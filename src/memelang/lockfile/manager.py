@@ -171,7 +171,10 @@ class LockfileManager:
 
         if requested_resolutions:
             spliced_items = self._splice_resolutions(draft_items, requested_resolutions)
-            active_outcome = verify_synthesis(SynthesisResult(items=spliced_items))
+            active_outcome = verify_synthesis(
+                SynthesisResult(items=spliced_items),
+                detect_implicit_ambiguities=False,
+            )
             applied_res = {str(k): v for k, v in requested_resolutions.items()}
 
         canonical = (
@@ -210,7 +213,10 @@ class LockfileManager:
         merged_res.update(resolutions)
 
         spliced_items = self._splice_resolutions(entry.draft_items, merged_res)
-        new_outcome = verify_synthesis(SynthesisResult(items=spliced_items))
+        new_outcome = verify_synthesis(
+            SynthesisResult(items=spliced_items),
+            detect_implicit_ambiguities=False,
+        )
 
         entry.resolutions = {str(k): v for k, v in sorted(merged_res.items())}
         entry.pending_ambiguities = list(new_outcome.ambiguities)

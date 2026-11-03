@@ -13,6 +13,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    FailStmt,
     FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
@@ -22,6 +23,7 @@ from memelang.ir.schema import (
     IfStmt,
     ListAppendStmt,
     ListIndexExpr,
+    ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
     LiteralExpr,
@@ -31,8 +33,10 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadInputExpr,
+    ReadJsonListExpr,
     ReturnStmt,
     SortCollectionStmt,
+    StrEndsWithExpr,
     SynthesisItem,
     SynthesisResult,
     UnaryOpExpr,
@@ -93,7 +97,13 @@ def _find_collection_mutations(stmts: list[IRStatement], collection: str) -> lis
     for s in stmts:
         if isinstance(
             s,
-            (SortCollectionStmt, ClampCollectionStmt, FilterCollectionStmt, ListAppendStmt),
+            (
+                SortCollectionStmt,
+                ClampCollectionStmt,
+                FilterCollectionStmt,
+                ListAppendStmt,
+                ListInsertStmt,
+            ),
         ) and s.target == collection:
             hits.append(s)
         elif isinstance(s, IfStmt):
@@ -102,6 +112,171 @@ def _find_collection_mutations(stmts: list[IRStatement], collection: str) -> lis
         elif isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)):
             hits.extend(_find_collection_mutations(s.body, collection))
     return hits
+
+
+def _branch_adds_to(stmts: list[IRStatement], target: str) -> bool:
+    for s in stmts:
+        if isinstance(s, (ListInsertStmt, ListAppendStmt)) and s.target == target:
+            return True
+        if isinstance(s, IfStmt) and (
+            _branch_adds_to(s.then_body, target) or _branch_adds_to(s.else_body, target)
+        ):
+            return True
+        if isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)) and _branch_adds_to(
+            s.body, target
+        ):
+            return True
+    return False
+
+
+def _has_asymmetric_insert(stmts: list[IRStatement], target: str) -> bool:
+    for s in stmts:
+        if isinstance(s, IfStmt):
+            t_adds = _branch_adds_to(s.then_body, target)
+            e_adds = _branch_adds_to(s.else_body, target)
+            if t_adds != e_adds:
+                return True
+            if _has_asymmetric_insert(s.then_body, target) or _has_asymmetric_insert(
+                s.else_body, target
+            ):
+                return True
+        elif isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)):
+            if _has_asymmetric_insert(s.body, target):
+                return True
+    return False
+
+
+def _contains_loop_with_asymmetric_insert(stmts: list[IRStatement], target: str) -> bool:
+    for s in stmts:
+        if isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)):
+            if _has_asymmetric_insert(s.body, target) or _contains_loop_with_asymmetric_insert(
+                s.body, target
+            ):
+                return True
+        elif isinstance(s, IfStmt):
+            if _contains_loop_with_asymmetric_insert(
+                s.then_body, target
+            ) or _contains_loop_with_asymmetric_insert(s.else_body, target):
+                return True
+    return False
+
+
+def _returns_index_of(stmts: list[IRStatement], target: str) -> bool:
+    for s in stmts:
+        if isinstance(s, ReturnStmt) and isinstance(s.value, ListIndexExpr):
+            if isinstance(s.value.target, VarRefExpr) and s.value.target.name == target:
+                return True
+        elif isinstance(s, IfStmt):
+            if _returns_index_of(s.then_body, target) or _returns_index_of(s.else_body, target):
+                return True
+        elif isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)):
+            if _returns_index_of(s.body, target):
+                return True
+    return False
+
+
+def _collect_empty_list_decls(stmts: list[IRStatement]) -> list[str]:
+    names: list[str] = []
+    for s in stmts:
+        if (
+            isinstance(s, VarDeclStmt)
+            and isinstance(s.value, ListLiteralExpr)
+            and len(s.value.elements) == 0
+        ):
+            names.append(s.name)
+        elif isinstance(s, IfStmt):
+            names.extend(_collect_empty_list_decls(s.then_body))
+            names.extend(_collect_empty_list_decls(s.else_body))
+    return names
+
+
+def _build_lossy_partial_sort_ambiguity(
+    statement_id: int,
+    func_stmt: FuncDefStmt,
+) -> AmbiguityDiagnostic | None:
+    if len(func_stmt.params) != 1:
+        return None
+    param = func_stmt.params[0]
+    elem_t = _element_type_of(param.param_type)
+    if elem_t is None or elem_t != func_stmt.return_type:
+        return None
+
+    empty_lists = _collect_empty_list_decls(func_stmt.body)
+    acc_name: str | None = None
+    for cand_acc in empty_lists:
+        if _contains_loop_with_asymmetric_insert(func_stmt.body, cand_acc) and _returns_index_of(
+            func_stmt.body, cand_acc
+        ):
+            acc_name = cand_acc
+            break
+
+    if acc_name is None:
+        return None
+
+    # Ensure the literal function itself is type-valid before offering it as Option 2
+    checker = _StaticChecker()
+    checker.check_stmt(func_stmt, _Scope(), stmt_idx=statement_id)
+
+    copy_var = "unsorted" if param.name != "unsorted" else "sorted_copy"
+    opt1_fn = FuncDefStmt(
+        name=func_stmt.name,
+        params=func_stmt.params,
+        return_type=func_stmt.return_type,
+        source_line=func_stmt.source_line,
+        body=[
+            IfStmt(
+                condition=BinaryOpExpr(
+                    op="==",
+                    left=ListLengthExpr(target=VarRefExpr(name=param.name)),
+                    right=LiteralExpr(value=0, data_type="Int"),
+                ),
+                then_body=[FailStmt(message=LiteralExpr(value="Empty list", data_type="String"))],
+                else_body=[],
+            ),
+            VarDeclStmt(
+                name=copy_var,
+                var_type=param.param_type,
+                value=VarRefExpr(name=param.name),
+            ),
+            SortCollectionStmt(target=copy_var, direction="ascending"),
+            ReturnStmt(
+                value=ListIndexExpr(
+                    target=VarRefExpr(name=copy_var),
+                    index=BinaryOpExpr(
+                        op="-",
+                        left=ListLengthExpr(target=VarRefExpr(name=copy_var)),
+                        right=LiteralExpr(value=1, data_type="Int"),
+                    ),
+                )
+            ),
+        ],
+    )
+
+    return AmbiguityDiagnostic(
+        statement_id=statement_id,
+        source_line=func_stmt.source_line or statement_id,
+        source_text=f"function {func_stmt.name}({param.name})",
+        reason=(
+            f"Loop in `{func_stmt.name}` only inserts items into `{acc_name}` on one branch "
+            f"(skipping larger elements in `else`), contradicting full-sort / largest-element intent."
+        ),
+        candidates=[
+            AmbiguityCandidate(
+                option=1,
+                description=f"Sort all elements of `{param.name}` ascending and return the last (largest) item",
+                canonical_meme=to_canonical_meme(ProgramIR(statements=[opt1_fn])),
+                replacement_ir=[opt1_fn],
+                replaces_whole_program=False,
+            ),
+            AmbiguityCandidate(
+                option=2,
+                description=f"Execute partial insertion into `{acc_name}` literally (skipping larger elements) and return `{acc_name}`'s last item",
+                canonical_meme=to_canonical_meme(ProgramIR(statements=[func_stmt])),
+                replacement_ir=[func_stmt],
+                replaces_whole_program=False,
+            ),
+        ],
+    )
 
 
 def _build_loop_collision_ambiguity(
@@ -382,6 +557,23 @@ class _StaticChecker:
         if isinstance(expr, ReadInputExpr):
             return expr.target_type
 
+        if isinstance(expr, StrEndsWithExpr):
+            t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            s_t = self.infer_expr_type(expr.suffix, scope, stmt_idx)
+            if t_t != "String" or s_t != "String":
+                raise StaticVerificationError(
+                    f"`str_ends_with` requires String operands, got ({t_t}, {s_t})", stmt_idx
+                )
+            return "Bool"
+
+        if isinstance(expr, ReadJsonListExpr):
+            fp_t = self.infer_expr_type(expr.filepath, scope, stmt_idx)
+            if fp_t != "String":
+                raise StaticVerificationError(
+                    f"`read_json_list` requires String filepath, got {fp_t}", stmt_idx
+                )
+            return "List<Float>"
+
         raise StaticVerificationError(f"Unsupported expression node: {type(expr)!r}", stmt_idx)
 
     def check_stmt(
@@ -494,6 +686,46 @@ class _StaticChecker:
                     f"Cannot append {val_t} to `{stmt.target}` of type {target_t}", stmt_idx
                 )
             return False
+
+        if isinstance(stmt, ListInsertStmt):
+            target_t = scope.lookup(stmt.target)
+            if target_t is None:
+                raise StaticVerificationError(
+                    f"Cannot insert into undeclared variable `{stmt.target}`", stmt_idx
+                )
+            elem_t = _element_type_of(target_t)
+            if elem_t is None:
+                raise StaticVerificationError(
+                    f"`list_insert` requires a List variable, got {target_t}", stmt_idx
+                )
+            idx_t = self.infer_expr_type(stmt.index, scope, stmt_idx)
+            if idx_t != "Int":
+                raise StaticVerificationError(
+                    f"`list_insert` index must be Int, got {idx_t}", stmt_idx
+                )
+            if (
+                isinstance(stmt.index, LiteralExpr)
+                and isinstance(stmt.index.value, int)
+                and not isinstance(stmt.index.value, bool)
+                and stmt.index.value < 0
+            ):
+                raise StaticVerificationError(
+                    f"Negative list insert index ({stmt.index.value}) is not allowed", stmt_idx
+                )
+            val_t = self.infer_expr_type(stmt.value, scope, stmt_idx)
+            if val_t != elem_t:
+                raise StaticVerificationError(
+                    f"Cannot insert {val_t} into `{stmt.target}` of type {target_t}", stmt_idx
+                )
+            return False
+
+        if isinstance(stmt, FailStmt):
+            msg_t = self.infer_expr_type(stmt.message, scope, stmt_idx)
+            if msg_t != "String":
+                raise StaticVerificationError(
+                    f"`fail_stmt` requires String message, got {msg_t}", stmt_idx
+                )
+            return True
 
         if isinstance(stmt, PrintStmt):
             if not stmt.expressions:
@@ -625,32 +857,62 @@ def verify_program(program: ProgramIR) -> ProgramIR:
     return program
 
 
-def verify_synthesis(result: SynthesisResult) -> VerificationOutcome:
+def verify_synthesis(
+    result: SynthesisResult,
+    detect_implicit_ambiguities: bool = True,
+) -> VerificationOutcome:
+    # Unwrap `FuncDefStmt(name="main", params=[], return_type="Void")` if no top-level main statements exist
+    has_top_exec = any(
+        not isinstance(it, (FuncDefStmt, AmbiguityDiagnostic)) for it in result.items
+    )
+    items_in: list[SynthesisItem] = []
+    for it in result.items:
+        if (
+            not has_top_exec
+            and isinstance(it, FuncDefStmt)
+            and it.name == "main"
+            and len(it.params) == 0
+            and it.return_type == "Void"
+        ):
+            items_in.extend(it.body)
+        else:
+            items_in.append(it)
+
     normalized: list[SynthesisItem] = []
     ambiguities: list[AmbiguityDiagnostic] = []
 
     # Pass 1: Structural collision safety net on top-level statements
     concrete_prefix: list[IRStatement] = []
-    for idx, item in enumerate(result.items):
+    for idx, item in enumerate(items_in):
         stmt_id = idx + 1
         if isinstance(item, AmbiguityDiagnostic):
             normalized.append(item)
             ambiguities.append(item)
             continue
 
-        if isinstance(item, ForEachStmt) and _find_collection_mutations(item.body, item.collection):
-            following = [
-                x for x in result.items[idx + 1 :] if not isinstance(x, AmbiguityDiagnostic)
-            ]
-            upgraded = _build_loop_collision_ambiguity(
-                statement_id=stmt_id,
-                loop_stmt=item,
-                preceding_stmts=list(concrete_prefix),
-                following_stmts=following,
-            )
-            normalized.append(upgraded)
-            ambiguities.append(upgraded)
-            continue
+        if detect_implicit_ambiguities:
+            if isinstance(item, ForEachStmt) and _find_collection_mutations(
+                item.body, item.collection
+            ):
+                following = [
+                    x for x in items_in[idx + 1 :] if not isinstance(x, AmbiguityDiagnostic)
+                ]
+                upgraded = _build_loop_collision_ambiguity(
+                    statement_id=stmt_id,
+                    loop_stmt=item,
+                    preceding_stmts=list(concrete_prefix),
+                    following_stmts=following,
+                )
+                normalized.append(upgraded)
+                ambiguities.append(upgraded)
+                continue
+
+            if isinstance(item, FuncDefStmt):
+                lossy_diag = _build_lossy_partial_sort_ambiguity(stmt_id, item)
+                if lossy_diag is not None:
+                    normalized.append(lossy_diag)
+                    ambiguities.append(lossy_diag)
+                    continue
 
         normalized.append(item)
         concrete_prefix.append(item)

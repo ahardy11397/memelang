@@ -41,6 +41,10 @@ uv run meme run examples/hello.meme --target rust
 uv run meme run examples/calc.meme --target cpp
 uv run meme run examples/random_sort_structured.meme --target python
 
+# Compile & run multi-function JSON file processing (resolving partial-sort ambiguity):
+uv run meme compile examples/find-largest.meme --target rust
+printf "examples/numbers.json\n" | uv run meme run examples/find-largest.meme --resolve 2=1 --target rust
+
 # Run FizzBuzz compiled to native C++20:
 uv run meme run examples/fizzbuzz.meme --target cpp
 ```

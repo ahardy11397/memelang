@@ -7,6 +7,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    FailStmt,
     FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
@@ -16,6 +17,7 @@ from memelang.ir.schema import (
     IfStmt,
     ListAppendStmt,
     ListIndexExpr,
+    ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
     LiteralExpr,
@@ -25,8 +27,10 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadInputExpr,
+    ReadJsonListExpr,
     ReturnStmt,
     SortCollectionStmt,
+    StrEndsWithExpr,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -93,6 +97,8 @@ class _CppGen:
     def __init__(self) -> None:
         self.uses_random = False
         self.uses_input = False
+        self.uses_str_helpers = False
+        self.uses_json_io = False
         self.func_returns: dict[str, MemeType] = {}
 
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> MemeType:
@@ -104,6 +110,10 @@ class _CppGen:
             return scope.get(expr.name, "Int")
         if isinstance(expr, RandomListExpr):
             return "List<Int>"
+        if isinstance(expr, ReadJsonListExpr):
+            return "List<Float>"
+        if isinstance(expr, StrEndsWithExpr):
+            return "Bool"
         if isinstance(expr, (RandomIntExpr, ListLengthExpr)):
             return "Int"
         if isinstance(expr, ListIndexExpr):
@@ -192,6 +202,15 @@ class _CppGen:
                 return f"_meme_parse_bool({raw})"
             return raw
 
+        if isinstance(expr, StrEndsWithExpr):
+            self.uses_str_helpers = True
+            return f"_meme_ends_with_ci({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.suffix, scope)})"
+
+        if isinstance(expr, ReadJsonListExpr):
+            self.uses_str_helpers = True
+            self.uses_json_io = True
+            return f"_meme_read_json_list({self.gen_expr(expr.filepath, scope)})"
+
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
     def gen_stmt(
@@ -245,6 +264,18 @@ class _CppGen:
 
         if isinstance(stmt, ListAppendStmt):
             return [f"{pad}{_cpp_ident(stmt.target)}.push_back({self.gen_expr(stmt.value, scope)});"]
+
+        if isinstance(stmt, ListInsertStmt):
+            tgt = _cpp_ident(stmt.target)
+            idx = self.gen_expr(stmt.index, scope)
+            val = self.gen_expr(stmt.value, scope)
+            return [f"{pad}{tgt}.insert({tgt}.begin() + static_cast<std::ptrdiff_t>({idx}), {val});"]
+
+        if isinstance(stmt, FailStmt):
+            return [
+                f"{pad}std::cout << _meme_fmt({self.gen_expr(stmt.message, scope)}) << \"\\n\";",
+                f"{pad}std::exit(0);",
+            ]
 
         if isinstance(stmt, PrintStmt):
             parts: list[str] = []
@@ -344,7 +375,10 @@ def generate_cpp(ir: ProgramIR) -> str:
 
     headers: list[str] = [
         "#include <algorithm>",
+        "#include <cctype>",
         "#include <cmath>",
+        "#include <cstdlib>",
+        "#include <fstream>",
         "#include <iostream>",
         "#include <sstream>",
         "#include <string>",
@@ -356,6 +390,14 @@ def generate_cpp(ir: ProgramIR) -> str:
 
     helpers: list[str] = [
         "inline std::string _meme_fmt(bool v) { return v ? \"true\" : \"false\"; }",
+        "inline std::string _meme_fmt(double v) {",
+        "    if (std::isfinite(v) && std::trunc(v) == v && v >= -9007199254740992.0 && v <= 9007199254740992.0) {",
+        "        return std::to_string(static_cast<long long>(v));",
+        "    }",
+        "    std::ostringstream oss;",
+        "    oss << v;",
+        "    return oss.str();",
+        "}",
         "inline const std::string& _meme_fmt(const std::string& v) { return v; }",
         "template <typename T>",
         "std::string _meme_fmt(const T& v) {",
@@ -408,10 +450,75 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    if (!prompt.empty()) { std::cout << prompt << std::flush; }",
                 "    std::string line;",
                 "    std::getline(std::cin, line);",
+                "    if (!line.empty() && line.back() == '\\r') line.pop_back();",
                 "    return line;",
                 "}",
                 "inline bool _meme_parse_bool(const std::string& s) {",
                 "    return s == \"true\" || s == \"True\" || s == \"1\" || s == \"yes\";",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_str_helpers:
+        helpers.extend(
+            [
+                "inline std::string _meme_trim(const std::string& s) {",
+                "    std::size_t a = 0;",
+                "    while (a < s.size() && std::isspace(static_cast<unsigned char>(s[a]))) ++a;",
+                "    std::size_t b = s.size();",
+                "    while (b > a && std::isspace(static_cast<unsigned char>(s[b - 1]))) --b;",
+                "    return s.substr(a, b - a);",
+                "}",
+                "inline bool _meme_ends_with_ci(const std::string& s, const std::string& suf) {",
+                "    std::string ts = _meme_trim(s);",
+                "    if (ts.size() < suf.size()) return false;",
+                "    std::size_t off = ts.size() - suf.size();",
+                "    for (std::size_t i = 0; i < suf.size(); ++i) {",
+                "        if (std::tolower(static_cast<unsigned char>(ts[off + i])) != std::tolower(static_cast<unsigned char>(suf[i]))) return false;",
+                "    }",
+                "    return true;",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_json_io:
+        helpers.extend(
+            [
+                "inline std::vector<double> _meme_read_json_list(const std::string& path) {",
+                "    std::ifstream ifs(_meme_trim(path));",
+                "    if (!ifs) {",
+                "        std::cerr << \"Error reading JSON file: cannot open \" << path << \"\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    std::ostringstream ss;",
+                "    ss << ifs.rdbuf();",
+                "    std::string trimmed = _meme_trim(ss.str());",
+                "    if (trimmed.size() < 2 || trimmed.front() != '[' || trimmed.back() != ']') {",
+                "        std::cerr << \"Error reading JSON file: expected JSON array\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    std::string inner = _meme_trim(trimmed.substr(1, trimmed.size() - 2));",
+                "    std::vector<double> out;",
+                "    if (inner.empty()) return out;",
+                "    std::size_t start = 0;",
+                "    while (start <= inner.size()) {",
+                "        std::size_t comma = inner.find(',', start);",
+                "        std::string tok = _meme_trim(comma == std::string::npos ? inner.substr(start) : inner.substr(start, comma - start));",
+                "        try {",
+                "            std::size_t idx = 0;",
+                "            double v = std::stod(tok, &idx);",
+                "            if (idx != tok.size() || !std::isfinite(v)) throw std::invalid_argument(\"bad\");",
+                "            out.push_back(v);",
+                "        } catch (...) {",
+                "            std::cerr << \"Error reading JSON file: invalid number `\" << tok << \"`\\n\";",
+                "            std::exit(1);",
+                "        }",
+                "        if (comma == std::string::npos) break;",
+                "        start = comma + 1;",
+                "    }",
+                "    return out;",
                 "}",
                 "",
             ]

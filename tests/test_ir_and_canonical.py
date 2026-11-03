@@ -217,3 +217,49 @@ def test_canonical_formatting_for_all_statements_and_expressions():
     assert "for each v in vals:" in canonical
     assert "for i from 1 to 3:" in canonical
     assert "while n > 10:" in canonical
+
+
+def test_file_json_list_insert_and_fail_canonical():
+    from memelang.ir.schema import FailStmt, ListInsertStmt, ReadJsonListExpr, StrEndsWithExpr
+
+    prog = ProgramIR(
+        statements=[
+            FuncDefStmt(
+                name="loadFile",
+                params=[FuncParam(name="filepath", param_type="String")],
+                return_type="List<Float>",
+                body=[
+                    IfStmt(
+                        condition=StrEndsWithExpr(
+                            target=VarRefExpr(name="filepath"),
+                            suffix=LiteralExpr(value=".json", data_type="String"),
+                        ),
+                        then_body=[
+                            VarDeclStmt(
+                                name="nums",
+                                var_type="List<Float>",
+                                value=ReadJsonListExpr(filepath=VarRefExpr(name="filepath")),
+                            ),
+                            ListInsertStmt(
+                                target="nums",
+                                index=LiteralExpr(value=0, data_type="Int"),
+                                value=LiteralExpr(value=1.5, data_type="Float"),
+                            ),
+                            ReturnStmt(value=VarRefExpr(name="nums")),
+                        ],
+                        else_body=[
+                            FailStmt(message=LiteralExpr(value="Wrong File Type", data_type="String"))
+                        ],
+                    )
+                ],
+            )
+        ]
+    )
+    restored = ProgramIR.model_validate_json(prog.model_dump_json())
+    assert restored == prog
+    canonical = to_canonical_meme(restored)
+    assert 'filepath ends with ".json"' in canonical
+    assert "read JSON number list from filepath" in canonical
+    assert "insert 1.5 into nums at 0" in canonical
+    assert 'fail with "Wrong File Type"' in canonical
+

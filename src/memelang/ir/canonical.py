@@ -8,6 +8,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    FailStmt,
     FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
@@ -17,6 +18,7 @@ from memelang.ir.schema import (
     IfStmt,
     ListAppendStmt,
     ListIndexExpr,
+    ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
     LiteralExpr,
@@ -25,8 +27,10 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadInputExpr,
+    ReadJsonListExpr,
     ReturnStmt,
     SortCollectionStmt,
+    StrEndsWithExpr,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -102,6 +106,12 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
     if isinstance(expr, ReadInputExpr):
         return f"read {expr.target_type} with prompt {json.dumps(expr.prompt)}"
 
+    if isinstance(expr, StrEndsWithExpr):
+        return f"{format_expr(expr.target)} ends with {format_expr(expr.suffix)}"
+
+    if isinstance(expr, ReadJsonListExpr):
+        return f"read JSON number list from {format_expr(expr.filepath)}"
+
     raise TypeError(f"Unsupported expression node: {type(expr)!r}")
 
 
@@ -129,6 +139,14 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
 
     if isinstance(stmt, ListAppendStmt):
         return [f"{pad}append {format_expr(stmt.value)} to {stmt.target}"]
+
+    if isinstance(stmt, ListInsertStmt):
+        return [
+            f"{pad}insert {format_expr(stmt.value)} into {stmt.target} at {format_expr(stmt.index)}"
+        ]
+
+    if isinstance(stmt, FailStmt):
+        return [f"{pad}fail with {format_expr(stmt.message)}"]
 
     if isinstance(stmt, PrintStmt):
         exprs = ", ".join(format_expr(e) for e in stmt.expressions)

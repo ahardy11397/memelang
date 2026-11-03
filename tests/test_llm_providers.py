@@ -231,3 +231,60 @@ def test_memelang_gbnf_grammar_allows_multiline_and_passes_to_llama_cpp(tmp_path
     assert captured_kwargs["grammar"] is not None
     assert "response_format" not in captured_kwargs
 
+
+def test_gbnf_and_system_prompt_include_file_json_insert_and_fail():
+    from memelang.llm.base import SYSTEM_PROMPT
+    from memelang.llm.llama_cpp import MEMELANG_FUNC_GBNF, MEMELANG_GBNF, build_llama_grammar
+
+    for token in ("str_ends_with", "read_json_list", "list_insert", "fail_stmt"):
+        assert token in MEMELANG_GBNF, f"Missing {token} in MEMELANG_GBNF"
+        assert token in SYSTEM_PROMPT, f"Missing {token} in SYSTEM_PROMPT"
+    assert "\nint-expr ::=" in MEMELANG_GBNF
+    assert "\nbool-expr ::=" in MEMELANG_GBNF
+    assert "typed-func-body" not in MEMELANG_FUNC_GBNF
+    assert '"op": "list_insert"' in SYSTEM_PROMPT
+    assert '"op": "for_range"' in SYSTEM_PROMPT
+    assert build_llama_grammar(func_only=False) is not None
+    assert build_llama_grammar(func_only=True) is not None
+
+
+def test_split_compilation_units_and_per_function_llama_cpp_synthesis(tmp_path):
+    from pathlib import Path
+    from memelang.llm.base import split_compilation_units
+    from memelang.llm.llama_cpp import LlamaCppProvider
+
+    fl_text = Path("examples/find-largest.meme").read_text(encoding="utf-8")
+    units = split_compilation_units(fl_text)
+    assert len(units) == 3
+    assert units[0].is_func is True and "loadFile" in units[0].text
+    assert units[1].is_func is True and "findLargest" in units[1].text
+    assert "stop when " not in units[1].text
+    assert units[1].line_numbers[-1] == 24
+    assert units[2].is_func is False and "Filepath?" in units[2].text
+
+    fake_gguf = tmp_path / "model.gguf"
+    fake_gguf.write_bytes(b"GGUF")
+    prov = LlamaCppProvider(fake_gguf)
+
+    prompts_seen: list[str] = []
+    canned = [
+        '{"items": [{"op": "func_def", "name": "loadFile", "params": [{"name": "filepath", "param_type": "String"}], "return_type": "List<Float>", "body": [{"op": "fail_stmt", "message": {"expr_type": "literal", "value": "Wrong File Type", "data_type": "String"}}]}]}',
+        '{"items": [{"op": "func_def", "name": "findLargest", "params": [{"name": "list", "param_type": "List<Float>"}], "return_type": "Float", "body": [{"op": "return_stmt", "value": {"expr_type": "literal", "value": 0.0, "data_type": "Float"}}]}]}',
+        '{"items": [{"op": "print_stmt", "expressions": [{"expr_type": "literal", "value": 1.0, "data_type": "Float"}]}]}',
+    ]
+
+    class MultiUnitFakeLlama:
+        def create_chat_completion(self, **kwargs):
+            idx = len(prompts_seen)
+            prompts_seen.append(kwargs["messages"][-1]["content"])
+            return {"choices": [{"message": {"content": canned[idx]}}]}
+
+    prov._llm = MultiUnitFakeLlama()
+    merged = prov.synthesize(fl_text)
+    assert len(prompts_seen) == 3
+    assert "loadFile(filepath: String) -> List<Float>" in prompts_seen[2]
+    assert "findLargest(list: List<Float>) -> Float" in prompts_seen[2]
+    assert len(merged.items) == 3
+
+
+

@@ -7,6 +7,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    FailStmt,
     FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
@@ -16,6 +17,7 @@ from memelang.ir.schema import (
     IfStmt,
     ListAppendStmt,
     ListIndexExpr,
+    ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
     LiteralExpr,
@@ -25,8 +27,10 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadInputExpr,
+    ReadJsonListExpr,
     ReturnStmt,
     SortCollectionStmt,
+    StrEndsWithExpr,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -88,6 +92,7 @@ class _RustGen:
     def __init__(self) -> None:
         self.uses_random = False
         self.uses_input = False
+        self.uses_json_io = False
         self.func_returns: dict[str, MemeType] = {}
 
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> MemeType:
@@ -99,6 +104,10 @@ class _RustGen:
             return scope.get(expr.name, "Int")
         if isinstance(expr, RandomListExpr):
             return "List<Int>"
+        if isinstance(expr, ReadJsonListExpr):
+            return "List<Float>"
+        if isinstance(expr, StrEndsWithExpr):
+            return "Bool"
         if isinstance(expr, (RandomIntExpr, ListLengthExpr)):
             return "Int"
         if isinstance(expr, ListIndexExpr):
@@ -194,6 +203,15 @@ class _RustGen:
                 return f"matches!({raw}.trim().to_lowercase().as_str(), \"true\" | \"1\" | \"yes\")"
             return raw
 
+        if isinstance(expr, StrEndsWithExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            suf = self.gen_expr(expr.suffix, scope)
+            return f"({tgt}.trim().to_lowercase().ends_with(&({suf}.to_lowercase())))"
+
+        if isinstance(expr, ReadJsonListExpr):
+            self.uses_json_io = True
+            return f"_meme_read_json_list(&({self.gen_expr(expr.filepath, scope)}))"
+
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
     def _fmt_expr_for_print(self, expr: IRExpr, scope: dict[str, MemeType]) -> str:
@@ -253,6 +271,17 @@ class _RustGen:
 
         if isinstance(stmt, ListAppendStmt):
             return [f"{pad}{_rust_ident(stmt.target)}.push({self.gen_expr(stmt.value, scope)});"]
+
+        if isinstance(stmt, ListInsertStmt):
+            return [
+                f"{pad}{_rust_ident(stmt.target)}.insert(({self.gen_expr(stmt.index, scope)}) as usize, {self.gen_expr(stmt.value, scope)});"
+            ]
+
+        if isinstance(stmt, FailStmt):
+            return [
+                f"{pad}println!(\"{{}}\", {self._fmt_expr_for_print(stmt.message, scope)});",
+                f"{pad}std::process::exit(0);",
+            ]
 
         if isinstance(stmt, PrintStmt):
             if len(stmt.expressions) == 1:
@@ -401,6 +430,43 @@ def generate_rust(ir: ProgramIR) -> str:
                 "    let mut buf = String::new();",
                 "    let _ = io::stdin().read_line(&mut buf);",
                 "    buf.trim_end_matches(&['\\r', '\\n'][..]).to_string()",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_json_io:
+        preamble.extend(
+            [
+                "fn _meme_read_json_list(path: &str) -> Vec<f64> {",
+                "    let raw = match std::fs::read_to_string(path.trim()) {",
+                "        Ok(s) => s,",
+                "        Err(e) => {",
+                "            eprintln!(\"Error reading JSON file: {}\", e);",
+                "            std::process::exit(1);",
+                "        }",
+                "    };",
+                "    let trimmed = raw.trim();",
+                "    if !trimmed.starts_with('[') || !trimmed.ends_with(']') {",
+                "        eprintln!(\"Error reading JSON file: expected JSON array\");",
+                "        std::process::exit(1);",
+                "    }",
+                "    let inner = trimmed[1..trimmed.len() - 1].trim();",
+                "    if inner.is_empty() {",
+                "        return Vec::new();",
+                "    }",
+                "    let mut out = Vec::new();",
+                "    for part in inner.split(',') {",
+                "        let tok = part.trim();",
+                "        match tok.parse::<f64>() {",
+                "            Ok(v) if v.is_finite() => out.push(v),",
+                "            _ => {",
+                "                eprintln!(\"Error reading JSON file: invalid number `{}`\", tok);",
+                "                std::process::exit(1);",
+                "            }",
+                "        }",
+                "    }",
+                "    out",
                 "}",
                 "",
             ]

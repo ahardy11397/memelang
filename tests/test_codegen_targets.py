@@ -328,3 +328,186 @@ def test_read_input_calculator_across_targets(target: TargetLang):
     res_whole = execute_ir(calc_prog, target, stdin_text="5\n3\n+\n")
     assert res_whole.returncode == 0, res_whole.stderr
     assert res_whole.stdout.strip().endswith("8")
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_find_largest_json_file_and_partial_sort_resolutions(target: TargetLang, tmp_path):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.ir.schema import (
+        FailStmt,
+        ForRangeStmt,
+        IfStmt,
+        ListAppendStmt,
+        ListIndexExpr,
+        ListInsertStmt,
+        ListLengthExpr,
+        ReadInputExpr,
+        ReadJsonListExpr,
+        StrEndsWithExpr,
+        SynthesisResult,
+    )
+    from memelang.lockfile.manager import LockfileManager
+
+    json_file = tmp_path / "nums.json"
+    json_file.write_text("[10, 50, 3, 99, 1]\n", encoding="utf-8")
+
+    syn = SynthesisResult(
+        items=[
+            FuncDefStmt(
+                name="loadFile",
+                params=[FuncParam(name="filepath", param_type="String")],
+                return_type="List<Float>",
+                body=[
+                    IfStmt(
+                        condition=StrEndsWithExpr(
+                            target=VarRefExpr(name="filepath"),
+                            suffix=LiteralExpr(value=".json", data_type="String"),
+                        ),
+                        then_body=[
+                            VarDeclStmt(
+                                name="fromFile",
+                                var_type="List<Float>",
+                                value=ReadJsonListExpr(filepath=VarRefExpr(name="filepath")),
+                            ),
+                            ReturnStmt(value=VarRefExpr(name="fromFile")),
+                        ],
+                        else_body=[
+                            FailStmt(message=LiteralExpr(value="Wrong File Type", data_type="String"))
+                        ],
+                    )
+                ],
+            ),
+            FuncDefStmt(
+                name="findLargest",
+                params=[FuncParam(name="items", param_type="List<Float>")],
+                return_type="Float",
+                body=[
+                    VarDeclStmt(
+                        name="unsorted", var_type="List<Float>", value=VarRefExpr(name="items")
+                    ),
+                    VarDeclStmt(
+                        name="sorted",
+                        var_type="List<Float>",
+                        value=ListLiteralExpr(elements=[], element_type="Float"),
+                    ),
+                    IfStmt(
+                        condition=BinaryOpExpr(
+                            op="<=",
+                            left=ListIndexExpr(
+                                target=VarRefExpr(name="unsorted"),
+                                index=LiteralExpr(value=0, data_type="Int"),
+                            ),
+                            right=ListIndexExpr(
+                                target=VarRefExpr(name="unsorted"),
+                                index=LiteralExpr(value=1, data_type="Int"),
+                            ),
+                        ),
+                        then_body=[
+                            ListAppendStmt(
+                                target="sorted",
+                                value=ListIndexExpr(
+                                    target=VarRefExpr(name="unsorted"),
+                                    index=LiteralExpr(value=0, data_type="Int"),
+                                ),
+                            )
+                        ],
+                        else_body=[
+                            ListAppendStmt(
+                                target="sorted",
+                                value=ListIndexExpr(
+                                    target=VarRefExpr(name="unsorted"),
+                                    index=LiteralExpr(value=1, data_type="Int"),
+                                ),
+                            )
+                        ],
+                    ),
+                    ForRangeStmt(
+                        loop_var="idx",
+                        start=LiteralExpr(value=1, data_type="Int"),
+                        end=BinaryOpExpr(
+                            op="-",
+                            left=ListLengthExpr(target=VarRefExpr(name="unsorted")),
+                            right=LiteralExpr(value=1, data_type="Int"),
+                        ),
+                        body=[
+                            VarDeclStmt(
+                                name="x",
+                                var_type="Float",
+                                value=ListIndexExpr(
+                                    target=VarRefExpr(name="unsorted"),
+                                    index=VarRefExpr(name="idx"),
+                                ),
+                            ),
+                            IfStmt(
+                                condition=BinaryOpExpr(
+                                    op="<",
+                                    left=VarRefExpr(name="x"),
+                                    right=ListIndexExpr(
+                                        target=VarRefExpr(name="sorted"),
+                                        index=LiteralExpr(value=0, data_type="Int"),
+                                    ),
+                                ),
+                                then_body=[
+                                    ListInsertStmt(
+                                        target="sorted",
+                                        index=LiteralExpr(value=0, data_type="Int"),
+                                        value=VarRefExpr(name="x"),
+                                    )
+                                ],
+                                else_body=[],
+                            ),
+                        ],
+                    ),
+                    ReturnStmt(
+                        value=ListIndexExpr(
+                            target=VarRefExpr(name="sorted"),
+                            index=BinaryOpExpr(
+                                op="-",
+                                left=ListLengthExpr(target=VarRefExpr(name="sorted")),
+                                right=LiteralExpr(value=1, data_type="Int"),
+                            ),
+                        )
+                    ),
+                ],
+            ),
+            VarDeclStmt(
+                name="filepath",
+                var_type="String",
+                value=ReadInputExpr(prompt="Filepath? ", target_type="String"),
+            ),
+            VarDeclStmt(
+                name="largest",
+                var_type="Float",
+                value=CallExpr(
+                    func_name="findLargest",
+                    args=[CallExpr(func_name="loadFile", args=[VarRefExpr(name="filepath")])],
+                ),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="largest")]),
+        ]
+    )
+
+    out = verify_synthesis(syn)
+    assert not out.is_unambiguous
+    mgr = LockfileManager(tmp_path / "build.lock")
+    mgr.record_outcome("find-largest.meme", "src", "test", syn, out)
+
+    # Option 1: Full ascending sort -> returns 99
+    prog_opt1 = mgr.apply_resolutions("find-largest.meme", "src", {2: 1}).program
+    assert prog_opt1 is not None
+    r1 = execute_ir(prog_opt1, target, stdin_text=f"{json_file}\n")
+    assert r1.returncode == 0, r1.stderr
+    assert r1.stdout.strip().endswith("99")
+
+    # Wrong file type -> prints "Wrong File Type" cleanly and exits 0
+    r_bad = execute_ir(prog_opt1, target, stdin_text="notes.txt\n")
+    assert r_bad.returncode == 0, r_bad.stderr
+    assert r_bad.stdout.strip().endswith("Wrong File Type")
+
+    # Option 2: Literal partial front-insertion -> skips 50 and 99, sorted=[1, 3, 10] -> returns 10
+    prog_opt2 = mgr.apply_resolutions("find-largest.meme", "src", {2: 2}).program
+    assert prog_opt2 is not None
+    r2 = execute_ir(prog_opt2, target, stdin_text=f"{json_file}\n")
+    assert r2.returncode == 0, r2.stderr
+    assert r2.stdout.strip().endswith("10")
+

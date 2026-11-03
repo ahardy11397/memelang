@@ -7,29 +7,40 @@ from pathlib import Path
 import re
 from pydantic import ValidationError
 
-from memelang.ir.schema import SynthesisResult
+from memelang.ir.schema import FuncDefStmt, SynthesisItem, SynthesisResult
 from memelang.llm.base import (
     LLMProviderError,
     build_compiler_messages,
     has_executable_content,
+    split_compilation_units,
 )
 
 DEFAULT_GGUF_REPO = "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF"
 DEFAULT_GGUF_FILENAME = "qwen2.5-coder-3b-instruct-q4_k_m.gguf"
 
-MEMELANG_GBNF = r"""
-root ::= ws "{" ws "\"items\"" ws ":" ws "[" ws (synthesis-item (ws "," ws synthesis-item)*)? ws "]" ws "}" ws
-synthesis-item ::= ir-stmt | ambiguity-diag
-
-meme-type ::= "\"Int\"" | "\"Float\"" | "\"Bool\"" | "\"String\"" | "\"List<Int>\"" | "\"List<Float>\"" | "\"List<Bool>\"" | "\"List<String>\"" | "\"Void\""
+_GBNF_COMMON = r"""
+meme-type ::= non-void-type | "\"Void\""
+non-void-type ::= "\"Int\"" | "\"Float\"" | "\"Bool\"" | "\"String\"" | "\"List<Int>\"" | "\"List<Float>\"" | "\"List<Bool>\"" | "\"List<String>\""
 scalar-type ::= "\"Int\"" | "\"Float\"" | "\"Bool\"" | "\"String\""
-bin-op ::= "\"+\"" | "\"-\"" | "\"*\"" | "\"/\"" | "\"%\"" | "\"==\"" | "\"!=\"" | "\"<\"" | "\"<=\"" | "\">\"" | "\">=\"" | "\"and\"" | "\"or\""
+bin-op ::= int-bin-op | bool-cmp-op
+int-bin-op ::= "\"+\"" | "\"-\"" | "\"*\"" | "\"/\"" | "\"%\""
+bool-cmp-op ::= "\"==\"" | "\"!=\"" | "\"<\"" | "\"<=\"" | "\">\"" | "\">=\"" | "\"and\"" | "\"or\""
 un-op ::= "\"-\"" | "\"not\""
 sort-dir ::= "\"ascending\"" | "\"descending\""
 opt-source-line ::= (ws "," ws "\"source_line\"" ws ":" ws (pos-int | "null"))?
 
-ir-expr ::= literal-expr | list-literal-expr | var-ref-expr | random-int-expr | random-list-expr | binary-op-expr | unary-op-expr | list-length-expr | list-index-expr | call-expr | read-input-expr
+ir-expr ::= literal-expr | list-literal-expr | var-ref-expr | random-int-expr | random-list-expr | binary-op-expr | unary-op-expr | list-length-expr | list-index-expr | call-expr | read-input-expr | str-ends-with-expr | read-json-list-expr
 expr-list ::= "[" ws (ir-expr (ws "," ws ir-expr)*)? ws "]"
+
+int-lit-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws "\"value\"" ws ":" ws integer ws "," ws "\"data_type\"" ws ":" ws "\"Int\"" ws "}"
+int-bin-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"binary_op\"" ws "," ws "\"op\"" ws ":" ws int-bin-op ws "," ws "\"left\"" ws ":" ws int-expr ws "," ws "\"right\"" ws ":" ws int-expr ws "}"
+int-un-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"unary_op\"" ws "," ws "\"op\"" ws ":" ws "\"-\"" ws "," ws "\"operand\"" ws ":" ws int-expr ws "}"
+int-expr ::= int-lit-expr | var-ref-expr | random-int-expr | int-bin-expr | int-un-expr | list-length-expr | list-index-expr | call-expr | read-input-expr
+
+bool-lit-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws "\"value\"" ws ":" ws boolean ws "," ws "\"data_type\"" ws ":" ws "\"Bool\"" ws "}"
+bool-bin-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"binary_op\"" ws "," ws "\"op\"" ws ":" ws bool-cmp-op ws "," ws "\"left\"" ws ":" ws ir-expr ws "," ws "\"right\"" ws ":" ws ir-expr ws "}"
+bool-un-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"unary_op\"" ws "," ws "\"op\"" ws ":" ws "\"not\"" ws "," ws "\"operand\"" ws ":" ws bool-expr ws "}"
+bool-expr ::= bool-lit-expr | var-ref-expr | bool-bin-expr | bool-un-expr | list-index-expr | call-expr | str-ends-with-expr | read-input-expr
 
 literal-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws (
     "\"value\"" ws ":" ws integer ws "," ws "\"data_type\"" ws ":" ws ("\"Int\"" | "\"Float\"")
@@ -39,36 +50,39 @@ literal-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws (
 ) ws "}"
 list-literal-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_literal\"" ws "," ws "\"elements\"" ws ":" ws expr-list ws "," ws "\"element_type\"" ws ":" ws scalar-type ws "}"
 var-ref-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"var_ref\"" ws "," ws "\"name\"" ws ":" ws ident-str ws "}"
-random-int-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"random_int\"" ws "," ws "\"min_val\"" ws ":" ws ir-expr ws "," ws "\"max_val\"" ws ":" ws ir-expr ws "}"
-random-list-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"random_list\"" ws "," ws "\"count\"" ws ":" ws ir-expr ws "," ws "\"min_val\"" ws ":" ws ir-expr ws "," ws "\"max_val\"" ws ":" ws ir-expr (ws "," ws "\"implicit_bounds\"" ws ":" ws boolean)? ws "}"
+random-int-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"random_int\"" ws "," ws "\"min_val\"" ws ":" ws int-expr ws "," ws "\"max_val\"" ws ":" ws int-expr ws "}"
+random-list-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"random_list\"" ws "," ws "\"count\"" ws ":" ws int-expr ws "," ws "\"min_val\"" ws ":" ws int-expr ws "," ws "\"max_val\"" ws ":" ws int-expr (ws "," ws "\"implicit_bounds\"" ws ":" ws boolean)? ws "}"
 binary-op-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"binary_op\"" ws "," ws "\"op\"" ws ":" ws bin-op ws "," ws "\"left\"" ws ":" ws ir-expr ws "," ws "\"right\"" ws ":" ws ir-expr ws "}"
 unary-op-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"unary_op\"" ws "," ws "\"op\"" ws ":" ws un-op ws "," ws "\"operand\"" ws ":" ws ir-expr ws "}"
 list-length-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_length\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
-list-index-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_index\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"index\"" ws ":" ws ir-expr ws "}"
+list-index-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_index\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"index\"" ws ":" ws int-expr ws "}"
 call-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"call\"" ws "," ws "\"func_name\"" ws ":" ws ident-str (ws "," ws "\"args\"" ws ":" ws expr-list)? ws "}"
 read-input-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"read_input\"" (ws "," ws "\"prompt\"" ws ":" ws string)? (ws "," ws "\"target_type\"" ws ":" ws scalar-type)? ws "}"
+str-ends-with-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"str_ends_with\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"suffix\"" ws ":" ws ir-expr ws "}"
+read-json-list-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"read_json_list\"" ws "," ws "\"filepath\"" ws ":" ws ir-expr ws "}"
 
-ir-stmt ::= var-decl-stmt | assign-stmt | sort-stmt | clamp-stmt | filter-stmt | append-stmt | print-stmt | if-stmt | for-each-stmt | for-range-stmt | while-stmt | func-def-stmt | return-stmt
-stmt-list ::= "[" ws (ir-stmt (ws "," ws ir-stmt)*)? ws "]"
-func-param ::= "{" ws "\"name\"" ws ":" ws ident-str ws "," ws "\"param_type\"" ws ":" ws meme-type ws "}"
+body-stmt ::= var-decl-stmt | assign-stmt | sort-stmt | clamp-stmt | filter-stmt | append-stmt | insert-stmt | fail-stmt | print-stmt | if-stmt | for-each-stmt | for-range-stmt | while-stmt | return-stmt
+ir-stmt ::= body-stmt | func-def-stmt
+stmt-list ::= "[" ws (body-stmt (ws "," ws body-stmt)*)? ws "]"
+func-param ::= "{" ws "\"name\"" ws ":" ws ident-str ws "," ws "\"param_type\"" ws ":" ws non-void-type ws "}"
 param-list ::= "[" ws (func-param (ws "," ws func-param)*)? ws "]"
 
-var-decl-stmt ::= "{" ws "\"op\"" ws ":" ws "\"var_decl\"" ws "," ws "\"name\"" ws ":" ws ident-str ws "," ws "\"var_type\"" ws ":" ws meme-type ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
+var-decl-stmt ::= "{" ws "\"op\"" ws ":" ws "\"var_decl\"" ws "," ws "\"name\"" ws ":" ws ident-str ws "," ws "\"var_type\"" ws ":" ws non-void-type ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
 assign-stmt ::= "{" ws "\"op\"" ws ":" ws "\"assign\"" ws "," ws "\"name\"" ws ":" ws ident-str ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
 sort-stmt ::= "{" ws "\"op\"" ws ":" ws "\"sort_collection\"" ws "," ws "\"target\"" ws ":" ws ident-str (ws "," ws "\"direction\"" ws ":" ws sort-dir)? opt-source-line ws "}"
 clamp-stmt ::= "{" ws "\"op\"" ws ":" ws "\"clamp_collection\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"min_val\"" ws ":" ws ir-expr ws "," ws "\"max_val\"" ws ":" ws ir-expr opt-source-line ws "}"
-filter-stmt ::= "{" ws "\"op\"" ws ":" ws "\"filter_collection\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"item_var\"" ws ":" ws ident-str ws "," ws "\"predicate\"" ws ":" ws ir-expr opt-source-line ws "}"
+filter-stmt ::= "{" ws "\"op\"" ws ":" ws "\"filter_collection\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"item_var\"" ws ":" ws ident-str ws "," ws "\"predicate\"" ws ":" ws bool-expr opt-source-line ws "}"
 append-stmt ::= "{" ws "\"op\"" ws ":" ws "\"list_append\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
+insert-stmt ::= "{" ws "\"op\"" ws ":" ws "\"list_insert\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"index\"" ws ":" ws int-expr ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
+fail-stmt ::= "{" ws "\"op\"" ws ":" ws "\"fail_stmt\"" ws "," ws "\"message\"" ws ":" ws ir-expr opt-source-line ws "}"
 print-stmt ::= "{" ws "\"op\"" ws ":" ws "\"print_stmt\"" ws "," ws "\"expressions\"" ws ":" ws "[" ws ir-expr (ws "," ws ir-expr)* ws "]" opt-source-line ws "}"
-if-stmt ::= "{" ws "\"op\"" ws ":" ws "\"if_stmt\"" ws "," ws "\"condition\"" ws ":" ws ir-expr ws "," ws "\"then_body\"" ws ":" ws stmt-list (ws "," ws "\"else_body\"" ws ":" ws stmt-list)? opt-source-line ws "}"
+if-stmt ::= "{" ws "\"op\"" ws ":" ws "\"if_stmt\"" ws "," ws "\"condition\"" ws ":" ws bool-expr ws "," ws "\"then_body\"" ws ":" ws stmt-list (ws "," ws "\"else_body\"" ws ":" ws stmt-list)? opt-source-line ws "}"
 for-each-stmt ::= "{" ws "\"op\"" ws ":" ws "\"for_each\"" ws "," ws "\"item_var\"" ws ":" ws ident-str ws "," ws "\"collection\"" ws ":" ws ident-str ws "," ws "\"body\"" ws ":" ws stmt-list opt-source-line ws "}"
-for-range-stmt ::= "{" ws "\"op\"" ws ":" ws "\"for_range\"" ws "," ws "\"loop_var\"" ws ":" ws ident-str ws "," ws "\"start\"" ws ":" ws ir-expr ws "," ws "\"end\"" ws ":" ws ir-expr ws "," ws "\"body\"" ws ":" ws stmt-list opt-source-line ws "}"
-while-stmt ::= "{" ws "\"op\"" ws ":" ws "\"while_loop\"" ws "," ws "\"condition\"" ws ":" ws ir-expr ws "," ws "\"body\"" ws ":" ws stmt-list opt-source-line ws "}"
+for-range-stmt ::= "{" ws "\"op\"" ws ":" ws "\"for_range\"" ws "," ws "\"loop_var\"" ws ":" ws ident-str ws "," ws "\"start\"" ws ":" ws int-expr ws "," ws "\"end\"" ws ":" ws int-expr ws "," ws "\"body\"" ws ":" ws stmt-list opt-source-line ws "}"
+while-stmt ::= "{" ws "\"op\"" ws ":" ws "\"while_loop\"" ws "," ws "\"condition\"" ws ":" ws bool-expr ws "," ws "\"body\"" ws ":" ws stmt-list opt-source-line ws "}"
+
 func-def-stmt ::= "{" ws "\"op\"" ws ":" ws "\"func_def\"" ws "," ws "\"name\"" ws ":" ws ident-str (ws "," ws "\"params\"" ws ":" ws param-list)? (ws "," ws "\"return_type\"" ws ":" ws meme-type)? ws "," ws "\"body\"" ws ":" ws stmt-list opt-source-line ws "}"
 return-stmt ::= "{" ws "\"op\"" ws ":" ws "\"return_stmt\"" (ws "," ws "\"value\"" ws ":" ws (ir-expr | "null"))? opt-source-line ws "}"
-
-ambiguity-candidate ::= "{" ws "\"option\"" ws ":" ws pos-int ws "," ws "\"description\"" ws ":" ws string ws "," ws "\"canonical_meme\"" ws ":" ws string ws "," ws "\"replacement_ir\"" ws ":" ws stmt-list (ws "," ws "\"replaces_whole_program\"" ws ":" ws boolean)? ws "}"
-ambiguity-diag ::= "{" ws "\"op\"" ws ":" ws "\"ambiguity\"" ws "," ws "\"statement_id\"" ws ":" ws pos-int (ws "," ws "\"source_line\"" ws ":" ws pos-int)? ws "," ws "\"source_text\"" ws ":" ws string ws "," ws "\"reason\"" ws ":" ws string ws "," ws "\"candidates\"" ws ":" ws "[" ws ambiguity-candidate (ws "," ws ambiguity-candidate)* ws "]" ws "}"
 
 ident-str ::= "\"" [a-zA-Z_] [a-zA-Z0-9_]* "\""
 pos-int ::= [1-9] [0-9]*
@@ -79,15 +93,28 @@ string ::= "\"" ([^"\\\x7F\x00-\x1F] | "\\" (["\\/bfnrt] | "u" [0-9a-fA-F]{4}))*
 ws ::= [ \t\n\r]*
 """
 
+MEMELANG_GBNF = (
+    'root ::= ws "{" ws "\\"items\\"" ws ":" ws "[" ws (ir-stmt (ws "," ws ir-stmt)*)? ws "]" ws "}" ws\n'
+    + _GBNF_COMMON
+)
 
-def build_llama_grammar():
+MEMELANG_FUNC_GBNF = (
+    'root ::= ws "{" ws "\\"items\\"" ws ":" ws "[" ws func-def-stmt ws "]" ws "}" ws\n'
+    + _GBNF_COMMON
+)
+
+
+def build_llama_grammar(func_only: bool = False):
     try:
         from llama_cpp import LlamaGrammar  # type: ignore[import-not-found]
     except ImportError as exc:
         raise LLMProviderError(
             "llama-cpp-python is not installed. Install with: `uv sync --extra local-gguf`"
         ) from exc
-    return LlamaGrammar.from_string(MEMELANG_GBNF, verbose=False)
+    return LlamaGrammar.from_string(
+        MEMELANG_FUNC_GBNF if func_only else MEMELANG_GBNF,
+        verbose=False,
+    )
 
 
 def get_model_cache_dir() -> Path:
@@ -184,18 +211,37 @@ class LlamaCppProvider:
         if not has_executable_content(source_text):
             return SynthesisResult(items=[])
 
+        units = split_compilation_units(source_text)
+        if not units:
+            return SynthesisResult(items=[])
+
         llm = self._get_llm()
-        grammar = build_llama_grammar()
-        msgs = build_compiler_messages(source_text)
+        all_items: list[SynthesisItem] = []
+        defined_funcs: list[FuncDefStmt] = []
+
         try:
-            resp = llm.create_chat_completion(
-                messages=msgs,
-                temperature=0.0,
-                seed=42,
-                max_tokens=self.max_tokens,
-                grammar=grammar,
-            )
-            content = _extract_json_object(resp["choices"][0]["message"]["content"])
-            return SynthesisResult.model_validate_json(content)
+            for unit in units:
+                grammar = build_llama_grammar(func_only=unit.is_func)
+                msgs = build_compiler_messages(
+                    unit.text,
+                    line_numbers=unit.line_numbers,
+                    available_functions=defined_funcs if defined_funcs else None,
+                )
+                resp = llm.create_chat_completion(
+                    messages=msgs,
+                    temperature=0.0,
+                    seed=42,
+                    max_tokens=self.max_tokens,
+                    grammar=grammar,
+                )
+                content = _extract_json_object(resp["choices"][0]["message"]["content"])
+                part = SynthesisResult.model_validate_json(content)
+                for it in part.items:
+                    if isinstance(it, FuncDefStmt):
+                        if it.source_line is None and unit.line_numbers:
+                            it.source_line = unit.line_numbers[0]
+                        defined_funcs.append(it)
+                    all_items.append(it)
+            return SynthesisResult(items=all_items)
         except (KeyError, IndexError, ValueError, ValidationError, RuntimeError) as exc:
             raise LLMProviderError(f"llama.cpp synthesis failed: {exc}") from exc

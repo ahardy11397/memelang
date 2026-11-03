@@ -9,6 +9,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    FailStmt,
     FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
@@ -18,6 +19,7 @@ from memelang.ir.schema import (
     IfStmt,
     ListAppendStmt,
     ListIndexExpr,
+    ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
     LiteralExpr,
@@ -27,8 +29,10 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadInputExpr,
+    ReadJsonListExpr,
     ReturnStmt,
     SortCollectionStmt,
+    StrEndsWithExpr,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -44,6 +48,7 @@ class _PyGen:
     def __init__(self) -> None:
         self.uses_random = False
         self.uses_math = False
+        self.uses_json_io = False
         self.symbols: dict[str, MemeType] = {}
         self.func_returns: dict[str, MemeType] = {}
 
@@ -56,6 +61,10 @@ class _PyGen:
             return scope.get(expr.name, "Int")
         if isinstance(expr, RandomListExpr):
             return "List<Int>"
+        if isinstance(expr, ReadJsonListExpr):
+            return "List<Float>"
+        if isinstance(expr, StrEndsWithExpr):
+            return "Bool"
         if isinstance(expr, (RandomIntExpr, ListLengthExpr)):
             return "Int"
         if isinstance(expr, ListIndexExpr):
@@ -133,6 +142,15 @@ class _PyGen:
                 return f"({raw}.strip().lower() in ('true', '1', 'yes'))"
             return raw
 
+        if isinstance(expr, StrEndsWithExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            suf = self.gen_expr(expr.suffix, scope)
+            return f"({tgt}.strip().lower().endswith({suf}.lower()))"
+
+        if isinstance(expr, ReadJsonListExpr):
+            self.uses_json_io = True
+            return f"_meme_read_json_list({self.gen_expr(expr.filepath, scope)})"
+
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
     def gen_stmt(
@@ -141,11 +159,17 @@ class _PyGen:
         pad = "    " * indent
 
         if isinstance(stmt, VarDeclStmt):
+            val_code = self.gen_expr(stmt.value, scope)
+            if isinstance(stmt.value, VarRefExpr) and stmt.var_type.startswith("List<"):
+                val_code = f"_meme_builtins.list({val_code})"
             scope[stmt.name] = stmt.var_type
-            return [f"{pad}{_py_ident(stmt.name)} = {self.gen_expr(stmt.value, scope)}"]
+            return [f"{pad}{_py_ident(stmt.name)} = {val_code}"]
 
         if isinstance(stmt, AssignStmt):
-            return [f"{pad}{_py_ident(stmt.name)} = {self.gen_expr(stmt.value, scope)}"]
+            val_code = self.gen_expr(stmt.value, scope)
+            if isinstance(stmt.value, VarRefExpr) and scope.get(stmt.name, "").startswith("List<"):
+                val_code = f"_meme_builtins.list({val_code})"
+            return [f"{pad}{_py_ident(stmt.name)} = {val_code}"]
 
         if isinstance(stmt, SortCollectionStmt):
             rev = "True" if stmt.direction == "descending" else "False"
@@ -172,6 +196,17 @@ class _PyGen:
 
         if isinstance(stmt, ListAppendStmt):
             return [f"{pad}{_py_ident(stmt.target)}.append({self.gen_expr(stmt.value, scope)})"]
+
+        if isinstance(stmt, ListInsertStmt):
+            return [
+                f"{pad}{_py_ident(stmt.target)}.insert({self.gen_expr(stmt.index, scope)}, {self.gen_expr(stmt.value, scope)})"
+            ]
+
+        if isinstance(stmt, FailStmt):
+            return [
+                f"{pad}_meme_builtins.print(_meme_fmt({self.gen_expr(stmt.message, scope)}))",
+                f"{pad}raise _meme_builtins.SystemExit(0)",
+            ]
 
         if isinstance(stmt, PrintStmt):
             parts = ", ".join(f"_meme_fmt({self.gen_expr(e, scope)})" for e in stmt.expressions)
@@ -251,6 +286,9 @@ class _PyGen:
 
 def generate_python(ir: ProgramIR) -> str:
     gen = _PyGen()
+    for stmt in ir.statements:
+        if isinstance(stmt, FuncDefStmt):
+            gen.func_returns[stmt.name] = stmt.return_type
     body_lines: list[str] = []
     for stmt in ir.statements:
         body_lines.extend(gen.gen_stmt(stmt, gen.symbols, indent=1))
@@ -258,11 +296,31 @@ def generate_python(ir: ProgramIR) -> str:
         body_lines.append("    pass")
 
     header: list[str] = ["import builtins as _meme_builtins"]
+    if gen.uses_json_io:
+        header.append("import json as _meme_json")
+        header.append("import sys as _meme_sys")
     if gen.uses_math:
         header.append("import math as _meme_math")
     if gen.uses_random:
         header.append("import random as _meme_random")
     header.append("")
+
+    if gen.uses_json_io:
+        header.extend(
+            [
+                "def _meme_read_json_list(path: str) -> list[float]:",
+                "    try:",
+                "        with _meme_builtins.open(path.strip(), 'r', encoding='utf-8') as _f:",
+                "            _data = _meme_json.load(_f)",
+                "        if not _meme_builtins.isinstance(_data, _meme_builtins.list):",
+                "            raise _meme_builtins.ValueError('Expected JSON list')",
+                "        return [_meme_builtins.float(_x) for _x in _data if not _meme_builtins.isinstance(_x, _meme_builtins.bool)]",
+                "    except _meme_builtins.Exception as _e:",
+                "        _meme_builtins.print(f'Error reading JSON file: {_e}', file=_meme_sys.stderr)",
+                "        raise _meme_builtins.SystemExit(1)",
+                "",
+            ]
+        )
 
     if gen.uses_random:
         header.extend(

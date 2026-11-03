@@ -153,6 +153,17 @@ class ReadInputExpr(IRNode):
     target_type: Literal["Int", "Float", "Bool", "String"] = "String"
 
 
+class StrEndsWithExpr(IRNode):
+    expr_type: Literal["str_ends_with"] = "str_ends_with"
+    target: IRExpr
+    suffix: IRExpr
+
+
+class ReadJsonListExpr(IRNode):
+    expr_type: Literal["read_json_list"] = "read_json_list"
+    filepath: IRExpr
+
+
 IRExpr = Annotated[
     LiteralExpr
     | ListLiteralExpr
@@ -164,7 +175,9 @@ IRExpr = Annotated[
     | ListLengthExpr
     | ListIndexExpr
     | CallExpr
-    | ReadInputExpr,
+    | ReadInputExpr
+    | StrEndsWithExpr
+    | ReadJsonListExpr,
     Field(discriminator="expr_type"),
 ]
 
@@ -219,6 +232,20 @@ class ListAppendStmt(IRNode):
     op: Literal["list_append"] = "list_append"
     target: str
     value: IRExpr
+    source_line: int | None = None
+
+
+class ListInsertStmt(IRNode):
+    op: Literal["list_insert"] = "list_insert"
+    target: str
+    index: IRExpr
+    value: IRExpr
+    source_line: int | None = None
+
+
+class FailStmt(IRNode):
+    op: Literal["fail_stmt"] = "fail_stmt"
+    message: IRExpr
     source_line: int | None = None
 
 
@@ -282,6 +309,8 @@ IRStatement = Annotated[
     | ClampCollectionStmt
     | FilterCollectionStmt
     | ListAppendStmt
+    | ListInsertStmt
+    | FailStmt
     | PrintStmt
     | IfStmt
     | ForEachStmt
@@ -336,11 +365,15 @@ UnaryOpExpr.model_rebuild()
 ListLengthExpr.model_rebuild()
 ListIndexExpr.model_rebuild()
 CallExpr.model_rebuild()
+StrEndsWithExpr.model_rebuild()
+ReadJsonListExpr.model_rebuild()
 VarDeclStmt.model_rebuild()
 AssignStmt.model_rebuild()
 ClampCollectionStmt.model_rebuild()
 FilterCollectionStmt.model_rebuild()
 ListAppendStmt.model_rebuild()
+ListInsertStmt.model_rebuild()
+FailStmt.model_rebuild()
 PrintStmt.model_rebuild()
 IfStmt.model_rebuild()
 ForEachStmt.model_rebuild()

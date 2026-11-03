@@ -377,3 +377,256 @@ def test_inverted_literal_bounds_and_negative_index_raise():
     )
     with pytest.raises(StaticVerificationError):
         verify_synthesis(neg_idx)
+
+
+def test_fail_stmt_diverges_and_lossy_partial_sort_detected(tmp_path):
+    from memelang.ir.schema import (
+        FailStmt,
+        ForRangeStmt,
+        IfStmt,
+        ListAppendStmt,
+        ListIndexExpr,
+        ListInsertStmt,
+        ListLengthExpr,
+        ListLiteralExpr,
+        ReadJsonListExpr,
+        StrEndsWithExpr,
+    )
+    from memelang.lockfile.manager import LockfileManager
+
+    load_fn = FuncDefStmt(
+        name="loadFile",
+        params=[FuncParam(name="filepath", param_type="String")],
+        return_type="List<Float>",
+        body=[
+            IfStmt(
+                condition=StrEndsWithExpr(
+                    target=VarRefExpr(name="filepath"),
+                    suffix=LiteralExpr(value=".json", data_type="String"),
+                ),
+                then_body=[
+                    VarDeclStmt(
+                        name="fromFile",
+                        var_type="List<Float>",
+                        value=ReadJsonListExpr(filepath=VarRefExpr(name="filepath")),
+                    ),
+                    ReturnStmt(value=VarRefExpr(name="fromFile")),
+                ],
+                else_body=[
+                    FailStmt(message=LiteralExpr(value="Wrong File Type", data_type="String"))
+                ],
+            )
+        ],
+    )
+
+    find_fn = FuncDefStmt(
+        name="findLargest",
+        params=[FuncParam(name="items", param_type="List<Float>")],
+        return_type="Float",
+        body=[
+            VarDeclStmt(name="unsorted", var_type="List<Float>", value=VarRefExpr(name="items")),
+            VarDeclStmt(
+                name="sorted",
+                var_type="List<Float>",
+                value=ListLiteralExpr(elements=[], element_type="Float"),
+            ),
+            IfStmt(
+                condition=BinaryOpExpr(
+                    op="<=",
+                    left=ListIndexExpr(
+                        target=VarRefExpr(name="unsorted"),
+                        index=LiteralExpr(value=0, data_type="Int"),
+                    ),
+                    right=ListIndexExpr(
+                        target=VarRefExpr(name="unsorted"),
+                        index=LiteralExpr(value=1, data_type="Int"),
+                    ),
+                ),
+                then_body=[
+                    ListAppendStmt(
+                        target="sorted",
+                        value=ListIndexExpr(
+                            target=VarRefExpr(name="unsorted"),
+                            index=LiteralExpr(value=0, data_type="Int"),
+                        ),
+                    )
+                ],
+                else_body=[
+                    ListAppendStmt(
+                        target="sorted",
+                        value=ListIndexExpr(
+                            target=VarRefExpr(name="unsorted"),
+                            index=LiteralExpr(value=1, data_type="Int"),
+                        ),
+                    )
+                ],
+            ),
+            ForRangeStmt(
+                loop_var="idx",
+                start=LiteralExpr(value=1, data_type="Int"),
+                end=BinaryOpExpr(
+                    op="-",
+                    left=ListLengthExpr(target=VarRefExpr(name="unsorted")),
+                    right=LiteralExpr(value=1, data_type="Int"),
+                ),
+                body=[
+                    VarDeclStmt(
+                        name="x",
+                        var_type="Float",
+                        value=ListIndexExpr(
+                            target=VarRefExpr(name="unsorted"),
+                            index=VarRefExpr(name="idx"),
+                        ),
+                    ),
+                    IfStmt(
+                        condition=BinaryOpExpr(
+                            op="<",
+                            left=VarRefExpr(name="x"),
+                            right=ListIndexExpr(
+                                target=VarRefExpr(name="sorted"),
+                                index=LiteralExpr(value=0, data_type="Int"),
+                            ),
+                        ),
+                        then_body=[
+                            ListInsertStmt(
+                                target="sorted",
+                                index=LiteralExpr(value=0, data_type="Int"),
+                                value=VarRefExpr(name="x"),
+                            )
+                        ],
+                        else_body=[],
+                    ),
+                ],
+            ),
+            ReturnStmt(
+                value=ListIndexExpr(
+                    target=VarRefExpr(name="sorted"),
+                    index=BinaryOpExpr(
+                        op="-",
+                        left=ListLengthExpr(target=VarRefExpr(name="sorted")),
+                        right=LiteralExpr(value=1, data_type="Int"),
+                    ),
+                )
+            ),
+        ],
+    )
+
+    syn = SynthesisResult(items=[load_fn, find_fn])
+    out = verify_synthesis(syn)
+    assert out.is_unambiguous is False
+    assert len(out.ambiguities) == 1
+    diag = out.ambiguities[0]
+    assert diag.statement_id == 2
+    assert len(diag.candidates) == 2
+
+    mgr = LockfileManager(tmp_path / "build.lock")
+    mgr.record_outcome("find-largest.meme", "src", "test", syn, out)
+
+    res1 = mgr.apply_resolutions("find-largest.meme", "src", {2: 1})
+    assert res1.is_unambiguous is True
+    assert res1.program is not None
+
+    res2 = mgr.apply_resolutions("find-largest.meme", "src", {2: 2})
+    assert res2.is_unambiguous is True
+    assert res2.program is not None
+
+    # Also verify `FuncDefStmt(name="main")` wrapper unwraps into top-level executable statements
+    wrapped_main = SynthesisResult(
+        items=[
+            load_fn,
+            FuncDefStmt(
+                name="main",
+                params=[],
+                return_type="Void",
+                body=[PrintStmt(expressions=[LiteralExpr(value="ran", data_type="String")])],
+            ),
+        ]
+    )
+    unwrapped_out = verify_synthesis(wrapped_main)
+    assert unwrapped_out.is_unambiguous is True
+    assert unwrapped_out.program is not None
+    assert isinstance(unwrapped_out.program.statements[-1], PrintStmt)
+
+    # Also detect lossy partial sort when the loop is nested inside an outer `IfStmt`
+    nested_loop_fn = FuncDefStmt(
+        name="findLargest",
+        params=[FuncParam(name="items", param_type="List<Float>")],
+        return_type="Float",
+        body=[
+            VarDeclStmt(
+                name="sorted",
+                var_type="List<Float>",
+                value=ListLiteralExpr(elements=[], element_type="Float"),
+            ),
+            IfStmt(
+                condition=BinaryOpExpr(
+                    op="<",
+                    left=ListIndexExpr(
+                        target=VarRefExpr(name="items"),
+                        index=LiteralExpr(value=0, data_type="Int"),
+                    ),
+                    right=ListIndexExpr(
+                        target=VarRefExpr(name="items"),
+                        index=LiteralExpr(value=1, data_type="Int"),
+                    ),
+                ),
+                then_body=[
+                    ListAppendStmt(
+                        target="sorted",
+                        value=ListIndexExpr(
+                            target=VarRefExpr(name="items"),
+                            index=LiteralExpr(value=0, data_type="Int"),
+                        ),
+                    ),
+                    ForEachStmt(
+                        item_var="x",
+                        collection="items",
+                        body=[
+                            IfStmt(
+                                condition=BinaryOpExpr(
+                                    op="<",
+                                    left=VarRefExpr(name="x"),
+                                    right=ListIndexExpr(
+                                        target=VarRefExpr(name="sorted"),
+                                        index=LiteralExpr(value=0, data_type="Int"),
+                                    ),
+                                ),
+                                then_body=[
+                                    ListInsertStmt(
+                                        target="sorted",
+                                        index=LiteralExpr(value=0, data_type="Int"),
+                                        value=VarRefExpr(name="x"),
+                                    )
+                                ],
+                                else_body=[],
+                            )
+                        ],
+                    ),
+                ],
+                else_body=[
+                    ListAppendStmt(
+                        target="sorted",
+                        value=ListIndexExpr(
+                            target=VarRefExpr(name="items"),
+                            index=LiteralExpr(value=1, data_type="Int"),
+                        ),
+                    )
+                ],
+            ),
+            ReturnStmt(
+                value=ListIndexExpr(
+                    target=VarRefExpr(name="sorted"),
+                    index=BinaryOpExpr(
+                        op="-",
+                        left=ListLengthExpr(target=VarRefExpr(name="sorted")),
+                        right=LiteralExpr(value=1, data_type="Int"),
+                    ),
+                )
+            ),
+        ],
+    )
+    nested_out = verify_synthesis(SynthesisResult(items=[nested_loop_fn]))
+    assert nested_out.is_unambiguous is False
+    assert len(nested_out.ambiguities) == 1
+
+

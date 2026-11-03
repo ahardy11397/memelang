@@ -14,6 +14,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    FailStmt,
     FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
@@ -23,6 +24,7 @@ from memelang.ir.schema import (
     IfStmt,
     ListAppendStmt,
     ListIndexExpr,
+    ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
     PrintStmt,
@@ -30,7 +32,9 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadInputExpr,
+    ReadJsonListExpr,
     ReturnStmt,
+    StrEndsWithExpr,
     UnaryOpExpr,
     VarDeclStmt,
     WhileStmt,
@@ -68,12 +72,22 @@ def _expr_uses_input(expr: IRExpr) -> bool:
         return _expr_uses_input(expr.target) or _expr_uses_input(expr.index)
     if isinstance(expr, CallExpr):
         return any(_expr_uses_input(a) for a in expr.args)
+    if isinstance(expr, StrEndsWithExpr):
+        return _expr_uses_input(expr.target) or _expr_uses_input(expr.suffix)
+    if isinstance(expr, ReadJsonListExpr):
+        return _expr_uses_input(expr.filepath)
     return False
 
 
 def _stmts_use_input(stmts: list[IRStatement]) -> bool:
     for s in stmts:
         if isinstance(s, (VarDeclStmt, AssignStmt, ListAppendStmt)) and _expr_uses_input(s.value):
+            return True
+        if isinstance(s, ListInsertStmt) and (
+            _expr_uses_input(s.index) or _expr_uses_input(s.value)
+        ):
+            return True
+        if isinstance(s, FailStmt) and _expr_uses_input(s.message):
             return True
         if isinstance(s, ClampCollectionStmt) and (
             _expr_uses_input(s.min_val) or _expr_uses_input(s.max_val)
