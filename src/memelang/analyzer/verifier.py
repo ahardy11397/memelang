@@ -70,6 +70,7 @@ class _Scope:
     def __init__(self, parent: _Scope | None = None) -> None:
         self.parent = parent
         self.symbols: dict[str, MemeType] = {}
+        self.empty_lists: set[str] = set()
 
     def lookup(self, name: str) -> MemeType | None:
         if name in self.symbols:
@@ -78,8 +79,23 @@ class _Scope:
             return self.parent.lookup(name)
         return None
 
-    def define(self, name: str, meme_type: MemeType) -> None:
+    def define(self, name: str, meme_type: MemeType, is_empty_list: bool = False) -> None:
         self.symbols[name] = meme_type
+        if is_empty_list:
+            self.empty_lists.add(name)
+
+    def mark_populated(self, name: str) -> None:
+        if name in self.symbols:
+            self.empty_lists.discard(name)
+        elif self.parent is not None:
+            self.parent.mark_populated(name)
+
+    def is_unpopulated_empty_list(self, name: str) -> bool:
+        if name in self.symbols:
+            return name in self.empty_lists
+        if self.parent is not None:
+            return self.parent.is_unpopulated_empty_list(name)
+        return False
 
 
 def _element_type_of(list_type: MemeType) -> MemeType | None:
@@ -513,6 +529,13 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"`list_index` requires a List target, got {target_t}", stmt_idx
                 )
+            if isinstance(expr.target, VarRefExpr) and scope.is_unpopulated_empty_list(
+                expr.target.name
+            ):
+                raise StaticVerificationError(
+                    f"Indexing into list `{expr.target.name}` which was initialized empty and never populated",
+                    stmt_idx,
+                )
             idx_t = self.infer_expr_type(expr.index, scope, stmt_idx)
             if idx_t != "Int":
                 raise StaticVerificationError(
@@ -599,7 +622,8 @@ class _StaticChecker:
                     f"Variable `{stmt.name}` declared as {stmt.var_type} but initialized with {val_t}",
                     stmt_idx,
                 )
-            scope.define(stmt.name, stmt.var_type)
+            is_empty = isinstance(stmt.value, ListLiteralExpr) and len(stmt.value.elements) == 0
+            scope.define(stmt.name, stmt.var_type, is_empty_list=is_empty)
             return False
 
         if isinstance(stmt, AssignStmt):
@@ -614,6 +638,8 @@ class _StaticChecker:
                     f"Cannot assign {val_t} to variable `{stmt.name}` of type {existing}",
                     stmt_idx,
                 )
+            if not (isinstance(stmt.value, ListLiteralExpr) and len(stmt.value.elements) == 0):
+                scope.mark_populated(stmt.name)
             return False
 
         if isinstance(stmt, SortCollectionStmt):
@@ -685,6 +711,7 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"Cannot append {val_t} to `{stmt.target}` of type {target_t}", stmt_idx
                 )
+            scope.mark_populated(stmt.target)
             return False
 
         if isinstance(stmt, ListInsertStmt):
@@ -717,6 +744,7 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"Cannot insert {val_t} into `{stmt.target}` of type {target_t}", stmt_idx
                 )
+            scope.mark_populated(stmt.target)
             return False
 
         if isinstance(stmt, FailStmt):
@@ -849,6 +877,173 @@ class _StaticChecker:
         raise StaticVerificationError(f"Unsupported statement node: {type(stmt)!r}", stmt_idx)
 
 
+def _expr_references_var(expr: IRExpr, name: str) -> bool:
+    if isinstance(expr, VarRefExpr):
+        return expr.name == name
+    if isinstance(expr, ListLiteralExpr):
+        return any(_expr_references_var(e, name) for e in expr.elements)
+    if isinstance(expr, RandomIntExpr):
+        return _expr_references_var(expr.min_val, name) or _expr_references_var(expr.max_val, name)
+    if isinstance(expr, RandomListExpr):
+        return (
+            _expr_references_var(expr.count, name)
+            or _expr_references_var(expr.min_val, name)
+            or _expr_references_var(expr.max_val, name)
+        )
+    if isinstance(expr, BinaryOpExpr):
+        return _expr_references_var(expr.left, name) or _expr_references_var(expr.right, name)
+    if isinstance(expr, UnaryOpExpr):
+        return _expr_references_var(expr.operand, name)
+    if isinstance(expr, ListLengthExpr):
+        return _expr_references_var(expr.target, name)
+    if isinstance(expr, ListIndexExpr):
+        return _expr_references_var(expr.target, name) or _expr_references_var(expr.index, name)
+    if isinstance(expr, CallExpr):
+        return any(_expr_references_var(a, name) for a in expr.args)
+    if isinstance(expr, StrEndsWithExpr):
+        return _expr_references_var(expr.target, name) or _expr_references_var(expr.suffix, name)
+    if isinstance(expr, ReadJsonListExpr):
+        return _expr_references_var(expr.filepath, name)
+    return False
+
+
+def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
+    for s in stmts:
+        if isinstance(s, (VarDeclStmt, AssignStmt, ListAppendStmt)) and _expr_references_var(
+            s.value, name
+        ):
+            return True
+        if isinstance(s, ListInsertStmt) and (
+            _expr_references_var(s.index, name) or _expr_references_var(s.value, name)
+        ):
+            return True
+        if isinstance(s, (SortCollectionStmt, ClampCollectionStmt, FilterCollectionStmt)) and (
+            s.target == name
+        ):
+            return True
+        if isinstance(s, ClampCollectionStmt) and (
+            _expr_references_var(s.min_val, name) or _expr_references_var(s.max_val, name)
+        ):
+            return True
+        if isinstance(s, FilterCollectionStmt) and _expr_references_var(s.predicate, name):
+            return True
+        if isinstance(s, FailStmt) and _expr_references_var(s.message, name):
+            return True
+        if isinstance(s, PrintStmt) and any(
+            _expr_references_var(e, name) for e in s.expressions
+        ):
+            return True
+        if isinstance(s, ReturnStmt) and s.value is not None and _expr_references_var(
+            s.value, name
+        ):
+            return True
+        if isinstance(s, IfStmt) and (
+            _expr_references_var(s.condition, name)
+            or _stmts_reference_var(s.then_body, name)
+            or _stmts_reference_var(s.else_body, name)
+        ):
+            return True
+        if isinstance(s, ForEachStmt) and (
+            s.collection == name or _stmts_reference_var(s.body, name)
+        ):
+            return True
+        if isinstance(s, ForRangeStmt) and (
+            _expr_references_var(s.start, name)
+            or _expr_references_var(s.end, name)
+            or _stmts_reference_var(s.body, name)
+        ):
+            return True
+        if isinstance(s, WhileStmt) and (
+            _expr_references_var(s.condition, name) or _stmts_reference_var(s.body, name)
+        ):
+            return True
+    return False
+
+
+def _stmts_mutate_var(stmts: list[IRStatement], name: str) -> bool:
+    for s in stmts:
+        if isinstance(s, AssignStmt) and s.name == name:
+            return True
+        if isinstance(
+            s,
+            (
+                ListAppendStmt,
+                ListInsertStmt,
+                SortCollectionStmt,
+                ClampCollectionStmt,
+                FilterCollectionStmt,
+            ),
+        ) and s.target == name:
+            return True
+        if isinstance(s, IfStmt) and (
+            _stmts_mutate_var(s.then_body, name) or _stmts_mutate_var(s.else_body, name)
+        ):
+            return True
+        if isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)) and _stmts_mutate_var(
+            s.body, name
+        ):
+            return True
+    return False
+
+
+def _normalize_sort_into_empty(stmts: list[IRStatement]) -> list[IRStatement]:
+    unmutated_empty: list[str] = [
+        s.name
+        for s in stmts
+        if isinstance(s, VarDeclStmt)
+        and isinstance(s.value, ListLiteralExpr)
+        and len(s.value.elements) == 0
+        and not _stmts_mutate_var(stmts, s.name)
+    ]
+    out: list[IRStatement] = []
+    for idx, s in enumerate(stmts):
+        if isinstance(s, FuncDefStmt):
+            out.append(
+                FuncDefStmt(
+                    name=s.name,
+                    params=s.params,
+                    return_type=s.return_type,
+                    body=_normalize_sort_into_empty(s.body),
+                    source_line=s.source_line,
+                )
+            )
+            continue
+        if isinstance(s, SortCollectionStmt) and unmutated_empty:
+            rest = stmts[idx + 1 :]
+            declared_before = {
+                prev.name for prev in stmts[:idx] if isinstance(prev, VarDeclStmt)
+            }
+            matched_dst: str | None = None
+            for cand in unmutated_empty:
+                if (
+                    cand != s.target
+                    and cand in declared_before
+                    and _stmts_reference_var(rest, cand)
+                    and not _stmts_reference_var(rest, s.target)
+                ):
+                    matched_dst = cand
+                    break
+            if matched_dst is not None:
+                unmutated_empty.remove(matched_dst)
+                out.append(
+                    AssignStmt(
+                        name=matched_dst,
+                        value=VarRefExpr(name=s.target),
+                        source_line=s.source_line,
+                    )
+                )
+                out.append(
+                    SortCollectionStmt(
+                        target=matched_dst,
+                        direction=s.direction,
+                        source_line=s.source_line,
+                    )
+                )
+                continue
+        out.append(s)
+    return out
+
+
 def verify_program(program: ProgramIR) -> ProgramIR:
     checker = _StaticChecker()
     root_scope = _Scope()
@@ -924,11 +1119,11 @@ def verify_synthesis(
             normalized_items=normalized,
         )
 
-    # Pass 2: Full lexical scope & static type verification
-    concrete_stmts = [cast(IRStatement, x) for x in normalized]
+    # Pass 2: Normalize `sort A into B` when `B` is an unmutated empty list, then verify
+    concrete_stmts = _normalize_sort_into_empty([cast(IRStatement, x) for x in normalized])
     prog = verify_program(ProgramIR(statements=concrete_stmts))
     return VerificationOutcome(
         program=prog,
         ambiguities=[],
-        normalized_items=normalized,
+        normalized_items=[*concrete_stmts],
     )

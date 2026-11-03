@@ -258,9 +258,19 @@ def test_split_compilation_units_and_per_function_llama_cpp_synthesis(tmp_path):
     assert len(units) == 3
     assert units[0].is_func is True and "loadFile" in units[0].text
     assert units[1].is_func is True and "findLargest" in units[1].text
-    assert "stop when " not in units[1].text
-    assert units[1].line_numbers[-1] == 24
     assert units[2].is_func is False and "Filepath?" in units[2].text
+
+    stop_when_src = (
+        "class demo\n"
+        "  define function fn with arr\n"
+        "    define out as arr\n"
+        "    stop when out item 1 is smaller than every other item\n"
+        "    return out item last\n"
+    )
+    sw_units = split_compilation_units(stop_when_src)
+    assert len(sw_units) == 1
+    assert "stop when " not in sw_units[0].text
+    assert sw_units[0].line_numbers[-1] == 5
 
     fake_gguf = tmp_path / "model.gguf"
     fake_gguf.write_bytes(b"GGUF")

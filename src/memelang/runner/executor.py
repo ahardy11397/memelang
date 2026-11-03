@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -132,9 +133,10 @@ def _run_target_cmd(
     timeout_sec: float,
     stdin_text: str | None,
     interactive_io: bool,
+    env: dict[str, str] | None = None,
 ) -> ExecutionResult:
     if interactive_io:
-        proc = subprocess.run(cmd)
+        proc = subprocess.run(cmd, env=env)
         return ExecutionResult(
             stdout="",
             stderr="",
@@ -147,6 +149,7 @@ def _run_target_cmd(
         capture_output=True,
         text=True,
         timeout=timeout_sec,
+        env=env,
     )
     return ExecutionResult(
         stdout=proc.stdout,
@@ -162,8 +165,13 @@ def execute_ir(
     timeout_sec: float = 15.0,
     stdin_text: str | None = None,
     interactive_io: bool = False,
+    source_dir: Path | None = None,
 ) -> ExecutionResult:
     code = generate_code(ir, target)
+    run_env: dict[str, str] | None = None
+    if source_dir is not None:
+        run_env = dict(os.environ)
+        run_env["MEME_SOURCE_DIR"] = str(source_dir.resolve())
 
     try:
         with tempfile.TemporaryDirectory(prefix=f"meme_{target}_") as tmp_dir:
@@ -178,6 +186,7 @@ def execute_ir(
                     timeout_sec=timeout_sec,
                     stdin_text=stdin_text,
                     interactive_io=interactive_io,
+                    env=run_env,
                 )
 
             if target == "rust":
@@ -203,6 +212,7 @@ def execute_ir(
                     timeout_sec=timeout_sec,
                     stdin_text=stdin_text,
                     interactive_io=interactive_io,
+                    env=run_env,
                 )
 
             if target == "cpp":
@@ -228,6 +238,7 @@ def execute_ir(
                     timeout_sec=timeout_sec,
                     stdin_text=stdin_text,
                     interactive_io=interactive_io,
+                    env=run_env,
                 )
     except subprocess.TimeoutExpired as exc:
         out_str = (

@@ -307,7 +307,12 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.command == "run":
             use_interactive = sys.stdin.isatty() and program_uses_input(program)
-            exec_res = execute_ir(program, target, interactive_io=use_interactive)
+            exec_res = execute_ir(
+                program,
+                target,
+                interactive_io=use_interactive,
+                source_dir=args.source.resolve().parent,
+            )
             if exec_res.stdout:
                 sys.stdout.write(exec_res.stdout)
             if exec_res.stderr:

@@ -298,6 +298,7 @@ def generate_python(ir: ProgramIR) -> str:
     header: list[str] = ["import builtins as _meme_builtins"]
     if gen.uses_json_io:
         header.append("import json as _meme_json")
+        header.append("import os as _meme_os")
         header.append("import sys as _meme_sys")
     if gen.uses_math:
         header.append("import math as _meme_math")
@@ -308,9 +309,20 @@ def generate_python(ir: ProgramIR) -> str:
     if gen.uses_json_io:
         header.extend(
             [
+                "def _meme_resolve_path(path: str) -> str:",
+                "    _p = path.strip()",
+                "    if _meme_os.path.exists(_p) or _meme_os.path.isabs(_p):",
+                "        return _p",
+                "    _sd = _meme_os.environ.get('MEME_SOURCE_DIR', '').strip()",
+                "    if _sd:",
+                "        _cand = _meme_os.path.join(_sd, _p)",
+                "        if _meme_os.path.exists(_cand):",
+                "            return _cand",
+                "    return _p",
+                "",
                 "def _meme_read_json_list(path: str) -> list[float]:",
                 "    try:",
-                "        with _meme_builtins.open(path.strip(), 'r', encoding='utf-8') as _f:",
+                "        with _meme_builtins.open(_meme_resolve_path(path), 'r', encoding='utf-8') as _f:",
                 "            _data = _meme_json.load(_f)",
                 "        if not _meme_builtins.isinstance(_data, _meme_builtins.list):",
                 "            raise _meme_builtins.ValueError('Expected JSON list')",

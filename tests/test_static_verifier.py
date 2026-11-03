@@ -630,3 +630,87 @@ def test_fail_stmt_diverges_and_lossy_partial_sort_detected(tmp_path):
     assert len(nested_out.ambiguities) == 1
 
 
+def test_indexing_never_populated_empty_list_raises_and_invalidates_stale_lock(tmp_path):
+    from memelang.ir.schema import AssignStmt, ListIndexExpr, ListLengthExpr, ListLiteralExpr
+    from memelang.lockfile.manager import LockEntry, LockFileDocument, LockfileManager
+
+    # 1. Truly unpopulated empty list (`sorted = []; return sorted[0]`) raises StaticVerificationError
+    truly_empty_fn = FuncDefStmt(
+        name="badEmpty",
+        params=[],
+        return_type="Float",
+        body=[
+            VarDeclStmt(
+                name="sorted",
+                var_type="List<Float>",
+                value=ListLiteralExpr(elements=[], element_type="Float"),
+            ),
+            ReturnStmt(
+                value=ListIndexExpr(
+                    target=VarRefExpr(name="sorted"),
+                    index=LiteralExpr(value=0, data_type="Int"),
+                )
+            ),
+        ],
+    )
+    with pytest.raises(StaticVerificationError) as exc_info:
+        verify_synthesis(SynthesisResult(items=[truly_empty_fn]))
+    assert "empty" in str(exc_info.value).lower()
+
+    # 2. `sort unsorted into sorted`: when LLM emits `sort_collection(unsorted)` followed by reading
+    #    unpopulated `sorted`, `verify_synthesis` normalizes it to `assign sorted = unsorted` + `sort sorted`,
+    #    whereas raw un-normalized `ProgramIR` in a stale `build.lock` fails `verify_program` and invalidates!
+    raw_sort_into_fn = FuncDefStmt(
+        name="findLargest",
+        params=[FuncParam(name="list", param_type="List<Float>")],
+        return_type="Float",
+        body=[
+            VarDeclStmt(name="unsorted", var_type="List<Float>", value=VarRefExpr(name="list")),
+            VarDeclStmt(
+                name="sorted",
+                var_type="List<Float>",
+                value=ListLiteralExpr(elements=[], element_type="Float"),
+            ),
+            SortCollectionStmt(target="unsorted", direction="ascending"),
+            ReturnStmt(
+                value=ListIndexExpr(
+                    target=VarRefExpr(name="sorted"),
+                    index=BinaryOpExpr(
+                        op="-",
+                        left=ListLengthExpr(target=VarRefExpr(name="sorted")),
+                        right=LiteralExpr(value=1, data_type="Int"),
+                    ),
+                )
+            ),
+        ],
+    )
+    with pytest.raises(StaticVerificationError):
+        verify_program(ProgramIR(statements=[raw_sort_into_fn]))
+
+    # Stale `build.lock` containing un-normalized `raw_sort_into_fn` is invalidated by `get_cached_program`
+    lock_path = tmp_path / "build.lock"
+    mgr = LockfileManager(lock_path)
+    doc = LockFileDocument(
+        entries={
+            "examples/find-largest.meme": LockEntry(
+                source_sha256=mgr.compute_source_hash("dummy src"),
+                provider="test",
+                draft_items=[raw_sort_into_fn],
+                ir=ProgramIR(statements=[raw_sort_into_fn]),
+            )
+        }
+    )
+    lock_path.write_text(doc.model_dump_json(indent=2), encoding="utf-8")
+    assert mgr.get_cached_program("examples/find-largest.meme", "dummy src") is None
+
+    # `verify_synthesis` normalizes `raw_sort_into_fn` cleanly!
+    norm_out = verify_synthesis(SynthesisResult(items=[raw_sort_into_fn]))
+    assert norm_out.is_unambiguous is True
+    assert norm_out.program is not None
+    norm_fn = norm_out.program.statements[0]
+    assert isinstance(norm_fn, FuncDefStmt)
+    assert any(isinstance(s, AssignStmt) and s.name == "sorted" for s in norm_fn.body)
+
+
+
+

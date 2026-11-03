@@ -12,16 +12,9 @@ class find-largest
     define unsorted as list
     define sorted as empty
 
-    check unsorted item 1 against unsorted item 2
-      copy smaller item to sorted item 1
-      foreach other item x in unsorted starting at item 2
-        check item x against sorted item 1
-          if item x is smaller
-            move each item in sorted up 1 and copy item x to sorted item 1
-          else 
-            check next item x 
-      stop when sorted item 1 is smaller than every other item in sorted && sorted item last is larger than every other item in sorted 
-      return sorterd item last
+    sort unsorted into sorted ascending
+
+    return largest from sorted
 
   define function main  
     define filepath from user "Filepath?"

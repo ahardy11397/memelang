@@ -8,7 +8,12 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from memelang.analyzer.verifier import VerificationOutcome, verify_synthesis
+from memelang.analyzer.verifier import (
+    StaticVerificationError,
+    VerificationOutcome,
+    verify_program,
+    verify_synthesis,
+)
 from memelang.ir.canonical import to_canonical_meme
 from memelang.ir.schema import (
     AmbiguityCandidate,
@@ -100,6 +105,10 @@ class LockfileManager:
             merged.update(req_str)
             if merged != entry.resolutions:
                 return None
+        try:
+            verify_program(entry.ir)
+        except StaticVerificationError:
+            return None
         return entry.ir
 
     @staticmethod

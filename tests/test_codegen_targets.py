@@ -511,3 +511,17 @@ def test_find_largest_json_file_and_partial_sort_resolutions(target: TargetLang,
     assert r2.returncode == 0, r2.stderr
     assert r2.stdout.strip().endswith("10")
 
+    # Relative path lookup against `source_dir` (`numbers.json` and `./numbers.json`)
+    sub_dir = tmp_path / "examples_sub"
+    sub_dir.mkdir(exist_ok=True)
+    (sub_dir / "numbers.json").write_text("[4, 42, 7]\n", encoding="utf-8")
+
+    r_rel1 = execute_ir(prog_opt1, target, stdin_text="numbers.json\n", source_dir=sub_dir)
+    assert r_rel1.returncode == 0, r_rel1.stderr
+    assert r_rel1.stdout.strip().endswith("42")
+
+    r_rel2 = execute_ir(prog_opt1, target, stdin_text="./numbers.json\n", source_dir=sub_dir)
+    assert r_rel2.returncode == 0, r_rel2.stderr
+    assert r_rel2.stdout.strip().endswith("42")
+
+

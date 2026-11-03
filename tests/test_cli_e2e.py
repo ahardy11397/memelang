@@ -187,7 +187,15 @@ def test_cli_pull_and_interactive_io_dispatch(
     calc_file.write_text('define name: String as read String with prompt "Name? "\nprint name\n', encoding="utf-8")
     seen_interactive: list[bool] = []
 
-    def _spy_execute_ir(ir: ProgramIR, target: str, timeout_sec: float = 15.0, stdin_text=None, interactive_io: bool = False):
+    def _spy_execute_ir(
+        ir: ProgramIR,
+        target: str,
+        timeout_sec: float = 15.0,
+        stdin_text=None,
+        interactive_io: bool = False,
+        source_dir: Path | None = None,
+    ):
+        assert source_dir == calc_file.resolve().parent
         seen_interactive.append(interactive_io)
         return ExecutionResult(stdout="Alice\n", stderr="", returncode=0, generated_code="")
 
