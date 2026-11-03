@@ -159,3 +159,42 @@ def test_cli_exit_codes_for_static_and_provider_errors(
     )
     assert rc_prov == 3
     capsys.readouterr()
+
+
+def test_cli_pull_and_interactive_io_dispatch(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+):
+    from memelang.ir.schema import PrintStmt, ProgramIR, ReadInputExpr, VarDeclStmt, VarRefExpr
+    from memelang.runner.executor import ExecutionResult
+
+    pulled: dict[str, str] = {}
+
+    def _fake_pull(repo_id: str, filename: str, model_dir: Path | None = None) -> Path:
+        pulled["repo_id"] = repo_id
+        pulled["filename"] = filename
+        dest = (model_dir or tmp_path) / filename
+        dest.write_bytes(b"GGUF")
+        return dest
+
+    monkeypatch.setattr("memelang.cli.pull_gguf_model", _fake_pull, raising=False)
+    rc_pull = main(["pull", "--model-dir", str(tmp_path)])
+    cap_pull = capsys.readouterr()
+    assert rc_pull == 0, cap_pull.err
+    assert "qwen2.5-coder-3b-instruct-q4_k_m.gguf" in cap_pull.out
+
+    # Verify `meme run` sets interactive_io=True when stdin.isatty() and program reads input
+    calc_file = tmp_path / "ask.meme"
+    calc_file.write_text('define name: String as read String with prompt "Name? "\nprint name\n', encoding="utf-8")
+    seen_interactive: list[bool] = []
+
+    def _spy_execute_ir(ir: ProgramIR, target: str, timeout_sec: float = 15.0, stdin_text=None, interactive_io: bool = False):
+        seen_interactive.append(interactive_io)
+        return ExecutionResult(stdout="Alice\n", stderr="", returncode=0, generated_code="")
+
+    monkeypatch.setattr("memelang.cli.execute_ir", _spy_execute_ir)
+    monkeypatch.setattr("sys.stdin.isatty", lambda: True)
+
+    rc_run = main(["run", str(calc_file), "--provider", "heuristic", "--lockfile", str(tmp_path / "b.lock")])
+    capsys.readouterr()
+    assert rc_run == 0
+    assert seen_interactive == [True]

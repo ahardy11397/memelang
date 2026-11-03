@@ -8,7 +8,14 @@ import httpx
 from memelang.llm.base import LLMProvider, LLMProviderError, build_compiler_messages
 from memelang.llm.gemini import GeminiProvider
 from memelang.llm.heuristic import HeuristicProvider
-from memelang.llm.llama_cpp import LlamaCppProvider
+from memelang.llm.llama_cpp import (
+    DEFAULT_GGUF_FILENAME,
+    DEFAULT_GGUF_REPO,
+    LlamaCppProvider,
+    find_cached_gguf,
+    get_model_cache_dir,
+    pull_gguf_model,
+)
 from memelang.llm.ollama import OllamaProvider, OpenAILocalProvider
 
 
@@ -34,6 +41,9 @@ def get_provider(spec: str = "auto") -> LLMProvider:
         if env_spec and env_spec != "auto":
             effective = env_spec
         else:
+            cached_gguf = find_cached_gguf()
+            if cached_gguf is not None:
+                return LlamaCppProvider(model_path=cached_gguf)
             host = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
             detected_model = _probe_local_ollama(host)
             if detected_model:
@@ -55,11 +65,17 @@ def get_provider(spec: str = "auto") -> LLMProvider:
             raise LLMProviderError("Specify model name as `openai-local:<model>`.")
         return OpenAILocalProvider(model=model, base_url=base_url)
 
-    if effective.startswith("llama-cpp:"):
+    if effective == "llama-cpp" or effective.startswith("llama-cpp:"):
         _, _, path = effective.partition(":")
-        if not path:
-            raise LLMProviderError("Specify GGUF model path as `llama-cpp:/path/to/model.gguf`.")
-        return LlamaCppProvider(model_path=path)
+        if path:
+            return LlamaCppProvider(model_path=path)
+        cached_gguf = find_cached_gguf()
+        if cached_gguf is None:
+            raise LLMProviderError(
+                f"No cached GGUF model found in `{get_model_cache_dir()}`. "
+                "Run `meme pull` first or pass `llama-cpp:/path/to/model.gguf`."
+            )
+        return LlamaCppProvider(model_path=cached_gguf)
 
     if effective == "gemini" or effective.startswith("gemini:"):
         _, _, model = effective.partition(":")
@@ -67,11 +83,13 @@ def get_provider(spec: str = "auto") -> LLMProvider:
 
     raise LLMProviderError(
         f"Unknown LLM provider `{spec}`. Supported: auto, heuristic, ollama[:model], "
-        "openai-local:<model>, llama-cpp:<path.gguf>, gemini[:model]."
+        "openai-local:<model>, llama-cpp[:path.gguf], gemini[:model]."
     )
 
 
 __all__ = [
+    "DEFAULT_GGUF_FILENAME",
+    "DEFAULT_GGUF_REPO",
     "GeminiProvider",
     "HeuristicProvider",
     "LLMProvider",
@@ -80,5 +98,8 @@ __all__ = [
     "OllamaProvider",
     "OpenAILocalProvider",
     "build_compiler_messages",
+    "find_cached_gguf",
+    "get_model_cache_dir",
     "get_provider",
+    "pull_gguf_model",
 ]

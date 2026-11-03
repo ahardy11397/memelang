@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import keyword
+
 from memelang.ir.schema import (
     AssignStmt,
     BinaryOpExpr,
@@ -34,9 +36,14 @@ from memelang.ir.schema import (
 )
 
 
+def _py_ident(name: str) -> str:
+    return f"meme_{name}" if keyword.iskeyword(name) or name.startswith("_meme_") else name
+
+
 class _PyGen:
     def __init__(self) -> None:
         self.uses_random = False
+        self.uses_math = False
         self.symbols: dict[str, MemeType] = {}
         self.func_returns: dict[str, MemeType] = {}
 
@@ -77,7 +84,7 @@ class _PyGen:
             return f"[{inner}]"
 
         if isinstance(expr, VarRefExpr):
-            return expr.name
+            return _py_ident(expr.name)
 
         if isinstance(expr, RandomIntExpr):
             self.uses_random = True
@@ -98,8 +105,12 @@ class _PyGen:
         if isinstance(expr, BinaryOpExpr):
             left = self.gen_expr(expr.left, scope)
             right = self.gen_expr(expr.right, scope)
-            if expr.op == "/" and self.infer_type(expr.left, scope) == "Int":
+            left_t = self.infer_type(expr.left, scope)
+            if expr.op == "/" and left_t == "Int":
                 return f"_meme_builtins.int({left} / {right})"
+            if expr.op == "%" and left_t == "Float":
+                self.uses_math = True
+                return f"_meme_math.fmod({left}, {right})"
             return f"({left} {expr.op} {right})"
 
         if isinstance(expr, ListLengthExpr):
@@ -110,7 +121,7 @@ class _PyGen:
 
         if isinstance(expr, CallExpr):
             args = ", ".join(self.gen_expr(a, scope) for a in expr.args)
-            return f"{expr.func_name}({args})"
+            return f"{_py_ident(expr.func_name)}({args})"
 
         if isinstance(expr, ReadInputExpr):
             raw = f"_meme_builtins.input({repr(expr.prompt)})"
@@ -131,33 +142,36 @@ class _PyGen:
 
         if isinstance(stmt, VarDeclStmt):
             scope[stmt.name] = stmt.var_type
-            return [f"{pad}{stmt.name} = {self.gen_expr(stmt.value, scope)}"]
+            return [f"{pad}{_py_ident(stmt.name)} = {self.gen_expr(stmt.value, scope)}"]
 
         if isinstance(stmt, AssignStmt):
-            return [f"{pad}{stmt.name} = {self.gen_expr(stmt.value, scope)}"]
+            return [f"{pad}{_py_ident(stmt.name)} = {self.gen_expr(stmt.value, scope)}"]
 
         if isinstance(stmt, SortCollectionStmt):
             rev = "True" if stmt.direction == "descending" else "False"
-            return [f"{pad}{stmt.target}.sort(reverse={rev})"]
+            return [f"{pad}{_py_ident(stmt.target)}.sort(reverse={rev})"]
 
         if isinstance(stmt, ClampCollectionStmt):
+            tgt = _py_ident(stmt.target)
             lo = self.gen_expr(stmt.min_val, scope)
             hi = self.gen_expr(stmt.max_val, scope)
             return [
-                f"{pad}{stmt.target} = [_meme_builtins.min(_meme_builtins.max(_x, {lo}), {hi}) for _x in {stmt.target}]"
+                f"{pad}{tgt} = [_meme_builtins.min(_meme_builtins.max(_x, {lo}), {hi}) for _x in {tgt}]"
             ]
 
         if isinstance(stmt, FilterCollectionStmt):
+            tgt = _py_ident(stmt.target)
+            iv = _py_ident(stmt.item_var)
             sub = dict(scope)
             col_t = scope.get(stmt.target, "List<Int>")
             sub[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[assignment]
             pred = self.gen_expr(stmt.predicate, sub)
             return [
-                f"{pad}{stmt.target} = [{stmt.item_var} for {stmt.item_var} in {stmt.target} if {pred}]"
+                f"{pad}{tgt} = [{iv} for {iv} in {tgt} if {pred}]"
             ]
 
         if isinstance(stmt, ListAppendStmt):
-            return [f"{pad}{stmt.target}.append({self.gen_expr(stmt.value, scope)})"]
+            return [f"{pad}{_py_ident(stmt.target)}.append({self.gen_expr(stmt.value, scope)})"]
 
         if isinstance(stmt, PrintStmt):
             parts = ", ".join(f"_meme_fmt({self.gen_expr(e, scope)})" for e in stmt.expressions)
@@ -182,7 +196,7 @@ class _PyGen:
             sub = dict(scope)
             col_t = scope.get(stmt.collection, "List<Int>")
             sub[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[assignment]
-            lines = [f"{pad}for {stmt.item_var} in {stmt.collection}[:]:"]
+            lines = [f"{pad}for {_py_ident(stmt.item_var)} in {_py_ident(stmt.collection)}[:]:"]
             if stmt.body:
                 for ch in stmt.body:
                     lines.extend(self.gen_stmt(ch, sub, indent + 1))
@@ -195,7 +209,7 @@ class _PyGen:
             sub[stmt.loop_var] = "Int"
             start_s = self.gen_expr(stmt.start, scope)
             end_s = self.gen_expr(stmt.end, scope)
-            lines = [f"{pad}for {stmt.loop_var} in _meme_builtins.range({start_s}, ({end_s}) + 1):"]
+            lines = [f"{pad}for {_py_ident(stmt.loop_var)} in _meme_builtins.range({start_s}, ({end_s}) + 1):"]
             if stmt.body:
                 for ch in stmt.body:
                     lines.extend(self.gen_stmt(ch, sub, indent + 1))
@@ -215,11 +229,11 @@ class _PyGen:
 
         if isinstance(stmt, FuncDefStmt):
             self.func_returns[stmt.name] = stmt.return_type
-            params = ", ".join(p.name for p in stmt.params)
+            params = ", ".join(_py_ident(p.name) for p in stmt.params)
             fn_scope = dict(scope)
             for p in stmt.params:
                 fn_scope[p.name] = p.param_type
-            lines = [f"{pad}def {stmt.name}({params}):"]
+            lines = [f"{pad}def {_py_ident(stmt.name)}({params}):"]
             if stmt.body:
                 for ch in stmt.body:
                     lines.extend(self.gen_stmt(ch, fn_scope, indent + 1))
@@ -244,6 +258,8 @@ def generate_python(ir: ProgramIR) -> str:
         body_lines.append("    pass")
 
     header: list[str] = ["import builtins as _meme_builtins"]
+    if gen.uses_math:
+        header.append("import math as _meme_math")
     if gen.uses_random:
         header.append("import random as _meme_random")
     header.append("")
@@ -262,6 +278,8 @@ def generate_python(ir: ProgramIR) -> str:
             "def _meme_fmt(val):",
             "    if _meme_builtins.isinstance(val, _meme_builtins.bool):",
             "        return 'true' if val else 'false'",
+            "    if _meme_builtins.isinstance(val, _meme_builtins.float) and val.is_integer():",
+            "        return _meme_builtins.str(_meme_builtins.int(val))",
             "    if _meme_builtins.isinstance(val, _meme_builtins.list):",
             "        return '[' + ', '.join(_meme_fmt(x) for x in val) + ']'",
             "    return _meme_builtins.str(val)",

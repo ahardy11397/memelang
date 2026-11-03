@@ -1,8 +1,10 @@
-"""Optional in-process GGUF local LLM provider via `llama-cpp-python`."""
+"""In-process GGUF local LLM provider and model puller via `llama-cpp-python`."""
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import re
 from pydantic import ValidationError
 
 from memelang.ir.schema import SynthesisResult
@@ -12,17 +14,151 @@ from memelang.llm.base import (
     has_executable_content,
 )
 
+DEFAULT_GGUF_REPO = "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF"
+DEFAULT_GGUF_FILENAME = "qwen2.5-coder-3b-instruct-q4_k_m.gguf"
+
+MEMELANG_GBNF = r"""
+root ::= ws "{" ws "\"items\"" ws ":" ws "[" ws (synthesis-item (ws "," ws synthesis-item)*)? ws "]" ws "}" ws
+synthesis-item ::= ir-stmt | ambiguity-diag
+
+meme-type ::= "\"Int\"" | "\"Float\"" | "\"Bool\"" | "\"String\"" | "\"List<Int>\"" | "\"List<Float>\"" | "\"List<Bool>\"" | "\"List<String>\"" | "\"Void\""
+scalar-type ::= "\"Int\"" | "\"Float\"" | "\"Bool\"" | "\"String\""
+bin-op ::= "\"+\"" | "\"-\"" | "\"*\"" | "\"/\"" | "\"%\"" | "\"==\"" | "\"!=\"" | "\"<\"" | "\"<=\"" | "\">\"" | "\">=\"" | "\"and\"" | "\"or\""
+un-op ::= "\"-\"" | "\"not\""
+sort-dir ::= "\"ascending\"" | "\"descending\""
+opt-source-line ::= (ws "," ws "\"source_line\"" ws ":" ws (pos-int | "null"))?
+
+ir-expr ::= literal-expr | list-literal-expr | var-ref-expr | random-int-expr | random-list-expr | binary-op-expr | unary-op-expr | list-length-expr | list-index-expr | call-expr | read-input-expr
+expr-list ::= "[" ws (ir-expr (ws "," ws ir-expr)*)? ws "]"
+
+literal-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws (
+    "\"value\"" ws ":" ws integer ws "," ws "\"data_type\"" ws ":" ws ("\"Int\"" | "\"Float\"")
+  | "\"value\"" ws ":" ws float-num ws "," ws "\"data_type\"" ws ":" ws "\"Float\""
+  | "\"value\"" ws ":" ws boolean ws "," ws "\"data_type\"" ws ":" ws "\"Bool\""
+  | "\"value\"" ws ":" ws string ws "," ws "\"data_type\"" ws ":" ws "\"String\""
+) ws "}"
+list-literal-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_literal\"" ws "," ws "\"elements\"" ws ":" ws expr-list ws "," ws "\"element_type\"" ws ":" ws scalar-type ws "}"
+var-ref-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"var_ref\"" ws "," ws "\"name\"" ws ":" ws ident-str ws "}"
+random-int-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"random_int\"" ws "," ws "\"min_val\"" ws ":" ws ir-expr ws "," ws "\"max_val\"" ws ":" ws ir-expr ws "}"
+random-list-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"random_list\"" ws "," ws "\"count\"" ws ":" ws ir-expr ws "," ws "\"min_val\"" ws ":" ws ir-expr ws "," ws "\"max_val\"" ws ":" ws ir-expr (ws "," ws "\"implicit_bounds\"" ws ":" ws boolean)? ws "}"
+binary-op-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"binary_op\"" ws "," ws "\"op\"" ws ":" ws bin-op ws "," ws "\"left\"" ws ":" ws ir-expr ws "," ws "\"right\"" ws ":" ws ir-expr ws "}"
+unary-op-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"unary_op\"" ws "," ws "\"op\"" ws ":" ws un-op ws "," ws "\"operand\"" ws ":" ws ir-expr ws "}"
+list-length-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_length\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
+list-index-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_index\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"index\"" ws ":" ws ir-expr ws "}"
+call-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"call\"" ws "," ws "\"func_name\"" ws ":" ws ident-str (ws "," ws "\"args\"" ws ":" ws expr-list)? ws "}"
+read-input-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"read_input\"" (ws "," ws "\"prompt\"" ws ":" ws string)? (ws "," ws "\"target_type\"" ws ":" ws scalar-type)? ws "}"
+
+ir-stmt ::= var-decl-stmt | assign-stmt | sort-stmt | clamp-stmt | filter-stmt | append-stmt | print-stmt | if-stmt | for-each-stmt | for-range-stmt | while-stmt | func-def-stmt | return-stmt
+stmt-list ::= "[" ws (ir-stmt (ws "," ws ir-stmt)*)? ws "]"
+func-param ::= "{" ws "\"name\"" ws ":" ws ident-str ws "," ws "\"param_type\"" ws ":" ws meme-type ws "}"
+param-list ::= "[" ws (func-param (ws "," ws func-param)*)? ws "]"
+
+var-decl-stmt ::= "{" ws "\"op\"" ws ":" ws "\"var_decl\"" ws "," ws "\"name\"" ws ":" ws ident-str ws "," ws "\"var_type\"" ws ":" ws meme-type ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
+assign-stmt ::= "{" ws "\"op\"" ws ":" ws "\"assign\"" ws "," ws "\"name\"" ws ":" ws ident-str ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
+sort-stmt ::= "{" ws "\"op\"" ws ":" ws "\"sort_collection\"" ws "," ws "\"target\"" ws ":" ws ident-str (ws "," ws "\"direction\"" ws ":" ws sort-dir)? opt-source-line ws "}"
+clamp-stmt ::= "{" ws "\"op\"" ws ":" ws "\"clamp_collection\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"min_val\"" ws ":" ws ir-expr ws "," ws "\"max_val\"" ws ":" ws ir-expr opt-source-line ws "}"
+filter-stmt ::= "{" ws "\"op\"" ws ":" ws "\"filter_collection\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"item_var\"" ws ":" ws ident-str ws "," ws "\"predicate\"" ws ":" ws ir-expr opt-source-line ws "}"
+append-stmt ::= "{" ws "\"op\"" ws ":" ws "\"list_append\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
+print-stmt ::= "{" ws "\"op\"" ws ":" ws "\"print_stmt\"" ws "," ws "\"expressions\"" ws ":" ws "[" ws ir-expr (ws "," ws ir-expr)* ws "]" opt-source-line ws "}"
+if-stmt ::= "{" ws "\"op\"" ws ":" ws "\"if_stmt\"" ws "," ws "\"condition\"" ws ":" ws ir-expr ws "," ws "\"then_body\"" ws ":" ws stmt-list (ws "," ws "\"else_body\"" ws ":" ws stmt-list)? opt-source-line ws "}"
+for-each-stmt ::= "{" ws "\"op\"" ws ":" ws "\"for_each\"" ws "," ws "\"item_var\"" ws ":" ws ident-str ws "," ws "\"collection\"" ws ":" ws ident-str ws "," ws "\"body\"" ws ":" ws stmt-list opt-source-line ws "}"
+for-range-stmt ::= "{" ws "\"op\"" ws ":" ws "\"for_range\"" ws "," ws "\"loop_var\"" ws ":" ws ident-str ws "," ws "\"start\"" ws ":" ws ir-expr ws "," ws "\"end\"" ws ":" ws ir-expr ws "," ws "\"body\"" ws ":" ws stmt-list opt-source-line ws "}"
+while-stmt ::= "{" ws "\"op\"" ws ":" ws "\"while_loop\"" ws "," ws "\"condition\"" ws ":" ws ir-expr ws "," ws "\"body\"" ws ":" ws stmt-list opt-source-line ws "}"
+func-def-stmt ::= "{" ws "\"op\"" ws ":" ws "\"func_def\"" ws "," ws "\"name\"" ws ":" ws ident-str (ws "," ws "\"params\"" ws ":" ws param-list)? (ws "," ws "\"return_type\"" ws ":" ws meme-type)? ws "," ws "\"body\"" ws ":" ws stmt-list opt-source-line ws "}"
+return-stmt ::= "{" ws "\"op\"" ws ":" ws "\"return_stmt\"" (ws "," ws "\"value\"" ws ":" ws (ir-expr | "null"))? opt-source-line ws "}"
+
+ambiguity-candidate ::= "{" ws "\"option\"" ws ":" ws pos-int ws "," ws "\"description\"" ws ":" ws string ws "," ws "\"canonical_meme\"" ws ":" ws string ws "," ws "\"replacement_ir\"" ws ":" ws stmt-list (ws "," ws "\"replaces_whole_program\"" ws ":" ws boolean)? ws "}"
+ambiguity-diag ::= "{" ws "\"op\"" ws ":" ws "\"ambiguity\"" ws "," ws "\"statement_id\"" ws ":" ws pos-int (ws "," ws "\"source_line\"" ws ":" ws pos-int)? ws "," ws "\"source_text\"" ws ":" ws string ws "," ws "\"reason\"" ws ":" ws string ws "," ws "\"candidates\"" ws ":" ws "[" ws ambiguity-candidate (ws "," ws ambiguity-candidate)* ws "]" ws "}"
+
+ident-str ::= "\"" [a-zA-Z_] [a-zA-Z0-9_]* "\""
+pos-int ::= [1-9] [0-9]*
+integer ::= "-"? ("0" | [1-9] [0-9]*)
+float-num ::= "-"? ("0" | [1-9] [0-9]*) "." [0-9]+ ([eE] [-+]? [0-9]+)?
+boolean ::= "true" | "false"
+string ::= "\"" ([^"\\\x7F\x00-\x1F] | "\\" (["\\/bfnrt] | "u" [0-9a-fA-F]{4}))* "\""
+ws ::= [ \t\n\r]*
+"""
+
+
+def build_llama_grammar():
+    try:
+        from llama_cpp import LlamaGrammar  # type: ignore[import-not-found]
+    except ImportError as exc:
+        raise LLMProviderError(
+            "llama-cpp-python is not installed. Install with: `uv sync --extra local-gguf`"
+        ) from exc
+    return LlamaGrammar.from_string(MEMELANG_GBNF, verbose=False)
+
+
+def get_model_cache_dir() -> Path:
+    env_dir = os.environ.get("MEME_MODEL_DIR", "").strip()
+    if env_dir:
+        return Path(env_dir)
+    return Path.home() / ".cache" / "memelang" / "models"
+
+
+def find_cached_gguf(model_dir: Path | None = None) -> Path | None:
+    target_dir = model_dir or get_model_cache_dir()
+    if not target_dir.exists():
+        return None
+    preferred = target_dir / DEFAULT_GGUF_FILENAME
+    if preferred.is_file():
+        return preferred
+    ggufs = sorted(target_dir.glob("*.gguf"))
+    return ggufs[0] if ggufs else None
+
+
+def pull_gguf_model(
+    repo_id: str = DEFAULT_GGUF_REPO,
+    filename: str = DEFAULT_GGUF_FILENAME,
+    model_dir: Path | None = None,
+) -> Path:
+    target_dir = model_dir or get_model_cache_dir()
+    target_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        from huggingface_hub import hf_hub_download  # type: ignore[import-not-found]
+    except ImportError as exc:
+        raise LLMProviderError(
+            "huggingface-hub is not installed. Install with: `uv sync --extra local-gguf`"
+        ) from exc
+
+    try:
+        downloaded = hf_hub_download(
+            repo_id=repo_id,
+            filename=filename,
+            local_dir=str(target_dir),
+        )
+        return Path(downloaded)
+    except Exception as exc:
+        raise LLMProviderError(
+            f"Failed to download `{filename}` from `{repo_id}`: {exc}"
+        ) from exc
+
+
+def _extract_json_object(raw: str) -> str:
+    s = raw.strip()
+    m = re.search(r"```(?:json)?\s*(\{.*\})\s*```", s, flags=re.DOTALL)
+    if m:
+        return m.group(1)
+    start = s.find("{")
+    end = s.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        return s[start : end + 1]
+    return s
+
 
 class LlamaCppProvider:
     def __init__(
         self,
-        model_path: str,
+        model_path: str | Path,
         n_gpu_layers: int = -1,
-        n_ctx: int = 4096,
+        n_ctx: int = 8192,
+        max_tokens: int = 4096,
     ) -> None:
         self.model_path = Path(model_path)
         self.n_gpu_layers = n_gpu_layers
         self.n_ctx = n_ctx
+        self.max_tokens = max_tokens
         self.name = f"llama-cpp:{self.model_path.name}"
         self._llm = None
 
@@ -49,17 +185,17 @@ class LlamaCppProvider:
             return SynthesisResult(items=[])
 
         llm = self._get_llm()
+        grammar = build_llama_grammar()
+        msgs = build_compiler_messages(source_text)
         try:
             resp = llm.create_chat_completion(
-                messages=build_compiler_messages(source_text),
+                messages=msgs,
                 temperature=0.0,
                 seed=42,
-                response_format={
-                    "type": "json_object",
-                    "schema": SynthesisResult.model_json_schema(),
-                },
+                max_tokens=self.max_tokens,
+                grammar=grammar,
             )
-            content = resp["choices"][0]["message"]["content"]
+            content = _extract_json_object(resp["choices"][0]["message"]["content"])
             return SynthesisResult.model_validate_json(content)
         except (KeyError, IndexError, ValueError, ValidationError, RuntimeError) as exc:
             raise LLMProviderError(f"llama.cpp synthesis failed: {exc}") from exc

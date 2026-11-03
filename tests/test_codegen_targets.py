@@ -237,3 +237,94 @@ def test_python_builtin_shadowing_variables(target: TargetLang):
     res = execute_ir(prog, target)
     assert res.returncode == 0, res.stderr
     assert res.stdout == "2\n4\n5\n3\n"
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_read_input_calculator_across_targets(target: TargetLang):
+    from memelang.analyzer.verifier import verify_program
+    from memelang.ir.schema import IfStmt, ReadInputExpr
+    from memelang.runner.executor import program_uses_input
+
+    calc_prog = ProgramIR(
+        statements=[
+            VarDeclStmt(
+                name="num1",
+                var_type="Float",
+                value=ReadInputExpr(prompt="First Number? ", target_type="Float"),
+            ),
+            VarDeclStmt(
+                name="num2",
+                var_type="Float",
+                value=ReadInputExpr(prompt="Second Number? ", target_type="Float"),
+            ),
+            VarDeclStmt(
+                name="operator",
+                var_type="String",
+                value=ReadInputExpr(prompt="Operator? ", target_type="String"),
+            ),
+            IfStmt(
+                condition=BinaryOpExpr(
+                    op="==",
+                    left=VarRefExpr(name="operator"),
+                    right=LiteralExpr(value="*", data_type="String"),
+                ),
+                then_body=[
+                    PrintStmt(
+                        expressions=[
+                            BinaryOpExpr(
+                                op="*",
+                                left=VarRefExpr(name="num1"),
+                                right=VarRefExpr(name="num2"),
+                            )
+                        ]
+                    )
+                ],
+                else_body=[
+                    IfStmt(
+                        condition=BinaryOpExpr(
+                            op="==",
+                            left=VarRefExpr(name="operator"),
+                            right=LiteralExpr(value="%", data_type="String"),
+                        ),
+                        then_body=[
+                            PrintStmt(
+                                expressions=[
+                                    BinaryOpExpr(
+                                        op="%",
+                                        left=VarRefExpr(name="num1"),
+                                        right=VarRefExpr(name="num2"),
+                                    )
+                                ]
+                            )
+                        ],
+                        else_body=[
+                            PrintStmt(
+                                expressions=[
+                                    BinaryOpExpr(
+                                        op="+",
+                                        left=VarRefExpr(name="num1"),
+                                        right=VarRefExpr(name="num2"),
+                                    )
+                                ]
+                            )
+                        ],
+                    )
+                ],
+            ),
+        ]
+    )
+    verify_program(calc_prog)
+    assert program_uses_input(calc_prog) is True
+    assert program_uses_input(ProgramIR(statements=[])) is False
+
+    res_dec = execute_ir(calc_prog, target, stdin_text="6.25\n2\n*\n")
+    assert res_dec.returncode == 0, res_dec.stderr
+    assert res_dec.stdout.strip().endswith("12.5")
+
+    res_mod = execute_ir(calc_prog, target, stdin_text="-7.5\n2\n%\n")
+    assert res_mod.returncode == 0, res_mod.stderr
+    assert res_mod.stdout.strip().endswith("-1.5")
+
+    res_whole = execute_ir(calc_prog, target, stdin_text="5\n3\n+\n")
+    assert res_whole.returncode == 0, res_whole.stderr
+    assert res_whole.stdout.strip().endswith("8")

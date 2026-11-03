@@ -15,9 +15,15 @@ from memelang.analyzer.verifier import (
 from memelang.codegen import TargetLang, generate_code
 from memelang.ir.canonical import to_canonical_meme
 from memelang.ir.schema import AmbiguityDiagnostic, ProgramIR
-from memelang.llm import LLMProviderError, get_provider
+from memelang.llm import (
+    DEFAULT_GGUF_FILENAME,
+    DEFAULT_GGUF_REPO,
+    LLMProviderError,
+    get_provider,
+    pull_gguf_model,
+)
 from memelang.lockfile.manager import LockfileManager, LockfileResolutionError
-from memelang.runner.executor import execute_ir
+from memelang.runner.executor import execute_ir, program_uses_input
 
 
 def _compute_source_key(source_path: Path) -> str:
@@ -223,6 +229,27 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     _add_shared_args(p_explain)
 
+    # pull
+    p_pull = subparsers.add_parser(
+        "pull", help="Download the default local 3B GGUF model for offline compilation"
+    )
+    p_pull.add_argument(
+        "--repo",
+        default=DEFAULT_GGUF_REPO,
+        help=f"Hugging Face repo ID (default: {DEFAULT_GGUF_REPO})",
+    )
+    p_pull.add_argument(
+        "--filename",
+        default=DEFAULT_GGUF_FILENAME,
+        help=f"GGUF filename (default: {DEFAULT_GGUF_FILENAME})",
+    )
+    p_pull.add_argument(
+        "--model-dir",
+        type=Path,
+        default=None,
+        help="Target directory for cached GGUF weights (default: ~/.cache/memelang/models)",
+    )
+
     return parser
 
 
@@ -231,6 +258,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
+        if args.command == "pull":
+            print(f"Downloading {args.filename} from {args.repo}...", flush=True)
+            saved_path = pull_gguf_model(
+                repo_id=args.repo,
+                filename=args.filename,
+                model_dir=args.model_dir,
+            )
+            print(f"Ready: {saved_path}")
+            return 0
+
         resolutions = _parse_resolve_args(getattr(args, "resolve", None))
         interactive = bool(getattr(args, "interactive", False))
 
@@ -269,7 +306,8 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.command == "run":
-            exec_res = execute_ir(program, target)
+            use_interactive = sys.stdin.isatty() and program_uses_input(program)
+            exec_res = execute_ir(program, target, interactive_io=use_interactive)
             if exec_res.stdout:
                 sys.stdout.write(exec_res.stdout)
             if exec_res.stderr:

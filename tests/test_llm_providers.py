@@ -172,3 +172,62 @@ def test_missing_gemini_key_or_gguf_raises_provider_error(monkeypatch: pytest.Mo
     with pytest.raises(LLMProviderError):
         gguf_prov = get_provider("llama-cpp:/nonexistent/model.gguf")
         gguf_prov.synthesize('print "hello"')
+
+
+def test_auto_and_bare_llama_cpp_discover_cached_gguf(tmp_path, monkeypatch: pytest.MonkeyPatch):
+    from memelang.llm.llama_cpp import LlamaCppProvider
+
+    monkeypatch.delenv("MEME_PROVIDER", raising=False)
+    monkeypatch.setenv("MEME_MODEL_DIR", str(tmp_path))
+
+    # When empty and no Ollama running, bare `llama-cpp` errors clearly
+    with pytest.raises(LLMProviderError) as exc_empty:
+        get_provider("llama-cpp")
+    assert "meme pull" in str(exc_empty.value)
+
+    # Create a fake cached GGUF file and verify both `auto` and `llama-cpp` pick it up
+    fake_gguf = tmp_path / "qwen2.5-coder-3b-instruct-q4_k_m.gguf"
+    fake_gguf.write_bytes(b"GGUF")
+
+    p_auto = get_provider("auto")
+    assert isinstance(p_auto, LlamaCppProvider)
+    assert p_auto.model_path == fake_gguf
+
+    p_bare = get_provider("llama-cpp")
+    assert isinstance(p_bare, LlamaCppProvider)
+    assert p_bare.model_path == fake_gguf
+
+
+def test_memelang_gbnf_grammar_allows_multiline_and_passes_to_llama_cpp(tmp_path):
+    from memelang.llm.llama_cpp import LlamaCppProvider, MEMELANG_GBNF, build_llama_grammar
+
+    assert "[ \\t\\n\\r]*" in MEMELANG_GBNF
+    grammar = build_llama_grammar()
+    assert grammar is not None
+
+    fake_gguf = tmp_path / "model.gguf"
+    fake_gguf.write_bytes(b"GGUF")
+    prov = LlamaCppProvider(fake_gguf)
+
+    captured_kwargs: dict = {}
+
+    class FakeLlama:
+        def create_chat_completion(self, **kwargs):
+            captured_kwargs.update(kwargs)
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "content": '{\n  "items": [\n    {\n      "op": "print_stmt",\n      "expressions": [\n        {"expr_type": "literal", "value": "ok", "data_type": "String"}\n      ]\n    }\n  ]\n}'
+                        }
+                    }
+                ]
+            }
+
+    prov._llm = FakeLlama()
+    res = prov.synthesize('print "ok"')
+    assert len(res.items) == 1
+    assert "grammar" in captured_kwargs
+    assert captured_kwargs["grammar"] is not None
+    assert "response_format" not in captured_kwargs
+

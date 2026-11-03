@@ -55,6 +55,25 @@ def _escape_cpp_str(val: str) -> str:
     return "".join(out)
 
 
+_CPP_KEYWORDS = {
+    "alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand", "bitor",
+    "bool", "break", "case", "catch", "char", "char8_t", "char16_t", "char32_t",
+    "class", "compl", "concept", "const", "consteval", "constexpr", "constinit",
+    "const_cast", "continue", "co_await", "co_return", "co_yield", "decltype",
+    "default", "delete", "do", "double", "dynamic_cast", "else", "enum", "explicit",
+    "export", "extern", "false", "float", "for", "friend", "goto", "if", "inline",
+    "int", "long", "mutable", "namespace", "new", "noexcept", "not", "not_eq",
+    "nullptr", "operator", "or", "or_eq", "private", "protected", "public",
+    "register", "reinterpret_cast", "requires", "return", "short", "signed",
+    "sizeof", "static", "static_assert", "static_cast", "struct", "switch",
+    "template", "this", "thread_local", "throw", "true", "try", "typedef",
+    "typeid", "typename", "union", "unsigned", "using", "virtual", "void",
+    "volatile", "wchar_t", "while", "xor", "xor_eq", "main",
+}
+
+
+def _cpp_ident(name: str) -> str:
+    return f"meme_{name}" if name in _CPP_KEYWORDS or name.startswith("_meme_") else name
 def _cpp_type(meme_type: MemeType) -> str:
     mapping = {
         "Int": "long long",
@@ -122,7 +141,7 @@ class _CppGen:
             return f"std::vector<{el_cpp}>{{{inner}}}"
 
         if isinstance(expr, VarRefExpr):
-            return expr.name
+            return _cpp_ident(expr.name)
 
         if isinstance(expr, RandomIntExpr):
             self.uses_random = True
@@ -143,6 +162,8 @@ class _CppGen:
         if isinstance(expr, BinaryOpExpr):
             left = self.gen_expr(expr.left, scope)
             right = self.gen_expr(expr.right, scope)
+            if expr.op == "%" and self.infer_type(expr.left, scope) == "Float":
+                return f"std::fmod({left}, {right})"
             op_map = {"and": "&&", "or": "||"}
             cpp_op = op_map.get(expr.op, expr.op)
             return f"({left} {cpp_op} {right})"
@@ -158,7 +179,7 @@ class _CppGen:
 
         if isinstance(expr, CallExpr):
             args = ", ".join(self.gen_expr(a, scope) for a in expr.args)
-            return f"{expr.func_name}({args})"
+            return f"{_cpp_ident(expr.func_name)}({args})"
 
         if isinstance(expr, ReadInputExpr):
             self.uses_input = True
@@ -181,19 +202,21 @@ class _CppGen:
         if isinstance(stmt, VarDeclStmt):
             val_code = self.gen_expr(stmt.value, scope)
             scope[stmt.name] = stmt.var_type
-            return [f"{pad}{_cpp_type(stmt.var_type)} {stmt.name} = {val_code};"]
+            return [f"{pad}{_cpp_type(stmt.var_type)} {_cpp_ident(stmt.name)} = {val_code};"]
 
         if isinstance(stmt, AssignStmt):
-            return [f"{pad}{stmt.name} = {self.gen_expr(stmt.value, scope)};"]
+            return [f"{pad}{_cpp_ident(stmt.name)} = {self.gen_expr(stmt.value, scope)};"]
 
         if isinstance(stmt, SortCollectionStmt):
+            tgt = _cpp_ident(stmt.target)
             if stmt.direction == "ascending":
-                return [f"{pad}std::sort({stmt.target}.begin(), {stmt.target}.end());"]
+                return [f"{pad}std::sort({tgt}.begin(), {tgt}.end());"]
             return [
-                f"{pad}std::sort({stmt.target}.begin(), {stmt.target}.end(), std::greater<>{{}});"
+                f"{pad}std::sort({tgt}.begin(), {tgt}.end(), std::greater<>{{}});"
             ]
 
         if isinstance(stmt, ClampCollectionStmt):
+            tgt = _cpp_ident(stmt.target)
             lo = self.gen_expr(stmt.min_val, scope)
             hi = self.gen_expr(stmt.max_val, scope)
             return [
@@ -201,25 +224,27 @@ class _CppGen:
                 f"{pad}    auto _lo = {lo};",
                 f"{pad}    auto _hi = {hi};",
                 f"{pad}    if (_lo <= _hi) {{",
-                f"{pad}        for (auto& _x : {stmt.target}) {{ _x = std::clamp(_x, _lo, _hi); }}",
+                f"{pad}        for (auto& _x : {tgt}) {{ _x = std::clamp(_x, _lo, _hi); }}",
                 f"{pad}    }}",
                 f"{pad}}}",
             ]
 
         if isinstance(stmt, FilterCollectionStmt):
+            tgt = _cpp_ident(stmt.target)
+            iv = _cpp_ident(stmt.item_var)
             sub = dict(scope)
             col_t = scope.get(stmt.target, "List<Int>")
             el_mtype = col_t[5:-1] if col_t.startswith("List<") else "Int"
             sub[stmt.item_var] = el_mtype  # type: ignore[assignment]
             pred = self.gen_expr(stmt.predicate, sub)
             return [
-                f"{pad}std::erase_if({stmt.target}, [&](const {_cpp_type(el_mtype)}& {stmt.item_var}) {{",  # type: ignore[arg-type]
+                f"{pad}std::erase_if({tgt}, [&](const {_cpp_type(el_mtype)}& {iv}) {{",  # type: ignore[arg-type]
                 f"{pad}    return !({pred});",
                 f"{pad}}});",
             ]
 
         if isinstance(stmt, ListAppendStmt):
-            return [f"{pad}{stmt.target}.push_back({self.gen_expr(stmt.value, scope)});"]
+            return [f"{pad}{_cpp_ident(stmt.target)}.push_back({self.gen_expr(stmt.value, scope)});"]
 
         if isinstance(stmt, PrintStmt):
             parts: list[str] = []
@@ -249,7 +274,7 @@ class _CppGen:
             el_mtype = col_t[5:-1] if col_t.startswith("List<") else "Int"
             sub[stmt.item_var] = el_mtype  # type: ignore[assignment]
             lines = [
-                f"{pad}for ({_cpp_type(el_mtype)} {stmt.item_var} : {stmt.collection}) {{"  # type: ignore[arg-type]
+                f"{pad}for ({_cpp_type(el_mtype)} {_cpp_ident(stmt.item_var)} : {_cpp_ident(stmt.collection)}) {{"  # type: ignore[arg-type]
             ]
             for ch in stmt.body:
                 lines.extend(self.gen_stmt(ch, sub, indent + 1))
@@ -259,10 +284,11 @@ class _CppGen:
         if isinstance(stmt, ForRangeStmt):
             sub = dict(scope)
             sub[stmt.loop_var] = "Int"
+            lv = _cpp_ident(stmt.loop_var)
             s = self.gen_expr(stmt.start, scope)
             e = self.gen_expr(stmt.end, scope)
             lines = [
-                f"{pad}for (long long {stmt.loop_var} = ({s}); {stmt.loop_var} <= ({e}); ++{stmt.loop_var}) {{"
+                f"{pad}for (long long {lv} = ({s}); {lv} <= ({e}); ++{lv}) {{"
             ]
             for ch in stmt.body:
                 lines.extend(self.gen_stmt(ch, sub, indent + 1))
@@ -286,9 +312,9 @@ class _CppGen:
 
     def gen_func(self, fn: FuncDefStmt) -> list[str]:
         self.func_returns[fn.name] = fn.return_type
-        params = ", ".join(f"{_cpp_type(p.param_type)} {p.name}" for p in fn.params)
+        params = ", ".join(f"{_cpp_type(p.param_type)} {_cpp_ident(p.name)}" for p in fn.params)
         fn_scope = {p.name: p.param_type for p in fn.params}
-        lines = [f"{_cpp_type(fn.return_type)} {fn.name}({params}) {{"]
+        lines = [f"{_cpp_type(fn.return_type)} {_cpp_ident(fn.name)}({params}) {{"]
         for ch in fn.body:
             lines.extend(self.gen_stmt(ch, fn_scope, indent=1))
         lines.append("}")
@@ -318,6 +344,7 @@ def generate_cpp(ir: ProgramIR) -> str:
 
     headers: list[str] = [
         "#include <algorithm>",
+        "#include <cmath>",
         "#include <iostream>",
         "#include <sstream>",
         "#include <string>",

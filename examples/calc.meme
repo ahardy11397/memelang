@@ -1,0 +1,8 @@
+this runs in the shell
+
+define num1 as input from user "First Number?"
+define num2 as input from user "Second Number?"
+define operator as input from user "Operator?"
+
+print result of num1 operator num2
+

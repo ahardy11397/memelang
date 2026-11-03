@@ -291,19 +291,12 @@ class _StaticChecker:
                     f"Incompatible operand types for `+`: {left_t} and {right_t}", stmt_idx
                 )
 
-            if expr.op in ("-", "*", "/"):
+            if expr.op in ("-", "*", "/", "%"):
                 if left_t == right_t and left_t in ("Int", "Float"):
                     return left_t
                 raise StaticVerificationError(
                     f"Incompatible operand types for `{expr.op}`: {left_t} and {right_t}",
                     stmt_idx,
-                )
-
-            if expr.op == "%":
-                if left_t == "Int" and right_t == "Int":
-                    return "Int"
-                raise StaticVerificationError(
-                    f"Modulo `%` requires Int operands, got {left_t} and {right_t}", stmt_idx
                 )
 
             if expr.op in ("<", "<=", ">", ">="):

@@ -15,7 +15,7 @@ dependencies = [
 
 [project.optional-dependencies]
 gemini = ["google-genai>=1.0"]
-local-gguf = ["llama-cpp-python>=0.3"]
+local-gguf = ["llama-cpp-python>=0.3", "huggingface-hub>=0.25"]
 
 [project.scripts]
 meme = "memelang.cli:main"

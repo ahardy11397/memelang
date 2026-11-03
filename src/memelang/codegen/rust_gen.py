@@ -55,6 +55,20 @@ def _escape_rust_str(val: str) -> str:
     return "".join(out)
 
 
+_RUST_KEYWORDS = {
+    "as", "async", "await", "break", "const", "continue", "crate", "dyn", "else",
+    "enum", "extern", "false", "fn", "for", "if", "impl", "in", "let", "loop",
+    "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self",
+    "static", "struct", "super", "trait", "true", "type", "unsafe", "use",
+    "where", "while", "abstract", "become", "box", "do", "final", "gen", "macro",
+    "override", "priv", "try", "typeof", "unsized", "virtual", "yield", "main",
+}
+
+
+def _rust_ident(name: str) -> str:
+    return f"meme_{name}" if name in _RUST_KEYWORDS or name.startswith("_meme_") else name
+
+
 def _rust_type(meme_type: MemeType) -> str:
     mapping = {
         "Int": "i64",
@@ -124,10 +138,11 @@ class _RustGen:
             return f"vec![{inner}]"
 
         if isinstance(expr, VarRefExpr):
+            ident = _rust_ident(expr.name)
             t = scope.get(expr.name, "Int")
             if t == "String" or t.startswith("List<"):
-                return f"{expr.name}.clone()"
-            return expr.name
+                return f"{ident}.clone()"
+            return ident
 
         if isinstance(expr, RandomIntExpr):
             self.uses_random = True
@@ -166,7 +181,7 @@ class _RustGen:
 
         if isinstance(expr, CallExpr):
             args = ", ".join(self.gen_expr(a, scope) for a in expr.args)
-            return f"{expr.func_name}({args})"
+            return f"{_rust_ident(expr.func_name)}({args})"
 
         if isinstance(expr, ReadInputExpr):
             self.uses_input = True
@@ -196,44 +211,48 @@ class _RustGen:
         if isinstance(stmt, VarDeclStmt):
             val_code = self.gen_expr(stmt.value, scope)
             scope[stmt.name] = stmt.var_type
-            return [f"{pad}let mut {stmt.name}: {_rust_type(stmt.var_type)} = {val_code};"]
+            return [f"{pad}let mut {_rust_ident(stmt.name)}: {_rust_type(stmt.var_type)} = {val_code};"]
 
         if isinstance(stmt, AssignStmt):
-            return [f"{pad}{stmt.name} = {self.gen_expr(stmt.value, scope)};"]
+            return [f"{pad}{_rust_ident(stmt.name)} = {self.gen_expr(stmt.value, scope)};"]
 
         if isinstance(stmt, SortCollectionStmt):
+            tgt = _rust_ident(stmt.target)
             if stmt.direction == "ascending":
                 return [
-                    f"{pad}{stmt.target}.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));"
+                    f"{pad}{tgt}.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));"
                 ]
             return [
-                f"{pad}{stmt.target}.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));"
+                f"{pad}{tgt}.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));"
             ]
 
         if isinstance(stmt, ClampCollectionStmt):
+            tgt = _rust_ident(stmt.target)
             lo = self.gen_expr(stmt.min_val, scope)
             hi = self.gen_expr(stmt.max_val, scope)
             return [
                 f"{pad}let (_lo, _hi) = ({lo}, {hi});",
-                f"{pad}for _x in {stmt.target}.iter_mut() {{",
+                f"{pad}for _x in {tgt}.iter_mut() {{",
                 f"{pad}    if *_x < _lo {{ *_x = _lo; }} else if *_x > _hi {{ *_x = _hi; }}",
                 f"{pad}}}",
             ]
 
         if isinstance(stmt, FilterCollectionStmt):
+            tgt = _rust_ident(stmt.target)
+            iv = _rust_ident(stmt.item_var)
             sub = dict(scope)
             col_t = scope.get(stmt.target, "List<Int>")
             sub[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[assignment]
             pred = self.gen_expr(stmt.predicate, sub)
             return [
-                f"{pad}{stmt.target} = {stmt.target}.into_iter().filter(|_item_ref| {{",
-                f"{pad}    let {stmt.item_var} = _item_ref.clone();",
+                f"{pad}{tgt} = {tgt}.into_iter().filter(|_item_ref| {{",
+                f"{pad}    let {iv} = _item_ref.clone();",
                 f"{pad}    {pred}",
                 f"{pad}}}).collect();",
             ]
 
         if isinstance(stmt, ListAppendStmt):
-            return [f"{pad}{stmt.target}.push({self.gen_expr(stmt.value, scope)});"]
+            return [f"{pad}{_rust_ident(stmt.target)}.push({self.gen_expr(stmt.value, scope)});"]
 
         if isinstance(stmt, PrintStmt):
             if len(stmt.expressions) == 1:
@@ -259,7 +278,7 @@ class _RustGen:
             sub = dict(scope)
             col_t = scope.get(stmt.collection, "List<Int>")
             sub[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[assignment]
-            lines = [f"{pad}for {stmt.item_var} in {stmt.collection}.clone().into_iter() {{"]
+            lines = [f"{pad}for {_rust_ident(stmt.item_var)} in {_rust_ident(stmt.collection)}.clone().into_iter() {{"]
             for ch in stmt.body:
                 lines.extend(self.gen_stmt(ch, sub, indent + 1))
             lines.append(f"{pad}}}")
@@ -270,7 +289,7 @@ class _RustGen:
             sub[stmt.loop_var] = "Int"
             s = self.gen_expr(stmt.start, scope)
             e = self.gen_expr(stmt.end, scope)
-            lines = [f"{pad}for {stmt.loop_var} in ({s})..=({e}) {{"]
+            lines = [f"{pad}for {_rust_ident(stmt.loop_var)} in ({s})..=({e}) {{"]
             for ch in stmt.body:
                 lines.extend(self.gen_stmt(ch, sub, indent + 1))
             lines.append(f"{pad}}}")
@@ -293,10 +312,10 @@ class _RustGen:
 
     def gen_func(self, fn: FuncDefStmt) -> list[str]:
         self.func_returns[fn.name] = fn.return_type
-        params = ", ".join(f"mut {p.name}: {_rust_type(p.param_type)}" for p in fn.params)
+        params = ", ".join(f"mut {_rust_ident(p.name)}: {_rust_type(p.param_type)}" for p in fn.params)
         ret = f" -> {_rust_type(fn.return_type)}" if fn.return_type != "Void" else ""
         fn_scope = {p.name: p.param_type for p in fn.params}
-        lines = [f"fn {fn.name}({params}){ret} {{"]
+        lines = [f"fn {_rust_ident(fn.name)}({params}){ret} {{"]
         for ch in fn.body:
             lines.extend(self.gen_stmt(ch, fn_scope, indent=1))
         lines.append("}")

@@ -30,12 +30,16 @@
 Requires Python 3.13+ and [`uv`](https://docs.astral.sh/uv/) (plus `rustc` and `g++` if running Rust/C++ targets).
 
 ```bash
-uv sync --dev
+# Install with built-in local GGUF inference (`llama-cpp-python` + `huggingface-hub`):
+uv sync --dev --extra local-gguf
 
-# Run a structured English program across Python, Rust, and C++20:
+# Download the default ~2 GB local 3B compiler model (`Qwen2.5-Coder-3B-Instruct` Q4_K_M):
+uv run meme pull
+
+# Run plain-English programs across Python 3, Rust, and C++20:
+uv run meme run examples/hello.meme --target rust
+uv run meme run examples/calc.meme --target cpp
 uv run meme run examples/random_sort_structured.meme --target python
-uv run meme run examples/random_sort_structured.meme --target rust
-uv run meme run examples/random_sort_structured.meme --target cpp
 
 # Run FizzBuzz compiled to native C++20:
 uv run meme run examples/fizzbuzz.meme --target cpp
@@ -84,21 +88,24 @@ uv run meme explain examples/random_sort_ambiguous.meme
 
 ## Local & Cloud LLM Providers (`--provider`)
 
-By default (`--provider auto`), `meme` uses `MEME_PROVIDER` if set, probes local Ollama (`http://127.0.0.1:11434`), and falls back cleanly to the built-in zero-dependency `heuristic` frontend.
+By default (`--provider auto`), `meme` checks `MEME_PROVIDER`, auto-discovers any cached GGUF model in `~/.cache/memelang/models/` (or `MEME_MODEL_DIR`), probes local Ollama (`http://127.0.0.1:11434`), and falls back cleanly to the built-in zero-dependency `heuristic` frontend.
 
-* **Local Ollama (Recommended for 6GB VRAM GPUs like GTX 1660):**
+* **Zero-Config In-Process GGUF (Recommended — ~2 GB VRAM / CPU):**
   ```bash
-  ollama pull qwen2.5-coder:3b   # ~2.0 GB VRAM in Q4_K_M
+  uv sync --extra local-gguf
+  uv run meme pull
+  uv run meme run examples/calc.meme --target rust
+  # Or pass a custom GGUF path explicitly:
+  uv run meme compile app.meme --provider llama-cpp:/path/to/model.gguf --target python
+  ```
+* **Local Ollama:**
+  ```bash
+  ollama pull qwen2.5-coder:3b
   uv run meme run examples/fizzbuzz.meme --provider ollama:qwen2.5-coder:3b --target rust
   ```
 * **OpenAI-Compatible Local Server (`llama-server`, LM Studio, vLLM):**
   ```bash
   OPENAI_BASE_URL=http://127.0.0.1:8080/v1 uv run meme compile app.meme --provider openai-local:qwen2.5-coder-3b --target cpp
-  ```
-* **In-Process GGUF (`llama-cpp-python`):**
-  ```bash
-  uv sync --extra local-gguf
-  uv run meme compile app.meme --provider llama-cpp:/path/to/qwen2.5-coder-3b-q4_k_m.gguf --target python
   ```
 * **Cloud Fallback (Google Gemini API):**
   ```bash
