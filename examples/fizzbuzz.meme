@@ -1,0 +1,15 @@
+# FizzBuzz in Structured English
+function is_divisible(n: Int, d: Int) -> Bool:
+    return n % d == 0
+
+for i from 1 to 20:
+    if is_divisible(i, 15):
+        print "FizzBuzz"
+    else:
+        if is_divisible(i, 3):
+            print "Fizz"
+        else:
+            if is_divisible(i, 5):
+                print "Buzz"
+            else:
+                print i

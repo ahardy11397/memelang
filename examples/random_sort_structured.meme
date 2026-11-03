@@ -1,0 +1,4 @@
+# Canonical Structured English example
+define list numbers as 10 random integers between 1 and 100
+sort numbers ascending
+print numbers

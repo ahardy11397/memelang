@@ -1,0 +1,5 @@
+# Ambiguous freeform English example from the design prompt
+array = 10.random numbers
+
+for each number in array
+    sort from 1 to 10
