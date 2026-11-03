@@ -201,3 +201,179 @@ def test_function_signature_and_return_type_checking():
     )
     with pytest.raises(StaticVerificationError):
         verify_synthesis(bad_call)
+
+
+def test_function_scope_isolation_and_complete_return_paths():
+    from memelang.ir.schema import IfStmt, WhileStmt
+
+    # 1. Function referencing outer main variable must fail
+    leak_outer = SynthesisResult(
+        items=[
+            VarDeclStmt(name="outer_x", var_type="Int", value=LiteralExpr(value=10, data_type="Int")),
+            FuncDefStmt(
+                name="bad_read",
+                params=[],
+                return_type="Int",
+                body=[ReturnStmt(value=VarRefExpr(name="outer_x"))],
+            ),
+        ]
+    )
+    with pytest.raises(StaticVerificationError):
+        verify_synthesis(leak_outer)
+
+    # 2. Duplicate parameter names must fail
+    dup_params = SynthesisResult(
+        items=[
+            FuncDefStmt(
+                name="dup",
+                params=[FuncParam(name="a", param_type="Int"), FuncParam(name="a", param_type="Int")],
+                return_type="Int",
+                body=[ReturnStmt(value=VarRefExpr(name="a"))],
+            )
+        ]
+    )
+    with pytest.raises(StaticVerificationError):
+        verify_synthesis(dup_params)
+
+    # 3. Partial return path (`if` without `else`) must fail
+    partial_if = SynthesisResult(
+        items=[
+            FuncDefStmt(
+                name="maybe_ret",
+                params=[FuncParam(name="x", param_type="Int")],
+                return_type="Int",
+                body=[
+                    IfStmt(
+                        condition=BinaryOpExpr(
+                            op=">",
+                            left=VarRefExpr(name="x"),
+                            right=LiteralExpr(value=0, data_type="Int"),
+                        ),
+                        then_body=[ReturnStmt(value=LiteralExpr(value=1, data_type="Int"))],
+                        else_body=[],
+                    )
+                ],
+            )
+        ]
+    )
+    with pytest.raises(StaticVerificationError):
+        verify_synthesis(partial_if)
+
+    # 4. Return only inside `while` loop must fail
+    loop_only_ret = SynthesisResult(
+        items=[
+            FuncDefStmt(
+                name="loop_ret",
+                params=[FuncParam(name="x", param_type="Int")],
+                return_type="Int",
+                body=[
+                    WhileStmt(
+                        condition=LiteralExpr(value=True, data_type="Bool"),
+                        body=[ReturnStmt(value=LiteralExpr(value=1, data_type="Int"))],
+                    )
+                ],
+            )
+        ]
+    )
+    with pytest.raises(StaticVerificationError):
+        verify_synthesis(loop_only_ret)
+
+    # 5. Complete `if`/`else` returning in both branches succeeds
+    complete_if = SynthesisResult(
+        items=[
+            FuncDefStmt(
+                name="abs_val",
+                params=[FuncParam(name="x", param_type="Int")],
+                return_type="Int",
+                body=[
+                    IfStmt(
+                        condition=BinaryOpExpr(
+                            op=">=",
+                            left=VarRefExpr(name="x"),
+                            right=LiteralExpr(value=0, data_type="Int"),
+                        ),
+                        then_body=[ReturnStmt(value=VarRefExpr(name="x"))],
+                        else_body=[
+                            ReturnStmt(
+                                value=BinaryOpExpr(
+                                    op="-",
+                                    left=LiteralExpr(value=0, data_type="Int"),
+                                    right=VarRefExpr(name="x"),
+                                )
+                            )
+                        ],
+                    )
+                ],
+            )
+        ]
+    )
+    assert verify_synthesis(complete_if).is_unambiguous is True
+
+
+def test_same_scope_redeclaration_raises():
+    redecl = SynthesisResult(
+        items=[
+            VarDeclStmt(name="x", var_type="Int", value=LiteralExpr(value=1, data_type="Int")),
+            VarDeclStmt(name="x", var_type="String", value=LiteralExpr(value="two", data_type="String")),
+        ]
+    )
+    with pytest.raises(StaticVerificationError) as exc_info:
+        verify_synthesis(redecl)
+    assert "already declared" in str(exc_info.value)
+
+
+def test_inverted_literal_bounds_and_negative_index_raise():
+    from memelang.ir.schema import ClampCollectionStmt, ListIndexExpr, ListLiteralExpr
+
+    inverted_rand = SynthesisResult(
+        items=[
+            VarDeclStmt(
+                name="nums",
+                var_type="List<Int>",
+                value=RandomListExpr(
+                    count=LiteralExpr(value=5, data_type="Int"),
+                    min_val=LiteralExpr(value=100, data_type="Int"),
+                    max_val=LiteralExpr(value=1, data_type="Int"),
+                ),
+            )
+        ]
+    )
+    with pytest.raises(StaticVerificationError):
+        verify_synthesis(inverted_rand)
+
+    inverted_clamp = SynthesisResult(
+        items=[
+            VarDeclStmt(
+                name="nums",
+                var_type="List<Int>",
+                value=ListLiteralExpr(elements=[LiteralExpr(value=5, data_type="Int")], element_type="Int"),
+            ),
+            ClampCollectionStmt(
+                target="nums",
+                min_val=LiteralExpr(value=50, data_type="Int"),
+                max_val=LiteralExpr(value=10, data_type="Int"),
+            ),
+        ]
+    )
+    with pytest.raises(StaticVerificationError):
+        verify_synthesis(inverted_clamp)
+
+    neg_idx = SynthesisResult(
+        items=[
+            VarDeclStmt(
+                name="nums",
+                var_type="List<Int>",
+                value=ListLiteralExpr(elements=[LiteralExpr(value=5, data_type="Int")], element_type="Int"),
+            ),
+            VarDeclStmt(
+                name="last",
+                var_type="Int",
+                value=ListIndexExpr(
+                    target=VarRefExpr(name="nums"),
+                    index=LiteralExpr(value=-1, data_type="Int"),
+                ),
+            ),
+        ]
+    )
+    with pytest.raises(StaticVerificationError):
+        verify_synthesis(neg_idx)

@@ -40,6 +40,29 @@ SortDirection = Literal["ascending", "descending"]
 class IRNode(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    @classmethod
+    def model_json_schema(cls, *args, **kwargs) -> dict:  # type: ignore[override]
+        schema = super().model_json_schema(*args, **kwargs)
+
+        def _enforce_discriminators(obj: object) -> None:
+            if isinstance(obj, dict):
+                props = obj.get("properties")
+                if isinstance(props, dict):
+                    req = list(obj.get("required") or [])
+                    for tag in ("op", "expr_type"):
+                        if tag in props and tag not in req:
+                            req.append(tag)
+                    if req:
+                        obj["required"] = req
+                for val in obj.values():
+                    _enforce_discriminators(val)
+            elif isinstance(obj, list):
+                for el in obj:
+                    _enforce_discriminators(el)
+
+        _enforce_discriminators(schema)
+        return schema
+
 
 # --- Expressions ---
 

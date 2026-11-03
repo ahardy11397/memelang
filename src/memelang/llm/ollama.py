@@ -83,7 +83,6 @@ class OpenAILocalProvider:
                 "type": "json_schema",
                 "json_schema": {
                     "name": "SynthesisResult",
-                    "strict": True,
                     "schema": SynthesisResult.model_json_schema(),
                 },
             },

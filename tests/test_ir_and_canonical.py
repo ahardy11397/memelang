@@ -83,6 +83,24 @@ def test_synthesis_result_discriminates_ambiguity_and_exports_json_schema():
     assert SynthesisResult.model_validate_json(res.model_dump_json()) == res
 
 
+def test_json_schema_requires_discriminator_tags():
+    from memelang.llm.base import SYSTEM_PROMPT
+
+    schema = SynthesisResult.model_json_schema()
+    defs = schema.get("$defs", {})
+    assert defs, "Expected $defs in SynthesisResult JSON schema"
+    for def_name, def_schema in defs.items():
+        props = def_schema.get("properties", {})
+        req = def_schema.get("required") or []
+        if "op" in props:
+            assert "op" in req, f"{def_name} missing 'op' in required"
+        if "expr_type" in props:
+            assert "expr_type" in req, f"{def_name} missing 'expr_type' in required"
+
+    assert '"var_decl"' in SYSTEM_PROMPT
+    assert '"ambiguity"' in SYSTEM_PROMPT
+
+
 def test_canonical_formatting_for_all_statements_and_expressions():
     prog = ProgramIR(
         statements=[

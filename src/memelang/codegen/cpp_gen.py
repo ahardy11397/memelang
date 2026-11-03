@@ -151,7 +151,10 @@ class _CppGen:
             return f"static_cast<long long>({self.gen_expr(expr.target, scope)}.size())"
 
         if isinstance(expr, ListIndexExpr):
-            return f"{self.gen_expr(expr.target, scope)}[static_cast<std::size_t>({self.gen_expr(expr.index, scope)})]"
+            indexed = f"{self.gen_expr(expr.target, scope)}.at(static_cast<std::size_t>({self.gen_expr(expr.index, scope)}))"
+            if self.infer_type(expr, scope) == "Bool":
+                return f"static_cast<bool>({indexed})"
+            return indexed
 
         if isinstance(expr, CallExpr):
             args = ", ".join(self.gen_expr(a, scope) for a in expr.args)
@@ -185,8 +188,10 @@ class _CppGen:
 
         if isinstance(stmt, SortCollectionStmt):
             if stmt.direction == "ascending":
-                return [f"{pad}std::ranges::sort({stmt.target});"]
-            return [f"{pad}std::ranges::sort({stmt.target}, std::ranges::greater{{}});"]
+                return [f"{pad}std::sort({stmt.target}.begin(), {stmt.target}.end());"]
+            return [
+                f"{pad}std::sort({stmt.target}.begin(), {stmt.target}.end(), std::greater<>{{}});"
+            ]
 
         if isinstance(stmt, ClampCollectionStmt):
             lo = self.gen_expr(stmt.min_val, scope)
@@ -195,7 +200,9 @@ class _CppGen:
                 f"{pad}{{",
                 f"{pad}    auto _lo = {lo};",
                 f"{pad}    auto _hi = {hi};",
-                f"{pad}    for (auto& _x : {stmt.target}) {{ _x = std::clamp(_x, _lo, _hi); }}",
+                f"{pad}    if (_lo <= _hi) {{",
+                f"{pad}        for (auto& _x : {stmt.target}) {{ _x = std::clamp(_x, _lo, _hi); }}",
+                f"{pad}    }}",
                 f"{pad}}}",
             ]
 

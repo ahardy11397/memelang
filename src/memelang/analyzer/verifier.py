@@ -196,6 +196,22 @@ def _build_loop_collision_ambiguity(
     )
 
 
+def _check_literal_bounds(lo: IRExpr, hi: IRExpr, stmt_idx: int | None) -> None:
+    if (
+        isinstance(lo, LiteralExpr)
+        and isinstance(hi, LiteralExpr)
+        and isinstance(lo.value, (int, float))
+        and isinstance(hi.value, (int, float))
+        and not isinstance(lo.value, bool)
+        and not isinstance(hi.value, bool)
+        and lo.value > hi.value
+    ):
+        raise StaticVerificationError(
+            f"Minimum bound ({lo.value}) cannot exceed maximum bound ({hi.value})",
+            stmt_idx,
+        )
+
+
 class _StaticChecker:
     def __init__(self) -> None:
         self.functions: dict[str, tuple[list[MemeType], MemeType]] = {}
@@ -229,6 +245,7 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"RandomIntExpr bounds must be Int, got ({lo_t}, {hi_t})", stmt_idx
                 )
+            _check_literal_bounds(expr.min_val, expr.max_val, stmt_idx)
             return "Int"
 
         if isinstance(expr, RandomListExpr):
@@ -240,6 +257,7 @@ class _StaticChecker:
                     f"RandomListExpr count and bounds must be Int, got ({c_t}, {lo_t}, {hi_t})",
                     stmt_idx,
                 )
+            _check_literal_bounds(expr.min_val, expr.max_val, stmt_idx)
             return "List<Int>"
 
         if isinstance(expr, UnaryOpExpr):
@@ -332,6 +350,15 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"List index must be Int, got {idx_t}", stmt_idx
                 )
+            if (
+                isinstance(expr.index, LiteralExpr)
+                and isinstance(expr.index.value, int)
+                and not isinstance(expr.index.value, bool)
+                and expr.index.value < 0
+            ):
+                raise StaticVerificationError(
+                    f"Negative list index ({expr.index.value}) is not allowed", stmt_idx
+                )
             return elem_t
 
         if isinstance(expr, CallExpr):
@@ -371,11 +398,15 @@ class _StaticChecker:
         stmt_idx: int | None,
         expected_return: MemeType | None = None,
     ) -> bool:
-        """Validates `stmt`; returns True if statement guarantees/contains a return."""
+        """Validates `stmt`; returns True iff statement guarantees a return on all paths."""
         if isinstance(stmt, VarDeclStmt):
             if stmt.var_type == "Void":
                 raise StaticVerificationError(
                     f"Variable `{stmt.name}` cannot have type Void", stmt_idx
+                )
+            if stmt.name in scope.symbols:
+                raise StaticVerificationError(
+                    f"Variable `{stmt.name}` is already declared in this scope", stmt_idx
                 )
             val_t = self.infer_expr_type(stmt.value, scope, stmt_idx)
             if val_t != stmt.var_type:
@@ -430,6 +461,7 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"Clamp bounds ({lo_t}, {hi_t}) must match element type {elem_t}", stmt_idx
                 )
+            _check_literal_bounds(stmt.min_val, stmt.max_val, stmt_idx)
             return False
 
         if isinstance(stmt, FilterCollectionStmt):
@@ -484,16 +516,17 @@ class _StaticChecker:
                     f"`if` condition must evaluate to Bool, got {cond_t}", stmt_idx
                 )
             then_scope = _Scope(parent=scope)
-            has_ret = False
+            then_ret = False
             for child in stmt.then_body:
-                has_ret = self.check_stmt(child, then_scope, stmt_idx, expected_return) or has_ret
+                then_ret = self.check_stmt(child, then_scope, stmt_idx, expected_return) or then_ret
+            else_ret = False
             if stmt.else_body:
                 else_scope = _Scope(parent=scope)
                 for child in stmt.else_body:
-                    has_ret = (
-                        self.check_stmt(child, else_scope, stmt_idx, expected_return) or has_ret
+                    else_ret = (
+                        self.check_stmt(child, else_scope, stmt_idx, expected_return) or else_ret
                     )
-            return has_ret
+            return then_ret and bool(stmt.else_body) and else_ret
 
         if isinstance(stmt, ForEachStmt):
             col_t = scope.lookup(stmt.collection)
@@ -508,10 +541,9 @@ class _StaticChecker:
                 )
             loop_scope = _Scope(parent=scope)
             loop_scope.define(stmt.item_var, elem_t)
-            has_ret = False
             for child in stmt.body:
-                has_ret = self.check_stmt(child, loop_scope, stmt_idx, expected_return) or has_ret
-            return has_ret
+                self.check_stmt(child, loop_scope, stmt_idx, expected_return)
+            return False
 
         if isinstance(stmt, ForRangeStmt):
             s_t = self.infer_expr_type(stmt.start, scope, stmt_idx)
@@ -522,10 +554,9 @@ class _StaticChecker:
                 )
             loop_scope = _Scope(parent=scope)
             loop_scope.define(stmt.loop_var, "Int")
-            has_ret = False
             for child in stmt.body:
-                has_ret = self.check_stmt(child, loop_scope, stmt_idx, expected_return) or has_ret
-            return has_ret
+                self.check_stmt(child, loop_scope, stmt_idx, expected_return)
+            return False
 
         if isinstance(stmt, WhileStmt):
             cond_t = self.infer_expr_type(stmt.condition, scope, stmt_idx)
@@ -534,10 +565,9 @@ class _StaticChecker:
                     f"`while` condition must evaluate to Bool, got {cond_t}", stmt_idx
                 )
             loop_scope = _Scope(parent=scope)
-            has_ret = False
             for child in stmt.body:
-                has_ret = self.check_stmt(child, loop_scope, stmt_idx, expected_return) or has_ret
-            return has_ret
+                self.check_stmt(child, loop_scope, stmt_idx, expected_return)
+            return False
 
         if isinstance(stmt, FuncDefStmt):
             if expected_return is not None:
@@ -547,11 +577,15 @@ class _StaticChecker:
                     f"Duplicate function definition `{stmt.name}`", stmt_idx
                 )
             param_types: list[MemeType] = []
-            fn_scope = _Scope(parent=scope)
+            fn_scope = _Scope(parent=None)
             for p in stmt.params:
                 if p.param_type == "Void":
                     raise StaticVerificationError(
                         f"Parameter `{p.name}` cannot have type Void", stmt_idx
+                    )
+                if p.name in fn_scope.symbols:
+                    raise StaticVerificationError(
+                        f"Duplicate parameter name `{p.name}` in function `{stmt.name}`", stmt_idx
                     )
                 param_types.append(p.param_type)
                 fn_scope.define(p.name, p.param_type)
@@ -562,7 +596,7 @@ class _StaticChecker:
                 saw_return = self.check_stmt(child, fn_scope, stmt_idx, stmt.return_type) or saw_return
             if stmt.return_type != "Void" and not saw_return:
                 raise StaticVerificationError(
-                    f"Function `{stmt.name}` has return type {stmt.return_type} but no return statement",
+                    f"Function `{stmt.name}` has return type {stmt.return_type} but does not return on all control paths",
                     stmt_idx,
                 )
             return False

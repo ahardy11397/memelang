@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 from dataclasses import dataclass
-from typing import cast
+from typing import Literal, cast
 
 from memelang.ir.canonical import to_canonical_meme
 from memelang.ir.schema import (
@@ -102,11 +103,12 @@ def _tokenize_expr(text: str) -> list[_Tok]:
         pos = m.end()
         if m.lastgroup == "STRING":
             raw = m.group("STRING")
-            if raw.startswith("'"):
-                inner = raw[1:-1].replace('\\"', '"').replace("\\'", "'")
-                val = json.loads(f'"{inner}"')
-            else:
-                val = json.loads(raw)
+            try:
+                val = ast.literal_eval(raw)
+                if not isinstance(val, str):
+                    raise ValueError("Not a string literal")
+            except (SyntaxError, ValueError) as exc:
+                raise LLMProviderError(f"Invalid string literal {raw!r}: {exc}") from exc
             tokens.append(_Tok("STRING", val))
         elif m.lastgroup == "FLOAT":
             tokens.append(_Tok("FLOAT", m.group("FLOAT")))
@@ -373,7 +375,11 @@ def _split_top_level_commas(text: str) -> list[str]:
     return [p for p in parts if p]
 
 
-def _guess_expr_type(expr: IRExpr, symbols: dict[str, MemeType]) -> MemeType:
+def _guess_expr_type(
+    expr: IRExpr,
+    symbols: dict[str, MemeType],
+    func_returns: dict[str, MemeType] | None = None,
+) -> MemeType:
     if isinstance(expr, LiteralExpr):
         return expr.data_type
     if isinstance(expr, ListLiteralExpr):
@@ -386,13 +392,35 @@ def _guess_expr_type(expr: IRExpr, symbols: dict[str, MemeType]) -> MemeType:
         return expr.target_type
     if isinstance(expr, VarRefExpr) and expr.name in symbols:
         return symbols[expr.name]
+    if isinstance(expr, ListIndexExpr):
+        col_t = _guess_expr_type(expr.target, symbols, func_returns)
+        if col_t.startswith("List<"):
+            return cast(MemeType, col_t[5:-1])
+        return "Int"
+    if isinstance(expr, CallExpr) and func_returns and expr.func_name in func_returns:
+        return func_returns[expr.func_name]
     if isinstance(expr, BinaryOpExpr):
         if expr.op in ("==", "!=", "<", "<=", ">", ">=", "and", "or"):
             return "Bool"
-        return _guess_expr_type(expr.left, symbols)
+        return _guess_expr_type(expr.left, symbols, func_returns)
     if isinstance(expr, UnaryOpExpr):
-        return "Bool" if expr.op == "not" else _guess_expr_type(expr.operand, symbols)
+        return "Bool" if expr.op == "not" else _guess_expr_type(expr.operand, symbols, func_returns)
     return "Int"
+
+
+def _refine_list_literal_types(
+    expr: IRExpr,
+    symbols: dict[str, MemeType],
+    func_returns: dict[str, MemeType],
+) -> IRExpr:
+    if isinstance(expr, ListLiteralExpr) and expr.elements:
+        first_t = _guess_expr_type(expr.elements[0], symbols, func_returns)
+        if first_t in ("Int", "Float", "Bool", "String"):
+            return ListLiteralExpr(
+                elements=[_refine_list_literal_types(e, symbols, func_returns) for e in expr.elements],
+                element_type=cast(Literal["Int", "Float", "Bool", "String"], first_t),
+            )
+    return expr
 
 
 class HeuristicProvider:
@@ -406,14 +434,34 @@ class HeuristicProvider:
 
         lines: list[_SourceLine] = []
         for idx, raw in enumerate(source_text.splitlines(), start=1):
-            stripped = raw.strip()
+            expanded = raw.expandtabs(4)
+            stripped = expanded.strip()
             if not stripped or stripped.startswith("#"):
                 continue
-            indent = len(raw) - len(raw.lstrip(" "))
+            indent = len(expanded) - len(expanded.lstrip(" "))
             lines.append(_SourceLine(lineno=idx, indent=indent, text=stripped))
 
         symbols: dict[str, MemeType] = {}
+        self._func_returns: dict[str, MemeType] = {}
         items, _ = self._parse_block(lines, 0, lines[0].indent, symbols, top_level=True)
+
+        # Post-process top-level AmbiguityDiagnostic candidates with replaces_whole_program=True
+        # so any concrete statements following the ambiguous statement are preserved!
+        for idx, item in enumerate(items):
+            if isinstance(item, AmbiguityDiagnostic):
+                trailing = [
+                    cast(IRStatement, x)
+                    for x in items[idx + 1 :]
+                    if not isinstance(x, AmbiguityDiagnostic)
+                ]
+                if trailing:
+                    for cand in item.candidates:
+                        if cand.replaces_whole_program:
+                            cand.replacement_ir = list(cand.replacement_ir) + trailing
+                            cand.canonical_meme = to_canonical_meme(
+                                ProgramIR(statements=cand.replacement_ir)
+                            )
+
         return SynthesisResult(items=items)
 
     def _parse_block(
@@ -564,36 +612,11 @@ class HeuristicProvider:
                 )
                 continue
 
-            # 4. `if <cond>[:]` (with optional `else[:]`)
+            # 4. `if <cond>[:]` (with optional `else if` / `elif` / `else[:]`)
             m_if = re.fullmatch(r"if\s+(.+?)\s*:?", text, flags=re.IGNORECASE)
             if m_if:
-                cond_e = _parse_expr(m_if.group(1))
-                if i + 1 >= len(lines) or lines[i + 1].indent <= base_indent:
-                    raise LLMProviderError(f"Expected indented block after line {line.lineno}")
-                then_items, i = self._parse_block(
-                    lines, i + 1, lines[i + 1].indent, dict(symbols)
-                )
-                else_items: list[SynthesisItem] = []
-                if (
-                    i < len(lines)
-                    and lines[i].indent == base_indent
-                    and re.fullmatch(r"else\s*:?", lines[i].text, flags=re.IGNORECASE)
-                ):
-                    if i + 1 >= len(lines) or lines[i + 1].indent <= base_indent:
-                        raise LLMProviderError(
-                            f"Expected indented block after `else` at line {lines[i].lineno}"
-                        )
-                    else_items, i = self._parse_block(
-                        lines, i + 1, lines[i + 1].indent, dict(symbols)
-                    )
-                items.append(
-                    IfStmt(
-                        condition=cond_e,
-                        then_body=[cast(IRStatement, s) for s in then_items],
-                        else_body=[cast(IRStatement, s) for s in else_items],
-                        source_line=line.lineno,
-                    )
-                )
+                if_stmt, i = self._parse_if_chain(lines, i, base_indent, symbols, m_if.group(1))
+                items.append(if_stmt)
                 continue
 
             # 5. `function <name>(<params>) [-> <RetType>][:]`
@@ -607,8 +630,10 @@ class HeuristicProvider:
                 ret_str = m_fn.group(3) or "Void"
                 if ret_str not in _VALID_TYPES:
                     raise LLMProviderError(f"Unknown return type {ret_str!r} at line {line.lineno}")
+                ret_mt = cast(MemeType, ret_str)
+                self._func_returns[fn_name] = ret_mt
                 params: list[FuncParam] = []
-                fn_syms = dict(symbols)
+                fn_syms: dict[str, MemeType] = {}
                 if raw_params:
                     for p_chunk in raw_params.split(","):
                         p_name, _, p_type = p_chunk.partition(":")
@@ -628,7 +653,7 @@ class HeuristicProvider:
                     FuncDefStmt(
                         name=fn_name,
                         params=params,
-                        return_type=cast(MemeType, ret_str),
+                        return_type=ret_mt,
                         body=[cast(IRStatement, s) for s in body_items],
                         source_line=line.lineno,
                     )
@@ -641,10 +666,55 @@ class HeuristicProvider:
 
         return items, i
 
+    def _parse_if_chain(
+        self,
+        lines: list[_SourceLine],
+        if_idx: int,
+        base_indent: int,
+        symbols: dict[str, MemeType],
+        cond_str: str,
+    ) -> tuple[IfStmt, int]:
+        line = lines[if_idx]
+        cond_e = _parse_expr(cond_str)
+        if if_idx + 1 >= len(lines) or lines[if_idx + 1].indent <= base_indent:
+            raise LLMProviderError(f"Expected indented block after line {line.lineno}")
+        then_items, i = self._parse_block(
+            lines, if_idx + 1, lines[if_idx + 1].indent, dict(symbols)
+        )
+        else_stmts: list[IRStatement] = []
+        if i < len(lines) and lines[i].indent == base_indent:
+            m_elif = re.fullmatch(
+                r"(?:else\s+if|elif)\s+(.+?)\s*:?", lines[i].text, flags=re.IGNORECASE
+            )
+            if m_elif:
+                nested_if, i = self._parse_if_chain(
+                    lines, i, base_indent, symbols, m_elif.group(1)
+                )
+                else_stmts = [nested_if]
+            elif re.fullmatch(r"else\s*:?", lines[i].text, flags=re.IGNORECASE):
+                if i + 1 >= len(lines) or lines[i + 1].indent <= base_indent:
+                    raise LLMProviderError(
+                        f"Expected indented block after `else` at line {lines[i].lineno}"
+                    )
+                else_items, i = self._parse_block(
+                    lines, i + 1, lines[i + 1].indent, dict(symbols)
+                )
+                else_stmts = [cast(IRStatement, s) for s in else_items]
+        return (
+            IfStmt(
+                condition=cond_e,
+                then_body=[cast(IRStatement, s) for s in then_items],
+                else_body=else_stmts,
+                source_line=line.lineno,
+            ),
+            i,
+        )
+
     def _parse_single_stmt(
         self, line: _SourceLine, symbols: dict[str, MemeType]
     ) -> IRStatement:
         text = line.text
+        fn_rets = getattr(self, "_func_returns", {})
 
         # `define list <name> as <expr>`
         m_def_list = re.fullmatch(
@@ -654,12 +724,12 @@ class HeuristicProvider:
         )
         if m_def_list:
             name = m_def_list.group(1)
-            val = _parse_expr(m_def_list.group(3))
+            val = _refine_list_literal_types(_parse_expr(m_def_list.group(3)), symbols, fn_rets)
             explicit_t = m_def_list.group(2)
             v_type = (
                 cast(MemeType, explicit_t)
                 if explicit_t in _VALID_TYPES
-                else _guess_expr_type(val, symbols)
+                else _guess_expr_type(val, symbols, fn_rets)
             )
             if not v_type.startswith("List<"):
                 v_type = "List<Int>"
@@ -674,13 +744,13 @@ class HeuristicProvider:
         if m_def:
             name = m_def.group(1)
             explicit_t = m_def.group(2)
-            val = _parse_expr(m_def.group(3))
+            val = _refine_list_literal_types(_parse_expr(m_def.group(3)), symbols, fn_rets)
             if explicit_t:
                 if explicit_t not in _VALID_TYPES:
                     raise LLMProviderError(f"Unknown type {explicit_t!r} at line {line.lineno}")
                 v_type = cast(MemeType, explicit_t)
             else:
-                v_type = _guess_expr_type(val, symbols)
+                v_type = _guess_expr_type(val, symbols, fn_rets)
             symbols[name] = v_type
             return VarDeclStmt(name=name, var_type=v_type, value=val, source_line=line.lineno)
 
@@ -763,10 +833,10 @@ class HeuristicProvider:
         m_eq = re.fullmatch(r"([A-Za-z_]\w*)\s*=\s*(.+)", text)
         if m_eq:
             name = m_eq.group(1)
-            val = _parse_expr(m_eq.group(2))
+            val = _refine_list_literal_types(_parse_expr(m_eq.group(2)), symbols, fn_rets)
             if name in symbols:
                 return AssignStmt(name=name, value=val, source_line=line.lineno)
-            v_type = _guess_expr_type(val, symbols)
+            v_type = _guess_expr_type(val, symbols, fn_rets)
             symbols[name] = v_type
             return VarDeclStmt(name=name, var_type=v_type, value=val, source_line=line.lineno)
 
@@ -785,6 +855,17 @@ class HeuristicProvider:
             ) or HeuristicProvider._find_free_var(expr.right, symbols)
         if isinstance(expr, UnaryOpExpr):
             return HeuristicProvider._find_free_var(expr.operand, symbols)
+        if isinstance(expr, CallExpr):
+            for arg in expr.args:
+                found = HeuristicProvider._find_free_var(arg, symbols)
+                if found:
+                    return found
+        if isinstance(expr, ListLengthExpr):
+            return HeuristicProvider._find_free_var(expr.target, symbols)
+        if isinstance(expr, ListIndexExpr):
+            return HeuristicProvider._find_free_var(
+                expr.target, symbols
+            ) or HeuristicProvider._find_free_var(expr.index, symbols)
         return None
 
     @staticmethod

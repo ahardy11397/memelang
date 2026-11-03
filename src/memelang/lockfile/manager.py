@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from memelang.analyzer.verifier import VerificationOutcome, verify_synthesis
 from memelang.ir.canonical import to_canonical_meme
@@ -37,7 +38,7 @@ class LockEntry(BaseModel):
 class LockFileDocument(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    lockfile_version: int = 1
+    lockfile_version: Literal[1] = 1
     entries: dict[str, LockEntry] = Field(default_factory=dict)
 
 
@@ -53,8 +54,13 @@ class LockfileManager:
     def _load_doc(self) -> LockFileDocument:
         if not self.lockfile_path.exists():
             return LockFileDocument()
-        raw = self.lockfile_path.read_text(encoding="utf-8")
-        return LockFileDocument.model_validate_json(raw)
+        try:
+            raw = self.lockfile_path.read_text(encoding="utf-8")
+            return LockFileDocument.model_validate_json(raw)
+        except (ValidationError, OSError, ValueError) as exc:
+            raise LockfileResolutionError(
+                f"Corrupt or incompatible lockfile `{self.lockfile_path}`: {exc}"
+            ) from exc
 
     def _save_doc(self, doc: LockFileDocument) -> None:
         self.lockfile_path.parent.mkdir(parents=True, exist_ok=True)
@@ -127,11 +133,17 @@ class LockfileManager:
                 )
             chosen_candidates[stmt_id] = cand_map[opt]
 
-        # If any chosen candidate replaces the whole program, apply it directly
+        # If any chosen candidate replaces the whole program, apply it while preserving any other unresolved ambiguities
         for stmt_id in sorted(chosen_candidates.keys()):
             cand = chosen_candidates[stmt_id]
             if cand.replaces_whole_program:
-                return list(cand.replacement_ir)
+                remaining_unresolved: list[SynthesisItem] = [
+                    item
+                    for item in draft_items
+                    if isinstance(item, AmbiguityDiagnostic)
+                    and item.statement_id not in chosen_candidates
+                ]
+                return list(cand.replacement_ir) + remaining_unresolved
 
         spliced: list[SynthesisItem] = []
         for item in draft_items:

@@ -81,14 +81,14 @@ class _PyGen:
 
         if isinstance(expr, RandomIntExpr):
             self.uses_random = True
-            return f"random.randint({self.gen_expr(expr.min_val, scope)}, {self.gen_expr(expr.max_val, scope)})"
+            return f"_meme_rand_int({self.gen_expr(expr.min_val, scope)}, {self.gen_expr(expr.max_val, scope)})"
 
         if isinstance(expr, RandomListExpr):
             self.uses_random = True
             c = self.gen_expr(expr.count, scope)
             lo = self.gen_expr(expr.min_val, scope)
             hi = self.gen_expr(expr.max_val, scope)
-            return f"[random.randint({lo}, {hi}) for _ in range({c})]"
+            return f"[_meme_rand_int({lo}, {hi}) for _ in _meme_builtins.range({c})]"
 
         if isinstance(expr, UnaryOpExpr):
             if expr.op == "not":
@@ -99,11 +99,11 @@ class _PyGen:
             left = self.gen_expr(expr.left, scope)
             right = self.gen_expr(expr.right, scope)
             if expr.op == "/" and self.infer_type(expr.left, scope) == "Int":
-                return f"int({left} / {right})"
+                return f"_meme_builtins.int({left} / {right})"
             return f"({left} {expr.op} {right})"
 
         if isinstance(expr, ListLengthExpr):
-            return f"len({self.gen_expr(expr.target, scope)})"
+            return f"_meme_builtins.len({self.gen_expr(expr.target, scope)})"
 
         if isinstance(expr, ListIndexExpr):
             return f"{self.gen_expr(expr.target, scope)}[{self.gen_expr(expr.index, scope)}]"
@@ -113,11 +113,11 @@ class _PyGen:
             return f"{expr.func_name}({args})"
 
         if isinstance(expr, ReadInputExpr):
-            raw = f"input({repr(expr.prompt)})"
+            raw = f"_meme_builtins.input({repr(expr.prompt)})"
             if expr.target_type == "Int":
-                return f"int({raw}.strip())"
+                return f"_meme_builtins.int({raw}.strip())"
             if expr.target_type == "Float":
-                return f"float({raw}.strip())"
+                return f"_meme_builtins.float({raw}.strip())"
             if expr.target_type == "Bool":
                 return f"({raw}.strip().lower() in ('true', '1', 'yes'))"
             return raw
@@ -144,7 +144,7 @@ class _PyGen:
             lo = self.gen_expr(stmt.min_val, scope)
             hi = self.gen_expr(stmt.max_val, scope)
             return [
-                f"{pad}{stmt.target} = [min(max(_x, {lo}), {hi}) for _x in {stmt.target}]"
+                f"{pad}{stmt.target} = [_meme_builtins.min(_meme_builtins.max(_x, {lo}), {hi}) for _x in {stmt.target}]"
             ]
 
         if isinstance(stmt, FilterCollectionStmt):
@@ -161,7 +161,7 @@ class _PyGen:
 
         if isinstance(stmt, PrintStmt):
             parts = ", ".join(f"_meme_fmt({self.gen_expr(e, scope)})" for e in stmt.expressions)
-            return [f"{pad}print({parts})"]
+            return [f"{pad}_meme_builtins.print({parts})"]
 
         if isinstance(stmt, IfStmt):
             lines = [f"{pad}if {self.gen_expr(stmt.condition, scope)}:"]
@@ -182,7 +182,7 @@ class _PyGen:
             sub = dict(scope)
             col_t = scope.get(stmt.collection, "List<Int>")
             sub[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[assignment]
-            lines = [f"{pad}for {stmt.item_var} in list({stmt.collection}):"]
+            lines = [f"{pad}for {stmt.item_var} in {stmt.collection}[:]:"]
             if stmt.body:
                 for ch in stmt.body:
                     lines.extend(self.gen_stmt(ch, sub, indent + 1))
@@ -195,7 +195,7 @@ class _PyGen:
             sub[stmt.loop_var] = "Int"
             start_s = self.gen_expr(stmt.start, scope)
             end_s = self.gen_expr(stmt.end, scope)
-            lines = [f"{pad}for {stmt.loop_var} in range({start_s}, ({end_s}) + 1):"]
+            lines = [f"{pad}for {stmt.loop_var} in _meme_builtins.range({start_s}, ({end_s}) + 1):"]
             if stmt.body:
                 for ch in stmt.body:
                     lines.extend(self.gen_stmt(ch, sub, indent + 1))
@@ -243,19 +243,28 @@ def generate_python(ir: ProgramIR) -> str:
     if not body_lines:
         body_lines.append("    pass")
 
-    header: list[str] = []
+    header: list[str] = ["import builtins as _meme_builtins"]
     if gen.uses_random:
-        header.append("import random")
-        header.append("")
+        header.append("import random as _meme_random")
+    header.append("")
+
+    if gen.uses_random:
+        header.extend(
+            [
+                "def _meme_rand_int(lo: int, hi: int) -> int:",
+                "    return lo if hi <= lo else _meme_random.randint(lo, hi)",
+                "",
+            ]
+        )
 
     header.extend(
         [
             "def _meme_fmt(val):",
-            "    if isinstance(val, bool):",
+            "    if _meme_builtins.isinstance(val, _meme_builtins.bool):",
             "        return 'true' if val else 'false'",
-            "    if isinstance(val, list):",
+            "    if _meme_builtins.isinstance(val, _meme_builtins.list):",
             "        return '[' + ', '.join(_meme_fmt(x) for x in val) + ']'",
-            "    return str(val)",
+            "    return _meme_builtins.str(val)",
             "",
             "def main() -> None:",
         ]

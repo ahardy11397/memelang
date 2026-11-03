@@ -133,3 +133,26 @@ def test_invalid_resolution_id_or_option_raises(tmp_path: Path):
     with pytest.raises(LockfileResolutionError) as exc_bad_opt:
         mgr.apply_resolutions("main.meme", src, {2: 9})
     assert "1, 2, 3" in str(exc_bad_opt.value)
+
+
+def test_corrupt_lockfile_and_execution_timeout_handled_cleanly(tmp_path: Path):
+    from memelang.ir.schema import ProgramIR, WhileStmt
+    from memelang.runner.executor import execute_ir
+
+    bad_lock = tmp_path / "build.lock"
+    bad_lock.write_text("{corrupt json", encoding="utf-8")
+    mgr = LockfileManager(bad_lock)
+    with pytest.raises(LockfileResolutionError):
+        mgr.get_cached_program("main.meme", 'print "hi"')
+
+    inf_prog = ProgramIR(
+        statements=[
+            WhileStmt(
+                condition=LiteralExpr(value=True, data_type="Bool"),
+                body=[],
+            )
+        ]
+    )
+    res = execute_ir(inf_prog, "python", timeout_sec=0.2)
+    assert res.returncode != 0
+    assert "timed out" in res.stderr.lower()

@@ -117,6 +117,51 @@ def test_ollama_provider_sends_schema_and_parses_response():
     assert oai_prov.synthesize('print "hello"') == expected_result
 
 
+def test_heuristic_option3_preserves_trailing_statements(tmp_path):
+    from memelang.lockfile.manager import LockfileManager
+
+    src = (
+        "array = 10.random numbers\n"
+        "for each number in array\n"
+        "    sort from 1 to 10\n"
+        "print array\n"
+    )
+    prov = HeuristicProvider()
+    syn = prov.synthesize(src)
+    out = verify_synthesis(syn)
+    assert not out.is_unambiguous
+
+    mgr = LockfileManager(tmp_path / "build.lock")
+    resolved = mgr.record_outcome("main.meme", src, prov.name, syn, out, requested_resolutions={2: 3})
+    assert resolved.is_unambiguous is True
+    assert resolved.program is not None
+    assert isinstance(resolved.program.statements[-1], PrintStmt)
+
+
+def test_heuristic_single_quotes_elif_and_expr_type_inference():
+    src = (
+        "function is_even(n: Int) -> Bool:\n"
+        "    return n % 2 == 0\n"
+        "\n"
+        'words = ["alpha", "beta"]\n'
+        "first = words[0]\n"
+        "flag = is_even(4)\n"
+        "nums = [1, 2, 3, 4]\n"
+        "filter nums where is_even(x)\n"
+        "if flag:\n"
+        "    print 'say \"hi\"', first\n"
+        "else if not flag:\n"
+        '    print "nope"\n'
+        "else:\n"
+        '    print "fallback"\n'
+    )
+    prov = HeuristicProvider()
+    syn = prov.synthesize(src)
+    out = verify_synthesis(syn)
+    assert out.is_unambiguous is True
+    assert out.program is not None
+
+
 def test_missing_gemini_key_or_gguf_raises_provider_error(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.delenv("GOOGLE_API_KEY", raising=False)

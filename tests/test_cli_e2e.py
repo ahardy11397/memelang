@@ -114,7 +114,7 @@ def test_cli_interactive_ambiguity_resolution(
     )
     cap = capsys.readouterr()
     assert rc == 0, cap.err
-    assert "random.randint(1, 10)" in cap.out
+    assert "_meme_rand_int(1, 10)" in cap.out
 
 
 def test_cli_exit_codes_for_static_and_provider_errors(
