@@ -1,0 +1,18 @@
+this runs in the shell
+
+class postfix-evaluator
+
+  define function evalOperation with op, a, b
+    if op == "+"
+      return a + b
+    if op == "-"
+      return a - b
+    if op == "*"
+      return a * b
+    return a / b
+
+  define function main
+    define trig from user "Evaluate postfix?"
+    define op1 as evalOperation from "+", 3, 4
+    define op2 as evalOperation from "*", op1, 2
+    print op2

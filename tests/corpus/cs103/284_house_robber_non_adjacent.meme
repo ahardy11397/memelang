@@ -1,0 +1,22 @@
+this runs in the shell
+
+class house-robber-max-sum
+
+  define function robNonAdjacent with houses
+    define prev2 as 0
+    define prev1 as 0
+    for i from 1 to length of houses
+      define cur as houses item i
+      define pick as prev2 + cur
+      define best as prev1
+      if pick > best
+        set best as pick
+      set prev2 as prev1
+      set prev1 as best
+    return prev1
+
+  define function main
+    define trig from user "Rob houses?"
+    define street as [2, 7, 9, 3, 1]
+    define loot as robNonAdjacent from street
+    print loot

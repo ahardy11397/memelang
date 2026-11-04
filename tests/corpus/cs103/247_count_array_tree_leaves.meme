@@ -1,0 +1,16 @@
+this runs in the shell
+
+class count-implicit-leaves
+
+  define function countLeavesInArray with n
+    define leaf_count as 0
+    for i from 1 to n
+      define left_child as 2 * i
+      if left_child > n
+        set leaf_count to leaf_count + 1
+    return leaf_count
+
+  define function main
+    define total_nodes from user "Total tree nodes?"
+    define leaves as countLeavesInArray from total_nodes
+    print leaves

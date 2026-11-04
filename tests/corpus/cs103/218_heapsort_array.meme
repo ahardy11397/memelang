@@ -1,0 +1,17 @@
+this runs in the shell
+
+class heapsort-array-verifier
+
+  define function isMaxHeapOrdered with arr
+    define n as length of arr
+    for i from 1 to (n / 2)
+      define left as 2 * i
+      if left <= n and arr item i < arr item left
+        return 0
+    return 1
+
+  define function main
+    define trig from user "Verify heap property?"
+    define test_heap as [99, 45, 30, 20, 10]
+    define verified as isMaxHeapOrdered from test_heap
+    print verified

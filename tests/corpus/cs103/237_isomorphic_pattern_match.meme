@@ -1,0 +1,14 @@
+this runs in the shell
+
+class isomorphic-pattern-matcher
+
+  define function checkPairs with str_a, str_b
+    if length of str_a != length of str_b
+      return 0
+    return 1
+
+  define function main
+    define word1 from user "First pattern?"
+    define word2 from user "Second pattern?"
+    define is_match as checkPairs from word1, word2
+    print is_match

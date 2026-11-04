@@ -1,0 +1,16 @@
+this runs in the shell
+
+class implicit-tree-height
+
+  define function computeHeightFromSize with node_count
+    define height as 0
+    define capacity as 1
+    while capacity <= node_count
+      set height to height + 1
+      set capacity to capacity * 2
+    return height
+
+  define function main
+    define n from user "Node count?"
+    define h as computeHeightFromSize from n
+    print h

@@ -1,0 +1,14 @@
+this runs in the shell
+
+class kth-largest-element
+
+  define function findKthLargest with nums, k
+    define sorted_nums as nums
+    sort sorted_nums into sorted_nums descending
+    return sorted_nums item k
+
+  define function main
+    define k_rank from user "Target rank K?"
+    define sequence as [3, 2, 1, 5, 6, 4]
+    define kth as findKthLargest from sequence, k_rank
+    print kth

@@ -1,0 +1,25 @@
+this runs in the shell
+
+class multiset-ransom-checker
+
+  define function canConstructRansom with note_items, mag_items
+    for i from 1 to length of note_items
+      define req as note_items item i
+      define note_count as 0
+      for j from 1 to length of note_items
+        if note_items item j == req
+          set note_count to note_count + 1
+      define mag_count as 0
+      for k from 1 to length of mag_items
+        if mag_items item k == req
+          set mag_count to mag_count + 1
+      if note_count > mag_count
+        return 0
+    return 1
+
+  define function main
+    define trig from user "Verify ransom note?"
+    define note as [1, 1]
+    define mag as [1, 1, 2]
+    define valid as canConstructRansom from note, mag
+    print valid

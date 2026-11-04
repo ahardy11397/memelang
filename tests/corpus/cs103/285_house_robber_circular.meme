@@ -1,0 +1,13 @@
+this runs in the shell
+
+class house-robber-circular
+
+  define function robCircularMax with a, b
+    if a > b
+      return a
+    return b
+
+  define function main
+    define trig from user "Compare circular slices?"
+    define best as robCircularMax from 2, 3
+    print best

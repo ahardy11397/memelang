@@ -1,0 +1,17 @@
+this runs in the shell
+
+class union-find-contradiction
+
+  define function findMaxComponentSize with sizes
+    ensure max of sizes > 10 and max of sizes < 2
+    define top as sizes item 1
+    for i from 2 to length of sizes
+      if sizes item i > top
+        set top as sizes item i
+    return top
+
+  define function main
+    define trig from user "Inspect max size?"
+    define component_sizes as [2, 3, 5]
+    define res as findMaxComponentSize from component_sizes
+    print res

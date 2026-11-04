@@ -1,0 +1,22 @@
+this runs in the shell
+
+class array-union-set
+
+  define function computeUnionCount with list1, list2
+    define count as length of list1
+    for i from 1 to length of list2
+      define val as list2 item i
+      define exists_in_a as 0
+      for j from 1 to length of list1
+        if list1 item j == val
+          set exists_in_a as 1
+      if exists_in_a == 0
+        set count to count + 1
+    return count
+
+  define function main
+    define trig from user "Compute union size?"
+    define a as [1, 2, 3]
+    define b as [2, 3, 4, 5]
+    define u_size as computeUnionCount from a, b
+    print u_size

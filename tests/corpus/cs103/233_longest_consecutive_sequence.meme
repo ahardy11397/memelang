@@ -1,0 +1,32 @@
+this runs in the shell
+
+class longest-consecutive-sequence
+
+  define function computeMaxStreak with nums
+    define max_len as 0
+    for i from 1 to length of nums
+      define val as nums item i
+      define is_start as 1
+      for j from 1 to length of nums
+        if nums item j == val - 1
+          set is_start as 0
+      if is_start == 1
+        define streak as 1
+        define cur as val
+        define has_next as 1
+        while has_next == 1
+          set has_next as 0
+          for k from 1 to length of nums
+            if nums item k == cur + 1
+              set has_next as 1
+              set cur as cur + 1
+              set streak to streak + 1
+        if streak > max_len
+          set max_len as streak
+    return max_len
+
+  define function main
+    define trig from user "Find longest streak?"
+    define sequence as [100, 4, 200, 1, 3, 2]
+    define ans as computeMaxStreak from sequence
+    print ans

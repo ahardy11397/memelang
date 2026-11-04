@@ -1,0 +1,12 @@
+this runs in the shell
+
+class matrix-chain-multiplication
+
+  define function calcSplitCost with p, q, r
+    define costt as p * q * r
+    return costt
+
+  define function main
+    define trig from user "Matrix split cost?"
+    define c as calcSplitCost from 2, 3, 5
+    print c

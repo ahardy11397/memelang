@@ -1,0 +1,18 @@
+this runs in the shell
+
+class four-sum-contradiction
+
+  define function findZeroQuads with nums
+    ensure length of nums >= 10 and length of nums <= 2
+    define count as 0
+    for a from 1 to length of nums
+      for b from (a + 1) to length of nums
+        if nums item a + nums item b == 0
+          set count to count + 1
+    return count
+
+  define function main
+    define trig from user "Search 4-sum pairs?"
+    define quad_list as [1, -1, 2, -2]
+    define quads as findZeroQuads from quad_list
+    print quads

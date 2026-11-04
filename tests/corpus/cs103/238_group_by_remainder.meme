@@ -1,0 +1,20 @@
+this runs in the shell
+
+class group-by-remainder
+
+  define function maxRemainderFrequency with nums, divisor
+    define max_freq as 0
+    for rem from 0 to (divisor - 1)
+      define count as 0
+      for i from 1 to length of nums
+        if nums item i % divisor == rem
+          set count to count + 1
+      if count > max_freq
+        set max_freq as count
+    return max_freq
+
+  define function main
+    define div_val from user "Divisor K?"
+    define elements as [1, 4, 7, 10, 2, 5]
+    define ans as maxRemainderFrequency from elements, div_val
+    print ans

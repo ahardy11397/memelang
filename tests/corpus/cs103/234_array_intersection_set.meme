@@ -1,0 +1,22 @@
+this runs in the shell
+
+class array-intersection-set
+
+  define function countIntersection with arr1, arr2
+    define matches as 0
+    for i from 1 to length of arr1
+      define val as arr1 item i
+      define in_arr2 as 0
+      for j from 1 to length of arr2
+        if arr2 item j == val
+          set in_arr2 as 1
+      if in_arr2 == 1
+        set matches to matches + 1
+    return matches
+
+  define function main
+    define trig from user "Compute intersection count?"
+    define list1 as [1, 2]
+    define list2 as [2, 3]
+    define common as countIntersection from list1, list2
+    print common

@@ -1,0 +1,17 @@
+this runs in the shell
+
+class fractional-knapsack-lossy
+
+  define function calcKnapsackValue with weights, values, capacity
+    define total_v as 0
+    for i from 1 to length of weights
+      if weights item i <= capacity
+        set total_v to total_v + values item i
+    return total_v
+
+  define function main
+    define trig from user "Calculate knapsack?"
+    define w as [10, 20]
+    define v as [60, 100]
+    define val as calcKnapsackValue from w, v, 15
+    print val

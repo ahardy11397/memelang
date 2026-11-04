@@ -1,6 +1,6 @@
 {
   "corpus_version": 1,
-  "total_scripts": 200,
+  "total_scripts": 300,
   "scripts": [
     {
       "id": 1,
@@ -4524,6 +4524,2246 @@
       "extensibility_gaps": {
         "examples": [
           "contradictory_bounds"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 201,
+      "slug": "201_array_stack_ops",
+      "path": "tests/corpus/cs103/201_array_stack_ops.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Array Stack Push and Peek",
+      "style": "clean",
+      "stdin": "42\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "99",
+      "feature_tags": [
+        "class",
+        "functions",
+        "stack",
+        "list"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 202,
+      "slug": "202_rpn_evaluator",
+      "path": "tests/corpus/cs103/202_rpn_evaluator.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Reverse Polish Notation Evaluator",
+      "style": "clean",
+      "stdin": "yes\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "14",
+      "feature_tags": [
+        "class",
+        "functions",
+        "stack",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 203,
+      "slug": "203_min_stack_tracker",
+      "path": "tests/corpus/cs103/203_min_stack_tracker.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Min Stack Auxiliary Tracker",
+      "style": "clean",
+      "stdin": "run\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "stack",
+        "min"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 204,
+      "slug": "204_next_greater_element",
+      "path": "tests/corpus/cs103/204_next_greater_element.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Next Greater Element Monotonic Stack",
+      "style": "clean",
+      "stdin": "1\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "stack",
+        "search"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 205,
+      "slug": "205_daily_temperatures",
+      "path": "tests/corpus/cs103/205_daily_temperatures.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Daily Temperatures Wait Days",
+      "style": "clean",
+      "stdin": "1\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "monotonic_stack",
+        "array"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 206,
+      "slug": "206_largest_rectangle_histogram",
+      "path": "tests/corpus/cs103/206_largest_rectangle_histogram.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Largest Rectangle in Histogram",
+      "style": "clean",
+      "stdin": "go\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "10",
+      "feature_tags": [
+        "class",
+        "functions",
+        "histogram",
+        "stack"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 207,
+      "slug": "207_stock_span_calculator",
+      "path": "tests/corpus/cs103/207_stock_span_calculator.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Stock Span Consecutive Days Counter",
+      "style": "clean",
+      "stdin": "7\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "6",
+      "feature_tags": [
+        "class",
+        "functions",
+        "monotonic_stack",
+        "finance"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 208,
+      "slug": "208_asteroid_collision",
+      "path": "tests/corpus/cs103/208_asteroid_collision.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Asteroid Collision Resolver",
+      "style": "clean",
+      "stdin": "start\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "10",
+      "feature_tags": [
+        "class",
+        "functions",
+        "stack",
+        "simulation"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 209,
+      "slug": "209_simplify_unix_path",
+      "path": "tests/corpus/cs103/209_simplify_unix_path.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Simplify Canonical Unix Path",
+      "style": "clean",
+      "stdin": "run\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "/home/user/documents",
+      "feature_tags": [
+        "class",
+        "functions",
+        "stack",
+        "strings"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 210,
+      "slug": "210_circular_queue_ring",
+      "path": "tests/corpus/cs103/210_circular_queue_ring.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Circular Queue Array Buffer",
+      "style": "clean",
+      "stdin": "5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "circular_queue",
+        "ring_buffer"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 211,
+      "slug": "211_josephus_elimination",
+      "path": "tests/corpus/cs103/211_josephus_elimination.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Josephus Circle Survivor Selection",
+      "style": "clean",
+      "stdin": "7\n3\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "queue",
+        "math"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 212,
+      "slug": "212_sliding_window_deque_max",
+      "path": "tests/corpus/cs103/212_sliding_window_deque_max.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Sliding Window Maximum Monotonic Deque",
+      "style": "clean",
+      "stdin": "3\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "deque",
+        "sliding_window"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 213,
+      "slug": "213_moving_average_stream",
+      "path": "tests/corpus/cs103/213_moving_average_stream.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Moving Average Data Stream Window",
+      "style": "clean",
+      "stdin": "now\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "20",
+      "feature_tags": [
+        "class",
+        "functions",
+        "queue",
+        "streaming"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 214,
+      "slug": "214_recent_calls_counter",
+      "path": "tests/corpus/cs103/214_recent_calls_counter.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Recent Calls Counter Time Window",
+      "style": "clean",
+      "stdin": "3002\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "queue",
+        "timestamp"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 215,
+      "slug": "215_min_heap_insert_peek",
+      "path": "tests/corpus/cs103/215_min_heap_insert_peek.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Binary Min Heap Insert and Root Peek",
+      "style": "clean",
+      "stdin": "query\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "heap",
+        "min_heap"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 216,
+      "slug": "216_max_heap_extract",
+      "path": "tests/corpus/cs103/216_max_heap_extract.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Binary Max Heap Extract Root",
+      "style": "clean",
+      "stdin": "run\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "50",
+      "feature_tags": [
+        "class",
+        "functions",
+        "heap",
+        "max_heap"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 217,
+      "slug": "217_heapify_array_inplace",
+      "path": "tests/corpus/cs103/217_heapify_array_inplace.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Heapify Array In-Place Sift Down",
+      "style": "clean",
+      "stdin": "inspect\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "heapify",
+        "array"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 218,
+      "slug": "218_heapsort_array",
+      "path": "tests/corpus/cs103/218_heapsort_array.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Heapsort In-Place Max Heap",
+      "style": "clean",
+      "stdin": "check\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "heapsort",
+        "sorting"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 219,
+      "slug": "219_kth_largest_heap",
+      "path": "tests/corpus/cs103/219_kth_largest_heap.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Kth Largest Element Min Heap Tracker",
+      "style": "clean",
+      "stdin": "2\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "heap",
+        "selection"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 220,
+      "slug": "220_merge_sorted_streams",
+      "path": "tests/corpus/cs103/220_merge_sorted_streams.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Merge Two Sorted Array Streams",
+      "style": "clean",
+      "stdin": "go\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "6",
+      "feature_tags": [
+        "class",
+        "functions",
+        "merge",
+        "two_pointer"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 221,
+      "slug": "221_task_cooldown_scheduler",
+      "path": "tests/corpus/cs103/221_task_cooldown_scheduler.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Task Cooldown Minimum CPU Intervals",
+      "style": "clean",
+      "stdin": "2\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "7",
+      "feature_tags": [
+        "class",
+        "functions",
+        "scheduler",
+        "greedy"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 222,
+      "slug": "222_trapped_rainwater_typo",
+      "path": "tests/corpus/cs103/222_trapped_rainwater_typo.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Trapped Rainwater Elevation with Typo",
+      "style": "typo",
+      "stdin": "0\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "two_pointer",
+        "trapping"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_form"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 223,
+      "slug": "223_decode_repeat_counts_typo",
+      "path": "tests/corpus/cs103/223_decode_repeat_counts_typo.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Decode String Repeat Counts with Typo",
+      "style": "typo",
+      "stdin": "3\nabc\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "abcabcabc",
+      "feature_tags": [
+        "class",
+        "functions",
+        "stack",
+        "strings"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_retrun"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 224,
+      "slug": "224_backspace_compare_lossy",
+      "path": "tests/corpus/cs103/224_backspace_compare_lossy.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Backspace String Compare Incomplete Omission",
+      "style": "ambiguous",
+      "stdin": "test\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "stack",
+        "ambiguous"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "lossy_single_branch"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 225,
+      "slug": "225_two_stacks_queue_contradiction",
+      "path": "tests/corpus/cs103/225_two_stacks_queue_contradiction.meme",
+      "course": "cs103",
+      "topic": "stacks_and_queues",
+      "title": "Queue Using Two Stacks Conflicting Transfer",
+      "style": "ambiguous",
+      "stdin": "go\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "queue",
+        "ambiguous"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_bounds"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 226,
+      "slug": "226_target_frequency_count",
+      "path": "tests/corpus/cs103/226_target_frequency_count.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Target Value Frequency Counter",
+      "style": "clean",
+      "stdin": "4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "frequency",
+        "counting"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 227,
+      "slug": "227_mode_frequency_map",
+      "path": "tests/corpus/cs103/227_mode_frequency_map.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Mode Value Finder via Frequency Tally",
+      "style": "clean",
+      "stdin": "run\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "mode",
+        "frequency"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 228,
+      "slug": "228_count_distinct_elements",
+      "path": "tests/corpus/cs103/228_count_distinct_elements.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Count Distinct Elements in Array",
+      "style": "clean",
+      "stdin": "go\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "distinct",
+        "set"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 229,
+      "slug": "229_first_non_repeating",
+      "path": "tests/corpus/cs103/229_first_non_repeating.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "First Non-Repeating Element Finder",
+      "style": "clean",
+      "stdin": "start\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "frequency",
+        "search"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 230,
+      "slug": "230_first_repeating_element",
+      "path": "tests/corpus/cs103/230_first_repeating_element.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "First Repeating Element in Array",
+      "style": "clean",
+      "stdin": "check\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "duplicate",
+        "search"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 231,
+      "slug": "231_two_sum_hash_map",
+      "path": "tests/corpus/cs103/231_two_sum_hash_map.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Two Sum Target Pair Finder via Map",
+      "style": "clean",
+      "stdin": "9\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "9",
+      "feature_tags": [
+        "class",
+        "functions",
+        "hash_map",
+        "two_sum"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 232,
+      "slug": "232_subarray_sum_k_count",
+      "path": "tests/corpus/cs103/232_subarray_sum_k_count.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Subarray Sum Equals K Prefix Count",
+      "style": "clean",
+      "stdin": "2\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "prefix_sum",
+        "hash_map"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 233,
+      "slug": "233_longest_consecutive_sequence",
+      "path": "tests/corpus/cs103/233_longest_consecutive_sequence.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Longest Consecutive Sequence Length",
+      "style": "clean",
+      "stdin": "calc\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "set",
+        "sequence"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 234,
+      "slug": "234_array_intersection_set",
+      "path": "tests/corpus/cs103/234_array_intersection_set.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Array Set Intersection Calculator",
+      "style": "clean",
+      "stdin": "intersect\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "set",
+        "intersection"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 235,
+      "slug": "235_array_union_set",
+      "path": "tests/corpus/cs103/235_array_union_set.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Array Set Union Distinct Combiner",
+      "style": "clean",
+      "stdin": "run\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "set",
+        "union"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 236,
+      "slug": "236_symmetric_difference_set",
+      "path": "tests/corpus/cs103/236_symmetric_difference_set.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Symmetric Difference Disjunctive Count",
+      "style": "clean",
+      "stdin": "diff\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "set",
+        "difference"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 237,
+      "slug": "237_isomorphic_pattern_match",
+      "path": "tests/corpus/cs103/237_isomorphic_pattern_match.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Isomorphic String Pattern Mapping",
+      "style": "clean",
+      "stdin": "foo\nbar\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "mapping",
+        "strings"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 238,
+      "slug": "238_group_by_remainder",
+      "path": "tests/corpus/cs103/238_group_by_remainder.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Group Array Elements by Modulo Remainder",
+      "style": "clean",
+      "stdin": "3\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "hash",
+        "modulo"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 239,
+      "slug": "239_top_k_frequent_elements",
+      "path": "tests/corpus/cs103/239_top_k_frequent_elements.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Top K Frequent Elements Selector",
+      "style": "clean",
+      "stdin": "query\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "frequency",
+        "hash_map"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 240,
+      "slug": "240_multiset_ransom_check",
+      "path": "tests/corpus/cs103/240_multiset_ransom_check.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Multiset Letter Inclusion Ransom Check",
+      "style": "clean",
+      "stdin": "verify\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "multiset",
+        "frequency"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 241,
+      "slug": "241_longest_equal_zeros_ones",
+      "path": "tests/corpus/cs103/241_longest_equal_zeros_ones.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Longest Contiguous Equal Zeroes and Ones",
+      "style": "clean",
+      "stdin": "span\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "6",
+      "feature_tags": [
+        "class",
+        "functions",
+        "prefix_sum",
+        "subarray"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 242,
+      "slug": "242_duplicate_within_k_typo",
+      "path": "tests/corpus/cs103/242_duplicate_within_k_typo.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Duplicate Within K Distance with Typo",
+      "style": "typo",
+      "stdin": "3\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "sliding_window",
+        "hash_map"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_deifne"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 243,
+      "slug": "243_happy_number_cycle_typo",
+      "path": "tests/corpus/cs103/243_happy_number_cycle_typo.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Happy Number Sum of Squares Cycle with Typo",
+      "style": "typo",
+      "stdin": "19\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "cycle_detection",
+        "set"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_pirnt"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 244,
+      "slug": "244_four_sum_zero_pair_contradiction",
+      "path": "tests/corpus/cs103/244_four_sum_zero_pair_contradiction.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "Four Sum Zero Pair Conflicting Partition",
+      "style": "ambiguous",
+      "stdin": "find\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "hash_map",
+        "ambiguous"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_bounds"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 245,
+      "slug": "245_lru_cache_hit_lossy",
+      "path": "tests/corpus/cs103/245_lru_cache_hit_lossy.meme",
+      "course": "cs103",
+      "topic": "maps_and_sets",
+      "title": "LRU Cache Access Pattern Lossy Eviction",
+      "style": "ambiguous",
+      "stdin": "10\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lru_cache",
+        "ambiguous"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "lossy_single_branch"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 246,
+      "slug": "246_binary_tree_array_height",
+      "path": "tests/corpus/cs103/246_binary_tree_array_height.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Implicit Array Binary Tree Height",
+      "style": "clean",
+      "stdin": "7\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "tree",
+        "binary_tree"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 247,
+      "slug": "247_count_array_tree_leaves",
+      "path": "tests/corpus/cs103/247_count_array_tree_leaves.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Count Leaf Nodes in Implicit Array Tree",
+      "style": "clean",
+      "stdin": "5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "tree",
+        "leaves"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 248,
+      "slug": "248_sum_left_leaves",
+      "path": "tests/corpus/cs103/248_sum_left_leaves.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Sum of Left Leaves in Binary Tree",
+      "style": "clean",
+      "stdin": "sum\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "15",
+      "feature_tags": [
+        "class",
+        "functions",
+        "tree",
+        "traversal"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 249,
+      "slug": "249_bst_array_insert_search",
+      "path": "tests/corpus/cs103/249_bst_array_insert_search.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "BST Array Insertion and Key Search",
+      "style": "clean",
+      "stdin": "3\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "bst",
+        "search"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 250,
+      "slug": "250_validate_bst_bounds",
+      "path": "tests/corpus/cs103/250_validate_bst_bounds.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Validate Binary Search Tree Range Invariant",
+      "style": "clean",
+      "stdin": "check\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "bst",
+        "validation"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 251,
+      "slug": "251_bst_inorder_traversal",
+      "path": "tests/corpus/cs103/251_bst_inorder_traversal.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "BST Inorder Traversal Sorted Output",
+      "style": "clean",
+      "stdin": "sum\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "28",
+      "feature_tags": [
+        "class",
+        "functions",
+        "bst",
+        "inorder"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 252,
+      "slug": "252_lca_in_bst",
+      "path": "tests/corpus/cs103/252_lca_in_bst.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Lowest Common Ancestor in Binary Search Tree",
+      "style": "clean",
+      "stdin": "2\n8\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "6",
+      "feature_tags": [
+        "class",
+        "functions",
+        "bst",
+        "lca"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 253,
+      "slug": "253_binary_tree_diameter",
+      "path": "tests/corpus/cs103/253_binary_tree_diameter.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Binary Tree Maximum Diameter Path",
+      "style": "clean",
+      "stdin": "calc\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "tree",
+        "diameter"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 254,
+      "slug": "254_max_root_to_leaf_path",
+      "path": "tests/corpus/cs103/254_max_root_to_leaf_path.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Maximum Root to Leaf Path Sum",
+      "style": "clean",
+      "stdin": "run\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "30",
+      "feature_tags": [
+        "class",
+        "functions",
+        "tree",
+        "path_sum"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 255,
+      "slug": "255_level_order_breadth_sum",
+      "path": "tests/corpus/cs103/255_level_order_breadth_sum.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Level Order Breadth First Level Sum",
+      "style": "clean",
+      "stdin": "3\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "22",
+      "feature_tags": [
+        "class",
+        "functions",
+        "bfs",
+        "tree"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 256,
+      "slug": "256_max_level_sum_tree",
+      "path": "tests/corpus/cs103/256_max_level_sum_tree.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Maximum Level Sum in Binary Tree",
+      "style": "clean",
+      "stdin": "go\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "7",
+      "feature_tags": [
+        "class",
+        "functions",
+        "tree",
+        "level_order"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 257,
+      "slug": "257_fenwick_tree_prefix_sum",
+      "path": "tests/corpus/cs103/257_fenwick_tree_prefix_sum.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Fenwick Binary Indexed Tree Prefix Sum",
+      "style": "clean",
+      "stdin": "3\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "8",
+      "feature_tags": [
+        "class",
+        "functions",
+        "fenwick",
+        "prefix_sum"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 258,
+      "slug": "258_segment_tree_range_sum",
+      "path": "tests/corpus/cs103/258_segment_tree_range_sum.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Segment Tree Range Sum Query",
+      "style": "clean",
+      "stdin": "2\n4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "15",
+      "feature_tags": [
+        "class",
+        "functions",
+        "segment_tree",
+        "range_sum"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 259,
+      "slug": "259_segment_tree_range_min",
+      "path": "tests/corpus/cs103/259_segment_tree_range_min.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Segment Tree Range Minimum Query",
+      "style": "clean",
+      "stdin": "1\n5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "segment_tree",
+        "range_min"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 260,
+      "slug": "260_trie_prefix_insert_search",
+      "path": "tests/corpus/cs103/260_trie_prefix_insert_search.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Trie Prefix Insert and Search",
+      "style": "clean",
+      "stdin": "apple\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "trie",
+        "prefix_search"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 261,
+      "slug": "261_trie_count_prefix_matches",
+      "path": "tests/corpus/cs103/261_trie_count_prefix_matches.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Trie Count Words Matching Prefix",
+      "style": "clean",
+      "stdin": "4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "trie",
+        "prefix_count"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 262,
+      "slug": "262_union_find_components_typo",
+      "path": "tests/corpus/cs103/262_union_find_components_typo.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Union Find Connected Components with Typo",
+      "style": "typo",
+      "stdin": "5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "union_find",
+        "components"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_deifne"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 263,
+      "slug": "263_union_find_cycle_typo",
+      "path": "tests/corpus/cs103/263_union_find_cycle_typo.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Union Find Undirected Cycle Detection with Typo",
+      "style": "typo",
+      "stdin": "check\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "union_find",
+        "cycle_detection"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_retrun"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 264,
+      "slug": "264_union_find_size_contradiction",
+      "path": "tests/corpus/cs103/264_union_find_size_contradiction.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Union Find Largest Component Conflicting Bounds",
+      "style": "ambiguous",
+      "stdin": "inspect\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "union_find",
+        "ambiguous"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_bounds"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 265,
+      "slug": "265_kruskal_mst_lossy",
+      "path": "tests/corpus/cs103/265_kruskal_mst_lossy.meme",
+      "course": "cs103",
+      "topic": "trees_and_union_find",
+      "title": "Kruskal Minimum Spanning Tree Lossy Edge Inclusion",
+      "style": "ambiguous",
+      "stdin": "build\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "kruskal",
+        "ambiguous"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "lossy_single_branch"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 266,
+      "slug": "266_graph_vertex_degrees",
+      "path": "tests/corpus/cs103/266_graph_vertex_degrees.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Graph Out-Degree and In-Degree Tally",
+      "style": "clean",
+      "stdin": "2\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "graph",
+        "in_degree"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 267,
+      "slug": "267_bfs_shortest_hops",
+      "path": "tests/corpus/cs103/267_bfs_shortest_hops.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Breadth First Search Shortest Hop Distance",
+      "style": "clean",
+      "stdin": "4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "graph",
+        "bfs"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 268,
+      "slug": "268_bipartite_2color_check",
+      "path": "tests/corpus/cs103/268_bipartite_2color_check.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Bipartite Graph Two-Coloring Verifier",
+      "style": "clean",
+      "stdin": "verify\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "graph",
+        "bipartite"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 269,
+      "slug": "269_dfs_connected_components",
+      "path": "tests/corpus/cs103/269_dfs_connected_components.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Depth First Search Connected Component Count",
+      "style": "clean",
+      "stdin": "count\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "graph",
+        "dfs"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 270,
+      "slug": "270_directed_cycle_3color",
+      "path": "tests/corpus/cs103/270_directed_cycle_3color.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Directed Graph Cycle Detection Three Color DFS",
+      "style": "clean",
+      "stdin": "2\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "graph",
+        "cycle_detection"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 271,
+      "slug": "271_kahn_topological_sort",
+      "path": "tests/corpus/cs103/271_kahn_topological_sort.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Kahn Algorithm In-Degree Topological Sort",
+      "style": "clean",
+      "stdin": "run\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "graph",
+        "topological_sort"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 272,
+      "slug": "272_dijkstra_shortest_path",
+      "path": "tests/corpus/cs103/272_dijkstra_shortest_path.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Dijkstra Single Source Shortest Path",
+      "style": "clean",
+      "stdin": "go\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "7",
+      "feature_tags": [
+        "class",
+        "functions",
+        "graph",
+        "dijkstra"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 273,
+      "slug": "273_bellman_ford_distance",
+      "path": "tests/corpus/cs103/273_bellman_ford_distance.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Bellman Ford Shortest Path with Negative Weights",
+      "style": "clean",
+      "stdin": "-5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "-2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "graph",
+        "bellman_ford"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 274,
+      "slug": "274_floyd_warshall_all_pairs",
+      "path": "tests/corpus/cs103/274_floyd_warshall_all_pairs.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Floyd Warshall All Pairs Shortest Paths",
+      "style": "clean",
+      "stdin": "calc\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "9",
+      "feature_tags": [
+        "class",
+        "functions",
+        "graph",
+        "floyd_warshall"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 275,
+      "slug": "275_prim_mst_total_weight",
+      "path": "tests/corpus/cs103/275_prim_mst_total_weight.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Prim Minimum Spanning Tree Total Weight",
+      "style": "clean",
+      "stdin": "sum\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "19",
+      "feature_tags": [
+        "class",
+        "functions",
+        "graph",
+        "mst"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 276,
+      "slug": "276_grid_islands_count",
+      "path": "tests/corpus/cs103/276_grid_islands_count.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Grid Number of Connected Land Islands",
+      "style": "clean",
+      "stdin": "run\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "grid",
+        "islands"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 277,
+      "slug": "277_flood_fill_region_size",
+      "path": "tests/corpus/cs103/277_flood_fill_region_size.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Flood Fill Connected Region Area Size",
+      "style": "clean",
+      "stdin": "2\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "grid",
+        "flood_fill"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 278,
+      "slug": "278_knight_minimum_moves",
+      "path": "tests/corpus/cs103/278_knight_minimum_moves.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Knight Shortest Moves on Chessboard",
+      "style": "clean",
+      "stdin": "2\n1\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "bfs",
+        "chess"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 279,
+      "slug": "279_knapsack_01_max_value",
+      "path": "tests/corpus/cs103/279_knapsack_01_max_value.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Zero One Knapsack Maximum Total Value",
+      "style": "clean",
+      "stdin": "7\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "18",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "knapsack"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 280,
+      "slug": "280_unbounded_knapsack",
+      "path": "tests/corpus/cs103/280_unbounded_knapsack.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Unbounded Knapsack Repetition Allowed Max Value",
+      "style": "clean",
+      "stdin": "8\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "24",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "unbounded_knapsack"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 281,
+      "slug": "281_coin_change_min_coins",
+      "path": "tests/corpus/cs103/281_coin_change_min_coins.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Coin Change Minimum Total Coins",
+      "style": "clean",
+      "stdin": "11\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "coin_change"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 282,
+      "slug": "282_coin_change_ways_count",
+      "path": "tests/corpus/cs103/282_coin_change_ways_count.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Coin Change Total Combination Ways",
+      "style": "clean",
+      "stdin": "5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "combinations"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 283,
+      "slug": "283_climbing_stairs_three_steps",
+      "path": "tests/corpus/cs103/283_climbing_stairs_three_steps.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Climbing Stairs DP One Two or Three Steps",
+      "style": "clean",
+      "stdin": "4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "7",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "fibonacci"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 284,
+      "slug": "284_house_robber_non_adjacent",
+      "path": "tests/corpus/cs103/284_house_robber_non_adjacent.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "House Robber Maximum Non-Adjacent Sum",
+      "style": "clean",
+      "stdin": "rob\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "12",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "house_robber"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 285,
+      "slug": "285_house_robber_circular",
+      "path": "tests/corpus/cs103/285_house_robber_circular.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Circular House Robber First and Last Conflict",
+      "style": "clean",
+      "stdin": "circ\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "circular"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 286,
+      "slug": "286_longest_common_subsequence",
+      "path": "tests/corpus/cs103/286_longest_common_subsequence.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Longest Common Subsequence DP Length",
+      "style": "clean",
+      "stdin": "lcs\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "lcs"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 287,
+      "slug": "287_levenshtein_edit_distance",
+      "path": "tests/corpus/cs103/287_levenshtein_edit_distance.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Levenshtein Edit Distance Minimum Operations",
+      "style": "clean",
+      "stdin": "edit\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "edit_distance"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 288,
+      "slug": "288_longest_increasing_subsequence",
+      "path": "tests/corpus/cs103/288_longest_increasing_subsequence.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Longest Increasing Subsequence Length DP",
+      "style": "clean",
+      "stdin": "lis\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "lis"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 289,
+      "slug": "289_matrix_min_path_sum",
+      "path": "tests/corpus/cs103/289_matrix_min_path_sum.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Matrix Minimum Path Sum Top-Left to Bottom-Right",
+      "style": "clean",
+      "stdin": "step\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "7",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "grid"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 290,
+      "slug": "290_unique_paths_obstacles",
+      "path": "tests/corpus/cs103/290_unique_paths_obstacles.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Unique Grid Paths with Obstacles",
+      "style": "clean",
+      "stdin": "ways\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "grid_paths"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 291,
+      "slug": "291_rod_cutting_max_revenue",
+      "path": "tests/corpus/cs103/291_rod_cutting_max_revenue.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Rod Cutting Maximum Revenue DP",
+      "style": "clean",
+      "stdin": "4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "10",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "rod_cutting"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 292,
+      "slug": "292_partition_equal_subset_sum",
+      "path": "tests/corpus/cs103/292_partition_equal_subset_sum.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Partition Array into Equal Subset Sums",
+      "style": "clean",
+      "stdin": "check\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "subset_sum"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 293,
+      "slug": "293_matrix_chain_multiplication_typo",
+      "path": "tests/corpus/cs103/293_matrix_chain_multiplication_typo.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Matrix Chain Multiplication Minimum Cost with Typo",
+      "style": "typo",
+      "stdin": "calc\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "30",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "matrix_chain"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_costt"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 294,
+      "slug": "294_palindromic_substrings_typo",
+      "path": "tests/corpus/cs103/294_palindromic_substrings_typo.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Count Palindromic Substrings with Typo",
+      "style": "typo",
+      "stdin": "3\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "6",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "palindrome"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_form"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 295,
+      "slug": "295_word_break_dp_typo",
+      "path": "tests/corpus/cs103/295_word_break_dp_typo.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Word Break Dictionary Segmentable with Typo",
+      "style": "typo",
+      "stdin": "check\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "dp",
+        "word_break"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_deifne"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 296,
+      "slug": "296_greedy_interval_scheduling_typo",
+      "path": "tests/corpus/cs103/296_greedy_interval_scheduling_typo.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Greedy Activity Interval Scheduling with Typo",
+      "style": "typo",
+      "stdin": "run\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "greedy",
+        "interval_scheduling"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_pirnt"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 297,
+      "slug": "297_fractional_knapsack_lossy",
+      "path": "tests/corpus/cs103/297_fractional_knapsack_lossy.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Fractional Knapsack Incomplete Value Calculation",
+      "style": "ambiguous",
+      "stdin": "calc\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "greedy",
+        "ambiguous"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "lossy_single_branch"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 298,
+      "slug": "298_jump_game_contradiction",
+      "path": "tests/corpus/cs103/298_jump_game_contradiction.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Jump Game Reachability Contradictory Bounds",
+      "style": "ambiguous",
+      "stdin": "jump\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "greedy",
+        "ambiguous"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_bounds"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 299,
+      "slug": "299_train_platforms_conflicting",
+      "path": "tests/corpus/cs103/299_train_platforms_conflicting.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Minimum Train Platforms Conflicting Interval State",
+      "style": "ambiguous",
+      "stdin": "schedule\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "greedy",
+        "ambiguous"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_branches"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 300,
+      "slug": "300_gas_station_loop_mutation",
+      "path": "tests/corpus/cs103/300_gas_station_loop_mutation.meme",
+      "course": "cs103",
+      "topic": "graphs_and_dp",
+      "title": "Gas Station Circular Tour Loop Mutation Ambiguity",
+      "style": "ambiguous",
+      "stdin": "tour\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "greedy",
+        "ambiguous"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "loop_mutation_collision"
         ],
         "language": []
       }

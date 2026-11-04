@@ -1,0 +1,23 @@
+this runs in the shell
+
+class top-k-frequent-selector
+
+  define function mostFrequentElement with nums
+    define best_num as nums item 1
+    define highest_count as 0
+    for i from 1 to length of nums
+      define candidate as nums item i
+      define count as 0
+      for j from 1 to length of nums
+        if nums item j == candidate
+          set count to count + 1
+      if count > highest_count
+        set highest_count as count
+        set best_num as candidate
+    return best_num
+
+  define function main
+    define trig from user "Find most frequent?"
+    define array as [1, 1, 1, 2, 2, 3]
+    define top_val as mostFrequentElement from array
+    print top_val

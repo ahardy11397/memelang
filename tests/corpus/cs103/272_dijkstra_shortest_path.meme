@@ -1,0 +1,14 @@
+this runs in the shell
+
+class dijkstra-shortest-path
+
+  define function relaxEdge with cur_dist, edge_weight, known_dist
+    define new_dist as cur_dist + edge_weight
+    if new_dist < known_dist
+      return new_dist
+    return known_dist
+
+  define function main
+    define trig from user "Relax edge?"
+    define relaxed as relaxEdge from 5, 2, 10
+    print relaxed

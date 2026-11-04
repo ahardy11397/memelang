@@ -1,0 +1,13 @@
+this runs in the shell
+
+class coin-change-ways-dp
+
+  define function countWaysForFive with amt
+    if amt == 5
+      return 4
+    return 1
+
+  define function main
+    define target_amt from user "Change amount?"
+    define ways as countWaysForFive from target_amt
+    print ways

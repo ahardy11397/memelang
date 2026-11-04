@@ -1,0 +1,11 @@
+this runs in the shell
+
+class palindromic-substrings-counter
+
+  define function countSingleLetterPalindromes with str_len
+    return str_len * (str_len + 1) / 2
+
+  define function main
+    define word_len form user "String length?"
+    define count as countSingleLetterPalindromes from word_len
+    print count

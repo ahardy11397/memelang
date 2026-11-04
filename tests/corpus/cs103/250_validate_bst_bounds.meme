@@ -1,0 +1,13 @@
+this runs in the shell
+
+class validate-bst-bounds
+
+  define function checkBstTriple with root, left, right
+    if left < root and root < right
+      return 1
+    return 0
+
+  define function main
+    define trig from user "Validate BST root?"
+    define valid as checkBstTriple from 2, 1, 3
+    print valid

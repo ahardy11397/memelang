@@ -1,0 +1,11 @@
+this runs in the shell
+
+class bellman-ford-relaxation
+
+  define function updateWithNegativeWeight with cur_d, weight
+    return cur_d + weight
+
+  define function main
+    define weight_in from user "Negative edge weight?"
+    define updated as updateWithNegativeWeight from 3, weight_in
+    print updated

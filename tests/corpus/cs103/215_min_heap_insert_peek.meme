@@ -1,0 +1,17 @@
+this runs in the shell
+
+class binary-min-heap
+
+  define function peekHeap with heap_nodes
+    return heap_nodes item 1
+
+  define function bubbleUpCheck with parent_val, child_val
+    if child_val < parent_val
+      return 1
+    return 0
+
+  define function main
+    define input_val from user "Heap root query?"
+    define min_tree as [5, 10, 15, 20]
+    define root as peekHeap from min_tree
+    print root

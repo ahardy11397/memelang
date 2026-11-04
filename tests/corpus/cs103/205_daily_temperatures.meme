@@ -1,0 +1,16 @@
+this runs in the shell
+
+class daily-temperatures
+
+  define function daysUntilWarmer with temps, day_idx
+    define cur_t as temps item day_idx
+    for k from (day_idx + 1) to length of temps
+      if temps item k > cur_t
+        return k - day_idx
+    return 0
+
+  define function main
+    define day_target from user "Day number?"
+    define history as [73, 74, 75, 71, 69, 72, 76, 73]
+    define wait_days as daysUntilWarmer from history, day_target
+    print wait_days

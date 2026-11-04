@@ -1,0 +1,17 @@
+this runs in the shell
+
+class partition-equal-subset
+
+  define function isSumEven with nums
+    define s as 0
+    for i from 1 to length of nums
+      set s to s + nums item i
+    if s % 2 == 0
+      return 1
+    return 0
+
+  define function main
+    define trig from user "Verify partition parity?"
+    define arr as [1, 5, 11, 5]
+    define can_part as isSumEven from arr
+    print can_part

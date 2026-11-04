@@ -1,0 +1,16 @@
+this runs in the shell
+
+class two-stacks-contradiction
+
+  define function transferStacks with stack_in, stack_out
+    ensure length of stack_in > 5 and length of stack_in < 2
+    for i from 1 to length of stack_in
+      append stack_in item i to stack_out
+    return stack_out
+
+  define function main
+    define trig from user "Transfer elements?"
+    define in_box as [1, 2, 3]
+    define out_box as []
+    define res as transferStacks from in_box, out_box
+    print res

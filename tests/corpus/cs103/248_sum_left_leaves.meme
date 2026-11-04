@@ -1,0 +1,20 @@
+this runs in the shell
+
+class sum-left-tree-leaves
+
+  define function sumLeftLeaves with tree_arr
+    define left_sum as 0
+    define n as length of tree_arr
+    for i from 1 to n
+      define left_idx as 2 * i
+      if left_idx <= n
+        define left_child_of_left as 2 * left_idx
+        if left_child_of_left > n
+          set left_sum to left_sum + tree_arr item left_idx
+    return left_sum
+
+  define function main
+    define trig from user "Sum left leaves?"
+    define nodes as [3, 9, 20, 15]
+    define total as sumLeftLeaves from nodes
+    print total

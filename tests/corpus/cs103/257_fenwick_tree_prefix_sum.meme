@@ -1,0 +1,15 @@
+this runs in the shell
+
+class fenwick-prefix-query
+
+  define function queryBitPrefix with bit_tree, idx
+    define total as 0
+    for i from 1 to idx
+      set total to total + bit_tree item i
+    return total
+
+  define function main
+    define query_pos from user "Query position?"
+    define bit_data as [2, 5, 1, 10]
+    define ans as queryBitPrefix from bit_data, query_pos
+    print ans

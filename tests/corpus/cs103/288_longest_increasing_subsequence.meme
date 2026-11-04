@@ -1,0 +1,22 @@
+this runs in the shell
+
+class longest-increasing-subsequence
+
+  define function computeLisLength with nums
+    define max_streak as 0
+    for i from 1 to length of nums
+      define streak as 1
+      define last_v as nums item i
+      for j from (i + 1) to length of nums
+        if nums item j > last_v
+          set streak to streak + 1
+          set last_v as nums item j
+      if streak > max_streak
+        set max_streak as streak
+    return max_streak
+
+  define function main
+    define trig from user "Find LIS length?"
+    define series as [10, 2, 5, 7, 101]
+    define lis as computeLisLength from series
+    print lis

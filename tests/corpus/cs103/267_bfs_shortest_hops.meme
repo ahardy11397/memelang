@@ -1,0 +1,12 @@
+this runs in the shell
+
+class bfs-shortest-hops
+
+  define function computeHops with dist_table, target
+    return dist_table item target
+
+  define function main
+    define query_node from user "Target node?"
+    define distances as [0, 1, 2, 2, 3]
+    define hops as computeHops from distances, query_node
+    print hops

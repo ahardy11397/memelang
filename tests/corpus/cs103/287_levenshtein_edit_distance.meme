@@ -1,0 +1,16 @@
+this runs in the shell
+
+class levenshtein-edit-distance
+
+  define function minOfThree with ins, del, rep
+    define m as ins
+    if del < m
+      set m as del
+    if rep < m
+      set m as rep
+    return m
+
+  define function main
+    define trig from user "Compute edit min?"
+    define op as minOfThree from 4, 3, 5
+    print op

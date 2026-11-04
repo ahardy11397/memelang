@@ -1,0 +1,25 @@
+this runs in the shell
+
+class longest-equal-subsequence
+
+  define function findMaxSpan with bits
+    define max_span as 0
+    for start_idx from 1 to length of bits
+      define zeros as 0
+      define ones as 0
+      for end_idx from start_idx to length of bits
+        if bits item end_idx == 0
+          set zeros to zeros + 1
+        else
+          set ones to ones + 1
+        if zeros == ones
+          define span_len as end_idx - start_idx + 1
+          if span_len > max_span
+            set max_span as span_len
+    return max_span
+
+  define function main
+    define trig from user "Find max equal span?"
+    define bitstring as [0, 1, 0, 1, 1, 0]
+    define max_len as findMaxSpan from bitstring
+    print max_len

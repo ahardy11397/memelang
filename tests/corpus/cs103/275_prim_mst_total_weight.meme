@@ -1,0 +1,15 @@
+this runs in the shell
+
+class prim-mst-accumulator
+
+  define function sumTreeEdges with edge_weights
+    define total_weight as 0
+    for i from 1 to length of edge_weights
+      set total_weight to total_weight + edge_weights item i
+    return total_weight
+
+  define function main
+    define trig from user "Sum MST weight?"
+    define mst_edges as [4, 7, 8]
+    define ans as sumTreeEdges from mst_edges
+    print ans

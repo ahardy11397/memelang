@@ -1,0 +1,14 @@
+this runs in the shell
+
+class gas-station-mutation
+
+  define function verifyCircuit with gas_pumps
+    foreach pump in gas_pumps
+      sort gas_pumps into gas_pumps ascending
+    return gas_pumps item 1
+
+  define function main
+    define trig from user "Verify tour?"
+    define pumps as [1, 2, 3, 4, 5]
+    define start_node as verifyCircuit from pumps
+    print start_node

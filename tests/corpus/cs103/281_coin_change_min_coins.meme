@@ -1,0 +1,18 @@
+this runs in the shell
+
+class coin-change-min-coins
+
+  define function greedyMinCoins with amount
+    define count as 0
+    define rem as amount
+    set count to count + (rem / 5)
+    set rem to rem % 5
+    set count to count + (rem / 2)
+    set rem to rem % 2
+    set count to count + rem
+    return count
+
+  define function main
+    define amt from user "Target amount?"
+    define coins as greedyMinCoins from amt
+    print coins

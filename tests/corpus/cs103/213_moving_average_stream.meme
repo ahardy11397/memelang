@@ -1,0 +1,15 @@
+this runs in the shell
+
+class moving-average-stream
+
+  define function calculateAverage with window
+    define total as 0
+    for i from 1 to length of window
+      set total to total + window item i
+    return total / length of window
+
+  define function main
+    define trig from user "Compute moving average?"
+    define stream_window as [10, 20, 30]
+    define avg as calculateAverage from stream_window
+    print avg

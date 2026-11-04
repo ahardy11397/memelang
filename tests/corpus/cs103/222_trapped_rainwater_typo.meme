@@ -1,0 +1,16 @@
+this runs in the shell
+
+class rainwater-elevation-trap
+
+  define function calculateElevationWater with left_max, right_max, height
+    define boundary as left_max
+    if right_max < boundary
+      set boundary to right_max
+    if boundary > height
+      return boundary - height
+    return 0
+
+  define function main
+    define init_level form user "Base level?"
+    define water as calculateElevationWater from 4, 3, 1
+    print water
