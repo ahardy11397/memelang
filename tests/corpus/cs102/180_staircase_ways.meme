@@ -1,0 +1,15 @@
+this runs in the shell
+
+class staircase-path-counter
+
+  define function countStairPaths with steps
+    if steps <= 1
+      return 1
+    define p1 as countStairPaths from (steps - 1)
+    define p2 as countStairPaths from (steps - 2)
+    return p1 + p2
+
+  define function main
+    define num_steps from user "Staircase height?"
+    define ways as countStairPaths from num_steps
+    print ways

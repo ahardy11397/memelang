@@ -1,0 +1,21 @@
+this runs in the shell
+
+class common-prefix-analyzer
+
+  define function prefixLength with s1, s2
+    define min_l as length of s1
+    if length of s2 < min_l
+      set min_l to length of s2
+    define match_len as 0
+    for idx from 1 to min_l
+      if s1 char idx == s2 char idx
+        set match_len to match_len + 1
+      else
+        return match_len
+    return match_len
+
+  define function main
+    define first_str from user "First string?"
+    define second_str from user "Second string?"
+    define lcp_len as prefixLength from first_str, second_str
+    print lcp_len

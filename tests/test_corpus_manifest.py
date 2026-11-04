@@ -228,3 +228,33 @@ def test_cs101_slice_integrity():
         skeletons.add(skel)
     assert len(skeletons) == 100
 
+
+def test_cs102_slice_integrity():
+    import re
+    rc = _load_runner_module()
+    manifest_path = REPO_ROOT / "tests" / "corpus" / "manifest.json"
+    manifest = rc.CorpusManifest.model_validate_json(manifest_path.read_text(encoding="utf-8"))
+    cs102 = [s for s in manifest.scripts if s.course == "cs102"]
+    assert [s.id for s in cs102] == list(range(101, 201))
+    assert sum(1 for s in cs102 if s.style == "clean") == 80
+    assert sum(1 for s in cs102 if s.style == "typo") == 10
+    assert sum(1 for s in cs102 if s.style == "ambiguous") == 10
+
+    assert len({s.slug for s in cs102}) == 100
+    assert len({s.title.lower() for s in cs102}) == 100
+
+    skeletons = set()
+    for s in cs102:
+        p = REPO_ROOT / s.path
+        assert p.is_file() and p.parent.name == "cs102"
+        raw = p.read_text(encoding="utf-8").strip()
+        assert raw != ""
+        if s.style == "ambiguous":
+            assert s.expected_status == "ambiguous" and s.expected_stdout_contains == ""
+        else:
+            assert s.expected_status == "ok" and s.expected_stdout_contains != ""
+        skel = re.sub(r"\d+", "#", re.sub(r"\s+", " ", raw.lower()))
+        skeletons.add(skel)
+    assert len(skeletons) == 100
+
+

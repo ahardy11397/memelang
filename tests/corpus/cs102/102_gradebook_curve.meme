@@ -1,0 +1,25 @@
+this runs in the shell
+
+class gradebook-curver
+
+  define function applyCurve with score, curve_pts
+    define bumped as score + curve_pts
+    if bumped > 100
+      return 100
+    return bumped
+
+  define function dropLowest with s1, s2
+    if s1 < s2
+      return s2
+    else
+      return s1
+
+  define function main
+    define grade_a from user "First score?"
+    define grade_b from user "Second score?"
+    define grade_c from user "Third score?"
+    define curve from user "Bonus points?"
+    define curved_a as applyCurve from grade_a, curve
+    define curved_b as applyCurve from grade_b, curve
+    define best as dropLowest from curved_a, curved_b
+    print best

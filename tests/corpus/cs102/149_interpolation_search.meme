@@ -1,0 +1,18 @@
+this runs in the shell
+
+class interpolation-probe
+
+  define function estimatePosition with arr, target
+    define low as 1
+    define high as length of arr
+    define val_low as arr item low
+    define val_high as arr item high
+    define fraction as (target - val_low) / (val_high - val_low)
+    define estimate as low + (fraction * (high - low))
+    return estimate
+
+  define function main
+    define target_elem from user "Desired value?"
+    define uniform_list as [10, 20, 30, 40, 50]
+    define probe_idx as estimatePosition from uniform_list, target_elem
+    print probe_idx

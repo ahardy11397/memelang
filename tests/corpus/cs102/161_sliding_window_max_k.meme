@@ -1,0 +1,20 @@
+this runs in the shell
+
+class sliding-window-sum
+
+  define function maxWindowK with arr, k
+    define current_sum as 0
+    for i from 1 to k
+      set current_sum to current_sum + arr item i
+    define best_sum as current_sum
+    for j from (k + 1) to length of arr
+      set current_sum to current_sum + (arr item j) - (arr item (j - k))
+      if current_sum > best_sum
+        set best_sum to current_sum
+    return best_sum
+
+  define function main
+    define window_k from user "Window size K?"
+    define elements as [2, 1, 5, 1, 3, 2]
+    define peak_sum as maxWindowK from elements, window_k
+    print peak_sum

@@ -1,0 +1,15 @@
+this runs in the shell
+
+class json-list-checker
+
+  define function safeLength with target_path
+    if target_path is json
+      define content_list as fromFile from target_path
+      retrun length of content_list
+    else
+      return 0
+
+  define function main
+    define input_file from user "Path to verify?"
+    define count as safeLength from input_file
+    print count

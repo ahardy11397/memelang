@@ -1,6 +1,6 @@
 {
   "corpus_version": 1,
-  "total_scripts": 100,
+  "total_scripts": 200,
   "scripts": [
     {
       "id": 1,
@@ -2176,6 +2176,2354 @@
       "extensibility_gaps": {
         "examples": [
           "contradictory_sort_direction"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 101,
+      "slug": "101_bank_account",
+      "path": "tests/corpus/cs102/101_bank_account.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Bank Account Balance Manager",
+      "style": "clean",
+      "stdin": "100\n50\n20\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "130",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 102,
+      "slug": "102_gradebook_curve",
+      "path": "tests/corpus/cs102/102_gradebook_curve.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Gradebook Curve and Lowest Dropper",
+      "style": "clean",
+      "stdin": "65\n85\n90\n5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "90",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 103,
+      "slug": "103_shopping_cart",
+      "path": "tests/corpus/cs102/103_shopping_cart.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Shopping Cart Subtotal and Tax Calculator",
+      "style": "clean",
+      "stdin": "40\n60\n10\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "99",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 104,
+      "slug": "104_vending_machine",
+      "path": "tests/corpus/cs102/104_vending_machine.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Vending Machine Change Dispenser",
+      "style": "clean",
+      "stdin": "100\n65\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "35",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 105,
+      "slug": "105_parking_garage",
+      "path": "tests/corpus/cs102/105_parking_garage.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Parking Garage Tiered Fee Calculator",
+      "style": "clean",
+      "stdin": "5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "14",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 106,
+      "slug": "106_rpg_combat",
+      "path": "tests/corpus/cs102/106_rpg_combat.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "RPG Combat Turn Damage Simulator",
+      "style": "clean",
+      "stdin": "50\n20\n5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "35",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 107,
+      "slug": "107_thermostat_hysteresis",
+      "path": "tests/corpus/cs102/107_thermostat_hysteresis.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Thermostat Hysteresis Mode Evaluator",
+      "style": "clean",
+      "stdin": "68\n72\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 108,
+      "slug": "108_inventory_restock",
+      "path": "tests/corpus/cs102/108_inventory_restock.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Warehouse Inventory Restock Checker",
+      "style": "clean",
+      "stdin": "12\n10\n15\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "23",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 109,
+      "slug": "109_payroll_calc",
+      "path": "tests/corpus/cs102/109_payroll_calc.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Payroll Net Pay and Tax Deductions",
+      "style": "clean",
+      "stdin": "40\n25\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "850",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 110,
+      "slug": "110_fraction_reducer",
+      "path": "tests/corpus/cs102/110_fraction_reducer.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Fraction Reducer using Greatest Common Divisor",
+      "style": "clean",
+      "stdin": "24\n36\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "loops",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 111,
+      "slug": "111_complex_number",
+      "path": "tests/corpus/cs102/111_complex_number.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Complex Number Multiplication Real Part",
+      "style": "clean",
+      "stdin": "2\n3\n4\n5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "-7",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 112,
+      "slug": "112_vector_2d",
+      "path": "tests/corpus/cs102/112_vector_2d.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "2D Vector Dot Product Calculator",
+      "style": "clean",
+      "stdin": "3\n4\n2\n6\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "30",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 113,
+      "slug": "113_stopwatch_lap",
+      "path": "tests/corpus/cs102/113_stopwatch_lap.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Stopwatch Lap Split and Difference",
+      "style": "clean",
+      "stdin": "58\n62\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 114,
+      "slug": "114_elo_rating",
+      "path": "tests/corpus/cs102/114_elo_rating.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Elo Rating Adjustment Step",
+      "style": "clean",
+      "stdin": "1500\n1\n32\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1516",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 115,
+      "slug": "115_weighted_gpa",
+      "path": "tests/corpus/cs102/115_weighted_gpa.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Credit-Weighted Grade Point Average",
+      "style": "clean",
+      "stdin": "4\n3\n3\n4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "24",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 116,
+      "slug": "116_loan_amortization",
+      "path": "tests/corpus/cs102/116_loan_amortization.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Loan Amortization Simple Interest Estimator",
+      "style": "clean",
+      "stdin": "1000\n5\n2\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "100",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 117,
+      "slug": "117_trip_fuel_efficiency",
+      "path": "tests/corpus/cs102/117_trip_fuel_efficiency.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Vehicle Trip Fuel Consumption",
+      "style": "clean",
+      "stdin": "300\n30\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "10",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 118,
+      "slug": "118_tank_clamp",
+      "path": "tests/corpus/cs102/118_tank_clamp.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Water Tank Inflow Outflow Clamping",
+      "style": "clean",
+      "stdin": "80\n30\n10\n100\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "100",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 119,
+      "slug": "119_battery_cycle_estimator",
+      "path": "tests/corpus/cs102/119_battery_cycle_estimator.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Battery Degradation Cycle Counter",
+      "style": "typo",
+      "stdin": "800\n1000\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "80",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_from_use"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 120,
+      "slug": "120_assertion_runner",
+      "path": "tests/corpus/cs102/120_assertion_runner.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Automated Assertion Equality Verifier",
+      "style": "typo",
+      "stdin": "42\n42\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_pirnt"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 121,
+      "slug": "121_caesar_shift_helper",
+      "path": "tests/corpus/cs102/121_caesar_shift_helper.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Caesar Cipher Numeric Code Shifter",
+      "style": "clean",
+      "stdin": "15\n3\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "18",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 122,
+      "slug": "122_luhn_checksum",
+      "path": "tests/corpus/cs102/122_luhn_checksum.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Luhn Single Digit Double and Reducer",
+      "style": "clean",
+      "stdin": "7\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 123,
+      "slug": "123_rgb_luminance",
+      "path": "tests/corpus/cs102/123_rgb_luminance.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "RGB Color Photometric Luminance",
+      "style": "clean",
+      "stdin": "100\n150\n200\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "143",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 124,
+      "slug": "124_box_intersect_ambiguity",
+      "path": "tests/corpus/cs102/124_box_intersect_ambiguity.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Contradictory Box Overlap Detection",
+      "style": "ambiguous",
+      "stdin": "0\n10\n5\n15\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_branches"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 125,
+      "slug": "125_day_of_year_contradiction",
+      "path": "tests/corpus/cs102/125_day_of_year_contradiction.meme",
+      "course": "cs102",
+      "topic": "classes_and_state",
+      "title": "Conflicting Leap Year Day Count",
+      "style": "ambiguous",
+      "stdin": "2\n28\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_bounds"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 126,
+      "slug": "126_json_min_guard",
+      "path": "tests/corpus/cs102/126_json_min_guard.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Minimum Finder with Filetype Guard",
+      "style": "clean",
+      "stdin": "../fixtures/numbers.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "conditionals",
+        "lists"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 127,
+      "slug": "127_json_average",
+      "path": "tests/corpus/cs102/127_json_average.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Scores Average Calculator",
+      "style": "clean",
+      "stdin": "../fixtures/scores.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "84",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 128,
+      "slug": "128_json_outliers",
+      "path": "tests/corpus/cs102/128_json_outliers.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON High Score Outlier Counter",
+      "style": "clean",
+      "stdin": "../fixtures/scores.json\n90\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 129,
+      "slug": "129_json_positives",
+      "path": "tests/corpus/cs102/129_json_positives.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Negative List Positive Counter",
+      "style": "clean",
+      "stdin": "../fixtures/negatives.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 130,
+      "slug": "130_json_clamp",
+      "path": "tests/corpus/cs102/130_json_clamp.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON First Value Bounded Clamper",
+      "style": "clean",
+      "stdin": "../fixtures/negatives.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "0",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 131,
+      "slug": "131_json_median",
+      "path": "tests/corpus/cs102/131_json_median.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Sorted List Median Finder",
+      "style": "clean",
+      "stdin": "../fixtures/sorted_nums.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "18",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 132,
+      "slug": "132_json_iqr",
+      "path": "tests/corpus/cs102/132_json_iqr.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Spread Range Extractor",
+      "style": "clean",
+      "stdin": "../fixtures/sorted_nums.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "59",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 133,
+      "slug": "133_json_compare_two",
+      "path": "tests/corpus/cs102/133_json_compare_two.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "Compare Averages of Two JSON Files",
+      "style": "clean",
+      "stdin": "../fixtures/weights.json\n../fixtures/values.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 134,
+      "slug": "134_json_dot_product",
+      "path": "tests/corpus/cs102/134_json_dot_product.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Paired Lists Dot Product",
+      "style": "clean",
+      "stdin": "../fixtures/weights.json\n../fixtures/values.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "68",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 135,
+      "slug": "135_json_check_sorted",
+      "path": "tests/corpus/cs102/135_json_check_sorted.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Monotonic Increasing Order Checker",
+      "style": "clean",
+      "stdin": "../fixtures/sorted_nums.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 136,
+      "slug": "136_json_deduplicate",
+      "path": "tests/corpus/cs102/136_json_deduplicate.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Distinct Consecutive Values Counter",
+      "style": "clean",
+      "stdin": "../fixtures/scores.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "6",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 137,
+      "slug": "137_json_max_deviation",
+      "path": "tests/corpus/cs102/137_json_max_deviation.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Maximum Absolute Deviation from Mean",
+      "style": "clean",
+      "stdin": "../fixtures/numbers.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "66",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 138,
+      "slug": "138_json_moving_avg",
+      "path": "tests/corpus/cs102/138_json_moving_avg.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Three-Point Moving Average First Window",
+      "style": "clean",
+      "stdin": "../fixtures/numbers.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "21",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 139,
+      "slug": "139_json_prefix_sum",
+      "path": "tests/corpus/cs102/139_json_prefix_sum.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Running Cumulative Total Final Sum",
+      "style": "clean",
+      "stdin": "../fixtures/numbers.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "163",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 140,
+      "slug": "140_json_sign_changes",
+      "path": "tests/corpus/cs102/140_json_sign_changes.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Alternating Sign Transition Counter",
+      "style": "clean",
+      "stdin": "../fixtures/negatives.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 141,
+      "slug": "141_csv_guard_typo",
+      "path": "tests/corpus/cs102/141_csv_guard_typo.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "File Extension Type Checker with Typo",
+      "style": "typo",
+      "stdin": "../fixtures/notes.txt\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Wrong File Type",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_deifne"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 142,
+      "slug": "142_empty_list_typo",
+      "path": "tests/corpus/cs102/142_empty_list_typo.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Empty List Safety Check with Typo",
+      "style": "typo",
+      "stdin": "../fixtures/numbers.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_retrun"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 143,
+      "slug": "143_json_negative_filtered_sum",
+      "path": "tests/corpus/cs102/143_json_negative_filtered_sum.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "JSON Negative List Positive Only Sum",
+      "style": "clean",
+      "stdin": "../fixtures/negatives.json\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "31",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 144,
+      "slug": "144_json_pipeline_lossy_ambiguity",
+      "path": "tests/corpus/cs102/144_json_pipeline_lossy_ambiguity.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "Conflicting Sort Directions in JSON Pipeline",
+      "style": "ambiguous",
+      "stdin": "../fixtures/numbers.json\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "lossy_partial_sort"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 145,
+      "slug": "145_json_normalization_contradiction",
+      "path": "tests/corpus/cs102/145_json_normalization_contradiction.meme",
+      "course": "cs102",
+      "topic": "file_and_json",
+      "title": "Contradictory Scaling Bounds in Normalization",
+      "style": "ambiguous",
+      "stdin": "../fixtures/numbers.json\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "file_io",
+        "json",
+        "lists"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_bounds"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 146,
+      "slug": "146_binary_search_iterative",
+      "path": "tests/corpus/cs102/146_binary_search_iterative.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Iterative Binary Search on Ordered List",
+      "style": "clean",
+      "stdin": "14\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 147,
+      "slug": "147_lower_bound",
+      "path": "tests/corpus/cs102/147_lower_bound.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Lower Bound Search for First Greater Equal",
+      "style": "clean",
+      "stdin": "10\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 148,
+      "slug": "148_upper_bound",
+      "path": "tests/corpus/cs102/148_upper_bound.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Upper Bound Search for First Strictly Greater",
+      "style": "clean",
+      "stdin": "14\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 149,
+      "slug": "149_interpolation_search",
+      "path": "tests/corpus/cs102/149_interpolation_search.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Interpolation Search Linear Estimation Probe",
+      "style": "clean",
+      "stdin": "30\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 150,
+      "slug": "150_bubble_sort",
+      "path": "tests/corpus/cs102/150_bubble_sort.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Bubble Sort Element Comparison Count",
+      "style": "clean",
+      "stdin": "5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "10",
+      "feature_tags": [
+        "class",
+        "functions",
+        "loops",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 151,
+      "slug": "151_selection_sort",
+      "path": "tests/corpus/cs102/151_selection_sort.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Selection Sort Minimum Index Finder",
+      "style": "clean",
+      "stdin": "2\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 152,
+      "slug": "152_insertion_sort",
+      "path": "tests/corpus/cs102/152_insertion_sort.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Insertion Sort Insertion Position Finder",
+      "style": "clean",
+      "stdin": "15\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 153,
+      "slug": "153_shell_sort_pass",
+      "path": "tests/corpus/cs102/153_shell_sort_pass.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Shell Sort Next Gap Reduction",
+      "style": "clean",
+      "stdin": "8\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 154,
+      "slug": "154_merge_sorted_lists",
+      "path": "tests/corpus/cs102/154_merge_sorted_lists.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Merge Two Sorted Lists Smallest Head",
+      "style": "clean",
+      "stdin": "1\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 155,
+      "slug": "155_quicksort_lomuto",
+      "path": "tests/corpus/cs102/155_quicksort_lomuto.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Quicksort Lomuto Partition Pivot Smaller Counter",
+      "style": "clean",
+      "stdin": "1\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 156,
+      "slug": "156_dutch_national_flag",
+      "path": "tests/corpus/cs102/156_dutch_national_flag.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Dutch National Flag Zero Count",
+      "style": "clean",
+      "stdin": "1\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 157,
+      "slug": "157_kadane_max_subarray",
+      "path": "tests/corpus/cs102/157_kadane_max_subarray.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Kadane Algorithm Maximum Subarray Sum",
+      "style": "clean",
+      "stdin": "1\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "6",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "arithmetic",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 158,
+      "slug": "158_max_subarray_product",
+      "path": "tests/corpus/cs102/158_max_subarray_product.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Maximum Product of Two Adjacent Elements",
+      "style": "clean",
+      "stdin": "1\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "24",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "arithmetic",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 159,
+      "slug": "159_two_sum_sorted",
+      "path": "tests/corpus/cs102/159_two_sum_sorted.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Two-Sum Two-Pointer Search on Sorted Array",
+      "style": "clean",
+      "stdin": "18\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 160,
+      "slug": "160_container_water",
+      "path": "tests/corpus/cs102/160_container_water.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Container with Most Water Area Evaluator",
+      "style": "clean",
+      "stdin": "1\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "8",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 161,
+      "slug": "161_sliding_window_max_k",
+      "path": "tests/corpus/cs102/161_sliding_window_max_k.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Sliding Window Maximum Sum of Fixed Size K",
+      "style": "clean",
+      "stdin": "3\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "9",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "arithmetic",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 162,
+      "slug": "162_longest_increasing_run",
+      "path": "tests/corpus/cs102/162_longest_increasing_run.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Longest Contiguous Increasing Run Length",
+      "style": "clean",
+      "stdin": "1\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 163,
+      "slug": "163_remove_duplicates_sorted",
+      "path": "tests/corpus/cs102/163_remove_duplicates_sorted.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Sorted Array Unique Element Counter",
+      "style": "clean",
+      "stdin": "1\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 164,
+      "slug": "164_rotate_list_k",
+      "path": "tests/corpus/cs102/164_rotate_list_k.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Rotate List Position Index Calculator",
+      "style": "clean",
+      "stdin": "2\n5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "read_input",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 165,
+      "slug": "165_kth_smallest_typo",
+      "path": "tests/corpus/cs102/165_kth_smallest_typo.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "K-th Smallest Selection with Typo",
+      "style": "typo",
+      "stdin": "3\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "7",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "read_input"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_sorterd"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 166,
+      "slug": "166_inversion_count_typo",
+      "path": "tests/corpus/cs102/166_inversion_count_typo.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "List Pair Inversion Counter with Typo",
+      "style": "typo",
+      "stdin": "1\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_lenght"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 167,
+      "slug": "167_majority_vote_typo",
+      "path": "tests/corpus/cs102/167_majority_vote_typo.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Boyer-Moore Candidate Tally with Typo",
+      "style": "typo",
+      "stdin": "1\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_from_use"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 168,
+      "slug": "168_search_mutation_ambiguity",
+      "path": "tests/corpus/cs102/168_search_mutation_ambiguity.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Concurrent Search and Loop Mutation Collision",
+      "style": "ambiguous",
+      "stdin": "5\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "loops"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "loop_mutation_collision"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 169,
+      "slug": "169_missing_number_lossy",
+      "path": "tests/corpus/cs102/169_missing_number_lossy.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Partial Branch Missing Number Omission",
+      "style": "ambiguous",
+      "stdin": "1\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "lossy_single_branch"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 170,
+      "slug": "170_pivot_index_contradiction",
+      "path": "tests/corpus/cs102/170_pivot_index_contradiction.meme",
+      "course": "cs102",
+      "topic": "search_and_sort",
+      "title": "Equilibrium Pivot Range Boundary Contradiction",
+      "style": "ambiguous",
+      "stdin": "1\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_bounds"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 171,
+      "slug": "171_recursive_factorial",
+      "path": "tests/corpus/cs102/171_recursive_factorial.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Recursive Factorial Calculation",
+      "style": "clean",
+      "stdin": "5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "120",
+      "feature_tags": [
+        "class",
+        "functions",
+        "recursion",
+        "read_input",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 172,
+      "slug": "172_recursive_fibonacci",
+      "path": "tests/corpus/cs102/172_recursive_fibonacci.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Recursive N-th Fibonacci Term",
+      "style": "clean",
+      "stdin": "6\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "8",
+      "feature_tags": [
+        "class",
+        "functions",
+        "recursion",
+        "read_input",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 173,
+      "slug": "173_recursive_gcd",
+      "path": "tests/corpus/cs102/173_recursive_gcd.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Recursive Euclidean Greatest Common Divisor",
+      "style": "clean",
+      "stdin": "48\n18\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "6",
+      "feature_tags": [
+        "class",
+        "functions",
+        "recursion",
+        "read_input",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 174,
+      "slug": "174_recursive_power",
+      "path": "tests/corpus/cs102/174_recursive_power.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Recursive Integer Power Exponentiation",
+      "style": "clean",
+      "stdin": "2\n5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "32",
+      "feature_tags": [
+        "class",
+        "functions",
+        "recursion",
+        "read_input",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 175,
+      "slug": "175_recursive_binary_search",
+      "path": "tests/corpus/cs102/175_recursive_binary_search.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Recursive Divide-and-Conquer Binary Search",
+      "style": "clean",
+      "stdin": "23\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "recursion",
+        "lists",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 176,
+      "slug": "176_recursive_sum_digits",
+      "path": "tests/corpus/cs102/176_recursive_sum_digits.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Recursive Sum of Positive Digits",
+      "style": "clean",
+      "stdin": "345\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "12",
+      "feature_tags": [
+        "class",
+        "functions",
+        "recursion",
+        "read_input",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 177,
+      "slug": "177_hanoi_move_count",
+      "path": "tests/corpus/cs102/177_hanoi_move_count.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Towers of Hanoi Minimum Moves Recurrence",
+      "style": "clean",
+      "stdin": "4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "15",
+      "feature_tags": [
+        "class",
+        "functions",
+        "recursion",
+        "read_input",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 178,
+      "slug": "178_ackermann_small",
+      "path": "tests/corpus/cs102/178_ackermann_small.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Ackermann Function Small Inputs Evaluation",
+      "style": "clean",
+      "stdin": "2\n2\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "7",
+      "feature_tags": [
+        "class",
+        "functions",
+        "recursion",
+        "read_input",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 179,
+      "slug": "179_mccarthy_91",
+      "path": "tests/corpus/cs102/179_mccarthy_91.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "McCarthy 91 Function Recursive Evaluator",
+      "style": "clean",
+      "stdin": "85\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "91",
+      "feature_tags": [
+        "class",
+        "functions",
+        "recursion",
+        "read_input",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 180,
+      "slug": "180_staircase_ways",
+      "path": "tests/corpus/cs102/180_staircase_ways.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Recursive Distinct Staircase Paths",
+      "style": "clean",
+      "stdin": "4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "recursion",
+        "read_input",
+        "conditionals",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 181,
+      "slug": "181_string_char_count",
+      "path": "tests/corpus/cs102/181_string_char_count.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "String Length and Character Counter",
+      "style": "clean",
+      "stdin": "hello\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 182,
+      "slug": "182_reverse_string",
+      "path": "tests/corpus/cs102/182_reverse_string.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Word Reversal Mirror Verification",
+      "style": "clean",
+      "stdin": "abc\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "cba",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "loops"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 183,
+      "slug": "183_palindrome_check",
+      "path": "tests/corpus/cs102/183_palindrome_check.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Symmetric Word Palindrome Verifier",
+      "style": "clean",
+      "stdin": "radar\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 184,
+      "slug": "184_case_insensitive_palindrome",
+      "path": "tests/corpus/cs102/184_case_insensitive_palindrome.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Normalized Case Palindrome Equality",
+      "style": "clean",
+      "stdin": "Madam\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 185,
+      "slug": "185_count_vowels",
+      "path": "tests/corpus/cs102/185_count_vowels.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Sentence Vowel Occurrence Counter",
+      "style": "clean",
+      "stdin": "hello world\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 186,
+      "slug": "186_count_words",
+      "path": "tests/corpus/cs102/186_count_words.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Sentence Word Boundary Space Counter",
+      "style": "clean",
+      "stdin": "the quick brown fox\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 187,
+      "slug": "187_caesar_cipher",
+      "path": "tests/corpus/cs102/187_caesar_cipher.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Character ASCII Caesar Rotator",
+      "style": "clean",
+      "stdin": "A\n3\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "D",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "arithmetic"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 188,
+      "slug": "188_run_length_encoding",
+      "path": "tests/corpus/cs102/188_run_length_encoding.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Run-Length Encoding Block Compressor",
+      "style": "clean",
+      "stdin": "aaabbc\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3a2b1c",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 189,
+      "slug": "189_anagram_check",
+      "path": "tests/corpus/cs102/189_anagram_check.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Same Length and Sorted Anagram Matcher",
+      "style": "clean",
+      "stdin": "listen\nsilent\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 190,
+      "slug": "190_longest_common_prefix",
+      "path": "tests/corpus/cs102/190_longest_common_prefix.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Two Word Longest Common Prefix Length",
+      "style": "clean",
+      "stdin": "flower\nflow\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 191,
+      "slug": "191_balanced_parentheses",
+      "path": "tests/corpus/cs102/191_balanced_parentheses.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Balanced Parentheses Nesting Depth Verifier",
+      "style": "clean",
+      "stdin": "(())()\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 192,
+      "slug": "192_valid_brackets",
+      "path": "tests/corpus/cs102/192_valid_brackets.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Multi-Bracket Character Counter Check",
+      "style": "clean",
+      "stdin": "[](){}\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 193,
+      "slug": "193_camel_to_snake",
+      "path": "tests/corpus/cs102/193_camel_to_snake.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "CamelCase Uppercase Word Boundary Counter",
+      "style": "clean",
+      "stdin": "myVariableName\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 194,
+      "slug": "194_strip_duplicate_spaces",
+      "path": "tests/corpus/cs102/194_strip_duplicate_spaces.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Consecutive Space Reducer Length",
+      "style": "clean",
+      "stdin": "a  b   c\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 195,
+      "slug": "195_substring_search_typo",
+      "path": "tests/corpus/cs102/195_substring_search_typo.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Substring Naive Pattern Match with Typo",
+      "style": "typo",
+      "stdin": "needle\nhaystack_needle_here\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "10",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_pirnt"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 196,
+      "slug": "196_hamming_distance_typo",
+      "path": "tests/corpus/cs102/196_hamming_distance_typo.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Hamming Character Difference Metric with Typo",
+      "style": "typo",
+      "stdin": "karolin\nkathrin\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input",
+        "loops",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_retrun"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 197,
+      "slug": "197_pangram_check_typo",
+      "path": "tests/corpus/cs102/197_pangram_check_typo.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Alphabet Pangram Character Coverage with Typo",
+      "style": "typo",
+      "stdin": "the quick brown fox jumps over the lazy dog\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "26",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_deifne"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 198,
+      "slug": "198_roman_numeral_ambiguity",
+      "path": "tests/corpus/cs102/198_roman_numeral_ambiguity.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Contradictory Roman Numeral Subtraction Rules",
+      "style": "ambiguous",
+      "stdin": "XIV\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_branches"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 199,
+      "slug": "199_int_to_roman_lossy",
+      "path": "tests/corpus/cs102/199_int_to_roman_lossy.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Lossy Omission of Roman Numeral Intermediate Steps",
+      "style": "ambiguous",
+      "stdin": "40\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "recursion",
+        "read_input"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "lossy_single_branch"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 200,
+      "slug": "200_title_case_contradiction",
+      "path": "tests/corpus/cs102/200_title_case_contradiction.meme",
+      "course": "cs102",
+      "topic": "recursion_and_strings",
+      "title": "Capitalize and Lowercase Mutual Contradiction",
+      "style": "ambiguous",
+      "stdin": "hello world\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "strings",
+        "read_input"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_bounds"
         ],
         "language": []
       }

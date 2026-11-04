@@ -1,0 +1,15 @@
+this runs in the shell
+
+class file-type-validator
+
+  define function validateExtension with path_string
+    if path_string is json
+      deifne res as "Valid JSON"
+      return res
+    else
+      return "Wrong File Type"
+
+  define function main
+    define file_to_check from user "Enter file name?"
+    define verdict as validateExtension from file_to_check
+    print verdict

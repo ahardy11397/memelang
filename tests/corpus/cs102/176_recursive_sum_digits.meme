@@ -1,0 +1,16 @@
+this runs in the shell
+
+class recursive-digit-sum
+
+  define function sumDigits with n
+    if n < 10
+      return n
+    define last_digit as n - ((n / 10) * 10)
+    define rest as n / 10
+    define sub_sum as sumDigits from rest
+    return last_digit + sub_sum
+
+  define function main
+    define num from user "Integer to sum digits?"
+    define res as sumDigits from num
+    print res

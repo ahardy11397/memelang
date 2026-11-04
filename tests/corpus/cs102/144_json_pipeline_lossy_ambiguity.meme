@@ -1,0 +1,17 @@
+this runs in the shell
+
+class json-lossy-pipeline
+
+  define function loadAndSort with fp
+    if fp is json
+      define dataset as fromFile from fp
+      sort dataset ascending
+      sort dataset descending
+      filter dataset where item < 0 and item > 100
+      return dataset
+    else return "Wrong File Type"
+
+  define function main
+    define p from user "File path?"
+    define result as loadAndSort from p
+    print result

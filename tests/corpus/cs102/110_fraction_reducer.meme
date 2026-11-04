@@ -1,0 +1,20 @@
+this runs in the shell
+
+class fraction-reducer
+
+  define function computeGcd with a, b
+    define x as a
+    define y as b
+    while y != 0
+      define temp as y
+      define rem as x - ((x / y) * y)
+      set x to temp
+      set y to rem
+    return x
+
+  define function main
+    define numerator from user "Fraction numerator?"
+    define denominator from user "Fraction denominator?"
+    define common as computeGcd from numerator, denominator
+    define reduced_num as numerator / common
+    print reduced_num

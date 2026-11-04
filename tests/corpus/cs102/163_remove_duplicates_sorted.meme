@@ -1,0 +1,18 @@
+this runs in the shell
+
+class sorted-unique-counter
+
+  define function countUniqueInSorted with arr
+    if length of arr == 0
+      return 0
+    define unique_count as 1
+    for i from 2 to length of arr
+      if arr item i != arr item (i - 1)
+        set unique_count to unique_count + 1
+    return unique_count
+
+  define function main
+    define opt from user "Calculate distinct count?"
+    define sorted_repeats as [1, 1, 2, 2, 3, 4, 4, 5]
+    define total_distinct as countUniqueInSorted from sorted_repeats
+    print total_distinct

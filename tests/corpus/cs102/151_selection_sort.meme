@@ -1,0 +1,16 @@
+this runs in the shell
+
+class selection-sort-pass
+
+  define function findMinIndexStartingAt with arr, start_pos
+    define min_idx as start_pos
+    for k from (start_pos + 1) to length of arr
+      if arr item k < arr item min_idx
+        set min_idx to k
+    return min_idx
+
+  define function main
+    define start_index from user "Pass start index?"
+    define elements as [64, 25, 12, 22, 11]
+    define chosen_idx as findMinIndexStartingAt from elements, start_index
+    print chosen_idx

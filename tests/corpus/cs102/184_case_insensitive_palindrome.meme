@@ -1,0 +1,19 @@
+this runs in the shell
+
+class case-normalized-palindrome
+
+  define function checkNormalized with original_str
+    define low as lowercase original_str
+    define left as 1
+    define right as length of low
+    while left < right
+      if low char left != low char right
+        return 0
+      set left to left + 1
+      set right to right - 1
+    return 1
+
+  define function main
+    define phrase from user "Text phrase?"
+    define status as checkNormalized from phrase
+    print status

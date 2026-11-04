@@ -1,0 +1,17 @@
+this runs in the shell
+
+class ackermann-evaluator
+
+  define function ack with m, n
+    if m == 0
+      return n + 1
+    if n == 0
+      return ack from (m - 1), 1
+    define inner as ack from m, (n - 1)
+    return ack from (m - 1), inner
+
+  define function main
+    define m_val from user "Ackermann parameter m?"
+    define n_val from user "Ackermann parameter n?"
+    define res as ack from m_val, n_val
+    print res

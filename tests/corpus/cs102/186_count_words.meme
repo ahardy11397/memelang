@@ -1,0 +1,17 @@
+this runs in the shell
+
+class word-counter
+
+  define function countWords with text_line
+    if length of text_line == 0
+      return 0
+    define spaces as 0
+    for pos from 1 to length of text_line
+      if text_line char pos == " "
+        set spaces to spaces + 1
+    return spaces + 1
+
+  define function main
+    define text from user "Enter full sentence?"
+    define words as countWords from text
+    print words

@@ -1,0 +1,22 @@
+this runs in the shell
+
+class json-positive-filter
+
+  define function readJsonData with path_param
+    if path_param is json
+      define parsed as fromFile from path_param
+      return parsed
+    else return "Wrong File Type"
+
+  define function countPositives with num_list
+    define positive_count as 0
+    for k from 1 to length of num_list
+      if num_list item k > 0
+        set positive_count to positive_count + 1
+    return positive_count
+
+  define function main
+    define source_file from user "Data file name?"
+    define raw_list as readJsonData from source_file
+    define pos_qty as countPositives from raw_list
+    print pos_qty

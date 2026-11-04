@@ -1,0 +1,16 @@
+this runs in the shell
+
+class sorted-list-merger
+
+  define function pickSmallestHead with a, b, idx_a, idx_b
+    if a item idx_a <= b item idx_b
+      return a item idx_a
+    else
+      return b item idx_b
+
+  define function main
+    define selector from user "Run pick head 1?"
+    define list1 as [3, 7, 12]
+    define list2 as [4, 6, 15]
+    define head as pickSmallestHead from list1, list2, 1, 1
+    print head

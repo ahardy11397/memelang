@@ -1,0 +1,18 @@
+this runs in the shell
+
+class stopwatch-analyzer
+
+  define function computeSplit with lap1_time, lap2_time
+    if lap2_time >= lap1_time
+      return lap2_time - lap1_time
+    else
+      return lap1_time - lap2_time
+
+  define function totalElapsed with lap1_time, lap2_time
+    return lap1_time + lap2_time
+
+  define function main
+    define lap1 from user "First lap duration in seconds?"
+    define lap2 from user "Second lap duration in seconds?"
+    define diff as computeSplit from lap1, lap2
+    print diff

@@ -1,0 +1,19 @@
+this runs in the shell
+
+class vector-operations
+
+  define function dotProduct with x1, y1, x2, y2
+    define term_x as x1 * x2
+    define term_y as y1 * y2
+    return term_x + term_y
+
+  define function squaredMagnitude with x, y
+    return (x * x) + (y * y)
+
+  define function main
+    define v1_x from user "Vector 1 X?"
+    define v1_y from user "Vector 1 Y?"
+    define v2_x from user "Vector 2 X?"
+    define v2_y from user "Vector 2 Y?"
+    define dot as dotProduct from v1_x, v1_y, v2_x, v2_y
+    print dot

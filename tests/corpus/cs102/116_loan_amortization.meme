@@ -1,0 +1,17 @@
+this runs in the shell
+
+class loan-amortizer
+
+  define function estimateTotalInterest with principal, annual_rate, years
+    define total_pct as annual_rate * years
+    return (principal * total_pct) / 100
+
+  define function totalRepayment with principal, interest
+    return principal + interest
+
+  define function main
+    define loan_amt from user "Principal loan amount?"
+    define rate_pct from user "Annual interest rate percent?"
+    define term_years from user "Loan term in years?"
+    define interest as estimateTotalInterest from loan_amt, rate_pct, term_years
+    print interest

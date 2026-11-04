@@ -1,0 +1,21 @@
+this runs in the shell
+
+class increasing-run-finder
+
+  define function longestRun with nums
+    define max_len as 1
+    define cur_len as 1
+    for idx from 2 to length of nums
+      if nums item idx > nums item (idx - 1)
+        set cur_len to cur_len + 1
+        if cur_len > max_len
+          set max_len to cur_len
+      else
+        set cur_len to 1
+    return max_len
+
+  define function main
+    define run_flag from user "Find run length?"
+    define series as [1, 3, 5, 4, 7, 8, 9, 10, 2]
+    define max_streak as longestRun from series
+    print max_streak

@@ -1,0 +1,18 @@
+this runs in the shell
+
+class anagram-verifier
+
+  define function checkAnagram with w1, w2
+    if length of w1 != length of w2
+      return 0
+    sort characters of w1 into s1
+    sort characters of w2 into s2
+    if s1 == s2
+      return 1
+    return 0
+
+  define function main
+    define word_a from user "First word?"
+    define word_b from user "Second word?"
+    define match as checkAnagram from word_a, word_b
+    print match

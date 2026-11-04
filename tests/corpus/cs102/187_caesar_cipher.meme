@@ -1,0 +1,12 @@
+this runs in the shell
+
+class caesar-rotator
+
+  define function rotateSingleChar with ch, shift
+    return shiftChar ch by shift
+
+  define function main
+    define letter from user "Single uppercase character?"
+    define offset from user "Rotation key offset?"
+    define encoded as rotateSingleChar from letter, offset
+    print encoded

@@ -1,0 +1,24 @@
+this runs in the shell
+
+class shopping-cart
+
+  define function computeSubtotal with price1, price2
+    return price1 + price2
+
+  define function applyDiscount with subtotal, discount
+    if subtotal > discount
+      return subtotal - discount
+    return 0
+
+  define function addTax with discounted, rate_percent
+    define tax as (discounted * rate_percent) / 100
+    return discounted + tax
+
+  define function main
+    define item1 from user "Price of item 1?"
+    define item2 from user "Price of item 2?"
+    define coupon from user "Coupon discount?"
+    define sub as computeSubtotal from item1, item2
+    define after_coupon as applyDiscount from sub, coupon
+    define total as addTax from after_coupon, 10
+    print total

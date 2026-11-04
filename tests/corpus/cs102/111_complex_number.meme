@@ -1,0 +1,21 @@
+this runs in the shell
+
+class complex-math
+
+  define function multiplyRealPart with r1, i1, r2, i2
+    define prod1 as r1 * r2
+    define prod2 as i1 * i2
+    return prod1 - prod2
+
+  define function multiplyImagPart with r1, i1, r2, i2
+    define term1 as r1 * i2
+    define term2 as i1 * r2
+    return term1 + term2
+
+  define function main
+    define real_a from user "First complex real?"
+    define imag_a from user "First complex imag?"
+    define real_b from user "Second complex real?"
+    define imag_b from user "Second complex imag?"
+    define res_real as multiplyRealPart from real_a, imag_a, real_b, imag_b
+    print res_real

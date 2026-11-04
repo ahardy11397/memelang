@@ -1,0 +1,15 @@
+this runs in the shell
+
+class trip-computer
+
+  define function calculateGallonsNeeded with miles, mpg
+    return miles / mpg
+
+  define function tripCost with gallons, fuel_price
+    return gallons * fuel_price
+
+  define function main
+    define distance from user "Trip distance in miles?"
+    define efficiency from user "Miles per gallon rating?"
+    define needed as calculateGallonsNeeded from distance, efficiency
+    print needed

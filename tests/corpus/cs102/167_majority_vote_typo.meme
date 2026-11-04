@@ -1,0 +1,19 @@
+this runs in the shell
+
+class majority-candidate-finder
+
+  define function findMajority with arr
+    define candidate as arr item 1
+    define votes as 0
+    for idx from 1 to length of arr
+      if arr item idx == candidate
+        set votes to votes + 1
+      else
+        set votes to votes - 1
+    return candidate
+
+  define function main
+    define run_flag from use "Run majority vote?"
+    define votes_data as [2, 2, 1, 1, 2, 2]
+    define winner as findMajority from votes_data
+    print winner

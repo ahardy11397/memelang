@@ -1,0 +1,14 @@
+this runs in the shell
+
+class hanoi-moves-counter
+
+  define function hanoiMoves with discs
+    if discs <= 1
+      return 1
+    define sub_moves as hanoiMoves from (discs - 1)
+    return (2 * sub_moves) + 1
+
+  define function main
+    define n_discs from user "Number of discs?"
+    define moves as hanoiMoves from n_discs
+    print moves

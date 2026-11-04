@@ -1,0 +1,11 @@
+this runs in the shell
+
+class string-length-analyzer
+
+  define function measureLength with s
+    return length of s
+
+  define function main
+    define user_word from user "Enter text word?"
+    define len as measureLength from user_word
+    print len

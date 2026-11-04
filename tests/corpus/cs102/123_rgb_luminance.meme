@@ -1,0 +1,17 @@
+this runs in the shell
+
+class rgb-luminance
+
+  define function computeLuminance with r, g, b
+    define red_part as r * 2126
+    define green_part as g * 7152
+    define blue_part as b * 722
+    define total_weighted as red_part + green_part + blue_part
+    return total_weighted / 10000
+
+  define function main
+    define r_val from user "Red channel intensity?"
+    define g_val from user "Green channel intensity?"
+    define b_val from user "Blue channel intensity?"
+    define lum as computeLuminance from r_val, g_val, b_val
+    print lum

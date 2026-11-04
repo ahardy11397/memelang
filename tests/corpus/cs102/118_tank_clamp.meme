@@ -1,0 +1,20 @@
+this runs in the shell
+
+class water-tank-controller
+
+  define function updateLevel with current_water, inflow, outflow, max_cap
+    define net_change as inflow - outflow
+    define projected as current_water + net_change
+    if projected > max_cap
+      return max_cap
+    if projected < 0
+      return 0
+    return projected
+
+  define function main
+    define cur_water from user "Current tank level?"
+    define in_flow from user "Inflow volume?"
+    define out_flow from user "Outflow volume?"
+    define tank_limit from user "Tank maximum capacity?"
+    define next_water as updateLevel from cur_water, in_flow, out_flow, tank_limit
+    print next_water

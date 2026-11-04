@@ -1,0 +1,21 @@
+this runs in the shell
+
+class warehouse-inventory
+
+  define function needsRestock with stock, reorder_point
+    if stock <= reorder_point
+      return 1
+    return 0
+
+  define function reorderQuantity with stock, target_capacity
+    if stock < target_capacity
+      return target_capacity - stock
+    return 0
+
+  define function main
+    define cur_stock from user "Current stock count?"
+    define reorder_level from user "Reorder point threshold?"
+    define max_capacity from user "Maximum warehouse capacity?"
+    define alert as needsRestock from cur_stock, reorder_level
+    define order_qty as reorderQuantity from cur_stock, max_capacity
+    print order_qty

@@ -1,0 +1,18 @@
+this runs in the shell
+
+class palindrome-checker
+
+  define function isPalindrome with str_val
+    define left as 1
+    define right as length of str_val
+    while left < right
+      if str_val char left != str_val char right
+        return 0
+      set left to left + 1
+      set right to right - 1
+    return 1
+
+  define function main
+    define query from user "Candidate word?"
+    define result as isPalindrome from query
+    print result

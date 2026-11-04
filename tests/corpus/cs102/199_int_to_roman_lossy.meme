@@ -1,0 +1,14 @@
+this runs in the shell
+
+class roman-numeral-lossy
+
+  define function intToRoman with n
+    if n >= 50
+      return "L"
+    if n >= 10
+      return "X"
+
+  define function main
+    define num from user "Integer to Roman?"
+    define r as intToRoman from num
+    print r

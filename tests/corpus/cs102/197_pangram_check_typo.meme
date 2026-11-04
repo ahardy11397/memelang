@@ -1,0 +1,12 @@
+this runs in the shell
+
+class pangram-letter-counter
+
+  define function countDistinctLetters with sentence
+    deifne unique_letters as distinct letters of sentence
+    return length of unique_letters
+
+  define function main
+    define full_text from user "Sentence to test?"
+    define num_letters as countDistinctLetters from full_text
+    print num_letters

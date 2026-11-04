@@ -1,0 +1,22 @@
+this runs in the shell
+
+class lower-bound-search
+
+  define function findLowerBound with arr, target
+    define low as 1
+    define high as length of arr
+    define ans as length of arr + 1
+    while low <= high
+      define mid as (low + high) / 2
+      if arr item mid >= target
+        set ans to mid
+        set high to mid - 1
+      else
+        set low to mid + 1
+    return ans
+
+  define function main
+    define query from user "Lower bound threshold?"
+    define ordered as [2, 5, 9, 14, 23, 38, 47, 61]
+    define pos as findLowerBound from ordered, query
+    print pos

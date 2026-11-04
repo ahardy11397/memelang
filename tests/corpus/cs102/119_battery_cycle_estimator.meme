@@ -1,0 +1,13 @@
+this runs in the shell
+
+class battery-monitor
+
+  define function computeHealthPct with cycles_done, rated_cycles
+    define used_pct as (cycles_done * 100) / rated_cycles
+    return 100 - used_pct
+
+  define function main
+    define completed_cycles from use "Battery cycles completed?"
+    define max_cycles from user "Rated maximum cycles?"
+    define health as computeHealthPct from completed_cycles, max_cycles
+    print health

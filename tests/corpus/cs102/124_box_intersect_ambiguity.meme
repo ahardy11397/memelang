@@ -1,0 +1,19 @@
+this runs in the shell
+
+class bounding-box-checker
+
+  define function checkOverlap with x1, x2, x3, x4
+    if x2 > x3
+      return 1
+    if x2 <= x3
+      return 1
+    else
+      return 0
+
+  define function main
+    define box1_left from user "Box 1 left coordinate?"
+    define box1_right from user "Box 1 right coordinate?"
+    define box2_left from user "Box 2 left coordinate?"
+    define box2_right from user "Box 2 right coordinate?"
+    define overlap as checkOverlap from box1_left, box1_right, box2_left, box2_right
+    print overlap

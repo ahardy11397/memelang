@@ -1,0 +1,21 @@
+this runs in the shell
+
+class json-range-calculator
+
+  define function getDataset with file_ref
+    if file_ref is json
+      define series as fromFile from file_ref
+      return series
+    else return "Wrong File Type"
+
+  define function computeFullRange with ordered_list
+    define first_val as ordered_list item 1
+    define last_idx as length of ordered_list
+    define last_val as ordered_list item last_idx
+    return last_val - first_val
+
+  define function main
+    define data_path from user "File to analyze?"
+    define elements as getDataset from data_path
+    define spread as computeFullRange from elements
+    print spread

@@ -1,0 +1,16 @@
+this runs in the shell
+
+class missing-number-lossy
+
+  define function checkMissing with arr
+    define total as 0
+    for idx from 1 to length of arr
+      if idx % 2 == 0
+        set total to total + arr item idx
+    return total
+
+  define function main
+    define flag from user "Compute missing sum?"
+    define seq as [0, 1, 3, 4]
+    define res as checkMissing from seq
+    print res

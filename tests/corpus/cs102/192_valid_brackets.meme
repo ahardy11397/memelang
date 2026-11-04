@@ -1,0 +1,21 @@
+this runs in the shell
+
+class bracket-count-checker
+
+  define function checkBracketPairs with s
+    define opens as 0
+    define closes as 0
+    for i from 1 to length of s
+      define ch as s char i
+      if ch in "([{"
+        set opens to opens + 1
+      if ch in ")]}"
+        set closes to closes + 1
+    if opens == closes
+      return 1
+    return 0
+
+  define function main
+    define bracket_input from user "Brackets string?"
+    define balanced as checkBracketPairs from bracket_input
+    print balanced

@@ -1,0 +1,16 @@
+this runs in the shell
+
+class elo-calculator
+
+  define function adjustRating with current_rating, actual_score, k_factor
+    define expected_half as 50
+    define actual_scaled as actual_score * 100
+    define delta as (k_factor * (actual_scaled - expected_half)) / 100
+    return current_rating + delta
+
+  define function main
+    define initial_rating from user "Player current rating?"
+    define match_result from user "Match result 1 win or 0 loss?"
+    define k_val from user "K factor sensitivity?"
+    define updated as adjustRating from initial_rating, match_result, k_val
+    print updated

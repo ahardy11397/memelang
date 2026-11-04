@@ -1,0 +1,22 @@
+this runs in the shell
+
+class json-min-finder
+
+  define function loadFile with filepath
+    if filepath is json
+      define list as fromFile from filepath
+      return list
+    else return "Wrong File Type"
+
+  define function findMin with nums
+    define smallest as nums item 1
+    for i from 2 to length of nums
+      if nums item i < smallest
+        set smallest to nums item i
+    return smallest
+
+  define function main
+    define filepath from user "Filepath?"
+    define loaded_data as loadFile from filepath
+    define min_val as findMin from loaded_data
+    print min_val

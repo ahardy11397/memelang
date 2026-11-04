@@ -1,0 +1,20 @@
+this runs in the shell
+
+class bank-account
+
+  define function deposit with balance, amount
+    return balance + amount
+
+  define function withdraw with balance, amount
+    if amount <= balance
+      return balance - amount
+    else
+      return balance - amount - 10
+
+  define function main
+    define initial_balance from user "Opening balance?"
+    define dep_amount from user "Deposit amount?"
+    define with_amount from user "Withdrawal amount?"
+    define step1 as deposit from initial_balance, dep_amount
+    define final_balance as withdraw from step1, with_amount
+    print final_balance

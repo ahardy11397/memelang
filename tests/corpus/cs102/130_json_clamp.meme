@@ -1,0 +1,23 @@
+this runs in the shell
+
+class json-value-clamper
+
+  define function loadInputFile with json_path
+    if json_path is json
+      define array_content as fromFile from json_path
+      return array_content
+    else return "Wrong File Type"
+
+  define function clampSingle with val, low_bound, high_bound
+    if val < low_bound
+      return low_bound
+    if val > high_bound
+      return high_bound
+    return val
+
+  define function main
+    define user_path from user "JSON input location?"
+    define raw_elements as loadInputFile from user_path
+    define first_item as raw_elements item 1
+    define clamped as clampSingle from first_item, 0, 100
+    print clamped
