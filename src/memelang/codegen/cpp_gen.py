@@ -218,7 +218,7 @@ class _CppGen:
             tgt = self.gen_expr(expr.target, scope)
             start = self.gen_expr(expr.start, scope)
             end = self.gen_expr(expr.end, scope)
-            return f"({tgt}).substr(static_cast<std::size_t>({start}), static_cast<std::size_t>(({end}) - ({start})))"
+            return f"({tgt}).substr(static_cast<std::size_t>({start}), static_cast<std::size_t>(std::max<long long>(0LL, static_cast<long long>(({end}) - ({start})))))"
 
         if isinstance(expr, ReadJsonListExpr):
             self.uses_str_helpers = True

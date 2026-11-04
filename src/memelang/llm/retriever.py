@@ -66,6 +66,7 @@ class ExampleRetriever:
         self._corpus: list[ExamplePair] = []
         self._doc_tokens: list[list[str]] = []
         self._doc_lengths: list[int] = []
+        self._doc_counts: list[Counter[str]] = []
         self._doc_freqs: dict[str, int] = {}
         self._avgdl: float = 0.0
 
@@ -78,6 +79,7 @@ class ExampleRetriever:
         self._corpus.clear()
         self._doc_tokens.clear()
         self._doc_lengths.clear()
+        self._doc_counts.clear()
         self._doc_freqs.clear()
         self._avgdl = 0.0
 
@@ -113,13 +115,14 @@ class ExampleRetriever:
             self._corpus.append(pair)
             self._doc_tokens.append(tokens)
             self._doc_lengths.append(len(tokens))
+            self._doc_counts.append(Counter(tokens))
 
         n_docs = len(self._corpus)
         if n_docs > 0:
             self._avgdl = sum(self._doc_lengths) / n_docs
             doc_freq_counter: Counter[str] = Counter()
-            for tokens in self._doc_tokens:
-                doc_freq_counter.update(set(tokens))
+            for doc_cnt in self._doc_counts:
+                doc_freq_counter.update(doc_cnt.keys())
             self._doc_freqs = dict(doc_freq_counter)
 
         return n_docs
@@ -159,9 +162,8 @@ class ExampleRetriever:
                     if pair.source_path == resolved_exclude:
                         continue
 
-            doc_tokens = self._doc_tokens[i]
             doc_len = self._doc_lengths[i]
-            doc_counts = Counter(doc_tokens)
+            doc_counts = self._doc_counts[i]
 
             score = 0.0
             for term in unique_query_terms:

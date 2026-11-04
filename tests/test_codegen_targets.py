@@ -610,4 +610,26 @@ def test_codegen_2d_list_indexing_parity(target: TargetLang):
     assert output.strip().splitlines() == ["30"]
 
 
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_codegen_string_slice_end_less_than_start_empty_parity(target: TargetLang):
+    program = ProgramIR(
+        items=[
+            VarDeclStmt(name="word", var_type="String", value=LiteralExpr(value="abcdef", data_type="String")),
+            VarDeclStmt(name="s", var_type="Int", value=LiteralExpr(value=3, data_type="Int")),
+            VarDeclStmt(name="e", var_type="Int", value=LiteralExpr(value=1, data_type="Int")),
+            PrintStmt(
+                expressions=[
+                    StringSliceExpr(
+                        target=VarRefExpr(name="word"),
+                        start=VarRefExpr(name="s"),
+                        end=VarRefExpr(name="e"),
+                    )
+                ]
+            ),
+        ]
+    )
+    output = _run_target(program, target)
+    assert output.strip() == ""
+
+
 

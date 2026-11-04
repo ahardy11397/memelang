@@ -8,3 +8,4 @@ build/
 *.egg-info/
 .superpowers/
 build.lock
+graphify-out/

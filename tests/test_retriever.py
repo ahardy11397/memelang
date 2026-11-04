@@ -94,3 +94,17 @@ def test_retriever_recursive_discovery(tmp_path: Path):
     results = retriever.retrieve("hello world", top_k=1)
     assert len(results) == 1
     assert results[0].slug == "001_hello"
+
+
+def test_retriever_precomputes_doc_counts_cache(tmp_path: Path):
+    ex_dir = tmp_path / "examples"
+    ex_dir.mkdir()
+    (ex_dir / "doc1.meme").write_text("print 100\n")
+    (ex_dir / "doc1.meme.lock").write_text('{"ir": {"items": []}}')
+
+    retriever = ExampleRetriever(examples_dir=ex_dir)
+    retriever.index_corpus()
+    assert len(retriever._doc_counts) == 1
+    assert retriever._doc_counts[0]["print"] == 1
+    assert retriever._doc_counts[0]["100"] == 1
+

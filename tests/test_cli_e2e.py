@@ -206,3 +206,28 @@ def test_cli_pull_and_interactive_io_dispatch(
     capsys.readouterr()
     assert rc_run == 0
     assert seen_interactive == [True]
+
+
+def test_cli_wires_example_retriever_to_provider(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+):
+    from memelang.llm import get_provider
+    from memelang.llm.retriever import ExampleRetriever
+
+    src_file = tmp_path / "hello.meme"
+    src_file.write_text("print 123\n", encoding="utf-8")
+    lock_file = tmp_path / "custom.lock"
+
+    captured_retriever: list[object] = []
+
+    def _spy_get_provider(spec: str = "auto", retriever: ExampleRetriever | None = None):
+        captured_retriever.append(retriever)
+        return get_provider("heuristic", retriever=retriever)
+
+    monkeypatch.setattr("memelang.cli.get_provider", _spy_get_provider)
+
+    rc = main(["compile", str(src_file), "--target", "python", "--lockfile", str(lock_file)])
+    assert rc == 0
+    assert len(captured_retriever) == 1
+    assert isinstance(captured_retriever[0], ExampleRetriever)
+

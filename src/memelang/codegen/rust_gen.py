@@ -220,7 +220,7 @@ class _RustGen:
             tgt = self.gen_expr(expr.target, scope)
             start = self.gen_expr(expr.start, scope)
             end = self.gen_expr(expr.end, scope)
-            return f"(({tgt}).chars().skip(({start}) as usize).take((({end}) - ({start})) as usize).collect::<String>())"
+            return f"(({tgt}).chars().skip(({start}) as usize).take((({end}).saturating_sub({start})).max(0) as usize).collect::<String>())"
 
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True

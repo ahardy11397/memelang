@@ -18,6 +18,7 @@ from memelang.ir.schema import AmbiguityDiagnostic, ProgramIR
 from memelang.llm import (
     DEFAULT_GGUF_FILENAME,
     DEFAULT_GGUF_REPO,
+    ExampleRetriever,
     LLMProviderError,
     get_provider,
     pull_gguf_model,
@@ -104,12 +105,14 @@ def _prompt_interactive_resolutions(
 
 
 def _load_or_synthesize_program(
-    source_path: Path,
-    lockfile_path: Path,
+    source_path: Path | str,
+    lockfile_path: Path | str,
     provider_spec: str,
     resolutions: dict[int, int],
     interactive: bool,
 ) -> tuple[ProgramIR | None, list[AmbiguityDiagnostic]]:
+    source_path = Path(source_path)
+    lockfile_path = Path(lockfile_path)
     if not source_path.exists():
         raise FileNotFoundError(f"Source file not found: {source_path}")
 
@@ -134,7 +137,9 @@ def _load_or_synthesize_program(
         else:
             outcome = VerificationOutcome(program=entry.ir, ambiguities=[])
     else:
-        provider = get_provider(provider_spec)
+        retriever = ExampleRetriever()
+        retriever.index_corpus()
+        provider = get_provider(provider_spec, retriever=retriever)
         synthesis = provider.synthesize(source_text)
         initial_outcome = verify_synthesis(synthesis)
         outcome = lock_mgr.record_outcome(
