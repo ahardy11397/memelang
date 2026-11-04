@@ -12,13 +12,17 @@ from memelang.ir.schema import (
     FuncDefStmt,
     FuncParam,
     ListAppendStmt,
+    ListIndexExpr,
     ListLiteralExpr,
+    ListSetIndexStmt,
     LiteralExpr,
     PrintStmt,
     ProgramIR,
     RandomListExpr,
     ReturnStmt,
     SortCollectionStmt,
+    StringLengthExpr,
+    StringSliceExpr,
     VarDeclStmt,
     VarRefExpr,
 )
@@ -523,5 +527,87 @@ def test_find_largest_json_file_and_partial_sort_resolutions(target: TargetLang,
     r_rel2 = execute_ir(prog_opt1, target, stdin_text="./numbers.json\n", source_dir=sub_dir)
     assert r_rel2.returncode == 0, r_rel2.stderr
     assert r_rel2.stdout.strip().endswith("42")
+
+
+def _run_target(program: ProgramIR, target: TargetLang) -> str:
+    res = execute_ir(program, target)
+    assert res.returncode == 0, res.stderr
+    return res.stdout
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_codegen_list_set_index_and_strings_parity(target: TargetLang):
+    program = ProgramIR(
+        items=[
+            VarDeclStmt(
+                name="nums",
+                var_type="List<Int>",
+                value=ListLiteralExpr(
+                    elements=[LiteralExpr(value=1, data_type="Int"), LiteralExpr(value=2, data_type="Int")],
+                    element_type="Int",
+                ),
+            ),
+            ListSetIndexStmt(
+                target="nums",
+                index=LiteralExpr(value=0, data_type="Int"),
+                value=LiteralExpr(value=99, data_type="Int"),
+            ),
+            PrintStmt(
+                expressions=[ListIndexExpr(target=VarRefExpr(name="nums"), index=LiteralExpr(value=0, data_type="Int"))]
+            ),
+            VarDeclStmt(name="word", var_type="String", value=LiteralExpr(value="abcdef", data_type="String")),
+            PrintStmt(expressions=[StringLengthExpr(target=VarRefExpr(name="word"))]),
+            PrintStmt(
+                expressions=[
+                    StringSliceExpr(
+                        target=VarRefExpr(name="word"),
+                        start=LiteralExpr(value=1, data_type="Int"),
+                        end=LiteralExpr(value=4, data_type="Int"),
+                    )
+                ]
+            ),
+        ]
+    )
+    output = _run_target(program, target)
+    assert output.strip().splitlines() == ["99", "6", "bcd"]
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_codegen_2d_list_indexing_parity(target: TargetLang):
+    program = ProgramIR(
+        items=[
+            VarDeclStmt(
+                name="matrix",
+                var_type="List<List<Int>>",
+                value=ListLiteralExpr(
+                    elements=[
+                        ListLiteralExpr(
+                            elements=[LiteralExpr(value=10, data_type="Int"), LiteralExpr(value=20, data_type="Int")],
+                            element_type="Int",
+                        ),
+                        ListLiteralExpr(
+                            elements=[LiteralExpr(value=30, data_type="Int"), LiteralExpr(value=40, data_type="Int")],
+                            element_type="Int",
+                        ),
+                    ],
+                    element_type="List<Int>",
+                ),
+            ),
+            PrintStmt(
+                expressions=[
+                    ListIndexExpr(
+                        target=ListIndexExpr(
+                            target=VarRefExpr(name="matrix"),
+                            index=LiteralExpr(value=1, data_type="Int"),
+                        ),
+                        index=LiteralExpr(value=0, data_type="Int"),
+                    )
+                ]
+            ),
+        ]
+    )
+    output = _run_target(program, target)
+    assert output.strip().splitlines() == ["30"]
+
 
 

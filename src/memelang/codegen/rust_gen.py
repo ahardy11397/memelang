@@ -20,6 +20,7 @@ from memelang.ir.schema import (
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListSetIndexStmt,
     LiteralExpr,
     MemeType,
     PrintStmt,
@@ -31,6 +32,8 @@ from memelang.ir.schema import (
     ReturnStmt,
     SortCollectionStmt,
     StrEndsWithExpr,
+    StringLengthExpr,
+    StringSliceExpr,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -73,16 +76,15 @@ def _rust_ident(name: str) -> str:
     return f"meme_{name}" if name in _RUST_KEYWORDS or name.startswith("_meme_") else name
 
 
-def _rust_type(meme_type: MemeType) -> str:
+def _rust_type(meme_type: MemeType | str) -> str:
+    if meme_type.startswith("List<") and meme_type.endswith(">"):
+        inner = meme_type[5:-1]
+        return f"Vec<{_rust_type(inner)}>"
     mapping = {
         "Int": "i64",
         "Float": "f64",
         "Bool": "bool",
         "String": "String",
-        "List<Int>": "Vec<i64>",
-        "List<Float>": "Vec<f64>",
-        "List<Bool>": "Vec<bool>",
-        "List<String>": "Vec<String>",
         "Void": "()",
     }
     return mapping[meme_type]
@@ -108,8 +110,10 @@ class _RustGen:
             return "List<Float>"
         if isinstance(expr, StrEndsWithExpr):
             return "Bool"
-        if isinstance(expr, (RandomIntExpr, ListLengthExpr)):
+        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr)):
             return "Int"
+        if isinstance(expr, StringSliceExpr):
+            return "String"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
             return col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[return-value]
@@ -208,6 +212,16 @@ class _RustGen:
             suf = self.gen_expr(expr.suffix, scope)
             return f"({tgt}.trim().to_lowercase().ends_with(&({suf}.to_lowercase())))"
 
+        if isinstance(expr, StringLengthExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            return f"(({tgt}).chars().count() as i64)"
+
+        if isinstance(expr, StringSliceExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            start = self.gen_expr(expr.start, scope)
+            end = self.gen_expr(expr.end, scope)
+            return f"(({tgt}).chars().skip(({start}) as usize).take((({end}) - ({start})) as usize).collect::<String>())"
+
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True
             return f"_meme_read_json_list(&({self.gen_expr(expr.filepath, scope)}))"
@@ -276,6 +290,12 @@ class _RustGen:
             return [
                 f"{pad}{_rust_ident(stmt.target)}.insert(({self.gen_expr(stmt.index, scope)}) as usize, {self.gen_expr(stmt.value, scope)});"
             ]
+
+        if isinstance(stmt, ListSetIndexStmt):
+            tgt = _rust_ident(stmt.target)
+            idx = self.gen_expr(stmt.index, scope)
+            val = self.gen_expr(stmt.value, scope)
+            return [f"{pad}{tgt}[({idx}) as usize] = {val};"]
 
         if isinstance(stmt, FailStmt):
             return [
@@ -375,8 +395,29 @@ def generate_rust(ir: ProgramIR) -> str:
     preamble: list[str] = [
         "#![allow(dead_code, unused_mut, unused_parens, unused_variables)]",
         "",
-        "fn _meme_fmt_slice<T: std::fmt::Display>(items: &[T]) -> String {",
-        "    let parts: Vec<String> = items.iter().map(|x| format!(\"{}\", x)).collect();",
+        "trait _MemeFmt {",
+        "    fn meme_fmt(&self) -> String;",
+        "}",
+        "impl _MemeFmt for i64 { fn meme_fmt(&self) -> String { format!(\"{}\", self) } }",
+        "impl _MemeFmt for f64 {",
+        "    fn meme_fmt(&self) -> String {",
+        "        if self.is_finite() && self.trunc() == *self && *self >= -9007199254740992.0 && *self <= 9007199254740992.0 {",
+        "            format!(\"{}\", *self as i64)",
+        "        } else {",
+        "            format!(\"{}\", self)",
+        "        }",
+        "    }",
+        "}",
+        "impl _MemeFmt for bool { fn meme_fmt(&self) -> String { format!(\"{}\", self) } }",
+        "impl _MemeFmt for String { fn meme_fmt(&self) -> String { self.clone() } }",
+        "impl<T: _MemeFmt> _MemeFmt for Vec<T> {",
+        "    fn meme_fmt(&self) -> String {",
+        "        let parts: Vec<String> = self.iter().map(|x| x.meme_fmt()).collect();",
+        "        format!(\"[{}]\", parts.join(\", \"))",
+        "    }",
+        "}",
+        "fn _meme_fmt_slice<T: _MemeFmt>(items: &[T]) -> String {",
+        "    let parts: Vec<String> = items.iter().map(|x| x.meme_fmt()).collect();",
         "    format!(\"[{}]\", parts.join(\", \"))",
         "}",
         "",

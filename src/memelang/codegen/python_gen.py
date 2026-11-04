@@ -22,6 +22,7 @@ from memelang.ir.schema import (
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListSetIndexStmt,
     LiteralExpr,
     MemeType,
     PrintStmt,
@@ -33,6 +34,8 @@ from memelang.ir.schema import (
     ReturnStmt,
     SortCollectionStmt,
     StrEndsWithExpr,
+    StringLengthExpr,
+    StringSliceExpr,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -65,8 +68,10 @@ class _PyGen:
             return "List<Float>"
         if isinstance(expr, StrEndsWithExpr):
             return "Bool"
-        if isinstance(expr, (RandomIntExpr, ListLengthExpr)):
+        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr)):
             return "Int"
+        if isinstance(expr, StringSliceExpr):
+            return "String"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
             return col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[return-value]
@@ -147,6 +152,15 @@ class _PyGen:
             suf = self.gen_expr(expr.suffix, scope)
             return f"({tgt}.strip().lower().endswith({suf}.lower()))"
 
+        if isinstance(expr, StringLengthExpr):
+            return f"_meme_builtins.len({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, StringSliceExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            s = self.gen_expr(expr.start, scope)
+            e = self.gen_expr(expr.end, scope)
+            return f"{tgt}[_meme_builtins.int({s}):_meme_builtins.int({e})]"
+
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True
             return f"_meme_read_json_list({self.gen_expr(expr.filepath, scope)})"
@@ -201,6 +215,12 @@ class _PyGen:
             return [
                 f"{pad}{_py_ident(stmt.target)}.insert({self.gen_expr(stmt.index, scope)}, {self.gen_expr(stmt.value, scope)})"
             ]
+
+        if isinstance(stmt, ListSetIndexStmt):
+            tgt = _py_ident(stmt.target)
+            idx = self.gen_expr(stmt.index, scope)
+            val = self.gen_expr(stmt.value, scope)
+            return [f"{pad}{tgt}[_meme_builtins.int({idx})] = {val}"]
 
         if isinstance(stmt, FailStmt):
             return [

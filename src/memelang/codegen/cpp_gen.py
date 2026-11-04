@@ -20,6 +20,7 @@ from memelang.ir.schema import (
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListSetIndexStmt,
     LiteralExpr,
     MemeType,
     PrintStmt,
@@ -31,6 +32,8 @@ from memelang.ir.schema import (
     ReturnStmt,
     SortCollectionStmt,
     StrEndsWithExpr,
+    StringLengthExpr,
+    StringSliceExpr,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -78,16 +81,15 @@ _CPP_KEYWORDS = {
 
 def _cpp_ident(name: str) -> str:
     return f"meme_{name}" if name in _CPP_KEYWORDS or name.startswith("_meme_") else name
-def _cpp_type(meme_type: MemeType) -> str:
+def _cpp_type(meme_type: MemeType | str) -> str:
+    if meme_type.startswith("List<") and meme_type.endswith(">"):
+        inner = meme_type[5:-1]
+        return f"std::vector<{_cpp_type(inner)}>"
     mapping = {
         "Int": "long long",
         "Float": "double",
         "Bool": "bool",
         "String": "std::string",
-        "List<Int>": "std::vector<long long>",
-        "List<Float>": "std::vector<double>",
-        "List<Bool>": "std::vector<bool>",
-        "List<String>": "std::vector<std::string>",
         "Void": "void",
     }
     return mapping[meme_type]
@@ -114,8 +116,10 @@ class _CppGen:
             return "List<Float>"
         if isinstance(expr, StrEndsWithExpr):
             return "Bool"
-        if isinstance(expr, (RandomIntExpr, ListLengthExpr)):
+        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr)):
             return "Int"
+        if isinstance(expr, StringSliceExpr):
+            return "String"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
             return col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[return-value]
@@ -206,6 +210,16 @@ class _CppGen:
             self.uses_str_helpers = True
             return f"_meme_ends_with_ci({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.suffix, scope)})"
 
+        if isinstance(expr, StringLengthExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            return f"static_cast<long long>(({tgt}).length())"
+
+        if isinstance(expr, StringSliceExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            start = self.gen_expr(expr.start, scope)
+            end = self.gen_expr(expr.end, scope)
+            return f"({tgt}).substr(static_cast<std::size_t>({start}), static_cast<std::size_t>(({end}) - ({start})))"
+
         if isinstance(expr, ReadJsonListExpr):
             self.uses_str_helpers = True
             self.uses_json_io = True
@@ -270,6 +284,12 @@ class _CppGen:
             idx = self.gen_expr(stmt.index, scope)
             val = self.gen_expr(stmt.value, scope)
             return [f"{pad}{tgt}.insert({tgt}.begin() + static_cast<std::ptrdiff_t>({idx}), {val});"]
+
+        if isinstance(stmt, ListSetIndexStmt):
+            tgt = _cpp_ident(stmt.target)
+            idx = self.gen_expr(stmt.index, scope)
+            val = self.gen_expr(stmt.value, scope)
+            return [f"{pad}{tgt}.at(static_cast<std::size_t>({idx})) = {val};"]
 
         if isinstance(stmt, FailStmt):
             return [
