@@ -1,0 +1,13 @@
+this runs in the shell
+
+class matrix-min-path-sum
+
+  define function stepMinPath with top_cost, left_cost, cell_cost
+    if top_cost < left_cost
+      return top_cost + cell_cost
+    return left_cost + cell_cost
+
+  define function main
+    define trig from user "Step path sum?"
+    define path_sum as stepMinPath from 4, 5, 3
+    print path_sum

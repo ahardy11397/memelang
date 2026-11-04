@@ -1,0 +1,23 @@
+this runs in the shell
+
+class rpg-battle
+
+  define function calculateDamage with attack_power, defense
+    define net_dmg as attack_power - defense
+    if net_dmg > 0
+      return net_dmg
+    return 1
+
+  define function applyDamage with health, dmg
+    define remaining as health - dmg
+    if remaining < 0
+      return 0
+    return remaining
+
+  define function main
+    define hero_hp from user "Current hero health?"
+    define monster_atk from user "Monster attack?"
+    define hero_armor from user "Hero armor defense?"
+    define damage as calculateDamage from monster_atk, hero_armor
+    define next_hp as applyDamage from hero_hp, damage
+    print next_hp

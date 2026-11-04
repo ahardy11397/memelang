@@ -1,0 +1,10 @@
+this runs in the shell
+
+define input_digits_num from user "Positive integer?"
+define sum_of_extracted_digits as 0
+define digit_buffer as input_digits_num
+while digit_buffer > 0
+  define extracted_digit as digit_buffer % 10
+  define sum_of_extracted_digits as sum_of_extracted_digits + extracted_digit
+  define digit_buffer as digit_buffer / 10
+print sum_of_extracted_digits

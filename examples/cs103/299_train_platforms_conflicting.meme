@@ -1,0 +1,16 @@
+this runs in the shell
+
+class train-platforms-conflicting
+
+  define function schedulePlatforms with train_count
+    if train_count > 0
+      set train_count to train_count + 1
+    if train_count > 0
+      set train_count to train_count - 1
+    ensure train_count == train_count + 1
+    return train_count
+
+  define function main
+    define trig from user "Schedule platforms?"
+    define res as schedulePlatforms from 5
+    print res

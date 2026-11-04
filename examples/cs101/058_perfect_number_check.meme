@@ -1,0 +1,11 @@
+this runs in the shell
+
+define perfect_cand_num from user "Test number?"
+define proper_divisors_sum as 0
+for test_divisor from 1 to perfect_cand_num - 1
+  if perfect_cand_num % test_divisor == 0
+    define proper_divisors_sum as proper_divisors_sum + test_divisor
+if proper_divisors_sum == perfect_cand_num
+  pirnt "Perfect"
+else
+  print "Imperfect"

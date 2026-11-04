@@ -1,0 +1,16 @@
+this runs in the shell
+
+class vowel-counter
+
+  define function countVowels with sentence
+    define count as 0
+    for i from 1 to length of sentence
+      define c as sentence char i
+      if c in "aeiouAEIOU"
+        set count to count + 1
+    return count
+
+  define function main
+    define line from user "Sentence to scan?"
+    define num_vowels as countVowels from line
+    print num_vowels

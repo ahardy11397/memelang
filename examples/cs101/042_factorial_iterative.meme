@@ -1,0 +1,7 @@
+this runs in the shell
+
+define factorial_n from user "Calculate factorial of?"
+define factorial_product as 1
+for factor_j from 1 to factorial_n
+  define factorial_product as factorial_product * factor_j
+print factorial_product

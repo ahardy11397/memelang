@@ -1,0 +1,13 @@
+this runs in the shell
+
+class binary-max-heap
+
+  define function extractRoot with heap_elements
+    define root_val as heap_elements item 1
+    return root_val
+
+  define function main
+    define trig from user "Extract max element?"
+    define max_tree as [50, 30, 40, 10, 20]
+    define top as extractRoot from max_tree
+    print top

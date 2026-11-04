@@ -1,0 +1,20 @@
+this runs in the shell
+
+class knight-minimum-moves
+
+  define function isSingleKnightHop with dr, dc
+    define abs_r as dr
+    if dr < 0
+      set abs_r as 0 - dr
+    define abs_c as dc
+    if dc < 0
+      set abs_c as 0 - dc
+    if (abs_r == 1 and abs_c == 2) or (abs_r == 2 and abs_c == 1)
+      return 1
+    return 0
+
+  define function main
+    define delta_r from user "Delta rows?"
+    define delta_c from user "Delta cols?"
+    define is_hop as isSingleKnightHop from delta_r, delta_c
+    print is_hop

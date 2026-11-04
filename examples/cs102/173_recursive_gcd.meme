@@ -1,0 +1,15 @@
+this runs in the shell
+
+class recursive-gcd-solver
+
+  define function recGcd with a, b
+    if b == 0
+      return a
+    define rem as a - ((a / b) * b)
+    return recGcd from b, rem
+
+  define function main
+    define val_a from user "First integer?"
+    define val_b from user "Second integer?"
+    define g as recGcd from val_a, val_b
+    print g

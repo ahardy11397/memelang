@@ -1,0 +1,13 @@
+this runs in the shell
+
+define pal_probe_num from user "Number to check for palindrome?"
+define pal_initial_copy as pal_probe_num
+define pal_reversed_acc as 0
+while pal_probe_num > 0
+  define pal_trailing as pal_probe_num % 10
+  define pal_reversed_acc as (pal_reversed_acc * 10) + pal_trailing
+  define pal_probe_num as pal_probe_num / 10
+if pal_initial_copy == pal_reversed_acc
+  print "Palindrome"
+else
+  print "Not Palindrome"

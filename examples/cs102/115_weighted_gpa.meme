@@ -1,0 +1,19 @@
+this runs in the shell
+
+class gpa-calculator
+
+  define function calculateQualityPoints with grade_pts, credits
+    return grade_pts * credits
+
+  define function totalQualityPoints with qp1, qp2
+    return qp1 + qp2
+
+  define function main
+    define g1 from user "Course 1 grade points?"
+    define c1 from user "Course 1 credit hours?"
+    define g2 from user "Course 2 grade points?"
+    define c2 from user "Course 2 credit hours?"
+    define qp1 as calculateQualityPoints from g1, c1
+    define qp2 as calculateQualityPoints from g2, c2
+    define total_pts as totalQualityPoints from qp1, qp2
+    print total_pts

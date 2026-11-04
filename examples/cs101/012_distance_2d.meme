@@ -1,0 +1,14 @@
+this runs in the shell
+
+define origin_x from user "Origin point X?"
+define origin_y from user "Origin point Y?"
+define dest_x from user "Destination point X?"
+define dest_y from user "Destination point Y?"
+define diff_x as dest_x - origin_x
+define diff_y as dest_y - origin_y
+if diff_x < 0
+  define diff_x as 0 - diff_x
+if diff_y < 0
+  define diff_y as 0 - diff_y
+define manhattan_dist as diff_x + diff_y
+print manhattan_dist

@@ -1,0 +1,16 @@
+this runs in the shell
+
+class parking-garage
+
+  define function calculateParkingFee with hours
+    if hours <= 1
+      return 4
+    if hours <= 3
+      return 4 + ((hours - 1) * 3)
+    define extra_hours as hours - 3
+    return 10 + (extra_hours * 2)
+
+  define function main
+    define parked_hours from user "Hours parked?"
+    define fee as calculateParkingFee from parked_hours
+    print fee

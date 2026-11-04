@@ -1,0 +1,14 @@
+this runs in the shell
+
+class string-reverser
+
+  define function reverseText with s
+    define out as ""
+    for idx from length of s to 1
+      set out to out + s char idx
+    return out
+
+  define function main
+    define txt from user "String to reverse?"
+    define rev as reverseText from txt
+    print rev

@@ -1,0 +1,14 @@
+this runs in the shell
+
+define prime_candidate from user "Candidate integer to test?"
+if prime_candidate < 2
+  print "Composite"
+else
+  define is_prime_flag as 1
+  for trial_d from 2 to prime_candidate - 1
+    if prime_candidate % trial_d == 0
+      define is_prime_flag as 0
+  if is_prime_flag == 1
+    print "Prime"
+  else
+    print "Composite"

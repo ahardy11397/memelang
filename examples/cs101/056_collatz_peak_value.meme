@@ -1,0 +1,13 @@
+this runs in the shell
+
+define trajectory_seed from user "Trajectory starting integer?"
+define max_trajectory_peak as trajectory_seed
+define trajectory_val as trajectory_seed
+while trajectory_val > 1
+  if trajectory_val % 2 == 0
+    define trajectory_val as trajectory_val / 2
+  else
+    define trajectory_val as (trajectory_val * 3) + 1
+  if trajectory_val > max_trajectory_peak
+    define max_trajectory_peak as trajectory_val
+print max_trajectory_peak

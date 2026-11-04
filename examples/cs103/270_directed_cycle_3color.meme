@@ -1,0 +1,14 @@
+this runs in the shell
+
+class directed-cycle-detector
+
+  define function detectBackEdge with node_states, target
+    if node_states item target == 1
+      return 1
+    return 0
+
+  define function main
+    define next_node from user "Target neighbor?"
+    define states as [2, 1, 0]
+    define has_cycle as detectBackEdge from states, next_node
+    print has_cycle

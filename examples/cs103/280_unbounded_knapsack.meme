@@ -1,0 +1,12 @@
+this runs in the shell
+
+class unbounded-knapsack-solver
+
+  define function maxRepetitionValue with unit_val, capacity, unit_weight
+    define max_copies as capacity / unit_weight
+    return max_copies * unit_val
+
+  define function main
+    define cap from user "Knapsack capacity?"
+    define val as maxRepetitionValue from 6, cap, 2
+    print val

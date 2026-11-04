@@ -1,0 +1,20 @@
+this runs in the shell
+
+class array-stack-manager
+
+  define function pushVal with stack, val
+    define updated as stack
+    append val to updated
+    return updated
+
+  define function peekTop with stack
+    define n as length of stack
+    return stack item n
+
+  define function main
+    define item_val from user "Enter element?"
+    define s as [10, 20]
+    define s1 as pushVal from s, item_val
+    define s2 as pushVal from s1, 99
+    define top_val as peekTop from s2
+    print top_val

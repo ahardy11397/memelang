@@ -1,0 +1,24 @@
+this runs in the shell
+
+class json-dot-product-calculator
+
+  define function readArray with file_address
+    if file_address is json
+      define parsed_data as fromFile from file_address
+      return parsed_data
+    else return "Wrong File Type"
+
+  define function computeDotProduct with w, v
+    define total_dot as 0
+    for idx from 1 to length of w
+      define prod as (w item idx) * (v item idx)
+      set total_dot to total_dot + prod
+    return total_dot
+
+  define function main
+    define w_file from user "Weights JSON file?"
+    define v_file from user "Values JSON file?"
+    define arr_w as readArray from w_file
+    define arr_v as readArray from v_file
+    define result as computeDotProduct from arr_w, arr_v
+    print result

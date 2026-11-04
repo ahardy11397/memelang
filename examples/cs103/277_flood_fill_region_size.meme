@@ -1,0 +1,16 @@
+this runs in the shell
+
+class flood-fill-region-size
+
+  define function countMatchingColor with region_pixels, target_color
+    define region_size as 0
+    for i from 1 to length of region_pixels
+      if region_pixels item i == target_color
+        set region_size to region_size + 1
+    return region_size
+
+  define function main
+    define col from user "Target color?"
+    define pixels as [2, 2, 2, 1, 2, 2]
+    define sz as countMatchingColor from pixels, col
+    print sz

@@ -1,0 +1,21 @@
+this runs in the shell
+
+class json-moving-average
+
+  define function loadSeries with loc
+    if loc is json
+      define numbers as fromFile from loc
+      return numbers
+    else return "Wrong File Type"
+
+  define function firstWindowAverage with series
+    define w1 as series item 1
+    define w2 as series item 2
+    define w3 as series item 3
+    return (w1 + w2 + w3) / 3
+
+  define function main
+    define source_path from user "File location?"
+    define vals as loadSeries from source_path
+    define avg3 as firstWindowAverage from vals
+    print avg3

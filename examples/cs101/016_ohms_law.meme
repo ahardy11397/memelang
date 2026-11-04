@@ -1,0 +1,6 @@
+this runs in the shell
+
+define measured_current from user "Circuit current in Amperes?"
+define circuit_resistance from user "Resistance in Ohms?"
+define calculated_voltage as measured_current * circuit_resistance
+print calculated_voltage

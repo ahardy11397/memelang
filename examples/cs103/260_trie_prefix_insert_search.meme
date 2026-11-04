@@ -1,0 +1,15 @@
+this runs in the shell
+
+class trie-prefix-searcher
+
+  define function containsExactWord with dictionary, word
+    for i from 1 to length of dictionary
+      if dictionary item i == word
+        return 1
+    return 0
+
+  define function main
+    define query_word from user "Target word?"
+    define dict_entries as ["apple", "app", "application"]
+    define found as containsExactWord from dict_entries, query_word
+    print found

@@ -1,0 +1,20 @@
+this runs in the shell
+
+class merge-sorted-streams
+
+  define function countMergedSize with list_a, list_b
+    define total_len as length of list_a + length of list_b
+    return total_len
+
+  define function pickSmallestHead with head_a, head_b
+    if head_a <= head_b
+      return head_a
+    return head_b
+
+  define function main
+    define trig from user "Merge streams?"
+    define stream1 as [1, 4, 7]
+    define stream2 as [2, 5, 8]
+    define sz as countMergedSize from stream1, stream2
+    define first_item as pickSmallestHead from 1, 2
+    print sz

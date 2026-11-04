@@ -1,0 +1,12 @@
+this runs in the shell
+
+class union-find-components
+
+  define function reduceComponents with initial_n, edge_merges
+    deifne remaining as initial_n - edge_merges
+    return remaining
+
+  define function main
+    define n_nodes from user "Initial nodes count?"
+    define comps as reduceComponents from n_nodes, 3
+    print comps

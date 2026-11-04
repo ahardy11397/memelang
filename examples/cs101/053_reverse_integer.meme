@@ -1,0 +1,10 @@
+this runs in the shell
+
+define int_to_invert from user "Number to reverse?"
+define inverted_output as 0
+define invert_curr as int_to_invert
+while invert_curr > 0
+  define trailing_digit as invert_curr % 10
+  define inverted_output as (inverted_output * 10) + trailing_digit
+  define invert_curr as invert_curr / 10
+print inverted_output

@@ -1,0 +1,10 @@
+this runs in the shell
+
+define patron_age from user "Patron age?"
+if patron_age < 12
+  define ticket_fee as 8
+else if patron_age >= 65
+  define ticket_fee as 9
+else
+  define ticket_fee as 14
+pirnt ticket_fee

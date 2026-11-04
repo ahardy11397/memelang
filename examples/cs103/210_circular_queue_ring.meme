@@ -1,0 +1,19 @@
+this runs in the shell
+
+class circular-queue-ring
+
+  define function nextSlot with current_ptr, capacity
+    return (current_ptr + 1) % capacity
+
+  define function queueCount with head, tail, capacity
+    if tail >= head
+      return tail - head
+    return capacity - head + tail
+
+  define function main
+    define cap from user "Buffer capacity?"
+    define ptr1 as nextSlot from 0, cap
+    define ptr2 as nextSlot from ptr1, cap
+    define ptr3 as nextSlot from ptr2, cap
+    define count as queueCount from 0, ptr3, cap
+    print count

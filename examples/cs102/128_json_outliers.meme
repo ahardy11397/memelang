@@ -1,0 +1,23 @@
+this runs in the shell
+
+class json-outlier-counter
+
+  define function loadRecords with target_file
+    if target_file is json
+      define records as fromFile from target_file
+      return records
+    else return "Wrong File Type"
+
+  define function countAbove with dataset, threshold
+    define count as 0
+    for idx from 1 to length of dataset
+      if dataset item idx >= threshold
+        set count to count + 1
+    return count
+
+  define function main
+    define filename from user "Input JSON file?"
+    define cutoff from user "Outlier cutoff?"
+    define vals as loadRecords from filename
+    define num_outliers as countAbove from vals, cutoff
+    print num_outliers

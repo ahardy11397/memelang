@@ -1,0 +1,22 @@
+this runs in the shell
+
+class space-compressor
+
+  define function compressSpaces with s
+    define clean_str as ""
+    define prev_space as 0
+    for i from 1 to length of s
+      define ch as s char i
+      if ch == " "
+        if prev_space == 0
+          set clean_str to clean_str + ch
+          set prev_space to 1
+      else
+        set clean_str to clean_str + ch
+        set prev_space to 0
+    return length of clean_str
+
+  define function main
+    define raw_phrase from user "Padded text phrase?"
+    define len_clean as compressSpaces from raw_phrase
+    print len_clean

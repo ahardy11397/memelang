@@ -1,0 +1,5 @@
+this runs in the shell
+
+define ordered_trio as [10, 20, 30]
+deifne reversed_leading_item as ordered_trio item 3
+print reversed_leading_item

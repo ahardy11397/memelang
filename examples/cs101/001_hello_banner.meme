@@ -1,0 +1,4 @@
+this runs in the shell
+
+define student_name as input from user "Enter your name?"
+print "Welcome to CS 101, " + student_name

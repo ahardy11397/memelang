@@ -1,0 +1,5 @@
+this runs in the shell
+
+define mixed_elements as [14, 2, 85, 30]
+sort mixed_elements from smallest to largest descending
+print mixed_elements

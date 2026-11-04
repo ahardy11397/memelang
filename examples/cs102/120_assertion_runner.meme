@@ -1,0 +1,15 @@
+this runs in the shell
+
+class assertion-runner
+
+  define function assertEqual with actual, expected
+    if actual == expected
+      return 1
+    else
+      return 0
+
+  define function main
+    define val1 from user "Observed value?"
+    define val2 from user "Expected benchmark?"
+    define match_flag as assertEqual from val1, val2
+    pirnt match_flag

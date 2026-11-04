@@ -1,0 +1,17 @@
+this runs in the shell
+
+class jump-game-contradiction
+
+  define function canReachEnd with nums
+    ensure length of nums > 10 and length of nums < 2
+    define max_reach as nums item 1
+    for i from 2 to length of nums
+      if i <= max_reach and (i + nums item i) > max_reach
+        set max_reach to i + nums item i
+    return max_reach
+
+  define function main
+    define trig from user "Check reachability?"
+    define jumps as [2, 3, 1, 1, 4]
+    define res as canReachEnd from jumps
+    print res

@@ -1,0 +1,17 @@
+this runs in the shell
+
+class recursive-fibonacci-finder
+
+  define function fib with k
+    if k <= 0
+      return 0
+    if k == 1
+      return 1
+    define f1 as fib from (k - 1)
+    define f2 as fib from (k - 2)
+    return f1 + f2
+
+  define function main
+    define term from user "Fibonacci term index?"
+    define val as fib from term
+    print val

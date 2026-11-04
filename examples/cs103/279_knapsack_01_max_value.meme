@@ -1,0 +1,15 @@
+this runs in the shell
+
+class zero-one-knapsack-dp
+
+  define function chooseBestItem with prev_val, item_val
+    if (prev_val + item_val) > prev_val
+      return prev_val + item_val
+    return prev_val
+
+  define function main
+    define cap from user "Capacity limit?"
+    define v1 as 10
+    define v2 as 8
+    define total_v as chooseBestItem from v1, v2
+    print total_v

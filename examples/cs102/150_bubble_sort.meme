@@ -1,0 +1,15 @@
+this runs in the shell
+
+class bubble-sort-counter
+
+  define function countComparisons with n
+    define total_comps as 0
+    for i from 1 to (n - 1)
+      for j from 1 to (n - i)
+        set total_comps to total_comps + 1
+    return total_comps
+
+  define function main
+    define list_size from user "Number of elements to bubble sort?"
+    define comps as countComparisons from list_size
+    print comps

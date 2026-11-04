@@ -1,0 +1,12 @@
+this runs in the shell
+
+define raw_bit_string_digits from user "Binary digits sequence?"
+define evaluated_decimal as 0
+define bit_weight_multiplier as 1
+define remaining_binary_bits as raw_bit_string_digits
+while remaining_binary_bits > 0
+  define individual_bit as remaining_binary_bits % 10
+  define evaluated_decimal as evaluated_decimal + (individual_bit * bit_weight_multiplier)
+  define bit_weight_multiplier as bit_weight_multiplier * 2
+  define remaining_binary_bits as remaining_binary_bits / 10
+print evaluated_decimal

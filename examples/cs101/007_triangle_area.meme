@@ -1,0 +1,6 @@
+this runs in the shell
+
+define tri_base from user "Triangle base span?"
+define tri_height from user "Triangle altitude height?"
+define tri_surface as (tri_base * tri_height) / 2
+print tri_surface

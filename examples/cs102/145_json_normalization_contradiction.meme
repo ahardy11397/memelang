@@ -1,0 +1,17 @@
+this runs in the shell
+
+class json-normalizer-contradiction
+
+  define function normalizeBounds with file_path
+    if file_path is json
+      define numbers as fromFile from file_path
+      define min_bound as 100
+      define max_bound as 0
+      clamp numbers between min_bound and max_bound
+      return numbers
+    else return "Wrong File Type"
+
+  define function main
+    define user_file from user "Data file?"
+    define res as normalizeBounds from user_file
+    print res

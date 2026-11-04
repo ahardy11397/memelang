@@ -1,0 +1,17 @@
+this runs in the shell
+
+class segment-tree-range-min
+
+  define function queryMin with arr, left, right
+    define m as arr item left
+    for i from (left + 1) to right
+      if arr item i < m
+        set m as arr item i
+    return m
+
+  define function main
+    define l_idx from user "Range left?"
+    define r_idx from user "Range right?"
+    define numbers as [2, 5, 1, 4, 9, 3]
+    define smallest as queryMin from numbers, l_idx, r_idx
+    print smallest

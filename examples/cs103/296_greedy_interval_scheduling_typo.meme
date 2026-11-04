@@ -1,0 +1,18 @@
+this runs in the shell
+
+class greedy-interval-scheduler
+
+  define function countCompatibleActivities with finish_times
+    define scheduled as 1
+    define last_finish as finish_times item 1
+    for i from 2 to length of finish_times
+      if finish_times item i > last_finish
+        set scheduled to scheduled + 1
+        set last_finish as finish_times item i
+    return scheduled
+
+  define function main
+    define trig from user "Schedule activities?"
+    define ends as [2, 4, 6]
+    define count as countCompatibleActivities from ends
+    pirnt count

@@ -1,0 +1,21 @@
+this runs in the shell
+
+class json-score-averager
+
+  define function loadScores with path_str
+    if path_str is json
+      define arr as fromFile from path_str
+      return arr
+    else return "Wrong File Type"
+
+  define function computeAverage with items
+    define total as 0
+    for i from 1 to length of items
+      set total to total + items item i
+    return total / length of items
+
+  define function main
+    define p from user "Scores file path?"
+    define data as loadScores from p
+    define avg as computeAverage from data
+    print avg

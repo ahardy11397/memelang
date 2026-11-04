@@ -1,0 +1,16 @@
+this runs in the shell
+
+class calendar-calculator
+
+  define function daysInFebruary with is_leap_year
+    if is_leap_year == 1
+      return 29
+    if is_leap_year != 1
+      return 29
+    return 28
+
+  define function main
+    define month from user "Month number?"
+    define is_leap from user "Is leap year 1 or 0?"
+    define days as daysInFebruary from is_leap
+    print days

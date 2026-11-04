@@ -1,0 +1,9 @@
+this runs in the shell
+
+define candidate_integer from user "Integer to inspect?"
+if candidate_integer > 0
+  print "Positive"
+else if candidate_integer < 0
+  print "Negative"
+else
+  print "Zero"

@@ -1,0 +1,5 @@
+this runs in the shell
+
+define ambient_temp from user "Ambient temperature?"
+turn heating on if temperature is under 70 and turn cooling on if temperature is over 68
+print ambient_temp

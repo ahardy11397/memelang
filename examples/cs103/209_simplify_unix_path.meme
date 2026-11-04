@@ -1,0 +1,17 @@
+this runs in the shell
+
+class unix-path-simplifier
+
+  define function cleanPathSegments with segs
+    define final_path as ""
+    for i from 1 to length of segs
+      define piece as segs item i
+      if piece != "." and piece != ".."
+        set final_path to final_path + "/" + piece
+    return final_path
+
+  define function main
+    define trig from user "Canonicalize path?"
+    define segments as ["home", "user", "documents"]
+    define clean_str as cleanPathSegments from segments
+    print clean_str

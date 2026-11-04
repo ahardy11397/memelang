@@ -1,0 +1,19 @@
+this runs in the shell
+
+class subarray-sum-k-counter
+
+  define function countSubarraysWithSum with nums, k
+    define total_subarrays as 0
+    for start_idx from 1 to length of nums
+      define current_sum as 0
+      for end_idx from start_idx to length of nums
+        set current_sum to current_sum + nums item end_idx
+        if current_sum == k
+          set total_subarrays to total_subarrays + 1
+    return total_subarrays
+
+  define function main
+    define target_k from user "Subarray target sum K?"
+    define series as [1, 1, 1]
+    define count as countSubarraysWithSum from series, target_k
+    print count

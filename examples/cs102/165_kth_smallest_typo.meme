@@ -1,0 +1,13 @@
+this runs in the shell
+
+class kth-smallest-selector
+
+  define function selectKth with nums, k
+    sorterd nums into sorted_arr ascending
+    return sorted_arr item k
+
+  define function main
+    define k_choice from user "K position?"
+    define raw_pool as [9, 2, 7, 14, 5]
+    define picked as selectKth from raw_pool, k_choice
+    print picked

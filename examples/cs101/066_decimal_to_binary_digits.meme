@@ -1,0 +1,12 @@
+this runs in the shell
+
+define dec_source_val from user "Decimal value?"
+define binary_digits_accumulated as 0
+define place_multiplier as 1
+define dec_remaining_num as dec_source_val
+while dec_remaining_num > 0
+  define bit_remainder as dec_remaining_num % 2
+  define binary_digits_accumulated as binary_digits_accumulated + (bit_remainder * place_multiplier)
+  define place_multiplier as place_multiplier * 10
+  define dec_remaining_num as dec_remaining_num / 2
+print binary_digits_accumulated

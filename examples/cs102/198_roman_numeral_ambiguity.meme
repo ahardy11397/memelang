@@ -1,0 +1,16 @@
+this runs in the shell
+
+class roman-subtraction-conflict
+
+  define function parseRoman with roman_str
+    if roman_str contains "IV"
+      return 4
+    if roman_str contains "IV"
+      return 6
+    else
+      return 0
+
+  define function main
+    define input_roman from user "Roman numeral?"
+    define val as parseRoman from input_roman
+    print val

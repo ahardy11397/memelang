@@ -1,0 +1,12 @@
+this runs in the shell
+
+define prime_ceiling from user "Ceiling value?"
+define prime_total_count as 0
+for cand_p from 2 to prime_ceiling
+  define cand_valid as 1
+  for cand_div from 2 to cand_p - 1
+    if cand_p % cand_div == 0
+      define cand_valid as 0
+  if cand_valid == 1
+    define prime_total_count as prime_total_count + 1
+print prime_total_count

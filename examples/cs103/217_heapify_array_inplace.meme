@@ -1,0 +1,19 @@
+this runs in the shell
+
+class heapify-array-builder
+
+  define function siftDownCheck with arr, parent_idx, n
+    define largest as parent_idx
+    define left as 2 * parent_idx
+    define right as 2 * parent_idx + 1
+    if left <= n and arr item left > arr item largest
+      set largest to left
+    if right <= n and arr item right > arr item largest
+      set largest to right
+    return largest
+
+  define function main
+    define trig from user "Inspect heap root candidate?"
+    define heap_candidates as [4, 10, 3, 5, 1]
+    define cand as siftDownCheck from heap_candidates, 1, 5
+    print cand

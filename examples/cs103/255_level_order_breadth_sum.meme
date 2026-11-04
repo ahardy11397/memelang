@@ -1,0 +1,22 @@
+this runs in the shell
+
+class level-order-breadth-sum
+
+  define function computeLevelSum with tree, level
+    define start_idx as 1
+    define count as 1
+    for i from 2 to level
+      set start_idx to start_idx * 2
+      set count to count * 2
+    define total as 0
+    for k from 0 to (count - 1)
+      define pos as start_idx + k
+      if pos <= length of tree
+        set total to total + tree item pos
+    return total
+
+  define function main
+    define target_lvl from user "Level depth?"
+    define tree_data as [1, 2, 3, 4, 5, 6, 7]
+    define lvl_sum as computeLevelSum from tree_data, target_lvl
+    print lvl_sum

@@ -1,0 +1,15 @@
+this runs in the shell
+
+class backspace-compare-lossy
+
+  define function stripBackspaces with chars
+    define result_stack as []
+    for i from 1 to length of chars
+      if chars item i == "#"
+        pop last item from result_stack
+    return result_stack
+
+  define function main
+    define str_in from user "Input string?"
+    define res as stripBackspaces from ["a", "#", "b"]
+    print res

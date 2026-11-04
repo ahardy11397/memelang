@@ -1,0 +1,18 @@
+this runs in the shell
+
+class thermostat-controller
+
+  define function evaluateHysteresis with current_temp, set_temp
+    define low_threshold as set_temp - 2
+    define high_threshold as set_temp + 2
+    if current_temp < low_threshold
+      return 1
+    if current_temp > high_threshold
+      return 2
+    return 0
+
+  define function main
+    define cur_t from user "Room temperature?"
+    define target_t from user "Set point temperature?"
+    define mode as evaluateHysteresis from cur_t, target_t
+    print mode

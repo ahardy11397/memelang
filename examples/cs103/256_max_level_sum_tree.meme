@@ -1,0 +1,13 @@
+this runs in the shell
+
+class max-level-sum-finder
+
+  define function compareLevelSums with sum_lvl1, sum_lvl2
+    if sum_lvl2 > sum_lvl1
+      return sum_lvl2
+    return sum_lvl1
+
+  define function main
+    define trig from user "Find max level sum?"
+    define best as compareLevelSums from 1, 7
+    print best

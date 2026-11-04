@@ -1,0 +1,13 @@
+this runs in the shell
+
+define actual_speed from user "Recorded vehicle speed?"
+define allowed_speed from user "Speed limit?"
+define excess_speed as actual_speed - allowed_speed
+if excess_speed <= 0
+  print 0
+else if excess_speed <= 10
+  print 50
+else if excess_speed <= 20
+  print 150
+else
+  print 300

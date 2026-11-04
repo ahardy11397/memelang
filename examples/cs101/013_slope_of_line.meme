@@ -1,0 +1,10 @@
+this runs in the shell
+
+define p1_x from user "First point X?"
+define p1_y from user "First point Y?"
+define p2_x from user "Second point X?"
+define p2_y from user "Second point Y?"
+define delta_run as p2_x - p1_x
+define delta_rise as p2_y - p1_y
+define line_slope as delta_rise / delta_run
+print line_slope

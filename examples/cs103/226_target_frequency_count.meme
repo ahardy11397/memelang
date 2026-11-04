@@ -1,0 +1,16 @@
+this runs in the shell
+
+class target-frequency-counter
+
+  define function countOccurrences with list_items, target
+    define count as 0
+    for i from 1 to length of list_items
+      if list_items item i == target
+        set count to count + 1
+    return count
+
+  define function main
+    define target_val from user "Target value?"
+    define data as [2, 4, 4, 3, 4, 5, 4]
+    define total as countOccurrences from data, target_val
+    print total

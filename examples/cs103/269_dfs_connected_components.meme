@@ -1,0 +1,16 @@
+this runs in the shell
+
+class dfs-components-counter
+
+  define function countUnvisited with visited_flags
+    define unvisited_count as 0
+    for i from 1 to length of visited_flags
+      if visited_flags item i == 0
+        set unvisited_count to unvisited_count + 1
+    return unvisited_count
+
+  define function main
+    define trig from user "Count isolated nodes?"
+    define visited as [1, 1, 0, 1, 0]
+    define isolated as countUnvisited from visited
+    print isolated

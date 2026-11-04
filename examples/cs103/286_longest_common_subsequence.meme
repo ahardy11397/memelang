@@ -1,0 +1,19 @@
+this runs in the shell
+
+class longest-common-subsequence
+
+  define function matchLength with s1, s2
+    define common as 0
+    for i from 1 to length of s1
+      define ch1 as s1 item i
+      for j from 1 to length of s2
+        if ch1 == s2 item j
+          set common to common + 1
+    return common
+
+  define function main
+    define trig from user "Calculate LCS match?"
+    define seq1 as ["a", "c", "e"]
+    define seq2 as ["a", "b", "c", "d", "e"]
+    define lcs as matchLength from seq1, seq2
+    print lcs

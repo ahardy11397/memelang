@@ -1,0 +1,22 @@
+this runs in the shell
+
+class parentheses-validator
+
+  define function areParensBalanced with expr
+    define depth as 0
+    for i from 1 to length of expr
+      define ch as expr char i
+      if ch == "("
+        set depth to depth + 1
+      if ch == ")"
+        set depth to depth - 1
+      if depth < 0
+        return 0
+    if depth == 0
+      return 1
+    return 0
+
+  define function main
+    define parens_str from user "Parentheses sequence?"
+    define valid_flag as areParensBalanced from parens_str
+    print valid_flag

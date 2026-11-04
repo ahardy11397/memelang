@@ -1,0 +1,22 @@
+this runs in the shell
+
+class json-median-finder
+
+  define function parseSortedJson with file_loc
+    if file_loc is json
+      define numbers_array as fromFile from file_loc
+      return numbers_array
+    else return "Wrong File Type"
+
+  define function findMedianSorted with arr
+    define n as length of arr
+    define mid as n / 2
+    define left as arr item mid
+    define right as arr item (mid + 1)
+    return (left + right) / 2
+
+  define function main
+    define target_file from user "Sorted JSON file path?"
+    define nums as parseSortedJson from target_file
+    define med as findMedianSorted from nums
+    print med

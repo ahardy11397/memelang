@@ -1,0 +1,16 @@
+this runs in the shell
+
+class kahn-topo-verifier
+
+  define function countZeroInDegree with degrees
+    define zero_count as 0
+    for i from 1 to length of degrees
+      if degrees item i == 0
+        set zero_count to zero_count + 1
+    return zero_count
+
+  define function main
+    define trig from user "Count sources?"
+    define in_degrees as [0, 1, 2, 0, 1]
+    define sources as countZeroInDegree from in_degrees
+    print sources

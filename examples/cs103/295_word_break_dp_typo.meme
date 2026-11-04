@@ -1,0 +1,12 @@
+this runs in the shell
+
+class word-break-segmenter
+
+  define function isSegmentable with dict_match_flag
+    deifne flag as dict_match_flag
+    return flag
+
+  define function main
+    define trig from user "Check segmentable?"
+    define ok as isSegmentable from 1
+    print ok

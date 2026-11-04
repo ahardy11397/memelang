@@ -1,0 +1,11 @@
+this runs in the shell
+
+define bmi_score from user "Calculated BMI figure?"
+if bmi_score < 18
+  print "Underweight"
+else if bmi_score < 25
+  print "Normal"
+else if bmi_score < 30
+  print "Overweight"
+else
+  print "Obese"

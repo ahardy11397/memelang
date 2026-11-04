@@ -1,0 +1,12 @@
+this runs in the shell
+
+class substring-pattern-finder
+
+  define function locateSubstring with pattern, text
+    return position of pattern in text
+
+  define function main
+    define needle from user "Search pattern?"
+    define haystack from user "Target corpus text?"
+    define pos as locateSubstring from needle, haystack
+    pirnt pos

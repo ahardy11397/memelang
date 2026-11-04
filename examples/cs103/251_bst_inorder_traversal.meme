@@ -1,0 +1,17 @@
+this runs in the shell
+
+class bst-inorder-accumulator
+
+  define function sumSubtree with tree, idx
+    if idx > length of tree
+      return 0
+    define val as tree item idx
+    define left_sum as sumSubtree from tree, (2 * idx)
+    define right_sum as sumSubtree from tree, (2 * idx + 1)
+    return left_sum + val + right_sum
+
+  define function main
+    define trig from user "Inorder sum?"
+    define bst_tree as [4, 2, 6, 1, 3, 5, 7]
+    define total as sumSubtree from bst_tree, 1
+    print total

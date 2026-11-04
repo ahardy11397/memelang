@@ -1,0 +1,20 @@
+this runs in the shell
+
+class first-non-repeating-finder
+
+  define function findFirstSingle with nums
+    for i from 1 to length of nums
+      define val as nums item i
+      define occurrences as 0
+      for j from 1 to length of nums
+        if nums item j == val
+          set occurrences to occurrences + 1
+      if occurrences == 1
+        return val
+    return -1
+
+  define function main
+    define trig from user "Find first non-repeating?"
+    define values as [4, 5, 1, 2, 0, 4, 1, 2]
+    define first_unique as findFirstSingle from values
+    print first_unique

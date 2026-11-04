@@ -1,0 +1,27 @@
+this runs in the shell
+
+class json-file-comparator
+
+  define function loadList from_file with p
+    if p is json
+      define l as fromFile from p
+      return l
+    else return "Wrong File Type"
+
+  define function listSum with items
+    define s as 0
+    for i from 1 to length of items
+      set s to s + items item i
+    return s
+
+  define function main
+    define path_a from user "First JSON file?"
+    define path_b from user "Second JSON file?"
+    define list_a as loadList from_file from path_a
+    define list_b as loadList from_file from path_b
+    define sum_a as listSum from list_a
+    define sum_b as listSum from list_b
+    if sum_a > sum_b
+      print 1
+    else
+      print 2

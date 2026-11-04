@@ -1,0 +1,11 @@
+this runs in the shell
+
+define logged_hours from user "Weekly hours logged?"
+define base_rate from user "Base hourly pay?"
+if logged_hours <= 40
+  print logged_hours * base_rate
+else
+  define regular_pay as 40 * base_rate
+  define overtime_hrs as logged_hours - 40
+  define overtime_pay as overtime_hrs * base_rate * 3 / 2
+  print regular_pay + overtime_pay

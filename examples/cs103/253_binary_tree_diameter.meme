@@ -1,0 +1,11 @@
+this runs in the shell
+
+class tree-diameter-estimator
+
+  define function estimateDiameter with left_depth, right_depth
+    return left_depth + right_depth
+
+  define function main
+    define trig from user "Compute diameter?"
+    define diam as estimateDiameter from 2, 1
+    print diam

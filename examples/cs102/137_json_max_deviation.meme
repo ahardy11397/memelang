@@ -1,0 +1,25 @@
+this runs in the shell
+
+class json-deviation-analyzer
+
+  define function loadNumericFile with fn
+    if fn is json
+      define contents as fromFile from fn
+      return contents
+    else return "Wrong File Type"
+
+  define function maxDeviation with nums, center_val
+    define max_diff as 0
+    for i from 1 to length of nums
+      define diff as nums item i - center_val
+      if diff < 0
+        set diff to 0 - diff
+      if diff > max_diff
+        set max_diff to diff
+    return max_diff
+
+  define function main
+    define input_name from user "Path to numbers json?"
+    define data as loadNumericFile from input_name
+    define dev as maxDeviation from data, 33
+    print dev

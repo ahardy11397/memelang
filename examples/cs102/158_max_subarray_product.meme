@@ -1,0 +1,17 @@
+this runs in the shell
+
+class max-adjacent-product
+
+  define function findMaxAdjacentProd with arr
+    define best_prod as (arr item 1) * (arr item 2)
+    for k from 2 to (length of arr - 1)
+      define p as (arr item k) * (arr item (k + 1))
+      if p > best_prod
+        set best_prod to p
+    return best_prod
+
+  define function main
+    define go from user "Compute adjacent product?"
+    define nums as [2, 3, -2, 4, 6]
+    define result as findMaxAdjacentProd from nums
+    print result

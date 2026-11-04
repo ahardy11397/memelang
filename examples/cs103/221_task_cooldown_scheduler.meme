@@ -1,0 +1,13 @@
+this runs in the shell
+
+class task-scheduler-intervals
+
+  define function calculateIntervals with max_freq, count_max, cooldown
+    define empty_slots as (max_freq - 1) * cooldown
+    define intervals as (max_freq - 1) + empty_slots + count_max
+    return intervals
+
+  define function main
+    define cool_n from user "Cooldown interval N?"
+    define total_time as calculateIntervals from 3, 1, cool_n
+    print total_time

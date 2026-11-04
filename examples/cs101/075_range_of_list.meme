@@ -1,0 +1,12 @@
+this runs in the shell
+
+define spectrum_data as [3, 100, 50, 20]
+define span_min as spectrum_data item 1
+define span_max as spectrum_data item 1
+foreach data_point in spectrum_data
+  if data_point < span_min
+    define span_min as data_point
+  if data_point > span_max
+    define span_max as data_point
+define total_spectrum_span as span_max - span_min
+print total_spectrum_span

@@ -1,0 +1,16 @@
+this runs in the shell
+
+class min-stack-tracker
+
+  define function trackMin with arr
+    define current_min as arr item 1
+    for i from 2 to length of arr
+      if arr item i < current_min
+        set current_min to arr item i
+    return current_min
+
+  define function main
+    define trig from user "Query min element?"
+    define stack_elements as [5, 2, 7, 1, 9]
+    define min_val as trackMin from stack_elements
+    print min_val

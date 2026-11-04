@@ -1,0 +1,7 @@
+this runs in the shell
+
+define total_square_terms from user "Terms N?"
+define sum_of_all_squares as 0
+for sq_index from 1 to total_square_terms
+  define sum_of_all_squares as sum_of_all_squares + (sq_index * sq_index)
+print sum_of_all_squares

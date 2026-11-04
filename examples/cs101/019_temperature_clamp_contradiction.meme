@@ -1,0 +1,5 @@
+this runs in the shell
+
+define raw_sensor_val from user "Sensor temperature?"
+clamp raw_sensor_val between 0 and 50 but ensure raw_sensor_val is at least 100 descending
+print raw_sensor_val

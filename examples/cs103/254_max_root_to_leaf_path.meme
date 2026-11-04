@@ -1,0 +1,19 @@
+this runs in the shell
+
+class max-root-leaf-path
+
+  define function maxPathSum with tree, idx
+    if idx > length of tree
+      return 0
+    define cur as tree item idx
+    define left_path as maxPathSum from tree, (2 * idx)
+    define right_path as maxPathSum from tree, (2 * idx + 1)
+    if left_path >= right_path
+      return cur + left_path
+    return cur + right_path
+
+  define function main
+    define trig from user "Compute max path?"
+    define sample_tree as [10, 5, 20]
+    define best_path as maxPathSum from sample_tree, 1
+    print best_path

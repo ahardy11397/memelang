@@ -1,0 +1,6 @@
+this runs in the shell
+
+define object_mass from use "Mass in kilograms?"
+define object_velocity from user "Velocity in meters per second?"
+define kinetic_e as (object_mass * object_velocity * object_velocity) / 2
+print kinetic_e

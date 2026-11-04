@@ -1,0 +1,15 @@
+this runs in the shell
+
+class recursive-power-computer
+
+  define function power with base, exp
+    if exp == 0
+      return 1
+    define sub as power from base, (exp - 1)
+    return base * sub
+
+  define function main
+    define b from user "Base number?"
+    define e from user "Exponent?"
+    define p as power from b, e
+    print p

@@ -124,11 +124,11 @@ By default (`--provider auto`), `meme` checks `MEME_PROVIDER`, auto-discovers an
 Memelang is designed to evolve along **two distinct axes**:
 
 1. **`examples/` Axis (Syntax & Library Extensibility):**
-   Curated `.meme` files in `examples/` act as the language's living syntax and idiom bank ("Memelang is as smart as you make it"). Adding new idiomatic patterns here teaches the LLM frontend new phrasing conventions without modifying compiler code.
+   `.meme` files in `examples/` (including shipped foundational examples and the pre-installed CS 101–103 standard library under `examples/cs101/`, `examples/cs102/`, `examples/cs103/`) act as the language's living syntax and idiom bank ("Memelang is as smart as you make it"). Adding new idiomatic patterns or reference programs here teaches the language new phrasing conventions and capabilities so real programs can be written and learned from.
 2. **`src/` Language Axis (IR & Output Target Extensibility):**
    The typed Intermediate Representation (`src/memelang/ir/`), static verifier (`src/memelang/analyzer/`), and codegen backends (`src/memelang/codegen/`) define core computational primitives and target languages (`python`, `rust`, `cpp`).
 
-To benchmark compiler robustness across university Computer Science curricula, Memelang includes an unfiltered **300-script stress corpus** (`tests/corpus/` covering CS 101, CS 102, and CS 103):
+To benchmark compiler robustness across university Computer Science curricula, Memelang includes an unfiltered **300-script stress corpus** mirroring the curriculum (`tests/corpus/` and `examples/` covering CS 101, CS 102, and CS 103):
 
 ```bash
 # Smoke test a slice of CS 101 programs using the fast built-in heuristic provider:

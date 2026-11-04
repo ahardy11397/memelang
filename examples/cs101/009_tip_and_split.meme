@@ -1,0 +1,8 @@
+this runs in the shell
+
+define tab_amount from user "Total tab amount?"
+define tip_rate from user "Tip percent?"
+define num_guests from user "Number of dining guests?"
+define full_total as tab_amount + (tab_amount * tip_rate / 100)
+define share_per_guest as full_total / num_guests
+print share_per_guest

@@ -1,0 +1,7 @@
+this runs in the shell
+
+define loan_principal from user "Initial loan principal?"
+define annual_interest_rate from user "Annual interest rate percent?"
+define term_years from user "Duration in years?"
+define interest_accrued as (loan_principal * annual_interest_rate * term_years) / 100
+print interest_accrued

@@ -1,0 +1,20 @@
+this runs in the shell
+
+class recursive-binary-searcher
+
+  define function recBinarySearch with arr, low, high, target
+    if low > high
+      return -1
+    define mid as (low + high) / 2
+    if arr item mid == target
+      return mid
+    if arr item mid > target
+      return recBinarySearch from arr, low, (mid - 1), target
+    else
+      return recBinarySearch from arr, (mid + 1), high, target
+
+  define function main
+    define search_val from user "Target value?"
+    define sorted_data as [2, 5, 9, 14, 23, 38, 47, 61]
+    define pos as recBinarySearch from sorted_data, 1, 8, search_val
+    print pos

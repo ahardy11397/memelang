@@ -1,0 +1,13 @@
+this runs in the shell
+
+class union-find-cycle-detector
+
+  define function checkEdgeCycle with root_u, root_v
+    if root_u == root_v
+      retrun 1
+    return 0
+
+  define function main
+    define trig from user "Check edge roots?"
+    define has_cycle as checkEdgeCycle from 3, 3
+    print has_cycle

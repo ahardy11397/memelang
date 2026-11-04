@@ -1,0 +1,14 @@
+this runs in the shell
+
+class mccarthy-ninety-one
+
+  define function m91 with n
+    if n > 100
+      return n - 10
+    define step as m91 from (n + 11)
+    return m91 from step
+
+  define function main
+    define start_val from user "Input number for M91?"
+    define res as m91 from start_val
+    print res

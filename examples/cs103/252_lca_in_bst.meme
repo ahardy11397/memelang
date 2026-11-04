@@ -1,0 +1,23 @@
+this runs in the shell
+
+class bst-lca-finder
+
+  define function findLcaKey with bst, p, q
+    define idx as 1
+    while idx <= length of bst
+      define cur as bst item idx
+      if p < cur and q < cur
+        set idx to 2 * idx
+      else
+        if p > cur and q > cur
+          set idx to 2 * idx + 1
+        else
+          return cur
+    return -1
+
+  define function main
+    define key_p from user "Key P?"
+    define key_q from user "Key Q?"
+    define tree as [6, 2, 8, 0, 4, 7, 9]
+    define lca as findLcaKey from tree, key_p, key_q
+    print lca

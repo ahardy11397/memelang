@@ -1,0 +1,7 @@
+this runs in the shell
+
+define upper_limit_n from user "Upper bound N?"
+define sum_accumulator as 0
+for counter_i from 1 to upper_limit_n
+  define sum_accumulator as sum_accumulator + counter_i
+print sum_accumulator

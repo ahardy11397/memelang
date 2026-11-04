@@ -1,0 +1,16 @@
+this runs in the shell
+
+class lomuto-partitioner
+
+  define function countSmallerThanPivot with arr, pivot_val
+    define smaller_count as 0
+    for i from 1 to (length of arr - 1)
+      if arr item i <= pivot_val
+        set smaller_count to smaller_count + 1
+    return smaller_count
+
+  define function main
+    define dummy from user "Run partition step?"
+    define sample as [10, 80, 30, 90, 40, 50, 70]
+    define count as countSmallerThanPivot from sample, 70
+    print count

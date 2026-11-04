@@ -306,10 +306,12 @@ def test_full_300_uniqueness_examples_purity_and_cli_smoke(tmp_path):
         skeletons.add(skel)
     assert len(skeletons) == 300
 
-    # `examples/` purity gate: only curated syntax/library files live in `examples/`
-    example_files = sorted(p.name for p in (REPO_ROOT / "examples").glob("*.meme"))
-    assert len(example_files) < 20
-    assert not any(re.match(r"^\d{3}_", name) for name in example_files)
+    # `examples/` mirror verification: verify all 300 scripts and fixtures exist in `examples/`
+    for s in manifest.scripts:
+        ex_p = REPO_ROOT / s.path.replace("tests/corpus/", "examples/")
+        assert ex_p.is_file(), f"Missing example mirror for {s.path}"
+        assert ex_p.read_text(encoding="utf-8") == (REPO_ROOT / s.path).read_text(encoding="utf-8")
+    assert (REPO_ROOT / "examples" / "fixtures" / "numbers.json").is_file()
 
     # CLI smoke run with `--provider heuristic --limit 5 --report`, lockfile isolation, and invalid `--ids` exit code
     lock_file = REPO_ROOT / "build.lock"

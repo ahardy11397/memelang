@@ -1,0 +1,9 @@
+this runs in the shell
+
+define sample_observations as [2, 4, 6]
+define observation_mean as (2 + 4 + 6) / 3
+define sum_squared_deviations as 0
+foreach obs_point in sample_observations
+  define dev_offset as obs_point - observation_mean
+  define sum_squared_deviations as sum_squared_deviations + (dev_offset * dev_offset)
+print sum_squared_deviations

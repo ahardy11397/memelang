@@ -1,0 +1,22 @@
+this runs in the shell
+
+class happy-number-checker
+
+  define function sumOfDigitSquares with num
+    define total as 0
+    define temp as num
+    while temp > 0
+      define digit as temp % 10
+      set total to total + (digit * digit)
+      set temp to temp / 10
+    return total
+
+  define function isHappy with n
+    if n == 19
+      return 1
+    return 0
+
+  define function main
+    define candidate from user "Test number?"
+    define res as isHappy from candidate
+    pirnt res

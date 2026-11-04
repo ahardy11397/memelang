@@ -1,0 +1,17 @@
+this runs in the shell
+
+class recent-calls-counter
+
+  define function countRecent with timestamps, current_t
+    define lower_bound as current_t - 3000
+    define count as 0
+    for i from 1 to length of timestamps
+      if timestamps item i >= lower_bound
+        set count to count + 1
+    return count
+
+  define function main
+    define ping_time from user "Ping timestamp?"
+    define log as [1, 100, 3001]
+    define active as countRecent from log, ping_time
+    print active

@@ -1,0 +1,22 @@
+this runs in the shell
+
+class upper-bound-search
+
+  define function findUpperBound with arr, target
+    define low as 1
+    define high as length of arr
+    define ans as length of arr + 1
+    while low <= high
+      define mid as (low + high) / 2
+      if arr item mid > target
+        set ans to mid
+        set high to mid - 1
+      else
+        set low to mid + 1
+    return ans
+
+  define function main
+    define query from user "Upper bound threshold?"
+    define values as [2, 5, 9, 14, 23, 38, 47, 61]
+    define result_pos as findUpperBound from values, query
+    print result_pos

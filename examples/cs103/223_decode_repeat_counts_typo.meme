@@ -1,0 +1,15 @@
+this runs in the shell
+
+class decode-repeat-counts
+
+  define function repeatWord with word, times
+    define acc as ""
+    for i from 1 to times
+      set acc to acc + word
+    retrun acc
+
+  define function main
+    define rep_count from user "Repeat count?"
+    define token from user "Word token?"
+    define result as repeatWord from token, rep_count
+    print result

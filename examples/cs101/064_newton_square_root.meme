@@ -1,0 +1,9 @@
+this runs in the shell
+
+define target_square_val from user "Target square?"
+define newton_guess as target_square_val / 2
+if newton_guess == 0
+  define newton_guess as 1
+for newton_step from 1 to 10
+  define newton_guess as (newton_guess + (target_square_val / newton_guess)) / 2
+print newton_guess

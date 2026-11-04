@@ -1,0 +1,23 @@
+this runs in the shell
+
+class mode-frequency-finder
+
+  define function findArrayMode with arr
+    define best_val as arr item 1
+    define max_count as 0
+    for i from 1 to length of arr
+      define candidate as arr item i
+      define c as 0
+      for j from 1 to length of arr
+        if arr item j == candidate
+          set c to c + 1
+      if c > max_count
+        set max_count to c
+        set best_val as candidate
+    return best_val
+
+  define function main
+    define trig from user "Find mode?"
+    define dataset as [1, 3, 2, 3, 4, 3, 2]
+    define mode as findArrayMode from dataset
+    print mode

@@ -1,0 +1,14 @@
+this runs in the shell
+
+define nth_index from user "Fibonacci index?"
+if nth_index <= 1
+  print nth_index
+else
+  define f_prev2 as 0
+  define f_prev1 as 1
+  define f_curr as 1
+  for f_step from 2 to nth_index
+    define f_curr as f_prev1 + f_prev2
+    define f_prev2 as f_prev1
+    define f_prev1 as f_curr
+  print f_curr

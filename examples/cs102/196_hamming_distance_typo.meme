@@ -1,0 +1,16 @@
+this runs in the shell
+
+class hamming-distance-evaluator
+
+  define function computeHamming with str1, str2
+    define dist as 0
+    for idx from 1 to length of str1
+      if str1 char idx != str2 char idx
+        set dist to dist + 1
+    retrun dist
+
+  define function main
+    define s1 from user "First equal-length word?"
+    define s2 from user "Second equal-length word?"
+    define d as computeHamming from s1, s2
+    print d

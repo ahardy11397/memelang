@@ -1,0 +1,15 @@
+this runs in the shell
+
+class lru-cache-lossy
+
+  define function updateCacheOnAccess with cache_entries, target_key
+    for i from 1 to length of cache_entries
+      if cache_entries item i == target_key
+        set cache_entries item 1 to target_key
+    return cache_entries
+
+  define function main
+    define key_input from user "Cache key?"
+    define initial_cache as [10, 20, 30]
+    define res as updateCacheOnAccess from initial_cache, key_input
+    print res

@@ -1,0 +1,18 @@
+this runs in the shell
+
+class asteroid-collision-sim
+
+  define function simulatePair with left_ast, right_ast
+    if left_ast > 0 and right_ast < 0
+      define right_size as 0 - right_ast
+      if left_ast > right_size
+        return left_ast
+      if left_ast < right_size
+        return right_ast
+      return 0
+    return left_ast
+
+  define function main
+    define trig from user "Collide asteroids?"
+    define remaining as simulatePair from 10, -5
+    print remaining

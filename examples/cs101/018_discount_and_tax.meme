@@ -1,0 +1,8 @@
+this runs in the shell
+
+define item_subtotal from user "Item subtotal?"
+define discount_pct from user "Discount percentage?"
+define local_tax_pct from user "Tax percentage?"
+define price_after_discount as item_subtotal - (item_subtotal * discount_pct / 100)
+define final_checkout_price as price_after_discount + (price_after_discount * local_tax_pct / 100)
+pirnt final_checkout_price

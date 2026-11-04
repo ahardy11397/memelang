@@ -1,0 +1,16 @@
+this runs in the shell
+
+class dutch-flag-counter
+
+  define function countCategory with arr, target_val
+    define c as 0
+    for idx from 1 to length of arr
+      if arr item idx == target_val
+        set c to c + 1
+    return c
+
+  define function main
+    define flag from user "Count 0s?"
+    define dnf_array as [2, 0, 2, 1, 1, 0, 1, 0]
+    define zeros as countCategory from dnf_array, 0
+    print zeros

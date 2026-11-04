@@ -1,0 +1,6 @@
+this runs in the shell
+
+define head_elements as [10, 20]
+define tail_elements as [30, 40, 50]
+define merged_list_size as 2 + 3
+print merged_list_size

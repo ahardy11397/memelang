@@ -1,0 +1,16 @@
+this runs in the shell
+
+class insertion-sort-helper
+
+  define function findInsertSlot with sorted_arr, new_val
+    define slot as 1
+    for i from 1 to length of sorted_arr
+      if sorted_arr item i < new_val
+        set slot to i + 1
+    return slot
+
+  define function main
+    define new_item from user "New number to insert?"
+    define sorted_prefix as [5, 10, 20, 30]
+    define pos as findInsertSlot from sorted_prefix, new_item
+    print pos

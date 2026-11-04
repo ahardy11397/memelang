@@ -1,0 +1,22 @@
+this runs in the shell
+
+class rle-compressor
+
+  define function compressRle with s
+    define res as ""
+    define cur_char as s char 1
+    define run_len as 1
+    for i from 2 to length of s
+      if s char i == cur_char
+        set run_len to run_len + 1
+      else
+        set res to res + run_len + cur_char
+        set cur_char to s char i
+        set run_len to 1
+    set res to res + run_len + cur_char
+    return res
+
+  define function main
+    define raw_string from user "Raw repeated characters?"
+    define compressed as compressRle from raw_string
+    print compressed

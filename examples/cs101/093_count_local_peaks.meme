@@ -1,0 +1,8 @@
+this runs in the shell
+
+define elevation_samples as [1, 4, 2, 5, 3]
+define local_peaks_count as 0
+for elev_idx from 2 to 4
+  if elevation_samples item elev_idx > elevation_samples item (elev_idx - 1) and elevation_samples item elev_idx > elevation_samples item (elev_idx + 1)
+    define local_peaks_count as local_peaks_count + 1
+print local_peaks_count

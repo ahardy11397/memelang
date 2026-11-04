@@ -1,0 +1,8 @@
+this runs in the shell
+
+define timer_start from user "Countdown start count?"
+define blast_counter as timer_start
+while blast_counter > 0
+  print blast_counter
+  define blast_counter as blast_counter - 1
+print "Blastoff"

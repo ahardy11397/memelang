@@ -1,0 +1,11 @@
+this runs in the shell
+
+class shell-sort-stepper
+
+  define function nextShellGap with current_gap
+    return current_gap / 2
+
+  define function main
+    define gap from user "Initial shell gap?"
+    define reduced_gap as nextShellGap from gap
+    print reduced_gap

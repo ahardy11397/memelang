@@ -1,0 +1,7 @@
+this runs in the shell
+
+define test_parity_num from user "Test number?"
+if test_parity_num % 2 == 0
+  print "Even"
+else
+  print "Odd"

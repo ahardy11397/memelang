@@ -1,0 +1,16 @@
+this runs in the shell
+
+class graph-degree-counter
+
+  define function countTargetInDegree with dest_list, target_node
+    define in_deg as 0
+    for i from 1 to length of dest_list
+      if dest_list item i == target_node
+        set in_deg to in_deg + 1
+    return in_deg
+
+  define function main
+    define target from user "Target vertex?"
+    define destinations as [2, 2, 2, 5]
+    define d as countTargetInDegree from destinations, target
+    print d

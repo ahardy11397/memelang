@@ -1,0 +1,14 @@
+this runs in the shell
+
+class recursive-factorial-calculator
+
+  define function fact with n
+    if n <= 1
+      return 1
+    define sub as fact from (n - 1)
+    return n * sub
+
+  define function main
+    define num from user "Enter integer for factorial?"
+    define answer as fact from num
+    print answer

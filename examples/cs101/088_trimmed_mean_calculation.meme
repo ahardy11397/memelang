@@ -1,0 +1,6 @@
+this runs in the shell
+
+define sorted_sample_five as [1, 10, 15, 20, 100]
+define center_three_sum as sorted_sample_five item 2 + sorted_sample_five item 3 + sorted_sample_five item 4
+define trimmed_mean_value as center_three_sum / 3
+pirnt trimmed_mean_value

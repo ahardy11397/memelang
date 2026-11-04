@@ -1,0 +1,20 @@
+this runs in the shell
+
+class distinct-elements-counter
+
+  define function countUnique with arr
+    define distinct_total as 0
+    for i from 1 to length of arr
+      define seen_before as 0
+      for j from 1 to (i - 1)
+        if arr item j == arr item i
+          set seen_before as 1
+      if seen_before == 0
+        set distinct_total to distinct_total + 1
+    return distinct_total
+
+  define function main
+    define trig from user "Count distinct elements?"
+    define records as [10, 20, 10, 30, 20, 40]
+    define uniques as countUnique from records
+    print uniques

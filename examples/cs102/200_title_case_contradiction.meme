@@ -1,0 +1,14 @@
+this runs in the shell
+
+class title-case-contradiction
+
+  define function formatTitle with phrase
+    define upper_text as uppercase phrase
+    define lower_text as lowercase phrase
+    ensure every word starts with lowercase and starts with uppercase
+    return phrase
+
+  define function main
+    define str_input from user "Phrase?"
+    define res as formatTitle from str_input
+    print res

@@ -1,0 +1,7 @@
+this runs in the shell
+
+define source_sequence as [1, 2, 3, 4, 5]
+define prefix_sum_last as 0
+foreach seq_term in source_sequence
+  define prefix_sum_last as prefix_sum_last + seq_term
+print prefix_sum_last

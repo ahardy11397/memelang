@@ -1,0 +1,11 @@
+this runs in the shell
+
+define first_val from user "Value A?"
+define second_val from user "Value B?"
+define third_val from user "Value C?"
+define largest_val as first_val
+if second_val > largest_val
+  define largest_val as second_val
+if third_val > largest_val
+  define largest_val as third_val
+print largest_val

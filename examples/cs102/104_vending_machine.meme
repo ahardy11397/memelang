@@ -1,0 +1,18 @@
+this runs in the shell
+
+class vending-machine
+
+  define function calculateChange with paid, cost
+    if paid >= cost
+      return paid - cost
+    else
+      return 0
+
+  define function countQuarters with change
+    return change / 25
+
+  define function main
+    define inserted from user "Coins inserted?"
+    define price from user "Item price?"
+    define change as calculateChange from inserted, price
+    print change

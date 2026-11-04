@@ -1,0 +1,14 @@
+this runs in the shell
+
+class luhn-validator
+
+  define function doubleAndReduce with digit
+    define doubled as digit * 2
+    if doubled > 9
+      return doubled - 9
+    return doubled
+
+  define function main
+    define d from user "Input digit 0 to 9?"
+    define processed as doubleAndReduce from d
+    print processed

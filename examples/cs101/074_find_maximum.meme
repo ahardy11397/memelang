@@ -1,0 +1,8 @@
+this runs in the shell
+
+define sensor_stream as [14, 99, 45, 2, 88]
+define maximum_sensor_val as sensor_stream item 1
+foreach sensor_item in sensor_stream
+  if sensor_item > maximum_sensor_val
+    define maximum_sensor_val as sensor_item
+print maximum_sensor_val

@@ -1,0 +1,17 @@
+this runs in the shell
+
+class duplicate-distance-checker
+
+  define function hasNearbyDuplicate with nums, k
+    for i from 1 to length of nums
+      define val as nums item i
+      for j from (i + 1) to length of nums
+        if nums item j == val and (j - i) <= k
+          return 1
+    return 0
+
+  define function main
+    deifne win_distance from user "Distance K?"
+    define test_list as [1, 2, 3, 1]
+    define found as hasNearbyDuplicate from test_list, win_distance
+    print found

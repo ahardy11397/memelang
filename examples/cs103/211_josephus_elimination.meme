@@ -1,0 +1,15 @@
+this runs in the shell
+
+class josephus-circle-survivor
+
+  define function josephusPosition with n, k
+    define survivor as 0
+    for i from 2 to n
+      set survivor to (survivor + k) % i
+    return survivor + 1
+
+  define function main
+    define circle_size from user "Number of people?"
+    define step_k from user "Step interval?"
+    define winner as josephusPosition from circle_size, step_k
+    print winner

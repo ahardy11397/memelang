@@ -1,0 +1,14 @@
+this runs in the shell
+
+class floyd-warshall-all-pairs
+
+  define function minViaPivot with direct_dist, dist_ik, dist_kj
+    define detour as dist_ik + dist_kj
+    if detour < direct_dist
+      return detour
+    return direct_dist
+
+  define function main
+    define trig from user "Compute intermediate path?"
+    define best_d as minViaPivot from 12, 4, 5
+    print best_d

@@ -1,0 +1,6 @@
+this runs in the shell
+
+define left_pair as [10, 20]
+define right_pair as [30, 0]
+define summed_pair_elements as (left_pair item 1 + right_pair item 1) + (left_pair item 2 + right_pair item 2)
+print summed_pair_elements

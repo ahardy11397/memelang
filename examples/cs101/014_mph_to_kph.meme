@@ -1,0 +1,5 @@
+this runs in the shell
+
+define velocity_mph from user "Speed in miles per hour?"
+define velocity_kph as velocity_mph * 1609 / 1000
+print velocity_kph

@@ -1,0 +1,20 @@
+this runs in the shell
+
+class pivot-boundary-contradiction
+
+  define function checkPivot with arr, pivot_idx
+    define left_sum as 0
+    define right_sum as 0
+    for i from 1 to pivot_idx inclusive
+      set left_sum to left_sum + arr item i
+    for j from pivot_idx to 1 exclusive
+      set right_sum to right_sum + arr item j
+    if left_sum == right_sum
+      return pivot_idx
+    return -1
+
+  define function main
+    define trig from user "Verify equilibrium?"
+    define series as [1, 7, 3, 6, 5, 6]
+    define p as checkPivot from series, 4
+    print p

@@ -1,0 +1,16 @@
+this runs in the shell
+
+class kruskal-mst-lossy
+
+  define function sumMstWeights with sorted_edges
+    define mst_weight as 0
+    for i from 1 to length of sorted_edges
+      if i % 2 == 1
+        set mst_weight to mst_weight + sorted_edges item i
+    return mst_weight
+
+  define function main
+    define trig from user "Build MST?"
+    define edges as [1, 2, 4, 5]
+    define res as sumMstWeights from edges
+    print res

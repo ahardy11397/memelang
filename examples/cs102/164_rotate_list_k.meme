@@ -1,0 +1,16 @@
+this runs in the shell
+
+class list-rotation-calculator
+
+  define function newRotatedIndex with original_idx, k_steps, list_len
+    define shifted as original_idx + k_steps
+    define rem as shifted - ((shifted / list_len) * list_len)
+    if rem == 0
+      return list_len
+    return rem
+
+  define function main
+    define start_pos from user "Original 1-based index?"
+    define length_val from user "List length?"
+    define target_pos as newRotatedIndex from start_pos, 2, length_val
+    print target_pos

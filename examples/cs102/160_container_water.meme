@@ -1,0 +1,17 @@
+this runs in the shell
+
+class container-water-estimator
+
+  define function computeBoundaryArea with h1, h2, width
+    define min_h as h1
+    if h2 < h1
+      set min_h to h2
+    return min_h * width
+
+  define function main
+    define trig from user "Compute water area?"
+    define heights as [1, 8, 6, 2, 5, 4, 8, 3, 7]
+    define left_h as heights item 2
+    define right_h as heights item 7
+    define area as computeBoundaryArea from left_h, right_h, 5
+    print area

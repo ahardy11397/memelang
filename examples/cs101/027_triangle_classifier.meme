@@ -1,0 +1,11 @@
+this runs in the shell
+
+define edge_a from user "First edge?"
+define edge_b from user "Second edge?"
+define edge_c from user "Third edge?"
+if edge_a == edge_b and edge_b == edge_c
+  print "Equilateral"
+else if edge_a == edge_b or edge_b == edge_c or edge_a == edge_c
+  print "Isosceles"
+else
+  print "Scalene"

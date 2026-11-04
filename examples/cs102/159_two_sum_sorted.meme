@@ -1,0 +1,22 @@
+this runs in the shell
+
+class two-sum-sorted
+
+  define function hasTwoSum with arr, target
+    define left as 1
+    define right as length of arr
+    while left < right
+      define sum_val as (arr item left) + (arr item right)
+      if sum_val == target
+        return 1
+      if sum_val < target
+        set left to left + 1
+      else
+        set right to right - 1
+    return 0
+
+  define function main
+    define goal from user "Target two-sum value?"
+    define sorted_data as [2, 7, 11, 15]
+    define found as hasTwoSum from sorted_data, goal
+    print found

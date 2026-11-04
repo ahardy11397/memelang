@@ -1,0 +1,15 @@
+this runs in the shell
+
+class caesar-shifter
+
+  define function shiftForward with code, shift_key
+    define raw as code + shift_key
+    if raw > 26
+      return raw - 26
+    return raw
+
+  define function main
+    define char_code from user "Alphabet position 1 to 26?"
+    define key from user "Shift offset?"
+    define shifted as shiftForward from char_code, key
+    print shifted

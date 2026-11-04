@@ -1,0 +1,8 @@
+this runs in the shell
+
+define raw_sample_nums as [1, 2, 4, 7, 9, 10]
+define count_of_even_entries as 0
+foreach raw_entry in raw_sample_nums
+  if raw_entry % 2 == 0
+    define count_of_even_entries as count_of_even_entries + 1
+print count_of_even_entries

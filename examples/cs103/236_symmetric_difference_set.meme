@@ -1,0 +1,30 @@
+this runs in the shell
+
+class symmetric-difference-set
+
+  define function countDisjunctive with set_a, set_b
+    define diff_count as 0
+    for i from 1 to length of set_a
+      define val_a as set_a item i
+      define in_b as 0
+      for j from 1 to length of set_b
+        if set_b item j == val_a
+          set in_b as 1
+      if in_b == 0
+        set diff_count to diff_count + 1
+    for k from 1 to length of set_b
+      define val_b as set_b item k
+      define in_a as 0
+      for m from 1 to length of set_a
+        if set_a item m == val_b
+          set in_a as 1
+      if in_a == 0
+        set diff_count to diff_count + 1
+    return diff_count
+
+  define function main
+    define trig from user "Calculate symmetric diff?"
+    define first_set as [1, 2, 3]
+    define second_set as [3, 4, 5]
+    define diff as countDisjunctive from first_set, second_set
+    print diff

@@ -1,0 +1,5 @@
+this runs in the shell
+
+define base_celsius from user "Base temperature in C?"
+define kelvin_result as base_celsius + 273
+print kelvin_result

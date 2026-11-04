@@ -1,0 +1,21 @@
+this runs in the shell
+
+class json-cumulative-sum
+
+  define function readJsonStream with stream_path
+    if stream_path is json
+      define nums as fromFile from stream_path
+      return nums
+    else return "Wrong File Type"
+
+  define function computeTotalSum with items
+    define running_total as 0
+    for idx from 1 to length of items
+      set running_total to running_total + items item idx
+    return running_total
+
+  define function main
+    define doc_path from user "Numbers fixture path?"
+    define sequence as readJsonStream from doc_path
+    define grand_sum as computeTotalSum from sequence
+    print grand_sum

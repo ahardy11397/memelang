@@ -1,0 +1,16 @@
+this runs in the shell
+
+class segment-tree-range-sum
+
+  define function querySum with arr, left, right
+    define s as 0
+    for i from left to right
+      set s to s + arr item i
+    return s
+
+  define function main
+    define l_bound from user "Left index?"
+    define r_bound from user "Right index?"
+    define values as [1, 3, 5, 7, 9, 11]
+    define total as querySum from values, l_bound, r_bound
+    print total

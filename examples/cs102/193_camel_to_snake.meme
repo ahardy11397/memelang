@@ -1,0 +1,16 @@
+this runs in the shell
+
+class camel-boundary-counter
+
+  define function countCamelWords with identifier
+    define words as 1
+    for k from 1 to length of identifier
+      define c as identifier char k
+      if c is uppercase
+        set words to words + 1
+    return words
+
+  define function main
+    define camel_id from user "CamelCase identifier?"
+    define word_count as countCamelWords from camel_id
+    print word_count

@@ -1,0 +1,7 @@
+this runs in the shell
+
+define single_char from user "Input single lowercase letter?"
+if single_char == "a" or single_char == "e" or single_char == "i" or single_char == "o" or single_char == "u"
+  print "Vowel"
+else
+  print "Consonant"

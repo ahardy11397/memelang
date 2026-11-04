@@ -1,0 +1,22 @@
+this runs in the shell
+
+class json-deduplicator
+
+  define function readList with pth
+    if pth is json
+      define raw as fromFile from pth
+      return raw
+    else return "Wrong File Type"
+
+  define function countAdjacentDistinct with data
+    define count as 1
+    for pos from 2 to length of data
+      if data item pos != data item (pos - 1)
+        set count to count + 1
+    return count
+
+  define function main
+    define json_source from user "Path to scores JSON?"
+    define items_list as readList from json_source
+    define unique_adjacent as countAdjacentDistinct from items_list
+    print unique_adjacent

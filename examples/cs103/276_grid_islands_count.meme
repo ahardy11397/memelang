@@ -1,0 +1,16 @@
+this runs in the shell
+
+class grid-islands-counter
+
+  define function countLandCells with grid_cells
+    define land_count as 0
+    for i from 1 to length of grid_cells
+      if grid_cells item i == 1
+        set land_count to land_count + 1
+    return land_count
+
+  define function main
+    define trig from user "Count land cells?"
+    define flat_grid as [1, 0, 1, 1, 0]
+    define lands as countLandCells from flat_grid
+    print lands

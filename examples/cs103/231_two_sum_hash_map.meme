@@ -1,0 +1,17 @@
+this runs in the shell
+
+class two-sum-hash-finder
+
+  define function findTargetPair with nums, target
+    for i from 1 to length of nums
+      define complement as target - nums item i
+      for j from (i + 1) to length of nums
+        if nums item j == complement
+          return target
+    return 0
+
+  define function main
+    define goal from user "Target sum?"
+    define arr as [2, 7, 11, 15]
+    define found as findTargetPair from arr, goal
+    print found

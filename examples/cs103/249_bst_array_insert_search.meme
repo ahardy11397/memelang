@@ -1,0 +1,21 @@
+this runs in the shell
+
+class bst-array-searcher
+
+  define function searchBstKey with bst_nodes, target
+    define idx as 1
+    while idx <= length of bst_nodes
+      define cur as bst_nodes item idx
+      if cur == target
+        return 1
+      if target < cur
+        set idx to 2 * idx
+      else
+        set idx to 2 * idx + 1
+    return 0
+
+  define function main
+    define query_key from user "Search key?"
+    define bst as [4, 2, 7, 1, 3]
+    define found as searchBstKey from bst, query_key
+    print found

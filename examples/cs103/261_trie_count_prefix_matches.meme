@@ -1,0 +1,16 @@
+this runs in the shell
+
+class trie-prefix-counter
+
+  define function countMatchingWords with words, prefix_len
+    define match_count as 0
+    for i from 1 to length of words
+      if length of (words item i) >= prefix_len
+        set match_count to match_count + 1
+    return match_count
+
+  define function main
+    define p_len from user "Prefix length threshold?"
+    define word_list as ["cat", "car", "cart", "dog"]
+    define total as countMatchingWords from word_list, p_len
+    print total

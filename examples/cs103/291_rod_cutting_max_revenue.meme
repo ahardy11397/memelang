@@ -1,0 +1,17 @@
+this runs in the shell
+
+class rod-cutting-revenue
+
+  define function maxCutRevenue with prices, target_len
+    define max_rev as 0
+    for cut from 1 to target_len
+      define r as prices item cut
+      if r > max_rev
+        set max_rev as r
+    return max_rev
+
+  define function main
+    define rod_len from user "Rod length?"
+    define price_table as [1, 5, 8, 10]
+    define revenue as maxCutRevenue from price_table, rod_len
+    print revenue

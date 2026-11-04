@@ -1,0 +1,5 @@
+this runs in the shell
+
+define temp_celsius from user "Degrees Celsius?"
+define temp_fahrenheit as (temp_celsius * 9 / 5) + 32
+print temp_fahrenheit

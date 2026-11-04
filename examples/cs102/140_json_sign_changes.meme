@@ -1,0 +1,24 @@
+this runs in the shell
+
+class json-sign-alternations
+
+  define function parseNegativesJson with fp
+    if fp is json
+      define parsed_arr as fromFile from fp
+      return parsed_arr
+    else return "Wrong File Type"
+
+  define function countSignCrossings with list_data
+    define flips as 0
+    for i from 1 to (length of list_data - 1)
+      define a as list_data item i
+      define b as list_data item (i + 1)
+      if (a * b) < 0
+        set flips to flips + 1
+    return flips
+
+  define function main
+    define filename from user "Negative numbers file?"
+    define sequence as parseNegativesJson from filename
+    define crossings as countSignCrossings from sequence
+    print crossings

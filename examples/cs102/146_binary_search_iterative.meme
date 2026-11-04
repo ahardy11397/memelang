@@ -1,0 +1,22 @@
+this runs in the shell
+
+class binary-search-iterative
+
+  define function findTarget with arr, target
+    define low as 1
+    define high as length of arr
+    while low <= high
+      define mid as (low + high) / 2
+      if arr item mid == target
+        return mid
+      if arr item mid < target
+        set low to mid + 1
+      else
+        set high to mid - 1
+    return -1
+
+  define function main
+    define search_val from user "Target value?"
+    define sorted_data as [2, 5, 9, 14, 23, 38, 47, 61]
+    define index as findTarget from sorted_data, search_val
+    print index
