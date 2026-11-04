@@ -4,6 +4,12 @@
 
 ---
 
+## Why Memelang
+
+Memelang is the first "meme language": **modular English as a modern expression language**. Designing software still takes someone who knows how to design software — that never changes. What changes is the ceremony: the job of a programming language has always been to make writing complex software as easy as possible, and Memelang takes that further than any mainstream language by letting you write the program in plain English. The compiler's LLM turns that non-deterministic input into determinism: a strictly-typed IR, a static verifier that halts on ambiguity instead of guessing, and a lockfile that makes every rebuild byte-identical.
+
+---
+
 ## Architecture
 
 ```text
@@ -119,14 +125,18 @@ By default (`--provider auto`), `meme` checks `MEME_PROVIDER`, auto-discovers an
 
 ---
 
-## Extensibility & Stress Corpus (`examples/` vs `src/`)
+## Extensibility: Three Axes
 
-Memelang is designed to evolve along **two distinct axes**:
+Memelang is designed to evolve along **three distinct axes**:
 
-1. **`examples/` Axis (Syntax & Library Extensibility):**
+1. **`examples/` Axis (Syntax & Idiom Extensibility):**
    `.meme` files in `examples/` (including shipped foundational examples and the pre-installed CS 101–103 standard library under `examples/cs101/`, `examples/cs102/`, `examples/cs103/`) act as the language's living syntax and idiom bank ("Memelang is as smart as you make it"). Adding new idiomatic patterns or reference programs here teaches the language new phrasing conventions and capabilities so real programs can be written and learned from.
 2. **`src/` Language Axis (IR & Output Target Extensibility):**
-   The typed Intermediate Representation (`src/memelang/ir/`), static verifier (`src/memelang/analyzer/`), and codegen backends (`src/memelang/codegen/`) define core computational primitives and target languages (`python`, `rust`, `cpp`).
+   The typed Intermediate Representation (`src/memelang/ir/`), static verifier (`src/memelang/analyzer/`), and codegen backends (`src/memelang/codegen/`) define core computational primitives and target languages (`python`, `rust`, `cpp`). Ship today with three runtime languages; more targets are on the roadmap.
+3. **Compiler LLM Axis (Frontend Extensibility):**
+   The compiler's own intelligence is an extension point. Every frontend implements the same `LLMProvider` protocol (`auto`, `ollama`, `openai-local`, `llama-cpp`, `gemini`, `heuristic`), and because synthesis output is JSON-schema-constrained to `SynthesisResult`, a stronger or smarter model can be dropped in without touching the verifier, lockfile, or any codegen backend. Long-term (the golang model of a self-extending toolchain), the goal is a compiler that is extendable **at runtime** — the language growing its own capabilities through its LLM frontend.
+
+The `.meme` files under `tests/corpus/` are **not** part of this axis: they are the author's personal stress-testing corpus for trying to break the language and do **not** ship as standard `.meme` files — only `examples/` ships with the language.
 
 To benchmark compiler robustness across university Computer Science curricula, Memelang includes an unfiltered **300-script stress corpus** mirroring the curriculum (`tests/corpus/` and `examples/` covering CS 101, CS 102, and CS 103):
 

@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-Memelang's architecture distinguishes between two extensibility axes:
+Memelang's architecture distinguishes between two extensibility axes (the two this gap analysis measures; the compiler's third extension axis — its own LLM frontend — is documented in `2026-11-03-memelang-design.md` §9):
 1. **Axis 1 (Syntax & Library Extensibility — `examples/`):** Whatever is in `examples/` defines what Memelang already knows. Instead of hardcoding all English grammatical forms in compiler system prompts, the compiler dynamically retrieves verified `.meme` + `.meme.lock` pairs matching the input code to serve as few-shot in-context learning demonstrations.
 2. **Axis 2 (Language Backend Extensibility — `src/`):** The typed intermediate representation (IR), static verifier, and multi-target code generation backends (`python`, `rust`, `cpp`).
 

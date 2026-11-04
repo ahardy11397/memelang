@@ -289,3 +289,20 @@ All code generators in `src/memelang/codegen/` are pure functions `generate_*(ir
 3. **Unit — Lockfile & Zero-LLM Resolution (`tests/test_lockfile_and_resolve.py`):** Verifies SHA-256 caching, `pending_ambiguities` persistence, and resolving ambiguities without invoking the LLM provider.
 4. **Integration — Multi-Target Codegen & Execution (`tests/test_codegen_targets.py`):** Compiles and executes sample programs across **Python 3**, **Rust (`rustc`)**, and **C++20 (`g++`)**, asserting valid compilation and expected stdout.
 5. **E2E — CLI Workflow (`tests/test_cli_e2e.py`):** Tests both the structured English example and the ambiguous `array = 10.random numbers / for each number in array sort from 1 to 10` workflow end-to-end through the `meme` CLI.
+
+---
+
+## 9. Extensibility: Three Axes
+
+Memelang's long-term growth model spans **three distinct axes** (this document's Sections 1–8 describe the compiler as it ships today; this section records the roadmap):
+
+1. **`examples/` Axis (Syntax & Idiom Extensibility):**
+   Shipped `.meme` files with pre-built lockfiles act as the language's living idiom bank, grounded in standard university CS curricula and the author's writing style. More `.meme` files means the language understands more of how people write — each new reference example teaches the compiler new phrasing conventions. This is the primary axis for community growth of the language without touching compiler code.
+
+2. **`src/` Language Axis (IR & Output Target Extensibility):**
+   The typed IR (`src/memelang/ir/`), static verifier (`src/memelang/analyzer/`), and pluggable codegen backends (`src/memelang/codegen/`) define the computational primitives and target runtime languages. Three ship today (`python`, `rust`, `cpp`); additional runtime languages are on the roadmap, added as new pure `generate_*(ir: ProgramIR) -> str` backends without changes to the frontend or verifier.
+
+3. **Compiler LLM Axis (Frontend Extensibility — extendable at runtime):**
+   The compiler's own LLM is an extension point, not a fixed component. Because synthesis is JSON-schema-constrained to `SynthesisResult` and every frontend implements the same `LLMProvider` protocol, the model behind the compiler can be upgraded, swapped, or paralleled by new providers without touching the verifier, lockfile, or codegen. The long-term goal (the model being Go's self-hosting toolchain) is a compiler that **grows at runtime**: with enough work, the language extends its own capabilities through its LLM frontend, so new IR-level behavior can arrive without a compiler release.
+
+Note on scope: the `.meme` files under `tests/corpus/` belong to none of these axes — they are the author's personal stress-testing corpus for trying to break the language and are not shipped as standard `.meme` files.
