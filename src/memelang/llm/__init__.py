@@ -17,6 +17,7 @@ from memelang.llm.llama_cpp import (
     pull_gguf_model,
 )
 from memelang.llm.ollama import OllamaProvider, OpenAILocalProvider
+from memelang.llm.retriever import ExamplePair, ExampleRetriever
 
 
 def _probe_local_ollama(host: str) -> str | None:
@@ -90,6 +91,8 @@ def get_provider(spec: str = "auto") -> LLMProvider:
 __all__ = [
     "DEFAULT_GGUF_FILENAME",
     "DEFAULT_GGUF_REPO",
+    "ExamplePair",
+    "ExampleRetriever",
     "GeminiProvider",
     "HeuristicProvider",
     "LLMProvider",

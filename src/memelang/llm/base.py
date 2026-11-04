@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
+from pathlib import Path
 import re
 from typing import Protocol
 
 from memelang.ir.schema import FuncDefStmt, SynthesisResult
+from memelang.llm.retriever import ExamplePair, ExampleRetriever
 
 
 class LLMProviderError(Exception):
@@ -27,7 +30,7 @@ def has_executable_content(source_text: str) -> bool:
     return False
 
 
-SYSTEM_PROMPT = """You are the frontend semantic synthesizer for the `meme` (Memelang) natural-language compiler.
+BASE_PROMPT_PREFIX = """You are the frontend semantic synthesizer for the `meme` (Memelang) natural-language compiler.
 Translate the user's English `.meme` source file into a strict JSON object matching `SynthesisResult`: `{"items": [...]}`.
 
 ### Allowed Static Types (`MemeType`)
@@ -79,8 +82,9 @@ Translate the user's English `.meme` source file into a strict JSON object match
    - `"else check next item x"` means do nothing in `else` (`"else_body": []`)!
    - Ignore English invariant lines like `"stop when ... every other item ..."` right before `return`; end the function's `"body"` directly with `"return_stmt"`.
 6. `"if_stmt"` is a top-level STATEMENT, NEVER an expression inside `"print_stmt"`! When printing a dynamic operator read into a `"String"` variable (e.g., `print result of num1 operator num2`), emit a top-level `"if_stmt"` statement chain (`operator == "+"`, `"-"`, `"*"`, `"/"` with a nested `num2 != 0.0` check) and put `{"op": "print_stmt", ...}` inside each `then_body` / `else_body`:
-   `{"op": "if_stmt", "condition": {"expr_type": "binary_op", "op": "==", "left": {"expr_type": "var_ref", "name": "operator"}, "right": {"expr_type": "literal", "value": "+", "data_type": "String"}}, "then_body": [{"op": "print_stmt", "expressions": [{"expr_type": "binary_op", "op": "+", "left": {"expr_type": "var_ref", "name": "num1"}, "right": {"expr_type": "var_ref", "name": "num2"}}]}], "else_body": [...]}`
-7. Example 1 (Structured):
+   `{"op": "if_stmt", "condition": {"expr_type": "binary_op", "op": "==", "left": {"expr_type": "var_ref", "name": "operator"}, "right": {"expr_type": "literal", "value": "+", "data_type": "String"}}, "then_body": [{"op": "print_stmt", "expressions": [{"expr_type": "binary_op", "op": "+", "left": {"expr_type": "var_ref", "name": "num1"}, "right": {"expr_type": "var_ref", "name": "num2"}}]}], "else_body": [...]}`"""
+
+BASE_ANCHOR_EXAMPLES = """7. Example 1 (Structured):
    Input:
      1: define list numbers as 10 random integers between 1 and 100
      2: sort numbers ascending
@@ -157,15 +161,46 @@ Translate the user's English `.meme` source file into a strict JSON object match
         {"option": 1, "description": "Sort `array` ascending", "canonical_meme": "sort array ascending",
          "replacement_ir": [{"op": "sort_collection", "target": "array", "direction": "ascending"}],
          "replaces_whole_program": false}
-      ]}
-Output ONLY valid JSON matching `SynthesisResult`."""
+      ]}"""
+
+PROMPT_FOOTER = "Output ONLY valid JSON matching `SynthesisResult`."
+
+SYSTEM_PROMPT = f"{BASE_PROMPT_PREFIX}\n{BASE_ANCHOR_EXAMPLES}\n{PROMPT_FOOTER}"
+
+
+def format_dynamic_example(example: ExamplePair) -> str:
+    lines = example.source_text.splitlines()
+    numbered_lines = "\n".join(f"{idx}: {line}" for idx, line in enumerate(lines, start=1))
+    ir_payload = (
+        example.locked_ir.get("ir")
+        if isinstance(example.locked_ir, dict) and example.locked_ir.get("ir") is not None
+        else example.locked_ir
+    )
+    json_ir = json.dumps(ir_payload, indent=2)
+    return (
+        f"### Relevant Syntactic Example: {example.slug}\n"
+        f"Input:\n"
+        f"{numbered_lines}\n"
+        f"Output:\n"
+        f"{json_ir}"
+    )
 
 
 def build_compiler_messages(
     source_text: str,
-    line_numbers: list[int] | None = None,
-    available_functions: list[FuncDefStmt] | None = None,
+    line_numbers: list[int] | Path | None = None,
+    available_functions: list[FuncDefStmt] | ExampleRetriever | None = None,
+    source_path: Path | None = None,
+    retriever: ExampleRetriever | None = None,
+    top_k: int = 2,
 ) -> list[dict[str, str]]:
+    if isinstance(line_numbers, Path):
+        source_path = line_numbers
+        line_numbers = None
+    if isinstance(available_functions, ExampleRetriever):
+        retriever = available_functions
+        available_functions = None
+
     lines = source_text.splitlines()
     if line_numbers and len(line_numbers) == len(lines):
         numbered = "\n".join(f"{ln}: {line}" for ln, line in zip(line_numbers, lines, strict=True))
@@ -184,8 +219,22 @@ def build_compiler_messages(
             + "\n\n"
         )
 
+    examples: list[ExamplePair] = []
+    if retriever is not None:
+        examples = retriever.retrieve(
+            query_text=source_text,
+            top_k=top_k,
+            exclude_path=source_path,
+        )
+
+    if examples:
+        dynamic_block = "\n\n".join(format_dynamic_example(ex) for ex in examples)
+        system_content = f"{BASE_PROMPT_PREFIX}\n\n{dynamic_block}\n\n{PROMPT_FOOTER}"
+    else:
+        system_content = SYSTEM_PROMPT
+
     return [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": system_content},
         {
             "role": "user",
             "content": f"{sig_header}Compile the following `.meme` source into SynthesisResult JSON:\n\n{numbered}",
