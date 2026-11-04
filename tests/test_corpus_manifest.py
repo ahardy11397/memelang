@@ -1,5 +1,6 @@
 import importlib.util
 from pathlib import Path
+import re
 import pytest
 
 from memelang.ir.schema import (
@@ -285,6 +286,48 @@ def test_cs103_slice_integrity():
         skel = re.sub(r"\d+", "#", re.sub(r"\s+", " ", raw.lower()))
         skeletons.add(skel)
     assert len(skeletons) == 100
+
+
+def test_full_300_uniqueness_examples_purity_and_cli_smoke(tmp_path):
+    rc = _load_runner_module()
+    manifest = rc.CorpusManifest.model_validate_json(
+        (REPO_ROOT / "tests" / "corpus" / "manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest.total_scripts == 300
+    assert len(manifest.scripts) == 300
+    assert len({s.slug for s in manifest.scripts}) == 300
+    assert len({s.title.lower() for s in manifest.scripts}) == 300
+
+    # Anti-clone gate: stripping whitespace and numeric literals must still leave 300 unique skeletons
+    skeletons = set()
+    for s in manifest.scripts:
+        raw = (REPO_ROOT / s.path).read_text(encoding="utf-8")
+        skel = re.sub(r"\d+", "#", re.sub(r"\s+", " ", raw.strip().lower()))
+        skeletons.add(skel)
+    assert len(skeletons) == 300
+
+    # `examples/` purity gate: only curated syntax/library files live in `examples/`
+    example_files = sorted(p.name for p in (REPO_ROOT / "examples").glob("*.meme"))
+    assert len(example_files) < 20
+    assert not any(re.match(r"^\d{3}_", name) for name in example_files)
+
+    # CLI smoke run with `--provider heuristic --limit 5 --report`, lockfile isolation, and invalid `--ids` exit code
+    lock_file = REPO_ROOT / "build.lock"
+    before_mtime = lock_file.stat().st_mtime_ns if lock_file.exists() else None
+    report_file = tmp_path / "report.json"
+    exit_ok = rc.main(
+        ["--provider", "heuristic", "--limit", "5", "--report", str(report_file)]
+    )
+    assert exit_ok == 0
+    assert report_file.is_file()
+    parsed_summary = rc.CorpusRunSummary.model_validate_json(
+        report_file.read_text(encoding="utf-8")
+    )
+    assert parsed_summary.total == 5
+    after_mtime = lock_file.stat().st_mtime_ns if lock_file.exists() else None
+    assert after_mtime == before_mtime
+
+    assert rc.main(["--ids", "10-5"]) == 2
 
 
 

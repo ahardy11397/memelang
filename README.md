@@ -116,3 +116,30 @@ By default (`--provider auto`), `meme` checks `MEME_PROVIDER`, auto-discovers an
   uv sync --extra gemini
   GEMINI_API_KEY=... uv run meme compile app.meme --provider gemini:gemini-2.5-flash --target rust
   ```
+
+---
+
+## Extensibility & Stress Corpus (`examples/` vs `src/`)
+
+Memelang is designed to evolve along **two distinct axes**:
+
+1. **`examples/` Axis (Syntax & Library Extensibility):**
+   Curated `.meme` files in `examples/` act as the language's living syntax and idiom bank ("Memelang is as smart as you make it"). Adding new idiomatic patterns here teaches the LLM frontend new phrasing conventions without modifying compiler code.
+2. **`src/` Language Axis (IR & Output Target Extensibility):**
+   The typed Intermediate Representation (`src/memelang/ir/`), static verifier (`src/memelang/analyzer/`), and codegen backends (`src/memelang/codegen/`) define core computational primitives and target languages (`python`, `rust`, `cpp`).
+
+To benchmark compiler robustness across university Computer Science curricula, Memelang includes an unfiltered **300-script stress corpus** (`tests/corpus/` covering CS 101, CS 102, and CS 103):
+
+```bash
+# Smoke test a slice of CS 101 programs using the fast built-in heuristic provider:
+uv run python scripts/run_corpus.py --course cs101 --limit 10
+
+# Run evaluation with the local compiler model and generate a 2-axis gap attribution report:
+uv run python scripts/run_corpus.py --report gap_report.json
+
+# Filter by course, style, or specific script IDs:
+uv run python scripts/run_corpus.py --course cs102 --style clean --ids 101-125
+```
+
+The runner attributes non-passing scripts into ranked **Axis 1 (`examples/`)** vs **Axis 2 (`src/`)** gaps, identifying exactly which new reference examples or IR operations will unlock the most student programs.
+
