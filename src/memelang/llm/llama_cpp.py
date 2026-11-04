@@ -181,11 +181,13 @@ class LlamaCppProvider:
         n_gpu_layers: int = -1,
         n_ctx: int = 8192,
         max_tokens: int = 4096,
+        retriever: object = None,
     ) -> None:
         self.model_path = Path(model_path)
         self.n_gpu_layers = n_gpu_layers
         self.n_ctx = n_ctx
         self.max_tokens = max_tokens
+        self.retriever = retriever
         self.name = f"llama-cpp:{self.model_path.name}"
         self._llm = None
 
@@ -226,6 +228,7 @@ class LlamaCppProvider:
                     unit.text,
                     line_numbers=unit.line_numbers,
                     available_functions=defined_funcs if defined_funcs else None,
+                    retriever=self.retriever,
                 )
                 resp = llm.create_chat_completion(
                     messages=msgs,

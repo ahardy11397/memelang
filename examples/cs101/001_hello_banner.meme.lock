@@ -1,0 +1,224 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs101/001_hello_banner.meme": {
+      "source_sha256": "f2649788956cad96853a94d16215c7fe0f3757f1de432b69637f919f48a08879",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "student_name",
+          "var_type": "String",
+          "value": {
+            "expr_type": "read_input",
+            "prompt": "Enter your name? ",
+            "target_type": "String"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "binary_op",
+              "op": "+",
+              "left": {
+                "expr_type": "literal",
+                "value": "Welcome to CS 101, ",
+                "data_type": "String"
+              },
+              "right": {
+                "expr_type": "var_ref",
+                "name": "student_name"
+              }
+            }
+          ],
+          "source_line": 4
+        }
+      ],
+      "canonical_meme": "define student_name: String as read String with prompt \"Enter your name? \"\nprint \"Welcome to CS 101, \" + student_name",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "student_name",
+            "var_type": "String",
+            "value": {
+              "expr_type": "read_input",
+              "prompt": "Enter your name? ",
+              "target_type": "String"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "literal",
+                  "value": "Welcome to CS 101, ",
+                  "data_type": "String"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "student_name"
+                }
+              }
+            ],
+            "source_line": 4
+          }
+        ]
+      }
+    },
+    "tests/corpus/cs101/001_hello_banner.meme": {
+      "source_sha256": "f2649788956cad96853a94d16215c7fe0f3757f1de432b69637f919f48a08879",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "student_name",
+          "var_type": "String",
+          "value": {
+            "expr_type": "read_input",
+            "prompt": "Enter your name? ",
+            "target_type": "String"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "binary_op",
+              "op": "+",
+              "left": {
+                "expr_type": "literal",
+                "value": "Welcome to CS 101, ",
+                "data_type": "String"
+              },
+              "right": {
+                "expr_type": "var_ref",
+                "name": "student_name"
+              }
+            }
+          ],
+          "source_line": 4
+        }
+      ],
+      "canonical_meme": "define student_name: String as read String with prompt \"Enter your name? \"\nprint \"Welcome to CS 101, \" + student_name",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "student_name",
+            "var_type": "String",
+            "value": {
+              "expr_type": "read_input",
+              "prompt": "Enter your name? ",
+              "target_type": "String"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "literal",
+                  "value": "Welcome to CS 101, ",
+                  "data_type": "String"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "student_name"
+                }
+              }
+            ],
+            "source_line": 4
+          }
+        ]
+      }
+    },
+    "001_hello_banner.meme": {
+      "source_sha256": "f2649788956cad96853a94d16215c7fe0f3757f1de432b69637f919f48a08879",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "student_name",
+          "var_type": "String",
+          "value": {
+            "expr_type": "read_input",
+            "prompt": "Enter your name? ",
+            "target_type": "String"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "binary_op",
+              "op": "+",
+              "left": {
+                "expr_type": "literal",
+                "value": "Welcome to CS 101, ",
+                "data_type": "String"
+              },
+              "right": {
+                "expr_type": "var_ref",
+                "name": "student_name"
+              }
+            }
+          ],
+          "source_line": 4
+        }
+      ],
+      "canonical_meme": "define student_name: String as read String with prompt \"Enter your name? \"\nprint \"Welcome to CS 101, \" + student_name",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "student_name",
+            "var_type": "String",
+            "value": {
+              "expr_type": "read_input",
+              "prompt": "Enter your name? ",
+              "target_type": "String"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "literal",
+                  "value": "Welcome to CS 101, ",
+                  "data_type": "String"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "student_name"
+                }
+              }
+            ],
+            "source_line": 4
+          }
+        ]
+      }
+    }
+  }
+}

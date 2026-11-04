@@ -174,11 +174,22 @@ SYSTEM_PROMPT = f"{BASE_PROMPT_PREFIX}\n{BASE_ANCHOR_EXAMPLES}\n{PROMPT_FOOTER}"
 def format_dynamic_example(example: ExamplePair) -> str:
     lines = example.source_text.splitlines()
     numbered_lines = "\n".join(f"{idx}: {line}" for idx, line in enumerate(lines, start=1))
-    ir_payload = (
-        example.locked_ir.get("ir")
-        if isinstance(example.locked_ir, dict) and example.locked_ir.get("ir") is not None
-        else example.locked_ir
-    )
+    ir_payload = example.locked_ir.get("ir") if isinstance(example.locked_ir, dict) else None
+    if ir_payload is None and isinstance(example.locked_ir, dict) and "entries" in example.locked_ir:
+        for entry in example.locked_ir["entries"].values():
+            if isinstance(entry, dict):
+                if entry.get("ir") is not None:
+                    ir_obj = entry["ir"]
+                    if isinstance(ir_obj, dict) and "statements" in ir_obj:
+                        ir_payload = {"items": ir_obj["statements"]}
+                    else:
+                        ir_payload = ir_obj
+                    break
+                elif entry.get("draft_items") is not None:
+                    ir_payload = {"items": entry["draft_items"]}
+                    break
+    if ir_payload is None:
+        ir_payload = example.locked_ir
     json_ir = json.dumps(ir_payload, indent=2)
     return (
         f"### Relevant Syntactic Example: {example.slug}\n"

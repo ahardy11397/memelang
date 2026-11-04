@@ -1,0 +1,1190 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs101/051_bubble_sort.meme": {
+      "source_sha256": "dac1cd54a2d57c5cf6f7b88f32261162de9920de9f8dc4abcdf6f34caaefb612",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "numbers",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 5,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 8,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "for_range",
+          "loop_var": "i",
+          "start": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "literal",
+            "value": 4,
+            "data_type": "Int"
+          },
+          "body": [
+            {
+              "op": "for_range",
+              "loop_var": "j",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              },
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": ">",
+                    "left": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "numbers"
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "j"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "numbers"
+                      },
+                      "index": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "var_decl",
+                      "name": "temp",
+                      "var_type": "Int",
+                      "value": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "numbers"
+                        },
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        }
+                      },
+                      "source_line": 7
+                    },
+                    {
+                      "op": "list_set_index",
+                      "target": "numbers",
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "j"
+                      },
+                      "value": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "numbers"
+                        },
+                        "index": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "j"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        }
+                      },
+                      "source_line": 8
+                    },
+                    {
+                      "op": "list_set_index",
+                      "target": "numbers",
+                      "index": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "temp"
+                      },
+                      "source_line": 9
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": null
+                }
+              ],
+              "source_line": null
+            }
+          ],
+          "source_line": null
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "numbers"
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "define list numbers as [5, 1, 4, 2, 8]\nfor i from 0 to 4:\n    for j from 0 to 3:\n        if numbers[j] > numbers[j + 1]:\n            define temp: Int as numbers[j]\n            set numbers[j] to numbers[j + 1]\n            set numbers[j + 1] to temp\nprint numbers",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "numbers",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "for_range",
+            "loop_var": "i",
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 4,
+              "data_type": "Int"
+            },
+            "body": [
+              {
+                "op": "for_range",
+                "loop_var": "j",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                },
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": ">",
+                      "left": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "numbers"
+                        },
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "numbers"
+                        },
+                        "index": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "j"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        }
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "var_decl",
+                        "name": "temp",
+                        "var_type": "Int",
+                        "value": {
+                          "expr_type": "list_index",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "numbers"
+                          },
+                          "index": {
+                            "expr_type": "var_ref",
+                            "name": "j"
+                          }
+                        },
+                        "source_line": 7
+                      },
+                      {
+                        "op": "list_set_index",
+                        "target": "numbers",
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        },
+                        "value": {
+                          "expr_type": "list_index",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "numbers"
+                          },
+                          "index": {
+                            "expr_type": "binary_op",
+                            "op": "+",
+                            "left": {
+                              "expr_type": "var_ref",
+                              "name": "j"
+                            },
+                            "right": {
+                              "expr_type": "literal",
+                              "value": 1,
+                              "data_type": "Int"
+                            }
+                          }
+                        },
+                        "source_line": 8
+                      },
+                      {
+                        "op": "list_set_index",
+                        "target": "numbers",
+                        "index": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "j"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "temp"
+                        },
+                        "source_line": 9
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": null
+                  }
+                ],
+                "source_line": null
+              }
+            ],
+            "source_line": null
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "numbers"
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    },
+    "tests/corpus/cs101/051_bubble_sort.meme": {
+      "source_sha256": "dac1cd54a2d57c5cf6f7b88f32261162de9920de9f8dc4abcdf6f34caaefb612",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "numbers",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 5,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 8,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "for_range",
+          "loop_var": "i",
+          "start": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "literal",
+            "value": 4,
+            "data_type": "Int"
+          },
+          "body": [
+            {
+              "op": "for_range",
+              "loop_var": "j",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              },
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": ">",
+                    "left": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "numbers"
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "j"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "numbers"
+                      },
+                      "index": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "var_decl",
+                      "name": "temp",
+                      "var_type": "Int",
+                      "value": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "numbers"
+                        },
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        }
+                      },
+                      "source_line": 7
+                    },
+                    {
+                      "op": "list_set_index",
+                      "target": "numbers",
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "j"
+                      },
+                      "value": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "numbers"
+                        },
+                        "index": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "j"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        }
+                      },
+                      "source_line": 8
+                    },
+                    {
+                      "op": "list_set_index",
+                      "target": "numbers",
+                      "index": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "temp"
+                      },
+                      "source_line": 9
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": null
+                }
+              ],
+              "source_line": null
+            }
+          ],
+          "source_line": null
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "numbers"
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "define list numbers as [5, 1, 4, 2, 8]\nfor i from 0 to 4:\n    for j from 0 to 3:\n        if numbers[j] > numbers[j + 1]:\n            define temp: Int as numbers[j]\n            set numbers[j] to numbers[j + 1]\n            set numbers[j + 1] to temp\nprint numbers",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "numbers",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "for_range",
+            "loop_var": "i",
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 4,
+              "data_type": "Int"
+            },
+            "body": [
+              {
+                "op": "for_range",
+                "loop_var": "j",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                },
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": ">",
+                      "left": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "numbers"
+                        },
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "numbers"
+                        },
+                        "index": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "j"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        }
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "var_decl",
+                        "name": "temp",
+                        "var_type": "Int",
+                        "value": {
+                          "expr_type": "list_index",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "numbers"
+                          },
+                          "index": {
+                            "expr_type": "var_ref",
+                            "name": "j"
+                          }
+                        },
+                        "source_line": 7
+                      },
+                      {
+                        "op": "list_set_index",
+                        "target": "numbers",
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        },
+                        "value": {
+                          "expr_type": "list_index",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "numbers"
+                          },
+                          "index": {
+                            "expr_type": "binary_op",
+                            "op": "+",
+                            "left": {
+                              "expr_type": "var_ref",
+                              "name": "j"
+                            },
+                            "right": {
+                              "expr_type": "literal",
+                              "value": 1,
+                              "data_type": "Int"
+                            }
+                          }
+                        },
+                        "source_line": 8
+                      },
+                      {
+                        "op": "list_set_index",
+                        "target": "numbers",
+                        "index": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "j"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "temp"
+                        },
+                        "source_line": 9
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": null
+                  }
+                ],
+                "source_line": null
+              }
+            ],
+            "source_line": null
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "numbers"
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    },
+    "051_bubble_sort.meme": {
+      "source_sha256": "dac1cd54a2d57c5cf6f7b88f32261162de9920de9f8dc4abcdf6f34caaefb612",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "numbers",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 5,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 8,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "for_range",
+          "loop_var": "i",
+          "start": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "literal",
+            "value": 4,
+            "data_type": "Int"
+          },
+          "body": [
+            {
+              "op": "for_range",
+              "loop_var": "j",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              },
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": ">",
+                    "left": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "numbers"
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "j"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "numbers"
+                      },
+                      "index": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "var_decl",
+                      "name": "temp",
+                      "var_type": "Int",
+                      "value": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "numbers"
+                        },
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        }
+                      },
+                      "source_line": 7
+                    },
+                    {
+                      "op": "list_set_index",
+                      "target": "numbers",
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "j"
+                      },
+                      "value": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "numbers"
+                        },
+                        "index": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "j"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        }
+                      },
+                      "source_line": 8
+                    },
+                    {
+                      "op": "list_set_index",
+                      "target": "numbers",
+                      "index": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "temp"
+                      },
+                      "source_line": 9
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": null
+                }
+              ],
+              "source_line": null
+            }
+          ],
+          "source_line": null
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "numbers"
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "define list numbers as [5, 1, 4, 2, 8]\nfor i from 0 to 4:\n    for j from 0 to 3:\n        if numbers[j] > numbers[j + 1]:\n            define temp: Int as numbers[j]\n            set numbers[j] to numbers[j + 1]\n            set numbers[j + 1] to temp\nprint numbers",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "numbers",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "for_range",
+            "loop_var": "i",
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 4,
+              "data_type": "Int"
+            },
+            "body": [
+              {
+                "op": "for_range",
+                "loop_var": "j",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                },
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": ">",
+                      "left": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "numbers"
+                        },
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "numbers"
+                        },
+                        "index": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "j"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        }
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "var_decl",
+                        "name": "temp",
+                        "var_type": "Int",
+                        "value": {
+                          "expr_type": "list_index",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "numbers"
+                          },
+                          "index": {
+                            "expr_type": "var_ref",
+                            "name": "j"
+                          }
+                        },
+                        "source_line": 7
+                      },
+                      {
+                        "op": "list_set_index",
+                        "target": "numbers",
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        },
+                        "value": {
+                          "expr_type": "list_index",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "numbers"
+                          },
+                          "index": {
+                            "expr_type": "binary_op",
+                            "op": "+",
+                            "left": {
+                              "expr_type": "var_ref",
+                              "name": "j"
+                            },
+                            "right": {
+                              "expr_type": "literal",
+                              "value": 1,
+                              "data_type": "Int"
+                            }
+                          }
+                        },
+                        "source_line": 8
+                      },
+                      {
+                        "op": "list_set_index",
+                        "target": "numbers",
+                        "index": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "j"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "temp"
+                        },
+                        "source_line": 9
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": null
+                  }
+                ],
+                "source_line": null
+              }
+            ],
+            "source_line": null
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "numbers"
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    }
+  }
+}

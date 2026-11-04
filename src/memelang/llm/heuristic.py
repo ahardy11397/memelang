@@ -428,6 +428,9 @@ class HeuristicProvider:
 
     name: str = "heuristic"
 
+    def __init__(self, retriever: object = None) -> None:
+        self.retriever = retriever
+
     def synthesize(self, source_text: str) -> SynthesisResult:
         if not has_executable_content(source_text):
             return SynthesisResult(items=[])

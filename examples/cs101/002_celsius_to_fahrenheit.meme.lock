@@ -1,0 +1,392 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs101/002_celsius_to_fahrenheit.meme": {
+      "source_sha256": "88abcca6f20509745ea21db9e2d06b7d759787603e7aaba26c0daa7f1b6db8bb",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "temp_celsius",
+          "var_type": "Float",
+          "value": {
+            "expr_type": "read_input",
+            "prompt": "Degrees Celsius? ",
+            "target_type": "Float"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "var_decl",
+          "name": "temp_fahrenheit",
+          "var_type": "Float",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "+",
+            "left": {
+              "expr_type": "binary_op",
+              "op": "/",
+              "left": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "temp_celsius"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 9.0,
+                  "data_type": "Float"
+                }
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 5.0,
+                "data_type": "Float"
+              }
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 32.0,
+              "data_type": "Float"
+            }
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "temp_fahrenheit"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "define temp_celsius: Float as read Float with prompt \"Degrees Celsius? \"\ndefine temp_fahrenheit: Float as temp_celsius * 9.0 / 5.0 + 32.0\nprint temp_fahrenheit",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "temp_celsius",
+            "var_type": "Float",
+            "value": {
+              "expr_type": "read_input",
+              "prompt": "Degrees Celsius? ",
+              "target_type": "Float"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "var_decl",
+            "name": "temp_fahrenheit",
+            "var_type": "Float",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "+",
+              "left": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "temp_celsius"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 9.0,
+                    "data_type": "Float"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 5.0,
+                  "data_type": "Float"
+                }
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 32.0,
+                "data_type": "Float"
+              }
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "temp_fahrenheit"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    },
+    "tests/corpus/cs101/002_celsius_to_fahrenheit.meme": {
+      "source_sha256": "88abcca6f20509745ea21db9e2d06b7d759787603e7aaba26c0daa7f1b6db8bb",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "temp_celsius",
+          "var_type": "Float",
+          "value": {
+            "expr_type": "read_input",
+            "prompt": "Degrees Celsius? ",
+            "target_type": "Float"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "var_decl",
+          "name": "temp_fahrenheit",
+          "var_type": "Float",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "+",
+            "left": {
+              "expr_type": "binary_op",
+              "op": "/",
+              "left": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "temp_celsius"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 9.0,
+                  "data_type": "Float"
+                }
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 5.0,
+                "data_type": "Float"
+              }
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 32.0,
+              "data_type": "Float"
+            }
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "temp_fahrenheit"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "define temp_celsius: Float as read Float with prompt \"Degrees Celsius? \"\ndefine temp_fahrenheit: Float as temp_celsius * 9.0 / 5.0 + 32.0\nprint temp_fahrenheit",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "temp_celsius",
+            "var_type": "Float",
+            "value": {
+              "expr_type": "read_input",
+              "prompt": "Degrees Celsius? ",
+              "target_type": "Float"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "var_decl",
+            "name": "temp_fahrenheit",
+            "var_type": "Float",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "+",
+              "left": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "temp_celsius"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 9.0,
+                    "data_type": "Float"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 5.0,
+                  "data_type": "Float"
+                }
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 32.0,
+                "data_type": "Float"
+              }
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "temp_fahrenheit"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    },
+    "002_celsius_to_fahrenheit.meme": {
+      "source_sha256": "88abcca6f20509745ea21db9e2d06b7d759787603e7aaba26c0daa7f1b6db8bb",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "temp_celsius",
+          "var_type": "Float",
+          "value": {
+            "expr_type": "read_input",
+            "prompt": "Degrees Celsius? ",
+            "target_type": "Float"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "var_decl",
+          "name": "temp_fahrenheit",
+          "var_type": "Float",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "+",
+            "left": {
+              "expr_type": "binary_op",
+              "op": "/",
+              "left": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "temp_celsius"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 9.0,
+                  "data_type": "Float"
+                }
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 5.0,
+                "data_type": "Float"
+              }
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 32.0,
+              "data_type": "Float"
+            }
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "temp_fahrenheit"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "define temp_celsius: Float as read Float with prompt \"Degrees Celsius? \"\ndefine temp_fahrenheit: Float as temp_celsius * 9.0 / 5.0 + 32.0\nprint temp_fahrenheit",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "temp_celsius",
+            "var_type": "Float",
+            "value": {
+              "expr_type": "read_input",
+              "prompt": "Degrees Celsius? ",
+              "target_type": "Float"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "var_decl",
+            "name": "temp_fahrenheit",
+            "var_type": "Float",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "+",
+              "left": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "temp_celsius"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 9.0,
+                    "data_type": "Float"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 5.0,
+                  "data_type": "Float"
+                }
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 32.0,
+                "data_type": "Float"
+              }
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "temp_fahrenheit"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

@@ -19,9 +19,11 @@ class GeminiProvider:
         self,
         model: str = "gemini-2.5-flash",
         api_key: str | None = None,
+        retriever: object = None,
     ) -> None:
         self.model = model
         self.api_key = api_key
+        self.retriever = retriever
         self.name = f"gemini:{model}"
 
     def synthesize(self, source_text: str) -> SynthesisResult:
@@ -46,14 +48,14 @@ class GeminiProvider:
                 "google-genai SDK is not installed. Install with: `uv sync --extra gemini`"
             ) from exc
 
-        msgs = build_compiler_messages(source_text)
+        msgs = build_compiler_messages(source_text, retriever=self.retriever)
         try:
             client = genai.Client(api_key=resolved_key)
             resp = client.models.generate_content(
                 model=self.model,
                 contents=msgs[-1]["content"],
                 config=types.GenerateContentConfig(
-                    system_instruction=SYSTEM_PROMPT,
+                    system_instruction=msgs[0]["content"],
                     temperature=0.0,
                     response_mime_type="application/json",
                     response_json_schema=SynthesisResult.model_json_schema(),

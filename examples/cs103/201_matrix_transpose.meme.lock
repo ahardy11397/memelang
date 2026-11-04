@@ -1,0 +1,1238 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs103/201_matrix_transpose.meme": {
+      "source_sha256": "34038f35a60b2c148cce15ebc6f875af5d0ac2ae60ffcb7b693e1aa025c6fb08",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "matrix",
+          "var_type": "List<List<Int>>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              },
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              }
+            ],
+            "element_type": "List<Int>"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "var_decl",
+          "name": "transposed",
+          "var_type": "List<List<Int>>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              },
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              }
+            ],
+            "element_type": "List<Int>"
+          },
+          "source_line": 4
+        },
+        {
+          "op": "for_range",
+          "loop_var": "r",
+          "start": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "literal",
+            "value": 1,
+            "data_type": "Int"
+          },
+          "body": [
+            {
+              "op": "for_range",
+              "loop_var": "c",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "val",
+                  "var_type": "Int",
+                  "value": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "matrix"
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "r"
+                      }
+                    },
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "c"
+                    }
+                  },
+                  "source_line": 7
+                },
+                {
+                  "op": "var_decl",
+                  "name": "row",
+                  "var_type": "List<Int>",
+                  "value": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "transposed"
+                    },
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "c"
+                    }
+                  },
+                  "source_line": 8
+                },
+                {
+                  "op": "list_set_index",
+                  "target": "row",
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "r"
+                  },
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "val"
+                  },
+                  "source_line": 9
+                },
+                {
+                  "op": "list_set_index",
+                  "target": "transposed",
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "c"
+                  },
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "row"
+                  },
+                  "source_line": 10
+                }
+              ],
+              "source_line": null
+            }
+          ],
+          "source_line": null
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "transposed"
+            }
+          ],
+          "source_line": 11
+        }
+      ],
+      "canonical_meme": "define list matrix as [[1, 2], [3, 4]]\ndefine list transposed as [[0, 0], [0, 0]]\nfor r from 0 to 1:\n    for c from 0 to 1:\n        define val: Int as matrix[r][c]\n        define list row as transposed[c]\n        set row[r] to val\n        set transposed[c] to row\nprint transposed",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "matrix",
+            "var_type": "List<List<Int>>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                },
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 4,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                }
+              ],
+              "element_type": "List<Int>"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "var_decl",
+            "name": "transposed",
+            "var_type": "List<List<Int>>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                },
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                }
+              ],
+              "element_type": "List<Int>"
+            },
+            "source_line": 4
+          },
+          {
+            "op": "for_range",
+            "loop_var": "r",
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            },
+            "body": [
+              {
+                "op": "for_range",
+                "loop_var": "c",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "val",
+                    "var_type": "Int",
+                    "value": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "matrix"
+                        },
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "r"
+                        }
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "c"
+                      }
+                    },
+                    "source_line": 7
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "row",
+                    "var_type": "List<Int>",
+                    "value": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "transposed"
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "c"
+                      }
+                    },
+                    "source_line": 8
+                  },
+                  {
+                    "op": "list_set_index",
+                    "target": "row",
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "r"
+                    },
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "val"
+                    },
+                    "source_line": 9
+                  },
+                  {
+                    "op": "list_set_index",
+                    "target": "transposed",
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "c"
+                    },
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "row"
+                    },
+                    "source_line": 10
+                  }
+                ],
+                "source_line": null
+              }
+            ],
+            "source_line": null
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "transposed"
+              }
+            ],
+            "source_line": 11
+          }
+        ]
+      }
+    },
+    "tests/corpus/cs103/201_matrix_transpose.meme": {
+      "source_sha256": "34038f35a60b2c148cce15ebc6f875af5d0ac2ae60ffcb7b693e1aa025c6fb08",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "matrix",
+          "var_type": "List<List<Int>>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              },
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              }
+            ],
+            "element_type": "List<Int>"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "var_decl",
+          "name": "transposed",
+          "var_type": "List<List<Int>>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              },
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              }
+            ],
+            "element_type": "List<Int>"
+          },
+          "source_line": 4
+        },
+        {
+          "op": "for_range",
+          "loop_var": "r",
+          "start": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "literal",
+            "value": 1,
+            "data_type": "Int"
+          },
+          "body": [
+            {
+              "op": "for_range",
+              "loop_var": "c",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "val",
+                  "var_type": "Int",
+                  "value": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "matrix"
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "r"
+                      }
+                    },
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "c"
+                    }
+                  },
+                  "source_line": 7
+                },
+                {
+                  "op": "var_decl",
+                  "name": "row",
+                  "var_type": "List<Int>",
+                  "value": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "transposed"
+                    },
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "c"
+                    }
+                  },
+                  "source_line": 8
+                },
+                {
+                  "op": "list_set_index",
+                  "target": "row",
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "r"
+                  },
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "val"
+                  },
+                  "source_line": 9
+                },
+                {
+                  "op": "list_set_index",
+                  "target": "transposed",
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "c"
+                  },
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "row"
+                  },
+                  "source_line": 10
+                }
+              ],
+              "source_line": null
+            }
+          ],
+          "source_line": null
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "transposed"
+            }
+          ],
+          "source_line": 11
+        }
+      ],
+      "canonical_meme": "define list matrix as [[1, 2], [3, 4]]\ndefine list transposed as [[0, 0], [0, 0]]\nfor r from 0 to 1:\n    for c from 0 to 1:\n        define val: Int as matrix[r][c]\n        define list row as transposed[c]\n        set row[r] to val\n        set transposed[c] to row\nprint transposed",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "matrix",
+            "var_type": "List<List<Int>>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                },
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 4,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                }
+              ],
+              "element_type": "List<Int>"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "var_decl",
+            "name": "transposed",
+            "var_type": "List<List<Int>>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                },
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                }
+              ],
+              "element_type": "List<Int>"
+            },
+            "source_line": 4
+          },
+          {
+            "op": "for_range",
+            "loop_var": "r",
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            },
+            "body": [
+              {
+                "op": "for_range",
+                "loop_var": "c",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "val",
+                    "var_type": "Int",
+                    "value": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "matrix"
+                        },
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "r"
+                        }
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "c"
+                      }
+                    },
+                    "source_line": 7
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "row",
+                    "var_type": "List<Int>",
+                    "value": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "transposed"
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "c"
+                      }
+                    },
+                    "source_line": 8
+                  },
+                  {
+                    "op": "list_set_index",
+                    "target": "row",
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "r"
+                    },
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "val"
+                    },
+                    "source_line": 9
+                  },
+                  {
+                    "op": "list_set_index",
+                    "target": "transposed",
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "c"
+                    },
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "row"
+                    },
+                    "source_line": 10
+                  }
+                ],
+                "source_line": null
+              }
+            ],
+            "source_line": null
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "transposed"
+              }
+            ],
+            "source_line": 11
+          }
+        ]
+      }
+    },
+    "201_matrix_transpose.meme": {
+      "source_sha256": "34038f35a60b2c148cce15ebc6f875af5d0ac2ae60ffcb7b693e1aa025c6fb08",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "matrix",
+          "var_type": "List<List<Int>>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              },
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              }
+            ],
+            "element_type": "List<Int>"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "var_decl",
+          "name": "transposed",
+          "var_type": "List<List<Int>>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              },
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              }
+            ],
+            "element_type": "List<Int>"
+          },
+          "source_line": 4
+        },
+        {
+          "op": "for_range",
+          "loop_var": "r",
+          "start": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "literal",
+            "value": 1,
+            "data_type": "Int"
+          },
+          "body": [
+            {
+              "op": "for_range",
+              "loop_var": "c",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "val",
+                  "var_type": "Int",
+                  "value": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "matrix"
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "r"
+                      }
+                    },
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "c"
+                    }
+                  },
+                  "source_line": 7
+                },
+                {
+                  "op": "var_decl",
+                  "name": "row",
+                  "var_type": "List<Int>",
+                  "value": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "transposed"
+                    },
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "c"
+                    }
+                  },
+                  "source_line": 8
+                },
+                {
+                  "op": "list_set_index",
+                  "target": "row",
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "r"
+                  },
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "val"
+                  },
+                  "source_line": 9
+                },
+                {
+                  "op": "list_set_index",
+                  "target": "transposed",
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "c"
+                  },
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "row"
+                  },
+                  "source_line": 10
+                }
+              ],
+              "source_line": null
+            }
+          ],
+          "source_line": null
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "transposed"
+            }
+          ],
+          "source_line": 11
+        }
+      ],
+      "canonical_meme": "define list matrix as [[1, 2], [3, 4]]\ndefine list transposed as [[0, 0], [0, 0]]\nfor r from 0 to 1:\n    for c from 0 to 1:\n        define val: Int as matrix[r][c]\n        define list row as transposed[c]\n        set row[r] to val\n        set transposed[c] to row\nprint transposed",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "matrix",
+            "var_type": "List<List<Int>>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                },
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 4,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                }
+              ],
+              "element_type": "List<Int>"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "var_decl",
+            "name": "transposed",
+            "var_type": "List<List<Int>>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                },
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                }
+              ],
+              "element_type": "List<Int>"
+            },
+            "source_line": 4
+          },
+          {
+            "op": "for_range",
+            "loop_var": "r",
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            },
+            "body": [
+              {
+                "op": "for_range",
+                "loop_var": "c",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "val",
+                    "var_type": "Int",
+                    "value": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "matrix"
+                        },
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "r"
+                        }
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "c"
+                      }
+                    },
+                    "source_line": 7
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "row",
+                    "var_type": "List<Int>",
+                    "value": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "transposed"
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "c"
+                      }
+                    },
+                    "source_line": 8
+                  },
+                  {
+                    "op": "list_set_index",
+                    "target": "row",
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "r"
+                    },
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "val"
+                    },
+                    "source_line": 9
+                  },
+                  {
+                    "op": "list_set_index",
+                    "target": "transposed",
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "c"
+                    },
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "row"
+                    },
+                    "source_line": 10
+                  }
+                ],
+                "source_line": null
+              }
+            ],
+            "source_line": null
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "transposed"
+              }
+            ],
+            "source_line": 11
+          }
+        ]
+      }
+    }
+  }
+}

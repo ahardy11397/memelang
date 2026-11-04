@@ -332,4 +332,16 @@ def test_full_300_uniqueness_examples_purity_and_cli_smoke(tmp_path):
     assert rc.main(["--ids", "10-5"]) == 2
 
 
+def test_seed_examples_have_valid_lockfiles_and_are_retrievable():
+    from memelang.llm.retriever import ExampleRetriever
+
+    retriever = ExampleRetriever()
+    count = retriever.index_corpus()
+    assert count >= 5
+    results = retriever.retrieve("hello student name", top_k=1)
+    assert len(results) == 1
+    assert "001_hello_banner" in results[0].slug
+
+
+
 

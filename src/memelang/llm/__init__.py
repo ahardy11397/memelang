@@ -35,7 +35,9 @@ def _probe_local_ollama(host: str) -> str | None:
         return None
 
 
-def get_provider(spec: str = "auto") -> LLMProvider:
+def get_provider(
+    spec: str = "auto", retriever: ExampleRetriever | None = None
+) -> LLMProvider:
     effective = spec
     if effective == "auto":
         env_spec = os.environ.get("MEME_PROVIDER", "").strip()
@@ -44,43 +46,43 @@ def get_provider(spec: str = "auto") -> LLMProvider:
         else:
             cached_gguf = find_cached_gguf()
             if cached_gguf is not None:
-                return LlamaCppProvider(model_path=cached_gguf)
+                return LlamaCppProvider(model_path=cached_gguf, retriever=retriever)
             host = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
             detected_model = _probe_local_ollama(host)
             if detected_model:
-                return OllamaProvider(model=detected_model, host=host)
-            return HeuristicProvider()
+                return OllamaProvider(model=detected_model, host=host, retriever=retriever)
+            return HeuristicProvider(retriever=retriever)
 
     if effective == "heuristic":
-        return HeuristicProvider()
+        return HeuristicProvider(retriever=retriever)
 
     if effective == "ollama" or effective.startswith("ollama:"):
         _, _, model = effective.partition(":")
         host = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
-        return OllamaProvider(model=model or "qwen2.5-coder:3b", host=host)
+        return OllamaProvider(model=model or "qwen2.5-coder:3b", host=host, retriever=retriever)
 
     if effective.startswith("openai-local:"):
         _, _, model = effective.partition(":")
         base_url = os.environ.get("OPENAI_BASE_URL", "http://127.0.0.1:8080/v1")
         if not model:
             raise LLMProviderError("Specify model name as `openai-local:<model>`.")
-        return OpenAILocalProvider(model=model, base_url=base_url)
+        return OpenAILocalProvider(model=model, base_url=base_url, retriever=retriever)
 
     if effective == "llama-cpp" or effective.startswith("llama-cpp:"):
         _, _, path = effective.partition(":")
         if path:
-            return LlamaCppProvider(model_path=path)
+            return LlamaCppProvider(model_path=path, retriever=retriever)
         cached_gguf = find_cached_gguf()
         if cached_gguf is None:
             raise LLMProviderError(
                 f"No cached GGUF model found in `{get_model_cache_dir()}`. "
                 "Run `meme pull` first or pass `llama-cpp:/path/to/model.gguf`."
             )
-        return LlamaCppProvider(model_path=cached_gguf)
+        return LlamaCppProvider(model_path=cached_gguf, retriever=retriever)
 
     if effective == "gemini" or effective.startswith("gemini:"):
         _, _, model = effective.partition(":")
-        return GeminiProvider(model=model or "gemini-2.5-flash")
+        return GeminiProvider(model=model or "gemini-2.5-flash", retriever=retriever)
 
     raise LLMProviderError(
         f"Unknown LLM provider `{spec}`. Supported: auto, heuristic, ollama[:model], "

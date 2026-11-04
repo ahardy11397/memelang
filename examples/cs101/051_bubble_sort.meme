@@ -1,0 +1,10 @@
+this runs in the shell
+
+define numbers as [5, 1, 4, 2, 8]
+for i from 0 to 4
+  for j from 0 to 3
+    if numbers item j > numbers item (j + 1)
+      define temp as numbers item j
+      set numbers item j to numbers item (j + 1)
+      set numbers item (j + 1) to temp
+print numbers

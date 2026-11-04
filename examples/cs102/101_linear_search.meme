@@ -1,0 +1,9 @@
+this runs in the shell
+
+define numbers as [10, 20, 30, 40, 50]
+define target as 30
+define found_idx as 0 - 1
+for i from 0 to 4
+  if numbers item i == target
+    set found_idx to i
+print found_idx

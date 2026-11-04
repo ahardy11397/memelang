@@ -1,0 +1,824 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs102/101_linear_search.meme": {
+      "source_sha256": "ed25741752715f9d5c45b3b6de3bab80050714d7d3be6265ef1c611a09cb8fdd",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "numbers",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 30,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 40,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 50,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "var_decl",
+          "name": "target",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 30,
+            "data_type": "Int"
+          },
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "found_idx",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "-",
+            "left": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 5
+        },
+        {
+          "op": "for_range",
+          "loop_var": "i",
+          "start": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "literal",
+            "value": 4,
+            "data_type": "Int"
+          },
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "numbers"
+                  },
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "target"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "found_idx",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  },
+                  "source_line": 7
+                }
+              ],
+              "else_body": [],
+              "source_line": null
+            }
+          ],
+          "source_line": null
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "found_idx"
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "define list numbers as [10, 20, 30, 40, 50]\ndefine target: Int as 30\ndefine found_idx: Int as 0 - 1\nfor i from 0 to 4:\n    if numbers[i] == target:\n        set found_idx to i\nprint found_idx",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "numbers",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 40,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "var_decl",
+            "name": "target",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 30,
+              "data_type": "Int"
+            },
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "found_idx",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "-",
+              "left": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 5
+          },
+          {
+            "op": "for_range",
+            "loop_var": "i",
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 4,
+              "data_type": "Int"
+            },
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "numbers"
+                    },
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "target"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "found_idx",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "source_line": 7
+                  }
+                ],
+                "else_body": [],
+                "source_line": null
+              }
+            ],
+            "source_line": null
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "found_idx"
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    },
+    "tests/corpus/cs102/101_linear_search.meme": {
+      "source_sha256": "ed25741752715f9d5c45b3b6de3bab80050714d7d3be6265ef1c611a09cb8fdd",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "numbers",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 30,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 40,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 50,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "var_decl",
+          "name": "target",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 30,
+            "data_type": "Int"
+          },
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "found_idx",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "-",
+            "left": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 5
+        },
+        {
+          "op": "for_range",
+          "loop_var": "i",
+          "start": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "literal",
+            "value": 4,
+            "data_type": "Int"
+          },
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "numbers"
+                  },
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "target"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "found_idx",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  },
+                  "source_line": 7
+                }
+              ],
+              "else_body": [],
+              "source_line": null
+            }
+          ],
+          "source_line": null
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "found_idx"
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "define list numbers as [10, 20, 30, 40, 50]\ndefine target: Int as 30\ndefine found_idx: Int as 0 - 1\nfor i from 0 to 4:\n    if numbers[i] == target:\n        set found_idx to i\nprint found_idx",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "numbers",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 40,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "var_decl",
+            "name": "target",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 30,
+              "data_type": "Int"
+            },
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "found_idx",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "-",
+              "left": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 5
+          },
+          {
+            "op": "for_range",
+            "loop_var": "i",
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 4,
+              "data_type": "Int"
+            },
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "numbers"
+                    },
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "target"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "found_idx",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "source_line": 7
+                  }
+                ],
+                "else_body": [],
+                "source_line": null
+              }
+            ],
+            "source_line": null
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "found_idx"
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    },
+    "101_linear_search.meme": {
+      "source_sha256": "ed25741752715f9d5c45b3b6de3bab80050714d7d3be6265ef1c611a09cb8fdd",
+      "provider": "golden",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "numbers",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 30,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 40,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 50,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "var_decl",
+          "name": "target",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 30,
+            "data_type": "Int"
+          },
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "found_idx",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "-",
+            "left": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 5
+        },
+        {
+          "op": "for_range",
+          "loop_var": "i",
+          "start": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "literal",
+            "value": 4,
+            "data_type": "Int"
+          },
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "numbers"
+                  },
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "target"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "found_idx",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  },
+                  "source_line": 7
+                }
+              ],
+              "else_body": [],
+              "source_line": null
+            }
+          ],
+          "source_line": null
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "found_idx"
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "define list numbers as [10, 20, 30, 40, 50]\ndefine target: Int as 30\ndefine found_idx: Int as 0 - 1\nfor i from 0 to 4:\n    if numbers[i] == target:\n        set found_idx to i\nprint found_idx",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "numbers",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 40,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "var_decl",
+            "name": "target",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 30,
+              "data_type": "Int"
+            },
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "found_idx",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "-",
+              "left": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 5
+          },
+          {
+            "op": "for_range",
+            "loop_var": "i",
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 4,
+              "data_type": "Int"
+            },
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "numbers"
+                    },
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "target"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "found_idx",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "source_line": 7
+                  }
+                ],
+                "else_body": [],
+                "source_line": null
+              }
+            ],
+            "source_line": null
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "found_idx"
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

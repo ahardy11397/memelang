@@ -46,6 +46,7 @@ from memelang.ir.schema import (
     WhileStmt,
 )
 from memelang.llm import LLMProvider, LLMProviderError, get_provider
+from memelang.llm.retriever import ExampleRetriever
 from memelang.lockfile.manager import LockfileManager
 from memelang.runner.executor import execute_ir
 
@@ -107,6 +108,8 @@ class CorpusRunSummary(BaseModel):
     by_style: dict[str, dict[str, int]]
     top_examples_gaps: list[tuple[str, int]]
     top_language_gaps: list[tuple[str, int]]
+    axis1_examples_gaps: dict[str, int] = Field(default_factory=dict)
+    axis2_language_gaps: dict[str, int] = Field(default_factory=dict)
     results: list[ScriptEvalResult] = Field(default_factory=list)
 
 
@@ -257,6 +260,7 @@ def evaluate_script(
     lock_mgr: LockfileManager,
     repo_root: Path,
     timeout_sec: float = 10.0,
+    retriever: ExampleRetriever | None = None,
 ) -> ScriptEvalResult:
     """Evaluates a single corpus script against isolated lockfile and records 2-axis gap attribution."""
     script_path = (repo_root / spec.path).resolve()
@@ -271,6 +275,9 @@ def evaluate_script(
             examples_gaps=spec.extensibility_gaps.examples,
             language_gaps=spec.extensibility_gaps.language,
         )
+
+    if retriever is not None and hasattr(provider, "retriever"):
+        provider.retriever = retriever
 
     source_text = script_path.read_text(encoding="utf-8")
 
@@ -487,6 +494,8 @@ def summarize_results(results: list[ScriptEvalResult]) -> CorpusRunSummary:
         by_style=by_style,
         top_examples_gaps=top_examples,
         top_language_gaps=top_language,
+        axis1_examples_gaps=dict(top_examples),
+        axis2_language_gaps=dict(top_language),
         results=results,
     )
 
@@ -550,6 +559,12 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Path to save machine-readable JSON summary report",
     )
+    parser.add_argument(
+        "--retriever",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Use dynamic few-shot example retriever when compiling (default: --retriever)",
+    )
 
     args = parser.parse_args(argv)
 
@@ -585,8 +600,13 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"Memelang CS Corpus Runner: evaluating {len(scripts)} scripts...")
 
+    retriever: ExampleRetriever | None = None
+    if args.retriever:
+        retriever = ExampleRetriever(examples_dir=REPO_ROOT / "examples")
+        retriever.index_corpus()
+
     try:
-        provider = get_provider(args.provider)
+        provider = get_provider(args.provider, retriever=retriever)
     except Exception as exc:
         print(f"Error: Failed to initialize provider {args.provider!r}: {exc}", file=sys.stderr)
         return 1
@@ -604,6 +624,7 @@ def main(argv: list[str] | None = None) -> int:
                 lock_mgr=lock_mgr,
                 repo_root=REPO_ROOT,
                 timeout_sec=args.timeout,
+                retriever=retriever,
             )
             results.append(res)
             status_indicator = "✓" if res.bucket in ("PASS", "AMBIGUOUS_EXPECTED") else "✗"

@@ -20,11 +20,13 @@ class OllamaProvider:
         host: str = "http://127.0.0.1:11434",
         client: httpx.Client | None = None,
         timeout: float = 120.0,
+        retriever: object = None,
     ) -> None:
         self.model = model
         self.host = host.rstrip("/")
         self._client = client
         self._timeout = timeout
+        self.retriever = retriever
         self.name = f"ollama:{model}"
 
     def synthesize(self, source_text: str) -> SynthesisResult:
@@ -33,7 +35,7 @@ class OllamaProvider:
 
         payload = {
             "model": self.model,
-            "messages": build_compiler_messages(source_text),
+            "messages": build_compiler_messages(source_text, retriever=self.retriever),
             "stream": False,
             "format": SynthesisResult.model_json_schema(),
             "options": {"temperature": 0.0, "seed": 42},
@@ -62,12 +64,14 @@ class OpenAILocalProvider:
         api_key: str = "local",
         client: httpx.Client | None = None,
         timeout: float = 120.0,
+        retriever: object = None,
     ) -> None:
         self.model = model
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self._client = client
         self._timeout = timeout
+        self.retriever = retriever
         self.name = f"openai-local:{model}"
 
     def synthesize(self, source_text: str) -> SynthesisResult:
@@ -76,7 +80,7 @@ class OpenAILocalProvider:
 
         payload = {
             "model": self.model,
-            "messages": build_compiler_messages(source_text),
+            "messages": build_compiler_messages(source_text, retriever=self.retriever),
             "temperature": 0.0,
             "seed": 42,
             "response_format": {
