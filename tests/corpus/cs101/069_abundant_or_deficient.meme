@@ -1,0 +1,13 @@
+this runs in the shell
+
+define number_to_classify from use "Number to classify?"
+define sum_of_proper_divisors as 0
+for prop_div from 1 to number_to_classify - 1
+  if number_to_classify % prop_div == 0
+    define sum_of_proper_divisors as sum_of_proper_divisors + prop_div
+if sum_of_proper_divisors > number_to_classify
+  print "Abundant"
+else if sum_of_proper_divisors < number_to_classify
+  print "Deficient"
+else
+  print "Perfect"

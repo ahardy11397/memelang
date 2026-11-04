@@ -1,0 +1,10 @@
+this runs in the shell
+
+define num_harmonic_terms from user "Terms in series?"
+define accumulated_harmonic as 0
+define harmonic_sign as 1
+for harm_k from 1 to num_harmonic_terms
+  define term_scaled_val as (1200 / harm_k) * harmonic_sign
+  define accumulated_harmonic as accumulated_harmonic + term_scaled_val
+  define harmonic_sign as 0 - harmonic_sign
+print accumulated_harmonic

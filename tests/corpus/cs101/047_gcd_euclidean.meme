@@ -1,0 +1,9 @@
+this runs in the shell
+
+define euc_first from user "First integer?"
+define euc_second from user "Second integer?"
+while euc_second != 0
+  define euc_mod as euc_first % euc_second
+  define euc_first as euc_second
+  define euc_second as euc_mod
+print euc_first

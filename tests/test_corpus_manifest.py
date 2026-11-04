@@ -198,3 +198,33 @@ def test_evaluate_script_buckets_prompt_stripping_source_dir_and_lockfile_isolat
     assert dict(summary.top_language_gaps)["list_set_index"] == 2
     assert dict(summary.top_examples_gaps)["swap_phrase"] == 1
     assert not (tmp_path / "build.lock").exists()
+
+
+def test_cs101_slice_integrity():
+    import re
+    rc = _load_runner_module()
+    manifest_path = REPO_ROOT / "tests" / "corpus" / "manifest.json"
+    manifest = rc.CorpusManifest.model_validate_json(manifest_path.read_text(encoding="utf-8"))
+    cs101 = [s for s in manifest.scripts if s.course == "cs101"]
+    assert [s.id for s in cs101] == list(range(1, 101))
+    assert sum(1 for s in cs101 if s.style == "clean") == 80
+    assert sum(1 for s in cs101 if s.style == "typo") == 10
+    assert sum(1 for s in cs101 if s.style == "ambiguous") == 10
+
+    assert len({s.slug for s in cs101}) == 100
+    assert len({s.title.lower() for s in cs101}) == 100
+
+    skeletons = set()
+    for s in cs101:
+        p = REPO_ROOT / s.path
+        assert p.is_file() and p.parent.name == "cs101"
+        raw = p.read_text(encoding="utf-8").strip()
+        assert raw != ""
+        if s.style == "ambiguous":
+            assert s.expected_status == "ambiguous" and s.expected_stdout_contains == ""
+        else:
+            assert s.expected_status == "ok" and s.expected_stdout_contains != ""
+        skel = re.sub(r"\d+", "#", re.sub(r"\s+", " ", raw.lower()))
+        skeletons.add(skel)
+    assert len(skeletons) == 100
+

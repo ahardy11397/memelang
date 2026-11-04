@@ -1,0 +1,6 @@
+this runs in the shell
+
+define active_dataset as [9, 3, 7, 1]
+foreach entry_item in active_dataset
+  sort active_dataset ascending
+print active_dataset

@@ -1,0 +1,2184 @@
+{
+  "corpus_version": 1,
+  "total_scripts": 100,
+  "scripts": [
+    {
+      "id": 1,
+      "slug": "001_hello_banner",
+      "path": "tests/corpus/cs101/001_hello_banner.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Course Welcome Banner",
+      "style": "clean",
+      "stdin": "Ada\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Ada",
+      "feature_tags": [
+        "read_input",
+        "string_concat",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 2,
+      "slug": "002_celsius_to_fahrenheit",
+      "path": "tests/corpus/cs101/002_celsius_to_fahrenheit.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Celsius to Fahrenheit Converter",
+      "style": "clean",
+      "stdin": "100\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "212",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 3,
+      "slug": "003_fahrenheit_to_celsius",
+      "path": "tests/corpus/cs101/003_fahrenheit_to_celsius.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Fahrenheit to Celsius Converter",
+      "style": "clean",
+      "stdin": "212\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "100",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 4,
+      "slug": "004_kelvin_conversion",
+      "path": "tests/corpus/cs101/004_kelvin_conversion.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Celsius to Kelvin Temperature",
+      "style": "clean",
+      "stdin": "25\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "298",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 5,
+      "slug": "005_rectangle_geometry",
+      "path": "tests/corpus/cs101/005_rectangle_geometry.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Rectangle Area and Perimeter",
+      "style": "clean",
+      "stdin": "7\n4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "28",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 6,
+      "slug": "006_circle_metrics",
+      "path": "tests/corpus/cs101/006_circle_metrics.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Circle Area Estimation",
+      "style": "clean",
+      "stdin": "10\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "314",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 7,
+      "slug": "007_triangle_area",
+      "path": "tests/corpus/cs101/007_triangle_area.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Triangle Base Height Area",
+      "style": "clean",
+      "stdin": "12\n5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "30",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 8,
+      "slug": "008_bmi_calculator",
+      "path": "tests/corpus/cs101/008_bmi_calculator.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Body Mass Index Metric",
+      "style": "clean",
+      "stdin": "70\n2\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "17",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 9,
+      "slug": "009_tip_and_split",
+      "path": "tests/corpus/cs101/009_tip_and_split.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Restaurant Tip and Bill Splitter",
+      "style": "clean",
+      "stdin": "100\n20\n4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "30",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 10,
+      "slug": "010_simple_interest",
+      "path": "tests/corpus/cs101/010_simple_interest.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Simple Interest Calculator",
+      "style": "clean",
+      "stdin": "1000\n5\n2\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "100",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 11,
+      "slug": "011_compound_interest_annual",
+      "path": "tests/corpus/cs101/011_compound_interest_annual.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Annual Compound Interest Approximator",
+      "style": "clean",
+      "stdin": "500\n10\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "605",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 12,
+      "slug": "012_distance_2d",
+      "path": "tests/corpus/cs101/012_distance_2d.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "2D Manhattan Distance",
+      "style": "clean",
+      "stdin": "2\n3\n5\n7\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "7",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 13,
+      "slug": "013_slope_of_line",
+      "path": "tests/corpus/cs101/013_slope_of_line.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Slope Between Two Coordinate Points",
+      "style": "clean",
+      "stdin": "1\n2\n4\n8\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 14,
+      "slug": "014_mph_to_kph",
+      "path": "tests/corpus/cs101/014_mph_to_kph.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Speed Conversion Miles to Kilometers",
+      "style": "clean",
+      "stdin": "60\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "96",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 15,
+      "slug": "015_seconds_to_hms",
+      "path": "tests/corpus/cs101/015_seconds_to_hms.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Seconds Breakdown to Hours Minutes Seconds",
+      "style": "clean",
+      "stdin": "3665\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1:1:5",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 16,
+      "slug": "016_ohms_law",
+      "path": "tests/corpus/cs101/016_ohms_law.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Ohms Law Voltage from Current and Resistance",
+      "style": "clean",
+      "stdin": "3\n15\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "45",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 17,
+      "slug": "017_kinetic_energy",
+      "path": "tests/corpus/cs101/017_kinetic_energy.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Kinetic Energy Calculation",
+      "style": "typo",
+      "stdin": "10\n4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "80",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_from_use"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 18,
+      "slug": "018_discount_and_tax",
+      "path": "tests/corpus/cs101/018_discount_and_tax.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Price Discount and Tax Calculation",
+      "style": "typo",
+      "stdin": "100\n20\n10\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "88",
+      "feature_tags": [
+        "read_input",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_pirnt"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 19,
+      "slug": "019_temperature_clamp_contradiction",
+      "path": "tests/corpus/cs101/019_temperature_clamp_contradiction.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Conflicting Temperature Range Clamping",
+      "style": "ambiguous",
+      "stdin": "120\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "read_input",
+        "clamp"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_bounds"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 20,
+      "slug": "020_cylinder_volume_lossy",
+      "path": "tests/corpus/cs101/020_cylinder_volume_lossy.meme",
+      "course": "cs101",
+      "topic": "io_and_math",
+      "title": "Cylinder Dimensions Incomplete Branch",
+      "style": "ambiguous",
+      "stdin": "5\n10\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "read_input",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "lossy_single_branch"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 21,
+      "slug": "021_even_or_odd",
+      "path": "tests/corpus/cs101/021_even_or_odd.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Integer Parity Even or Odd",
+      "style": "clean",
+      "stdin": "14\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Even",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 22,
+      "slug": "022_sign_checker",
+      "path": "tests/corpus/cs101/022_sign_checker.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Number Sign Positive Negative Zero",
+      "style": "clean",
+      "stdin": "-9\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Negative",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 23,
+      "slug": "023_max_of_three",
+      "path": "tests/corpus/cs101/023_max_of_three.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Maximum of Three Values",
+      "style": "clean",
+      "stdin": "12\n45\n30\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "45",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 24,
+      "slug": "024_leap_year",
+      "path": "tests/corpus/cs101/024_leap_year.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Gregorian Leap Year Determination",
+      "style": "clean",
+      "stdin": "2024\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Leap",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 25,
+      "slug": "025_letter_grade",
+      "path": "tests/corpus/cs101/025_letter_grade.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Letter Grade Score Evaluator",
+      "style": "clean",
+      "stdin": "87\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "B",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 26,
+      "slug": "026_cartesian_quadrant",
+      "path": "tests/corpus/cs101/026_cartesian_quadrant.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Cartesian Quadrant Locator",
+      "style": "clean",
+      "stdin": "-3\n5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Quadrant 2",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 27,
+      "slug": "027_triangle_classifier",
+      "path": "tests/corpus/cs101/027_triangle_classifier.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Triangle Side Length Classifier",
+      "style": "clean",
+      "stdin": "5\n5\n5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Equilateral",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 28,
+      "slug": "028_speeding_ticket_fine",
+      "path": "tests/corpus/cs101/028_speeding_ticket_fine.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Traffic Speeding Ticket Fine Tier",
+      "style": "clean",
+      "stdin": "82\n65\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "150",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 29,
+      "slug": "029_shipping_fee",
+      "path": "tests/corpus/cs101/029_shipping_fee.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Package Weight Shipping Fee",
+      "style": "clean",
+      "stdin": "8\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "15",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 30,
+      "slug": "030_progressive_tax",
+      "path": "tests/corpus/cs101/030_progressive_tax.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Two Tier Progressive Income Tax",
+      "style": "clean",
+      "stdin": "60000\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "7000",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 31,
+      "slug": "031_water_physical_state",
+      "path": "tests/corpus/cs101/031_water_physical_state.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Water State of Matter by Temperature",
+      "style": "clean",
+      "stdin": "50\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Liquid",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 32,
+      "slug": "032_overtime_pay",
+      "path": "tests/corpus/cs101/032_overtime_pay.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Weekly Wage with Overtime Rate",
+      "style": "clean",
+      "stdin": "45\n20\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "950",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 33,
+      "slug": "033_bmi_health_category",
+      "path": "tests/corpus/cs101/033_bmi_health_category.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Body Mass Index Category Assessment",
+      "style": "clean",
+      "stdin": "22\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Normal",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 34,
+      "slug": "034_rock_paper_scissors",
+      "path": "tests/corpus/cs101/034_rock_paper_scissors.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Rock Paper Scissors Game Arbiter",
+      "style": "clean",
+      "stdin": "rock\nscissors\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Player 1 Wins",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 35,
+      "slug": "035_divisible_3_and_5",
+      "path": "tests/corpus/cs101/035_divisible_3_and_5.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Divisibility by Both Three and Five",
+      "style": "clean",
+      "stdin": "15\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Both",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 36,
+      "slug": "036_vowel_or_consonant",
+      "path": "tests/corpus/cs101/036_vowel_or_consonant.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Single Character Vowel or Consonant",
+      "style": "clean",
+      "stdin": "e\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Vowel",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 37,
+      "slug": "037_military_to_standard_time",
+      "path": "tests/corpus/cs101/037_military_to_standard_time.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Military Time to Standard Conversion",
+      "style": "typo",
+      "stdin": "15\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3 PM",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_deifne"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 38,
+      "slug": "038_cinema_ticket_pricing",
+      "path": "tests/corpus/cs101/038_cinema_ticket_pricing.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Cinema Age Based Admission",
+      "style": "typo",
+      "stdin": "68\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "9",
+      "feature_tags": [
+        "read_input",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_pirnt"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 39,
+      "slug": "039_overlapping_grade_boundary",
+      "path": "tests/corpus/cs101/039_overlapping_grade_boundary.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Conflicting Letter Grade Boundaries",
+      "style": "ambiguous",
+      "stdin": "85\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "read_input",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "overlapping_ranges"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 40,
+      "slug": "040_thermostat_conflicting_targets",
+      "path": "tests/corpus/cs101/040_thermostat_conflicting_targets.meme",
+      "course": "cs101",
+      "topic": "conditionals",
+      "title": "Thermostat Mode Conflicting Setpoints",
+      "style": "ambiguous",
+      "stdin": "72\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "read_input",
+        "conditionals"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_branches"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 41,
+      "slug": "041_sum_one_to_n",
+      "path": "tests/corpus/cs101/041_sum_one_to_n.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Sum of Integers from One to N",
+      "style": "clean",
+      "stdin": "10\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "55",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 42,
+      "slug": "042_factorial_iterative",
+      "path": "tests/corpus/cs101/042_factorial_iterative.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Iterative Factorial Computation",
+      "style": "clean",
+      "stdin": "5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "120",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 43,
+      "slug": "043_fibonacci_term",
+      "path": "tests/corpus/cs101/043_fibonacci_term.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Fibonacci Sequence Nth Number",
+      "style": "clean",
+      "stdin": "7\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "13",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 44,
+      "slug": "044_countdown_loop",
+      "path": "tests/corpus/cs101/044_countdown_loop.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Blastoff Countdown Sequence",
+      "style": "clean",
+      "stdin": "3\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Blastoff",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 45,
+      "slug": "045_multiplication_table",
+      "path": "tests/corpus/cs101/045_multiplication_table.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Single Multiplication Table Row",
+      "style": "clean",
+      "stdin": "4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "40",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 46,
+      "slug": "046_integer_power",
+      "path": "tests/corpus/cs101/046_integer_power.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Exponentiation by Iterative Multiplication",
+      "style": "clean",
+      "stdin": "2\n6\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "64",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 47,
+      "slug": "047_gcd_euclidean",
+      "path": "tests/corpus/cs101/047_gcd_euclidean.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Greatest Common Divisor Euclid",
+      "style": "clean",
+      "stdin": "48\n18\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "6",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 48,
+      "slug": "048_lcm_two_numbers",
+      "path": "tests/corpus/cs101/048_lcm_two_numbers.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Least Common Multiple via GCD",
+      "style": "clean",
+      "stdin": "12\n15\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "60",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 49,
+      "slug": "049_primality_test",
+      "path": "tests/corpus/cs101/049_primality_test.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Trial Division Primality Test",
+      "style": "clean",
+      "stdin": "17\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Prime",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 50,
+      "slug": "050_count_primes_up_to_n",
+      "path": "tests/corpus/cs101/050_count_primes_up_to_n.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Count Prime Numbers Below Limit",
+      "style": "clean",
+      "stdin": "10\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 51,
+      "slug": "051_sum_of_digits",
+      "path": "tests/corpus/cs101/051_sum_of_digits.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Sum of Decimal Digits",
+      "style": "clean",
+      "stdin": "345\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "12",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 52,
+      "slug": "052_count_digits",
+      "path": "tests/corpus/cs101/052_count_digits.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Count Decimal Digits in Integer",
+      "style": "clean",
+      "stdin": "9876\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 53,
+      "slug": "053_reverse_integer",
+      "path": "tests/corpus/cs101/053_reverse_integer.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Reverse Integer Digits",
+      "style": "clean",
+      "stdin": "1234\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "4321",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 54,
+      "slug": "054_palindrome_number",
+      "path": "tests/corpus/cs101/054_palindrome_number.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Numeric Palindrome Test",
+      "style": "clean",
+      "stdin": "1221\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Palindrome",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 55,
+      "slug": "055_collatz_step_count",
+      "path": "tests/corpus/cs101/055_collatz_step_count.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Collatz Conjecture Step Counter",
+      "style": "clean",
+      "stdin": "6\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "8",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 56,
+      "slug": "056_collatz_peak_value",
+      "path": "tests/corpus/cs101/056_collatz_peak_value.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Collatz Sequence Peak Trajectory",
+      "style": "clean",
+      "stdin": "7\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "52",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 57,
+      "slug": "057_armstrong_number",
+      "path": "tests/corpus/cs101/057_armstrong_number.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Three Digit Armstrong Narcissistic Number",
+      "style": "typo",
+      "stdin": "153\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Armstrong",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_deifne"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 58,
+      "slug": "058_perfect_number_check",
+      "path": "tests/corpus/cs101/058_perfect_number_check.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Perfect Number Divisor Sum",
+      "style": "typo",
+      "stdin": "6\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Perfect",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_pirnt"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 59,
+      "slug": "059_loop_sort_mutation_ambiguity",
+      "path": "tests/corpus/cs101/059_loop_sort_mutation_ambiguity.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Loop With Whole Collection In-Place Mutation",
+      "style": "ambiguous",
+      "stdin": "5\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "loops",
+        "sort"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "loop_mutation_collision"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 60,
+      "slug": "060_infinite_loop_ambiguous_exit",
+      "path": "tests/corpus/cs101/060_infinite_loop_ambiguous_exit.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Ambiguous Loop Convergence Condition",
+      "style": "ambiguous",
+      "stdin": "10\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "loops"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "ambiguous_convergence"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 61,
+      "slug": "061_sum_of_squares",
+      "path": "tests/corpus/cs101/061_sum_of_squares.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Sum of Squares of First N Integers",
+      "style": "clean",
+      "stdin": "4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "30",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 62,
+      "slug": "062_alternating_harmonic_sum",
+      "path": "tests/corpus/cs101/062_alternating_harmonic_sum.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Scaled Alternating Harmonic Sum",
+      "style": "clean",
+      "stdin": "4\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "700",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 63,
+      "slug": "063_geometric_series",
+      "path": "tests/corpus/cs101/063_geometric_series.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Finite Geometric Series Sum",
+      "style": "clean",
+      "stdin": "5\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "31",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 64,
+      "slug": "064_newton_square_root",
+      "path": "tests/corpus/cs101/064_newton_square_root.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Newton Method Integer Square Root",
+      "style": "clean",
+      "stdin": "49\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "7",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 65,
+      "slug": "065_binary_to_decimal",
+      "path": "tests/corpus/cs101/065_binary_to_decimal.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Binary Bit Sequence to Decimal Value",
+      "style": "clean",
+      "stdin": "1101\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "13",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 66,
+      "slug": "066_decimal_to_binary_digits",
+      "path": "tests/corpus/cs101/066_decimal_to_binary_digits.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Decimal to Binary Place Accumulator",
+      "style": "clean",
+      "stdin": "11\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "1011",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 67,
+      "slug": "067_fizzbuzz_summary_count",
+      "path": "tests/corpus/cs101/067_fizzbuzz_summary_count.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Count FizzBuzz Matches Below N",
+      "style": "clean",
+      "stdin": "30\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 68,
+      "slug": "068_divisor_count",
+      "path": "tests/corpus/cs101/068_divisor_count.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Count of Positive Divisors",
+      "style": "clean",
+      "stdin": "24\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "8",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 69,
+      "slug": "069_abundant_or_deficient",
+      "path": "tests/corpus/cs101/069_abundant_or_deficient.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Abundant Deficient or Perfect Classification",
+      "style": "typo",
+      "stdin": "12\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Abundant",
+      "feature_tags": [
+        "read_input",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_from_use"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 70,
+      "slug": "070_contradictory_series_bounds",
+      "path": "tests/corpus/cs101/070_contradictory_series_bounds.meme",
+      "course": "cs101",
+      "topic": "loops_and_series",
+      "title": "Contradictory Series Stepping Order",
+      "style": "ambiguous",
+      "stdin": "10\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "loops"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_iteration_order"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 71,
+      "slug": "071_list_sum",
+      "path": "tests/corpus/cs101/071_list_sum.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Sum of Elements in List",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "42",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 72,
+      "slug": "072_list_average",
+      "path": "tests/corpus/cs101/072_list_average.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Arithmetic Mean of Integer Array",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "20",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 73,
+      "slug": "073_find_minimum",
+      "path": "tests/corpus/cs101/073_find_minimum.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Find Minimum Element in List",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 74,
+      "slug": "074_find_maximum",
+      "path": "tests/corpus/cs101/074_find_maximum.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Find Maximum Element in List",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "99",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 75,
+      "slug": "075_range_of_list",
+      "path": "tests/corpus/cs101/075_range_of_list.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Range Difference Between Extremes",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "97",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 76,
+      "slug": "076_count_positives",
+      "path": "tests/corpus/cs101/076_count_positives.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Count Positive Integers in Sequence",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 77,
+      "slug": "077_count_evens",
+      "path": "tests/corpus/cs101/077_count_evens.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Count Even Numbers in Array",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 78,
+      "slug": "078_count_above_threshold",
+      "path": "tests/corpus/cs101/078_count_above_threshold.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Count Elements Exceeding Threshold",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 79,
+      "slug": "079_linear_search_index",
+      "path": "tests/corpus/cs101/079_linear_search_index.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Linear Search First Index Probe",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 80,
+      "slug": "080_count_occurrences",
+      "path": "tests/corpus/cs101/080_count_occurrences.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Frequency of Specific Target in Array",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "3",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 81,
+      "slug": "081_strictly_increasing_check",
+      "path": "tests/corpus/cs101/081_strictly_increasing_check.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Array Monotonic Increasing Verification",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Increasing",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 82,
+      "slug": "082_dot_product_vectors",
+      "path": "tests/corpus/cs101/082_dot_product_vectors.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Vector Dot Product of Equal Arrays",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "32",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 83,
+      "slug": "083_elementwise_sum",
+      "path": "tests/corpus/cs101/083_elementwise_sum.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Elementwise Addition of Parallel Arrays",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "60",
+      "feature_tags": [
+        "lists",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 84,
+      "slug": "084_filter_passing_grades",
+      "path": "tests/corpus/cs101/084_filter_passing_grades.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Filter Passing Scores Sum",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "255",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 85,
+      "slug": "085_clamp_sensor_readings",
+      "path": "tests/corpus/cs101/085_clamp_sensor_readings.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Clamp Sensor Readings Sum",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "170",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 86,
+      "slug": "086_second_largest_element",
+      "path": "tests/corpus/cs101/086_second_largest_element.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Second Highest Value in Array",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "35",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 87,
+      "slug": "087_median_three_elements",
+      "path": "tests/corpus/cs101/087_median_three_elements.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Median Value Among Three Numbers",
+      "style": "typo",
+      "stdin": "7\n2\n9\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "7",
+      "feature_tags": [
+        "read_input",
+        "lists",
+        "sort",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_sorterd"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 88,
+      "slug": "088_trimmed_mean_calculation",
+      "path": "tests/corpus/cs101/088_trimmed_mean_calculation.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Trimmed Mean Dropping Extremes",
+      "style": "typo",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "15",
+      "feature_tags": [
+        "lists",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_pirnt"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 89,
+      "slug": "089_loop_clamp_and_sort_ambiguity",
+      "path": "tests/corpus/cs101/089_loop_clamp_and_sort_ambiguity.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Array In-Place Sorting Within Iterator",
+      "style": "ambiguous",
+      "stdin": "\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "sort"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "loop_mutation_collision"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 90,
+      "slug": "090_lossy_partial_insertion",
+      "path": "tests/corpus/cs101/090_lossy_partial_insertion.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Lossy Accumulator Skipping Else Branch",
+      "style": "ambiguous",
+      "stdin": "\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "class",
+        "functions",
+        "lists"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "lossy_partial_sort"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 91,
+      "slug": "091_running_prefix_sums",
+      "path": "tests/corpus/cs101/091_running_prefix_sums.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Running Prefix Sum Last Element",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "15",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 92,
+      "slug": "092_max_adjacent_difference",
+      "path": "tests/corpus/cs101/092_max_adjacent_difference.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Maximum Absolute Adjacent Difference",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "7",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 93,
+      "slug": "093_count_local_peaks",
+      "path": "tests/corpus/cs101/093_count_local_peaks.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Count Interior Local Peaks",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "2",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 94,
+      "slug": "094_dice_roll_simulation",
+      "path": "tests/corpus/cs101/094_dice_roll_simulation.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Deterministic Dice Sum Check",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "14",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 95,
+      "slug": "095_coin_flip_heads_ratio",
+      "path": "tests/corpus/cs101/095_coin_flip_heads_ratio.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Coin Flip Heads Majority Check",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Heads Majority",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "conditionals",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 96,
+      "slug": "096_normalize_array_by_max",
+      "path": "tests/corpus/cs101/096_normalize_array_by_max.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Normalize Elements Against Maximum",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "25",
+      "feature_tags": [
+        "lists",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 97,
+      "slug": "097_variance_numerator",
+      "path": "tests/corpus/cs101/097_variance_numerator.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Sample Variance Sum of Squared Deviations",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "8",
+      "feature_tags": [
+        "lists",
+        "loops",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 98,
+      "slug": "098_merge_append_lists",
+      "path": "tests/corpus/cs101/098_merge_append_lists.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Combined Length of Appended Lists",
+      "style": "clean",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "5",
+      "feature_tags": [
+        "lists",
+        "arithmetic",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 99,
+      "slug": "099_reverse_list_elements",
+      "path": "tests/corpus/cs101/099_reverse_list_elements.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Reverse Three Item List Order",
+      "style": "typo",
+      "stdin": "\n",
+      "expected_status": "ok",
+      "expected_stdout_contains": "30",
+      "feature_tags": [
+        "lists",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "typo_deifne"
+        ],
+        "language": []
+      }
+    },
+    {
+      "id": 100,
+      "slug": "100_sort_direction_contradiction",
+      "path": "tests/corpus/cs101/100_sort_direction_contradiction.meme",
+      "course": "cs101",
+      "topic": "lists_and_arrays",
+      "title": "Contradictory Array Sort Direction",
+      "style": "ambiguous",
+      "stdin": "\n",
+      "expected_status": "ambiguous",
+      "expected_stdout_contains": "",
+      "feature_tags": [
+        "lists",
+        "sort"
+      ],
+      "extensibility_gaps": {
+        "examples": [
+          "contradictory_sort_direction"
+        ],
+        "language": []
+      }
+    }
+  ]
+}

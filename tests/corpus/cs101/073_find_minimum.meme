@@ -1,0 +1,8 @@
+this runs in the shell
+
+define score_list as [12, 5, 3, 9, 21]
+define current_minimum as score_list item 1
+foreach test_score_val in score_list
+  if test_score_val < current_minimum
+    define current_minimum as test_score_val
+print current_minimum

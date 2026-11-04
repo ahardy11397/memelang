@@ -1,0 +1,9 @@
+this runs in the shell
+
+define num_geo_powers from user "Number of powers of 2?"
+define geo_series_total as 0
+define curr_power_term as 1
+for geo_iter from 1 to num_geo_powers
+  define geo_series_total as geo_series_total + curr_power_term
+  define curr_power_term as curr_power_term * 2
+print geo_series_total

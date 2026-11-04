@@ -1,0 +1,7 @@
+this runs in the shell
+
+define rect_length from user "Rectangle length?"
+define rect_width from user "Rectangle width?"
+define rect_area as rect_length * rect_width
+define rect_perimeter as 2 * (rect_length + rect_width)
+print rect_area + " " + rect_perimeter

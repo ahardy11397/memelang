@@ -1,0 +1,10 @@
+this runs in the shell
+
+define total_income from user "Gross income?"
+if total_income <= 40000
+  define low_tax as total_income * 10 / 100
+  print low_tax
+else
+  define tier1_tax as 4000
+  define tier2_tax as (total_income - 40000) * 15 / 100
+  print tier1_tax + tier2_tax

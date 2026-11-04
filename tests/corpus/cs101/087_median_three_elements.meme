@@ -1,0 +1,8 @@
+this runs in the shell
+
+define val1 from user "First?"
+define val2 from user "Second?"
+define val3 from user "Third?"
+define raw_triplet as [val1, val2, val3]
+sort raw_triplet ascending into sorterd
+print sorterd item 2

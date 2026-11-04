@@ -1,0 +1,5 @@
+this runs in the shell
+
+define circle_radius from user "Circle radius?"
+define approx_circle_area as 314 * circle_radius * circle_radius / 100
+print approx_circle_area

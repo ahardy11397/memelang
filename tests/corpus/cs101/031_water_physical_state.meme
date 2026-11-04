@@ -1,0 +1,9 @@
+this runs in the shell
+
+define water_celsius from user "Water temperature in C?"
+if water_celsius <= 0
+  print "Solid"
+else if water_celsius >= 100
+  print "Gas"
+else
+  print "Liquid"

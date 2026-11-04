@@ -1,0 +1,11 @@
+this runs in the shell
+
+define carton_weight from user "Weight in pounds?"
+if carton_weight <= 2
+  print 5
+else if carton_weight <= 5
+  print 10
+else if carton_weight <= 10
+  print 15
+else
+  print 25

@@ -1,0 +1,11 @@
+this runs in the shell
+
+define progression_seq as [2, 5, 8, 11, 19]
+define monotonic_flag as 1
+for scan_pos from 1 to 4
+  if progression_seq item scan_pos >= progression_seq item (scan_pos + 1)
+    define monotonic_flag as 0
+if monotonic_flag == 1
+  print "Increasing"
+else
+  print "Not Increasing"

@@ -1,0 +1,6 @@
+this runs in the shell
+
+define weight_kg from user "Body weight in kilograms?"
+define height_meters from user "Body height in meters?"
+define bmi_index as weight_kg / (height_meters * height_meters)
+print bmi_index

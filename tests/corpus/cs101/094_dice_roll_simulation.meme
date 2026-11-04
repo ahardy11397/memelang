@@ -1,0 +1,7 @@
+this runs in the shell
+
+define recorded_dice_faces as [3, 5, 6]
+define face_values_total as 0
+foreach face in recorded_dice_faces
+  define face_values_total as face_values_total + face
+print face_values_total

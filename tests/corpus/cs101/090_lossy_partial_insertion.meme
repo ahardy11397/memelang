@@ -1,0 +1,14 @@
+this runs in the shell
+
+class lossy-collector
+
+  define function collectSorted with items
+    define result as empty
+    for i from 1 to length of items
+      if items item i < 50
+        insert items item i into result
+    return result item last
+
+  define function main
+    define my_items as [20, 80, 40]
+    print collectSorted my_items

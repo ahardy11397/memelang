@@ -1,0 +1,11 @@
+this runs in the shell
+
+define cal_year from user "Calendar year?"
+if cal_year % 400 == 0
+  print "Leap"
+else if cal_year % 100 == 0
+  print "Common"
+else if cal_year % 4 == 0
+  print "Leap"
+else
+  print "Common"

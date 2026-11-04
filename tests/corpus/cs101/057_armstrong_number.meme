@@ -1,0 +1,13 @@
+this runs in the shell
+
+define armstrong_input from user "Candidate integer?"
+deifne armstrong_temp as armstrong_input
+define armstrong_sum as 0
+while armstrong_temp > 0
+  define arm_digit as armstrong_temp % 10
+  define armstrong_sum as armstrong_sum + (arm_digit * arm_digit * arm_digit)
+  define armstrong_temp as armstrong_temp / 10
+if armstrong_sum == armstrong_input
+  print "Armstrong"
+else
+  print "Regular"

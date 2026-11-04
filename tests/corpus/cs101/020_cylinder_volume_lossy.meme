@@ -1,0 +1,8 @@
+this runs in the shell
+
+define cyl_radius from user "Cylinder radius?"
+define cyl_height from user "Cylinder height?"
+
+if cyl_radius > cyl_height
+  define cyl_volume as 314 * cyl_radius * cyl_radius * cyl_height / 100
+  print cyl_volume

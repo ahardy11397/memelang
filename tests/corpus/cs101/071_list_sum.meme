@@ -1,0 +1,7 @@
+this runs in the shell
+
+define array_elements as [4, 8, 15, 15]
+define sum_of_elements as 0
+foreach val_item in array_elements
+  define sum_of_elements as sum_of_elements + val_item
+print sum_of_elements

@@ -1,0 +1,11 @@
+this runs in the shell
+
+define div_check_n from user "Integer to test divisibility?"
+if div_check_n % 15 == 0
+  print "Both"
+else if div_check_n % 3 == 0
+  print "Three"
+else if div_check_n % 5 == 0
+  print "Five"
+else
+  print "Neither"

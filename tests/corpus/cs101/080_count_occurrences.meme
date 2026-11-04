@@ -1,0 +1,8 @@
+this runs in the shell
+
+define dice_roll_log as [3, 5, 3, 2, 3, 6]
+define count_of_target_rolls as 0
+foreach logged_roll in dice_roll_log
+  if logged_roll == 3
+    define count_of_target_rolls as count_of_target_rolls + 1
+print count_of_target_rolls

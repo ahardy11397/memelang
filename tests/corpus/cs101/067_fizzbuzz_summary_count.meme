@@ -1,0 +1,8 @@
+this runs in the shell
+
+define max_fizz_range from user "Max range for FizzBuzz?"
+define total_fizzbuzz_count as 0
+for fb_counter from 1 to max_fizz_range
+  if fb_counter % 15 == 0
+    define total_fizzbuzz_count as total_fizzbuzz_count + 1
+print total_fizzbuzz_count

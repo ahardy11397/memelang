@@ -1,0 +1,11 @@
+this runs in the shell
+
+define point_series as [3, 10, 4, 5]
+define maximum_step_diff as 0
+for step_probe from 1 to 3
+  define step_delta as point_series item (step_probe + 1) - point_series item step_probe
+  if step_delta < 0
+    define step_delta as 0 - step_delta
+  if step_delta > maximum_step_diff
+    define maximum_step_diff as step_delta
+print maximum_step_diff

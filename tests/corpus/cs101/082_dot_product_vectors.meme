@@ -1,0 +1,8 @@
+this runs in the shell
+
+define primary_vector as [1, 2, 3]
+define secondary_vector as [4, 5, 6]
+define vector_inner_product as 0
+for comp_idx from 1 to 3
+  define vector_inner_product as vector_inner_product + (primary_vector item comp_idx * secondary_vector item comp_idx)
+print vector_inner_product

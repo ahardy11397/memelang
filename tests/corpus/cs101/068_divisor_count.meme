@@ -1,0 +1,8 @@
+this runs in the shell
+
+define composite_test_num from user "Target integer for divisors?"
+define count_of_all_divisors as 0
+for divisor_probe from 1 to composite_test_num
+  if composite_test_num % divisor_probe == 0
+    define count_of_all_divisors as count_of_all_divisors + 1
+print count_of_all_divisors

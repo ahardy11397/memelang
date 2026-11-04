@@ -1,0 +1,8 @@
+this runs in the shell
+
+define sample_integers as [10, 20, 30]
+define integer_accumulator as 0
+foreach sample_elem in sample_integers
+  define integer_accumulator as integer_accumulator + sample_elem
+define array_mean_average as integer_accumulator / 3
+print array_mean_average

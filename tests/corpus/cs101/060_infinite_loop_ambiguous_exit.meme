@@ -1,0 +1,7 @@
+this runs in the shell
+
+define step_target_goal from user "Target value?"
+define crawler_pos as 0
+while crawler_pos < step_target_goal
+  increase crawler_pos by 2 or decrease crawler_pos by 1 until settled
+print crawler_pos

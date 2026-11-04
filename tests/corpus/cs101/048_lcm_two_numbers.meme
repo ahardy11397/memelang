@@ -1,0 +1,13 @@
+this runs in the shell
+
+define lcm_num1 from user "First number?"
+define lcm_num2 from user "Second number?"
+define temp_x as lcm_num1
+define temp_y as lcm_num2
+while temp_y != 0
+  define temp_mod as temp_x % temp_y
+  define temp_x as temp_y
+  define temp_y as temp_mod
+define gcd_result as temp_x
+define computed_lcm as (lcm_num1 * lcm_num2) / gcd_result
+print computed_lcm

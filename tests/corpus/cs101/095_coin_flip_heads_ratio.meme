@@ -1,0 +1,11 @@
+this runs in the shell
+
+define boolean_coin_flips as [1, 1, 0, 1, 0]
+define total_heads_count as 0
+foreach flip_event in boolean_coin_flips
+  if flip_event == 1
+    define total_heads_count as total_heads_count + 1
+if total_heads_count > 2
+  print "Heads Majority"
+else
+  print "Tails Majority"

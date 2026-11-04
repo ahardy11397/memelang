@@ -1,0 +1,8 @@
+this runs in the shell
+
+define power_base from user "Base value?"
+define power_exp from user "Exponent value?"
+define accumulated_power as 1
+for exp_step from 1 to power_exp
+  define accumulated_power as accumulated_power * power_base
+print accumulated_power

@@ -1,0 +1,7 @@
+this runs in the shell
+
+define initial_deposit from user "Deposit sum?"
+define compounding_rate from user "Interest percent per year?"
+define balance_year_one as initial_deposit + (initial_deposit * compounding_rate / 100)
+define balance_year_two as balance_year_one + (balance_year_one * compounding_rate / 100)
+print balance_year_two

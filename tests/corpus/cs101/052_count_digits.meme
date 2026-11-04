@@ -1,0 +1,12 @@
+this runs in the shell
+
+define original_digit_entry from user "Integer to count digits?"
+if original_digit_entry == 0
+  print 1
+else
+  define total_digit_tally as 0
+  define digits_remaining as original_digit_entry
+  while digits_remaining > 0
+    define total_digit_tally as total_digit_tally + 1
+    define digits_remaining as digits_remaining / 10
+  print total_digit_tally

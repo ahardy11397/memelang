@@ -1,0 +1,12 @@
+this runs in the shell
+
+define collatz_seed from user "Collatz seed number?"
+define total_collatz_steps as 0
+define collatz_runner as collatz_seed
+while collatz_runner > 1
+  if collatz_runner % 2 == 0
+    define collatz_runner as collatz_runner / 2
+  else
+    define collatz_runner as (collatz_runner * 3) + 1
+  define total_collatz_steps as total_collatz_steps + 1
+print total_collatz_steps

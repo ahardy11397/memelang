@@ -1,0 +1,7 @@
+this runs in the shell
+
+define test_mark from user "Test mark?"
+check test_mark against ranges:
+if test_mark is between 80 and 90 give "B"
+if test_mark is between 85 and 95 give "B+"
+print test_mark

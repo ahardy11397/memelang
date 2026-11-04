@@ -1,0 +1,6 @@
+this runs in the shell
+
+define metric_pair as [10, 40]
+define max_metric_value as metric_pair item 2
+define first_metric_pct as (metric_pair item 1 * 100) / max_metric_value
+print first_metric_pct

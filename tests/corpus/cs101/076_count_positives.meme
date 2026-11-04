@@ -1,0 +1,8 @@
+this runs in the shell
+
+define signed_int_sequence as [-5, 3, 0, 7, -2, 12]
+define count_of_positives as 0
+foreach signed_elem in signed_int_sequence
+  if signed_elem > 0
+    define count_of_positives as count_of_positives + 1
+print count_of_positives

@@ -1,0 +1,10 @@
+this runs in the shell
+
+define player1_pick from user "Player 1 choice?"
+define player2_pick from user "Player 2 choice?"
+if player1_pick == player2_pick
+  print "Tie Game"
+else if (player1_pick == "rock" and player2_pick == "scissors") or (player1_pick == "paper" and player2_pick == "rock") or (player1_pick == "scissors" and player2_pick == "paper")
+  print "Player 1 Wins"
+else
+  print "Player 2 Wins"

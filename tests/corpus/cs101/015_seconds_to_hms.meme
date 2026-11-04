@@ -1,0 +1,8 @@
+this runs in the shell
+
+define elapsed_seconds from user "Total elapsed seconds?"
+define num_hours as elapsed_seconds / 3600
+define remaining_sec as elapsed_seconds % 3600
+define num_minutes as remaining_sec / 60
+define num_seconds as remaining_sec % 60
+print num_hours + ":" + num_minutes + ":" + num_seconds

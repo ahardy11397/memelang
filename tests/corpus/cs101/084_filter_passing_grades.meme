@@ -1,0 +1,8 @@
+this runs in the shell
+
+define student_exam_marks as [45, 80, 85, 55, 90]
+define total_passing_points as 0
+foreach exam_mark in student_exam_marks
+  if exam_mark >= 60
+    define total_passing_points as total_passing_points + exam_mark
+print total_passing_points

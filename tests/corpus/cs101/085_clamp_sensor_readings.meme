@@ -1,0 +1,12 @@
+this runs in the shell
+
+define raw_sensor_inputs as [-10, 50, 120]
+define clamped_readings_sum as 0
+foreach input_reading in raw_sensor_inputs
+  define normalized_reading as input_reading
+  if normalized_reading < 0
+    define normalized_reading as 0
+  if normalized_reading > 100
+    define normalized_reading as 100
+  define clamped_readings_sum as clamped_readings_sum + normalized_reading
+print clamped_readings_sum

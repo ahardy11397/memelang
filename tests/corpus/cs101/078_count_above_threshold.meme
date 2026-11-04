@@ -1,0 +1,8 @@
+this runs in the shell
+
+define classroom_grades as [65, 78, 85, 92, 54]
+define high_score_count as 0
+foreach student_grade in classroom_grades
+  if student_grade >= 80
+    define high_score_count as high_score_count + 1
+print high_score_count

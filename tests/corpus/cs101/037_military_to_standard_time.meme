@@ -1,0 +1,11 @@
+this runs in the shell
+
+deifne hour_24 from user "Hour in 24-hour clock?"
+if hour_24 == 0
+  print "12 AM"
+else if hour_24 < 12
+  print hour_24 + " AM"
+else if hour_24 == 12
+  print "12 PM"
+else
+  print (hour_24 - 12) + " PM"

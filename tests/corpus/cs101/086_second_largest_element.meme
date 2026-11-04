@@ -1,0 +1,12 @@
+this runs in the shell
+
+define contender_values as [10, 40, 25, 35, 5]
+define highest_val as 0
+define runner_up_val as 0
+foreach contender in contender_values
+  if contender > highest_val
+    define runner_up_val as highest_val
+    define highest_val as contender
+  else if contender > runner_up_val
+    define runner_up_val as contender
+print runner_up_val

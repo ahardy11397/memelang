@@ -1,0 +1,5 @@
+this runs in the shell
+
+define fahrenheit_input from user "Fahrenheit reading?"
+define converted_celsius as (fahrenheit_input - 32) * 5 / 9
+print converted_celsius

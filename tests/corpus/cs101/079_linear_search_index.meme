@@ -1,0 +1,9 @@
+this runs in the shell
+
+define lookup_table as [10, 20, 30, 40, 50]
+define needle_key as 30
+define first_found_pos as 0 - 1
+for probe_step from 1 to 5
+  if lookup_table item probe_step == needle_key and first_found_pos == 0 - 1
+    define first_found_pos as probe_step
+print first_found_pos
