@@ -13,12 +13,17 @@ from memelang.ir.schema import (
     ForEachStmt,
     FuncDefStmt,
     FuncParam,
+    ListIndexExpr,
+    ListLiteralExpr,
+    ListSetIndexStmt,
     LiteralExpr,
     PrintStmt,
     ProgramIR,
     RandomListExpr,
     ReturnStmt,
     SortCollectionStmt,
+    StringLengthExpr,
+    StringSliceExpr,
     SynthesisResult,
     VarDeclStmt,
     VarRefExpr,
@@ -710,6 +715,75 @@ def test_indexing_never_populated_empty_list_raises_and_invalidates_stale_lock(t
     norm_fn = norm_out.program.statements[0]
     assert isinstance(norm_fn, FuncDefStmt)
     assert any(isinstance(s, AssignStmt) and s.name == "sorted" for s in norm_fn.body)
+
+
+def test_verify_list_set_index_success():
+    program = ProgramIR(items=[
+        VarDeclStmt(name="arr", var_type="List<Int>", value=ListLiteralExpr(elements=[LiteralExpr(value=10, data_type="Int")], element_type="Int"), source_line=1),
+        ListSetIndexStmt(target="arr", index=LiteralExpr(value=0, data_type="Int"), value=LiteralExpr(value=20, data_type="Int"), source_line=2),
+    ])
+    outcome = verify_synthesis(program)
+    assert outcome.passed
+
+
+def test_verify_list_set_index_type_mismatch():
+    program = ProgramIR(items=[
+        VarDeclStmt(name="arr", var_type="List<Int>", value=ListLiteralExpr(elements=[LiteralExpr(value=10, data_type="Int")], element_type="Int"), source_line=1),
+        ListSetIndexStmt(target="arr", index=LiteralExpr(value=0, data_type="Int"), value=LiteralExpr(value="bad", data_type="String"), source_line=2),
+    ])
+    with pytest.raises(StaticVerificationError, match="Cannot assign String to element of List<Int>"):
+        verify_synthesis(program)
+
+
+def test_verify_string_slice_and_length():
+    program = ProgramIR(items=[
+        VarDeclStmt(name="msg", var_type="String", value=LiteralExpr(value="hello world", data_type="String"), source_line=1),
+        VarDeclStmt(name="n", var_type="Int", value=StringLengthExpr(target=VarRefExpr(name="msg")), source_line=2),
+        VarDeclStmt(name="sub", var_type="String", value=StringSliceExpr(target=VarRefExpr(name="msg"), start=LiteralExpr(value=0, data_type="Int"), end=LiteralExpr(value=5, data_type="Int")), source_line=3),
+    ])
+    outcome = verify_synthesis(program)
+    assert outcome.passed
+
+
+def test_verify_2d_list_indexing():
+    program = ProgramIR(statements=[
+        VarDeclStmt(
+            name="grid",
+            var_type="List<List<Int>>",
+            value=ListLiteralExpr(
+                elements=[
+                    ListLiteralExpr(elements=[LiteralExpr(value=1, data_type="Int")], element_type="Int"),
+                    ListLiteralExpr(elements=[LiteralExpr(value=2, data_type="Int")], element_type="Int"),
+                ],
+                element_type="List<Int>",
+            ),
+            source_line=1,
+        ),
+        VarDeclStmt(
+            name="row0",
+            var_type="List<Int>",
+            value=ListIndexExpr(target=VarRefExpr(name="grid"), index=LiteralExpr(value=0, data_type="Int")),
+            source_line=2,
+        ),
+        VarDeclStmt(
+            name="cell",
+            var_type="Int",
+            value=ListIndexExpr(
+                target=ListIndexExpr(target=VarRefExpr(name="grid"), index=LiteralExpr(value=0, data_type="Int")),
+                index=LiteralExpr(value=0, data_type="Int"),
+            ),
+            source_line=3,
+        ),
+        ListSetIndexStmt(
+            target="grid",
+            index=LiteralExpr(value=1, data_type="Int"),
+            value=ListLiteralExpr(elements=[LiteralExpr(value=99, data_type="Int")], element_type="Int"),
+            source_line=4,
+        ),
+    ])
+    outcome = verify_synthesis(program)
+    assert outcome.passed
+
 
 
 

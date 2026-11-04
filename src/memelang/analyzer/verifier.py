@@ -26,6 +26,7 @@ from memelang.ir.schema import (
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListSetIndexStmt,
     LiteralExpr,
     MemeType,
     PrintStmt,
@@ -37,6 +38,8 @@ from memelang.ir.schema import (
     ReturnStmt,
     SortCollectionStmt,
     StrEndsWithExpr,
+    StringLengthExpr,
+    StringSliceExpr,
     SynthesisItem,
     SynthesisResult,
     UnaryOpExpr,
@@ -64,6 +67,10 @@ class VerificationOutcome:
     @property
     def is_unambiguous(self) -> bool:
         return len(self.ambiguities) == 0 and self.program is not None
+
+    @property
+    def passed(self) -> bool:
+        return self.is_unambiguous
 
 
 class _Scope:
@@ -99,13 +106,9 @@ class _Scope:
 
 
 def _element_type_of(list_type: MemeType) -> MemeType | None:
-    mapping: dict[str, MemeType] = {
-        "List<Int>": "Int",
-        "List<Float>": "Float",
-        "List<Bool>": "Bool",
-        "List<String>": "String",
-    }
-    return mapping.get(list_type)
+    if list_type.startswith("List<") and list_type.endswith(">"):
+        return cast(MemeType, list_type[5:-1])
+    return None
 
 
 def _find_collection_mutations(stmts: list[IRStatement], collection: str) -> list[IRStatement]:
@@ -119,6 +122,7 @@ def _find_collection_mutations(stmts: list[IRStatement], collection: str) -> lis
                 FilterCollectionStmt,
                 ListAppendStmt,
                 ListInsertStmt,
+                ListSetIndexStmt,
             ),
         ) and s.target == collection:
             hits.append(s)
@@ -597,6 +601,43 @@ class _StaticChecker:
                 )
             return "List<Float>"
 
+        if isinstance(expr, StringLengthExpr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if target_t != "String":
+                raise StaticVerificationError(
+                    f"`string_length` requires a String target, got {target_t}", stmt_idx
+                )
+            return "Int"
+
+        if isinstance(expr, StringSliceExpr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if target_t != "String":
+                raise StaticVerificationError(
+                    f"`string_slice` requires a String target, got {target_t}", stmt_idx
+                )
+            start_t = self.infer_expr_type(expr.start, scope, stmt_idx)
+            end_t = self.infer_expr_type(expr.end, scope, stmt_idx)
+            if start_t != "Int" or end_t != "Int":
+                raise StaticVerificationError(
+                    f"`string_slice` indices must be Int, got ({start_t}, {end_t})", stmt_idx
+                )
+            if (
+                isinstance(expr.start, LiteralExpr)
+                and isinstance(expr.start.value, int)
+                and not isinstance(expr.start.value, bool)
+                and expr.start.value < 0
+            ) or (
+                isinstance(expr.end, LiteralExpr)
+                and isinstance(expr.end.value, int)
+                and not isinstance(expr.end.value, bool)
+                and expr.end.value < 0
+            ):
+                raise StaticVerificationError(
+                    "Negative string slice index is not allowed", stmt_idx
+                )
+            _check_literal_bounds(expr.start, expr.end, stmt_idx)
+            return "String"
+
         raise StaticVerificationError(f"Unsupported expression node: {type(expr)!r}", stmt_idx)
 
     def check_stmt(
@@ -743,6 +784,39 @@ class _StaticChecker:
             if val_t != elem_t:
                 raise StaticVerificationError(
                     f"Cannot insert {val_t} into `{stmt.target}` of type {target_t}", stmt_idx
+                )
+            scope.mark_populated(stmt.target)
+            return False
+
+        if isinstance(stmt, ListSetIndexStmt):
+            target_t = scope.lookup(stmt.target)
+            if target_t is None:
+                raise StaticVerificationError(
+                    f"Cannot set index of undeclared variable `{stmt.target}`", stmt_idx
+                )
+            elem_t = _element_type_of(target_t)
+            if elem_t is None:
+                raise StaticVerificationError(
+                    f"`list_set_index` requires a List variable, got {target_t}", stmt_idx
+                )
+            idx_t = self.infer_expr_type(stmt.index, scope, stmt_idx)
+            if idx_t != "Int":
+                raise StaticVerificationError(
+                    f"`list_set_index` index must be Int, got {idx_t}", stmt_idx
+                )
+            if (
+                isinstance(stmt.index, LiteralExpr)
+                and isinstance(stmt.index.value, int)
+                and not isinstance(stmt.index.value, bool)
+                and stmt.index.value < 0
+            ):
+                raise StaticVerificationError(
+                    f"Negative list set index ({stmt.index.value}) is not allowed", stmt_idx
+                )
+            val_t = self.infer_expr_type(stmt.value, scope, stmt_idx)
+            if val_t != elem_t:
+                raise StaticVerificationError(
+                    f"Cannot assign {val_t} to element of {target_t}", stmt_idx
                 )
             scope.mark_populated(stmt.target)
             return False
@@ -904,6 +978,14 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
         return _expr_references_var(expr.target, name) or _expr_references_var(expr.suffix, name)
     if isinstance(expr, ReadJsonListExpr):
         return _expr_references_var(expr.filepath, name)
+    if isinstance(expr, StringLengthExpr):
+        return _expr_references_var(expr.target, name)
+    if isinstance(expr, StringSliceExpr):
+        return (
+            _expr_references_var(expr.target, name)
+            or _expr_references_var(expr.start, name)
+            or _expr_references_var(expr.end, name)
+        )
     return False
 
 
@@ -915,6 +997,12 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
             return True
         if isinstance(s, ListInsertStmt) and (
             _expr_references_var(s.index, name) or _expr_references_var(s.value, name)
+        ):
+            return True
+        if isinstance(s, ListSetIndexStmt) and (
+            s.target == name
+            or _expr_references_var(s.index, name)
+            or _expr_references_var(s.value, name)
         ):
             return True
         if isinstance(s, (SortCollectionStmt, ClampCollectionStmt, FilterCollectionStmt)) and (
@@ -969,6 +1057,7 @@ def _stmts_mutate_var(stmts: list[IRStatement], name: str) -> bool:
             (
                 ListAppendStmt,
                 ListInsertStmt,
+                ListSetIndexStmt,
                 SortCollectionStmt,
                 ClampCollectionStmt,
                 FilterCollectionStmt,
@@ -1053,9 +1142,12 @@ def verify_program(program: ProgramIR) -> ProgramIR:
 
 
 def verify_synthesis(
-    result: SynthesisResult,
+    result: SynthesisResult | ProgramIR,
     detect_implicit_ambiguities: bool = True,
 ) -> VerificationOutcome:
+    if isinstance(result, ProgramIR):
+        result = SynthesisResult(items=cast(list[SynthesisItem], result.statements))
+
     # Unwrap `FuncDefStmt(name="main", params=[], return_type="Void")` if no top-level main statements exist
     has_top_exec = any(
         not isinstance(it, (FuncDefStmt, AmbiguityDiagnostic)) for it in result.items

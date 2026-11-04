@@ -14,6 +14,10 @@ MemeType = Literal[
     "List<Float>",
     "List<Bool>",
     "List<String>",
+    "List<List<Int>>",
+    "List<List<Float>>",
+    "List<List<Bool>>",
+    "List<List<String>>",
     "Void",
 ]
 
@@ -95,7 +99,7 @@ class LiteralExpr(IRNode):
 class ListLiteralExpr(IRNode):
     expr_type: Literal["list_literal"] = "list_literal"
     elements: list[IRExpr]
-    element_type: Literal["Int", "Float", "Bool", "String"]
+    element_type: MemeType
 
 
 class VarRefExpr(IRNode):
@@ -164,6 +168,18 @@ class ReadJsonListExpr(IRNode):
     filepath: IRExpr
 
 
+class StringLengthExpr(IRNode):
+    expr_type: Literal["string_length"] = "string_length"
+    target: IRExpr
+
+
+class StringSliceExpr(IRNode):
+    expr_type: Literal["string_slice"] = "string_slice"
+    target: IRExpr
+    start: IRExpr
+    end: IRExpr
+
+
 IRExpr = Annotated[
     LiteralExpr
     | ListLiteralExpr
@@ -177,7 +193,9 @@ IRExpr = Annotated[
     | CallExpr
     | ReadInputExpr
     | StrEndsWithExpr
-    | ReadJsonListExpr,
+    | ReadJsonListExpr
+    | StringLengthExpr
+    | StringSliceExpr,
     Field(discriminator="expr_type"),
 ]
 
@@ -237,6 +255,14 @@ class ListAppendStmt(IRNode):
 
 class ListInsertStmt(IRNode):
     op: Literal["list_insert"] = "list_insert"
+    target: str
+    index: IRExpr
+    value: IRExpr
+    source_line: int | None = None
+
+
+class ListSetIndexStmt(IRNode):
+    op: Literal["list_set_index"] = "list_set_index"
     target: str
     index: IRExpr
     value: IRExpr
@@ -310,6 +336,7 @@ IRStatement = Annotated[
     | FilterCollectionStmt
     | ListAppendStmt
     | ListInsertStmt
+    | ListSetIndexStmt
     | FailStmt
     | PrintStmt
     | IfStmt
@@ -355,6 +382,19 @@ class SynthesisResult(IRNode):
 class ProgramIR(IRNode):
     statements: list[IRStatement] = Field(default_factory=list)
 
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_items(cls, data: object) -> object:
+        if isinstance(data, dict):
+            if "items" in data and "statements" not in data:
+                data = dict(data)
+                data["statements"] = data.pop("items")
+        return data
+
+    @property
+    def items(self) -> list[IRStatement]:
+        return self.statements
+
 
 # Rebuild recursive models
 ListLiteralExpr.model_rebuild()
@@ -367,12 +407,15 @@ ListIndexExpr.model_rebuild()
 CallExpr.model_rebuild()
 StrEndsWithExpr.model_rebuild()
 ReadJsonListExpr.model_rebuild()
+StringLengthExpr.model_rebuild()
+StringSliceExpr.model_rebuild()
 VarDeclStmt.model_rebuild()
 AssignStmt.model_rebuild()
 ClampCollectionStmt.model_rebuild()
 FilterCollectionStmt.model_rebuild()
 ListAppendStmt.model_rebuild()
 ListInsertStmt.model_rebuild()
+ListSetIndexStmt.model_rebuild()
 FailStmt.model_rebuild()
 PrintStmt.model_rebuild()
 IfStmt.model_rebuild()

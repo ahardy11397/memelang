@@ -34,7 +34,7 @@ BASE_PROMPT_PREFIX = """You are the frontend semantic synthesizer for the `meme`
 Translate the user's English `.meme` source file into a strict JSON object matching `SynthesisResult`: `{"items": [...]}`.
 
 ### Allowed Static Types (`MemeType`)
-`"Int"`, `"Float"`, `"Bool"`, `"String"`, `"List<Int>"`, `"List<Float>"`, `"List<Bool>"`, `"List<String>"`, `"Void"`.
+`"Int"`, `"Float"`, `"Bool"`, `"String"`, `"List<Int>"`, `"List<Float>"`, `"List<Bool>"`, `"List<String>"`, `"List<List<Int>>"`, `"List<List<Float>>"`, `"List<List<Bool>>"`, `"List<List<String>>"`, `"Void"`.
 
 ### Allowed Expressions (`expr_type` REQUIRED on every expression)
 - `{"expr_type": "literal", "value": 10, "data_type": "Int"}` (also `"Float"`, `"Bool"`, `"String"`)
@@ -46,6 +46,8 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"expr_type": "unary_op", "op": "-", "operand": <expr>}` (`op` in `-`, `not`)
 - `{"expr_type": "list_length", "target": <expr>}`
 - `{"expr_type": "list_index", "target": <expr>, "index": <expr>}`
+- `{"expr_type": "string_length", "target": <expr>}`
+- `{"expr_type": "string_slice", "target": <expr>, "start": <Int expr>, "end": <Int expr>}`
 - `{"expr_type": "call", "func_name": "fn", "args": [...]}`
 - `{"expr_type": "read_input", "prompt": "Enter x: ", "target_type": "Float"}` (`target_type` in `"Int"`, `"Float"`, `"Bool"`, `"String"`)
 - `{"expr_type": "str_ends_with", "target": <String expr>, "suffix": <String expr>}` (case-insensitive suffix check, e.g. `if filepath is json` -> `suffix` `".json"`, returns `"Bool"`)
@@ -59,6 +61,7 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "filter_collection", "target": "nums", "item_var": "n", "predicate": <expr>}`
 - `{"op": "list_append", "target": "nums", "value": <expr>}`
 - `{"op": "list_insert", "target": "nums", "index": <Int expr>, "value": <expr>}` (inserts at 0-based `index`, shifting elements right)
+- `{"op": "list_set_index", "target": "nums", "index": <Int expr>, "value": <expr>}` (sets element at 0-based `index` in-place)
 - `{"op": "fail_stmt", "message": <String expr>}` (prints error message and exits cleanly; counts as returning on that branch!)
 - `{"op": "print_stmt", "expressions": [<expr>, ...]}`
 - `{"op": "if_stmt", "condition": <expr>, "then_body": [...], "else_body": [...]}`
