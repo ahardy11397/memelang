@@ -1,0 +1,1376 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/506_package_dependency_graph.meme": {
+      "source_sha256": "78e766577373394c051426a0cdd53785b052f781d0b3e0c57d13229a248ced36",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "ResolutionPlan",
+          "fields": [
+            {
+              "name": "target",
+              "field_type": "String"
+            },
+            {
+              "name": "valid_package",
+              "field_type": "Bool"
+            },
+            {
+              "name": "missing_count",
+              "field_type": "Int"
+            },
+            {
+              "name": "to_install",
+              "field_type": "List<String>"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "func_def",
+          "name": "plan_installation",
+          "params": [
+            {
+              "name": "pkg",
+              "param_type": "String"
+            },
+            {
+              "name": "registry",
+              "param_type": "Map<String, List<String>>"
+            },
+            {
+              "name": "installed",
+              "param_type": "Map<String, Bool>"
+            }
+          ],
+          "return_type": "ResolutionPlan",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "map_has_key",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "registry"
+                },
+                "key": {
+                  "expr_type": "var_ref",
+                  "name": "pkg"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "direct_deps",
+                  "var_type": "List<String>",
+                  "value": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "registry"
+                    },
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "pkg"
+                    }
+                  },
+                  "source_line": 9
+                },
+                {
+                  "op": "var_decl",
+                  "name": "missing",
+                  "var_type": "List<String>",
+                  "value": {
+                    "expr_type": "list_literal",
+                    "elements": [],
+                    "element_type": "String"
+                  },
+                  "source_line": 10
+                },
+                {
+                  "op": "var_decl",
+                  "name": "count",
+                  "var_type": "Int",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "source_line": 11
+                },
+                {
+                  "op": "for_each",
+                  "item_var": "dep",
+                  "collection": "direct_deps",
+                  "body": [
+                    {
+                      "op": "var_decl",
+                      "name": "is_inst",
+                      "var_type": "Bool",
+                      "value": {
+                        "expr_type": "map_get",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "installed"
+                        },
+                        "key": {
+                          "expr_type": "var_ref",
+                          "name": "dep"
+                        },
+                        "default_val": {
+                          "expr_type": "literal",
+                          "value": false,
+                          "data_type": "Bool"
+                        }
+                      },
+                      "source_line": 13
+                    },
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "unary_op",
+                        "op": "not",
+                        "operand": {
+                          "expr_type": "var_ref",
+                          "name": "is_inst"
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "op": "list_append",
+                          "target": "missing",
+                          "value": {
+                            "expr_type": "var_ref",
+                            "name": "dep"
+                          },
+                          "source_line": 15
+                        },
+                        {
+                          "op": "assign",
+                          "name": "count",
+                          "value": {
+                            "expr_type": "binary_op",
+                            "op": "+",
+                            "left": {
+                              "expr_type": "var_ref",
+                              "name": "count"
+                            },
+                            "right": {
+                              "expr_type": "literal",
+                              "value": 1,
+                              "data_type": "Int"
+                            }
+                          },
+                          "source_line": 16
+                        }
+                      ],
+                      "else_body": [],
+                      "source_line": 14
+                    }
+                  ],
+                  "source_line": 12
+                },
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "record_literal",
+                    "record_name": "ResolutionPlan",
+                    "fields": [
+                      {
+                        "name": "target",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "pkg"
+                        }
+                      },
+                      {
+                        "name": "valid_package",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        }
+                      },
+                      {
+                        "name": "missing_count",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "count"
+                        }
+                      },
+                      {
+                        "name": "to_install",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "missing"
+                        }
+                      }
+                    ]
+                  },
+                  "source_line": 17
+                }
+              ],
+              "else_body": [
+                {
+                  "op": "var_decl",
+                  "name": "empty_list",
+                  "var_type": "List<String>",
+                  "value": {
+                    "expr_type": "list_literal",
+                    "elements": [],
+                    "element_type": "String"
+                  },
+                  "source_line": 19
+                },
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "record_literal",
+                    "record_name": "ResolutionPlan",
+                    "fields": [
+                      {
+                        "name": "target",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "pkg"
+                        }
+                      },
+                      {
+                        "name": "valid_package",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": false,
+                          "data_type": "Bool"
+                        }
+                      },
+                      {
+                        "name": "missing_count",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": 0,
+                          "data_type": "Int"
+                        }
+                      },
+                      {
+                        "name": "to_install",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "empty_list"
+                        }
+                      }
+                    ]
+                  },
+                  "source_line": 20
+                }
+              ],
+              "source_line": 8
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "var_decl",
+          "name": "registry",
+          "var_type": "Map<String, List<String>>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "List<String>",
+            "entries": []
+          },
+          "source_line": 22
+        },
+        {
+          "op": "map_set",
+          "target": "registry",
+          "key": {
+            "expr_type": "literal",
+            "value": "web-service",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "database",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "auth-lib",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "logging",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 23
+        },
+        {
+          "op": "map_set",
+          "target": "registry",
+          "key": {
+            "expr_type": "literal",
+            "value": "worker-job",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "queue-client",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "logging",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 24
+        },
+        {
+          "op": "map_set",
+          "target": "registry",
+          "key": {
+            "expr_type": "literal",
+            "value": "auth-lib",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "crypto-core",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 25
+        },
+        {
+          "op": "var_decl",
+          "name": "installed",
+          "var_type": "Map<String, Bool>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "Bool",
+            "entries": []
+          },
+          "source_line": 27
+        },
+        {
+          "op": "map_set",
+          "target": "installed",
+          "key": {
+            "expr_type": "literal",
+            "value": "logging",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "literal",
+            "value": true,
+            "data_type": "Bool"
+          },
+          "source_line": 28
+        },
+        {
+          "op": "map_set",
+          "target": "installed",
+          "key": {
+            "expr_type": "literal",
+            "value": "crypto-core",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "literal",
+            "value": true,
+            "data_type": "Bool"
+          },
+          "source_line": 29
+        },
+        {
+          "op": "var_decl",
+          "name": "p1",
+          "var_type": "ResolutionPlan",
+          "value": {
+            "expr_type": "call",
+            "func_name": "plan_installation",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "web-service",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "registry"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "installed"
+              }
+            ]
+          },
+          "source_line": 32
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p1"
+              },
+              "field_name": "target"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p1"
+              },
+              "field_name": "valid_package"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p1"
+              },
+              "field_name": "missing_count"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p1"
+              },
+              "field_name": "to_install"
+            }
+          ],
+          "source_line": 33
+        },
+        {
+          "op": "var_decl",
+          "name": "p2",
+          "var_type": "ResolutionPlan",
+          "value": {
+            "expr_type": "call",
+            "func_name": "plan_installation",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "worker-job",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "registry"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "installed"
+              }
+            ]
+          },
+          "source_line": 36
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p2"
+              },
+              "field_name": "target"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p2"
+              },
+              "field_name": "valid_package"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p2"
+              },
+              "field_name": "missing_count"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p2"
+              },
+              "field_name": "to_install"
+            }
+          ],
+          "source_line": 37
+        },
+        {
+          "op": "map_set",
+          "target": "installed",
+          "key": {
+            "expr_type": "literal",
+            "value": "database",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "literal",
+            "value": true,
+            "data_type": "Bool"
+          },
+          "source_line": 40
+        },
+        {
+          "op": "map_set",
+          "target": "installed",
+          "key": {
+            "expr_type": "literal",
+            "value": "auth-lib",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "literal",
+            "value": true,
+            "data_type": "Bool"
+          },
+          "source_line": 41
+        },
+        {
+          "op": "var_decl",
+          "name": "p3",
+          "var_type": "ResolutionPlan",
+          "value": {
+            "expr_type": "call",
+            "func_name": "plan_installation",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "web-service",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "registry"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "installed"
+              }
+            ]
+          },
+          "source_line": 42
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p3"
+              },
+              "field_name": "target"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p3"
+              },
+              "field_name": "valid_package"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p3"
+              },
+              "field_name": "missing_count"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p3"
+              },
+              "field_name": "to_install"
+            }
+          ],
+          "source_line": 43
+        },
+        {
+          "op": "var_decl",
+          "name": "p4",
+          "var_type": "ResolutionPlan",
+          "value": {
+            "expr_type": "call",
+            "func_name": "plan_installation",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "non-existent-lib",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "registry"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "installed"
+              }
+            ]
+          },
+          "source_line": 46
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p4"
+              },
+              "field_name": "target"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p4"
+              },
+              "field_name": "valid_package"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p4"
+              },
+              "field_name": "missing_count"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p4"
+              },
+              "field_name": "to_install"
+            }
+          ],
+          "source_line": 47
+        }
+      ],
+      "canonical_meme": "record ResolutionPlan:\n    target: String\n    valid_package: Bool\n    missing_count: Int\n    to_install: List<String>\nfunction plan_installation(pkg: String, registry: Map<String, List<String>>, installed: Map<String, Bool>) -> ResolutionPlan:\n    if registry has key pkg:\n        define list direct_deps as registry[pkg]\n        define list missing as empty List<String>\n        define count: Int as 0\n        for each dep in direct_deps:\n            define is_inst: Bool as installed[dep] default false\n            if not is_inst:\n                append dep to missing\n                set count to count + 1\n        return ResolutionPlan(target=pkg, valid_package=true, missing_count=count, to_install=missing)\n    else:\n        define list empty_list as empty List<String>\n        return ResolutionPlan(target=pkg, valid_package=false, missing_count=0, to_install=empty_list)\ndefine registry: Map<String, List<String>> as empty Map<String, List<String>>\nset registry[\"web-service\"] to [\"database\", \"auth-lib\", \"logging\"]\nset registry[\"worker-job\"] to [\"queue-client\", \"logging\"]\nset registry[\"auth-lib\"] to [\"crypto-core\"]\ndefine installed: Map<String, Bool> as empty Map<String, Bool>\nset installed[\"logging\"] to true\nset installed[\"crypto-core\"] to true\ndefine p1: ResolutionPlan as plan_installation(\"web-service\", registry, installed)\nprint p1.target, p1.valid_package, p1.missing_count, p1.to_install\ndefine p2: ResolutionPlan as plan_installation(\"worker-job\", registry, installed)\nprint p2.target, p2.valid_package, p2.missing_count, p2.to_install\nset installed[\"database\"] to true\nset installed[\"auth-lib\"] to true\ndefine p3: ResolutionPlan as plan_installation(\"web-service\", registry, installed)\nprint p3.target, p3.valid_package, p3.missing_count, p3.to_install\ndefine p4: ResolutionPlan as plan_installation(\"non-existent-lib\", registry, installed)\nprint p4.target, p4.valid_package, p4.missing_count, p4.to_install",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "ResolutionPlan",
+            "fields": [
+              {
+                "name": "target",
+                "field_type": "String"
+              },
+              {
+                "name": "valid_package",
+                "field_type": "Bool"
+              },
+              {
+                "name": "missing_count",
+                "field_type": "Int"
+              },
+              {
+                "name": "to_install",
+                "field_type": "List<String>"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "plan_installation",
+            "params": [
+              {
+                "name": "pkg",
+                "param_type": "String"
+              },
+              {
+                "name": "registry",
+                "param_type": "Map<String, List<String>>"
+              },
+              {
+                "name": "installed",
+                "param_type": "Map<String, Bool>"
+              }
+            ],
+            "return_type": "ResolutionPlan",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "map_has_key",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "registry"
+                  },
+                  "key": {
+                    "expr_type": "var_ref",
+                    "name": "pkg"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "direct_deps",
+                    "var_type": "List<String>",
+                    "value": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "registry"
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "pkg"
+                      }
+                    },
+                    "source_line": 9
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "missing",
+                    "var_type": "List<String>",
+                    "value": {
+                      "expr_type": "list_literal",
+                      "elements": [],
+                      "element_type": "String"
+                    },
+                    "source_line": 10
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "count",
+                    "var_type": "Int",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "source_line": 11
+                  },
+                  {
+                    "op": "for_each",
+                    "item_var": "dep",
+                    "collection": "direct_deps",
+                    "body": [
+                      {
+                        "op": "var_decl",
+                        "name": "is_inst",
+                        "var_type": "Bool",
+                        "value": {
+                          "expr_type": "map_get",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "installed"
+                          },
+                          "key": {
+                            "expr_type": "var_ref",
+                            "name": "dep"
+                          },
+                          "default_val": {
+                            "expr_type": "literal",
+                            "value": false,
+                            "data_type": "Bool"
+                          }
+                        },
+                        "source_line": 13
+                      },
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "unary_op",
+                          "op": "not",
+                          "operand": {
+                            "expr_type": "var_ref",
+                            "name": "is_inst"
+                          }
+                        },
+                        "then_body": [
+                          {
+                            "op": "list_append",
+                            "target": "missing",
+                            "value": {
+                              "expr_type": "var_ref",
+                              "name": "dep"
+                            },
+                            "source_line": 15
+                          },
+                          {
+                            "op": "assign",
+                            "name": "count",
+                            "value": {
+                              "expr_type": "binary_op",
+                              "op": "+",
+                              "left": {
+                                "expr_type": "var_ref",
+                                "name": "count"
+                              },
+                              "right": {
+                                "expr_type": "literal",
+                                "value": 1,
+                                "data_type": "Int"
+                              }
+                            },
+                            "source_line": 16
+                          }
+                        ],
+                        "else_body": [],
+                        "source_line": 14
+                      }
+                    ],
+                    "source_line": 12
+                  },
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "record_literal",
+                      "record_name": "ResolutionPlan",
+                      "fields": [
+                        {
+                          "name": "target",
+                          "value": {
+                            "expr_type": "var_ref",
+                            "name": "pkg"
+                          }
+                        },
+                        {
+                          "name": "valid_package",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": true,
+                            "data_type": "Bool"
+                          }
+                        },
+                        {
+                          "name": "missing_count",
+                          "value": {
+                            "expr_type": "var_ref",
+                            "name": "count"
+                          }
+                        },
+                        {
+                          "name": "to_install",
+                          "value": {
+                            "expr_type": "var_ref",
+                            "name": "missing"
+                          }
+                        }
+                      ]
+                    },
+                    "source_line": 17
+                  }
+                ],
+                "else_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "empty_list",
+                    "var_type": "List<String>",
+                    "value": {
+                      "expr_type": "list_literal",
+                      "elements": [],
+                      "element_type": "String"
+                    },
+                    "source_line": 19
+                  },
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "record_literal",
+                      "record_name": "ResolutionPlan",
+                      "fields": [
+                        {
+                          "name": "target",
+                          "value": {
+                            "expr_type": "var_ref",
+                            "name": "pkg"
+                          }
+                        },
+                        {
+                          "name": "valid_package",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": false,
+                            "data_type": "Bool"
+                          }
+                        },
+                        {
+                          "name": "missing_count",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": 0,
+                            "data_type": "Int"
+                          }
+                        },
+                        {
+                          "name": "to_install",
+                          "value": {
+                            "expr_type": "var_ref",
+                            "name": "empty_list"
+                          }
+                        }
+                      ]
+                    },
+                    "source_line": 20
+                  }
+                ],
+                "source_line": 8
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "var_decl",
+            "name": "registry",
+            "var_type": "Map<String, List<String>>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "List<String>",
+              "entries": []
+            },
+            "source_line": 22
+          },
+          {
+            "op": "map_set",
+            "target": "registry",
+            "key": {
+              "expr_type": "literal",
+              "value": "web-service",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "database",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "auth-lib",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "logging",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 23
+          },
+          {
+            "op": "map_set",
+            "target": "registry",
+            "key": {
+              "expr_type": "literal",
+              "value": "worker-job",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "queue-client",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "logging",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 24
+          },
+          {
+            "op": "map_set",
+            "target": "registry",
+            "key": {
+              "expr_type": "literal",
+              "value": "auth-lib",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "crypto-core",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 25
+          },
+          {
+            "op": "var_decl",
+            "name": "installed",
+            "var_type": "Map<String, Bool>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "Bool",
+              "entries": []
+            },
+            "source_line": 27
+          },
+          {
+            "op": "map_set",
+            "target": "installed",
+            "key": {
+              "expr_type": "literal",
+              "value": "logging",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "literal",
+              "value": true,
+              "data_type": "Bool"
+            },
+            "source_line": 28
+          },
+          {
+            "op": "map_set",
+            "target": "installed",
+            "key": {
+              "expr_type": "literal",
+              "value": "crypto-core",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "literal",
+              "value": true,
+              "data_type": "Bool"
+            },
+            "source_line": 29
+          },
+          {
+            "op": "var_decl",
+            "name": "p1",
+            "var_type": "ResolutionPlan",
+            "value": {
+              "expr_type": "call",
+              "func_name": "plan_installation",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "web-service",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "registry"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "installed"
+                }
+              ]
+            },
+            "source_line": 32
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p1"
+                },
+                "field_name": "target"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p1"
+                },
+                "field_name": "valid_package"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p1"
+                },
+                "field_name": "missing_count"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p1"
+                },
+                "field_name": "to_install"
+              }
+            ],
+            "source_line": 33
+          },
+          {
+            "op": "var_decl",
+            "name": "p2",
+            "var_type": "ResolutionPlan",
+            "value": {
+              "expr_type": "call",
+              "func_name": "plan_installation",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "worker-job",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "registry"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "installed"
+                }
+              ]
+            },
+            "source_line": 36
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p2"
+                },
+                "field_name": "target"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p2"
+                },
+                "field_name": "valid_package"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p2"
+                },
+                "field_name": "missing_count"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p2"
+                },
+                "field_name": "to_install"
+              }
+            ],
+            "source_line": 37
+          },
+          {
+            "op": "map_set",
+            "target": "installed",
+            "key": {
+              "expr_type": "literal",
+              "value": "database",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "literal",
+              "value": true,
+              "data_type": "Bool"
+            },
+            "source_line": 40
+          },
+          {
+            "op": "map_set",
+            "target": "installed",
+            "key": {
+              "expr_type": "literal",
+              "value": "auth-lib",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "literal",
+              "value": true,
+              "data_type": "Bool"
+            },
+            "source_line": 41
+          },
+          {
+            "op": "var_decl",
+            "name": "p3",
+            "var_type": "ResolutionPlan",
+            "value": {
+              "expr_type": "call",
+              "func_name": "plan_installation",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "web-service",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "registry"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "installed"
+                }
+              ]
+            },
+            "source_line": 42
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p3"
+                },
+                "field_name": "target"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p3"
+                },
+                "field_name": "valid_package"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p3"
+                },
+                "field_name": "missing_count"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p3"
+                },
+                "field_name": "to_install"
+              }
+            ],
+            "source_line": 43
+          },
+          {
+            "op": "var_decl",
+            "name": "p4",
+            "var_type": "ResolutionPlan",
+            "value": {
+              "expr_type": "call",
+              "func_name": "plan_installation",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "non-existent-lib",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "registry"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "installed"
+                }
+              ]
+            },
+            "source_line": 46
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p4"
+                },
+                "field_name": "target"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p4"
+                },
+                "field_name": "valid_package"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p4"
+                },
+                "field_name": "missing_count"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p4"
+                },
+                "field_name": "to_install"
+              }
+            ],
+            "source_line": 47
+          }
+        ]
+      }
+    }
+  }
+}

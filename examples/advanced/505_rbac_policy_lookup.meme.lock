@@ -1,0 +1,1912 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/505_rbac_policy_lookup.meme": {
+      "source_sha256": "c2bbf06cd85cd2018a8506fd94fdc90f846d10c2e5b6cb6ad0657a3a0556c929",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "Subject",
+          "fields": [
+            {
+              "name": "user_id",
+              "field_type": "Int"
+            },
+            {
+              "name": "name",
+              "field_type": "String"
+            },
+            {
+              "name": "role",
+              "field_type": "String"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "record_def",
+          "name": "AccessRequest",
+          "fields": [
+            {
+              "name": "user_id",
+              "field_type": "Int"
+            },
+            {
+              "name": "resource",
+              "field_type": "String"
+            },
+            {
+              "name": "action",
+              "field_type": "String"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "record_def",
+          "name": "Decision",
+          "fields": [
+            {
+              "name": "allowed",
+              "field_type": "Bool"
+            },
+            {
+              "name": "reason",
+              "field_type": "String"
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "func_def",
+          "name": "check_permission",
+          "params": [
+            {
+              "name": "req",
+              "param_type": "AccessRequest"
+            },
+            {
+              "name": "users",
+              "param_type": "Map<Int, Subject>"
+            },
+            {
+              "name": "role_perms",
+              "param_type": "Map<String, List<String>>"
+            }
+          ],
+          "return_type": "Decision",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "map_has_key",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "users"
+                },
+                "key": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "req"
+                  },
+                  "field_name": "user_id"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "sub",
+                  "var_type": "Subject",
+                  "value": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "users"
+                    },
+                    "index": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "req"
+                      },
+                      "field_name": "user_id"
+                    }
+                  },
+                  "source_line": 17
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "map_has_key",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "role_perms"
+                    },
+                    "key": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "sub"
+                      },
+                      "field_name": "role"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "var_decl",
+                      "name": "perms",
+                      "var_type": "List<String>",
+                      "value": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "role_perms"
+                        },
+                        "index": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "sub"
+                          },
+                          "field_name": "role"
+                        }
+                      },
+                      "source_line": 19
+                    },
+                    {
+                      "op": "var_decl",
+                      "name": "target_perm",
+                      "var_type": "String",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "req"
+                            },
+                            "field_name": "resource"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": ":",
+                            "data_type": "String"
+                          }
+                        },
+                        "right": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "req"
+                          },
+                          "field_name": "action"
+                        }
+                      },
+                      "source_line": 20
+                    },
+                    {
+                      "op": "var_decl",
+                      "name": "has_grant",
+                      "var_type": "Bool",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": false,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 21
+                    },
+                    {
+                      "op": "for_each",
+                      "item_var": "p",
+                      "collection": "perms",
+                      "body": [
+                        {
+                          "op": "if_stmt",
+                          "condition": {
+                            "expr_type": "binary_op",
+                            "op": "==",
+                            "left": {
+                              "expr_type": "var_ref",
+                              "name": "p"
+                            },
+                            "right": {
+                              "expr_type": "var_ref",
+                              "name": "target_perm"
+                            }
+                          },
+                          "then_body": [
+                            {
+                              "op": "assign",
+                              "name": "has_grant",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": true,
+                                "data_type": "Bool"
+                              },
+                              "source_line": 24
+                            }
+                          ],
+                          "else_body": [],
+                          "source_line": 23
+                        }
+                      ],
+                      "source_line": 22
+                    },
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "var_ref",
+                        "name": "has_grant"
+                      },
+                      "then_body": [
+                        {
+                          "op": "return_stmt",
+                          "value": {
+                            "expr_type": "record_literal",
+                            "record_name": "Decision",
+                            "fields": [
+                              {
+                                "name": "allowed",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": true,
+                                  "data_type": "Bool"
+                                }
+                              },
+                              {
+                                "name": "reason",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": "ROLE_PERMISSION_GRANTED",
+                                  "data_type": "String"
+                                }
+                              }
+                            ]
+                          },
+                          "source_line": 26
+                        }
+                      ],
+                      "else_body": [
+                        {
+                          "op": "return_stmt",
+                          "value": {
+                            "expr_type": "record_literal",
+                            "record_name": "Decision",
+                            "fields": [
+                              {
+                                "name": "allowed",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": false,
+                                  "data_type": "Bool"
+                                }
+                              },
+                              {
+                                "name": "reason",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": "ACTION_DENIED",
+                                  "data_type": "String"
+                                }
+                              }
+                            ]
+                          },
+                          "source_line": 28
+                        }
+                      ],
+                      "source_line": 25
+                    }
+                  ],
+                  "else_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "record_literal",
+                        "record_name": "Decision",
+                        "fields": [
+                          {
+                            "name": "allowed",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": false,
+                              "data_type": "Bool"
+                            }
+                          },
+                          {
+                            "name": "reason",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": "ROLE_NOT_CONFIGURED",
+                              "data_type": "String"
+                            }
+                          }
+                        ]
+                      },
+                      "source_line": 30
+                    }
+                  ],
+                  "source_line": 18
+                }
+              ],
+              "else_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "record_literal",
+                    "record_name": "Decision",
+                    "fields": [
+                      {
+                        "name": "allowed",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": false,
+                          "data_type": "Bool"
+                        }
+                      },
+                      {
+                        "name": "reason",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "UNKNOWN_SUBJECT",
+                          "data_type": "String"
+                        }
+                      }
+                    ]
+                  },
+                  "source_line": 32
+                }
+              ],
+              "source_line": 16
+            }
+          ],
+          "source_line": 15
+        },
+        {
+          "op": "var_decl",
+          "name": "s1",
+          "var_type": "Subject",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Subject",
+            "fields": [
+              {
+                "name": "user_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Alice",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "role",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "admin",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 34
+        },
+        {
+          "op": "var_decl",
+          "name": "s2",
+          "var_type": "Subject",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Subject",
+            "fields": [
+              {
+                "name": "user_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Bob",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "role",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "auditor",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 35
+        },
+        {
+          "op": "var_decl",
+          "name": "s3",
+          "var_type": "Subject",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Subject",
+            "fields": [
+              {
+                "name": "user_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Charlie",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "role",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "member",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 36
+        },
+        {
+          "op": "var_decl",
+          "name": "users",
+          "var_type": "Map<Int, Subject>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "Int",
+            "value_type": "Subject",
+            "entries": []
+          },
+          "source_line": 38
+        },
+        {
+          "op": "map_set",
+          "target": "users",
+          "key": {
+            "expr_type": "literal",
+            "value": 1,
+            "data_type": "Int"
+          },
+          "value": {
+            "expr_type": "var_ref",
+            "name": "s1"
+          },
+          "source_line": 39
+        },
+        {
+          "op": "map_set",
+          "target": "users",
+          "key": {
+            "expr_type": "literal",
+            "value": 2,
+            "data_type": "Int"
+          },
+          "value": {
+            "expr_type": "var_ref",
+            "name": "s2"
+          },
+          "source_line": 40
+        },
+        {
+          "op": "map_set",
+          "target": "users",
+          "key": {
+            "expr_type": "literal",
+            "value": 3,
+            "data_type": "Int"
+          },
+          "value": {
+            "expr_type": "var_ref",
+            "name": "s3"
+          },
+          "source_line": 41
+        },
+        {
+          "op": "var_decl",
+          "name": "role_perms",
+          "var_type": "Map<String, List<String>>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "List<String>",
+            "entries": []
+          },
+          "source_line": 43
+        },
+        {
+          "op": "map_set",
+          "target": "role_perms",
+          "key": {
+            "expr_type": "literal",
+            "value": "admin",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "users:read",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "users:write",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "billing:read",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "billing:write",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 44
+        },
+        {
+          "op": "map_set",
+          "target": "role_perms",
+          "key": {
+            "expr_type": "literal",
+            "value": "auditor",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "users:read",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "billing:read",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 45
+        },
+        {
+          "op": "map_set",
+          "target": "role_perms",
+          "key": {
+            "expr_type": "literal",
+            "value": "member",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "users:read",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 46
+        },
+        {
+          "op": "var_decl",
+          "name": "r1",
+          "var_type": "AccessRequest",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "AccessRequest",
+            "fields": [
+              {
+                "name": "user_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "resource",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "billing",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "action",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "write",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 49
+        },
+        {
+          "op": "var_decl",
+          "name": "d1",
+          "var_type": "Decision",
+          "value": {
+            "expr_type": "call",
+            "func_name": "check_permission",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "users"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "role_perms"
+              }
+            ]
+          },
+          "source_line": 50
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "d1"
+              },
+              "field_name": "allowed"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "d1"
+              },
+              "field_name": "reason"
+            }
+          ],
+          "source_line": 51
+        },
+        {
+          "op": "var_decl",
+          "name": "r2",
+          "var_type": "AccessRequest",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "AccessRequest",
+            "fields": [
+              {
+                "name": "user_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "resource",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "billing",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "action",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "write",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 54
+        },
+        {
+          "op": "var_decl",
+          "name": "d2",
+          "var_type": "Decision",
+          "value": {
+            "expr_type": "call",
+            "func_name": "check_permission",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "r2"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "users"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "role_perms"
+              }
+            ]
+          },
+          "source_line": 55
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "d2"
+              },
+              "field_name": "allowed"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "d2"
+              },
+              "field_name": "reason"
+            }
+          ],
+          "source_line": 56
+        },
+        {
+          "op": "var_decl",
+          "name": "r3",
+          "var_type": "AccessRequest",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "AccessRequest",
+            "fields": [
+              {
+                "name": "user_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "resource",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "billing",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "action",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "read",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 59
+        },
+        {
+          "op": "var_decl",
+          "name": "d3",
+          "var_type": "Decision",
+          "value": {
+            "expr_type": "call",
+            "func_name": "check_permission",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "r3"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "users"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "role_perms"
+              }
+            ]
+          },
+          "source_line": 60
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "d3"
+              },
+              "field_name": "allowed"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "d3"
+              },
+              "field_name": "reason"
+            }
+          ],
+          "source_line": 61
+        },
+        {
+          "op": "var_decl",
+          "name": "r4",
+          "var_type": "AccessRequest",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "AccessRequest",
+            "fields": [
+              {
+                "name": "user_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 999,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "resource",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "users",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "action",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "read",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 64
+        },
+        {
+          "op": "var_decl",
+          "name": "d4",
+          "var_type": "Decision",
+          "value": {
+            "expr_type": "call",
+            "func_name": "check_permission",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "r4"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "users"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "role_perms"
+              }
+            ]
+          },
+          "source_line": 65
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "d4"
+              },
+              "field_name": "allowed"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "d4"
+              },
+              "field_name": "reason"
+            }
+          ],
+          "source_line": 66
+        }
+      ],
+      "canonical_meme": "record Subject:\n    user_id: Int\n    name: String\n    role: String\nrecord AccessRequest:\n    user_id: Int\n    resource: String\n    action: String\nrecord Decision:\n    allowed: Bool\n    reason: String\nfunction check_permission(req: AccessRequest, users: Map<Int, Subject>, role_perms: Map<String, List<String>>) -> Decision:\n    if users has key req.user_id:\n        define sub: Subject as users[req.user_id]\n        if role_perms has key sub.role:\n            define list perms as role_perms[sub.role]\n            define target_perm: String as req.resource + \":\" + req.action\n            define has_grant: Bool as false\n            for each p in perms:\n                if p == target_perm:\n                    set has_grant to true\n            if has_grant:\n                return Decision(allowed=true, reason=\"ROLE_PERMISSION_GRANTED\")\n            else:\n                return Decision(allowed=false, reason=\"ACTION_DENIED\")\n        else:\n            return Decision(allowed=false, reason=\"ROLE_NOT_CONFIGURED\")\n    else:\n        return Decision(allowed=false, reason=\"UNKNOWN_SUBJECT\")\ndefine s1: Subject as Subject(user_id=1, name=\"Alice\", role=\"admin\")\ndefine s2: Subject as Subject(user_id=2, name=\"Bob\", role=\"auditor\")\ndefine s3: Subject as Subject(user_id=3, name=\"Charlie\", role=\"member\")\ndefine users: Map<Int, Subject> as empty Map<Int, Subject>\nset users[1] to s1\nset users[2] to s2\nset users[3] to s3\ndefine role_perms: Map<String, List<String>> as empty Map<String, List<String>>\nset role_perms[\"admin\"] to [\"users:read\", \"users:write\", \"billing:read\", \"billing:write\"]\nset role_perms[\"auditor\"] to [\"users:read\", \"billing:read\"]\nset role_perms[\"member\"] to [\"users:read\"]\ndefine r1: AccessRequest as AccessRequest(user_id=1, resource=\"billing\", action=\"write\")\ndefine d1: Decision as check_permission(r1, users, role_perms)\nprint d1.allowed, d1.reason\ndefine r2: AccessRequest as AccessRequest(user_id=2, resource=\"billing\", action=\"write\")\ndefine d2: Decision as check_permission(r2, users, role_perms)\nprint d2.allowed, d2.reason\ndefine r3: AccessRequest as AccessRequest(user_id=2, resource=\"billing\", action=\"read\")\ndefine d3: Decision as check_permission(r3, users, role_perms)\nprint d3.allowed, d3.reason\ndefine r4: AccessRequest as AccessRequest(user_id=999, resource=\"users\", action=\"read\")\ndefine d4: Decision as check_permission(r4, users, role_perms)\nprint d4.allowed, d4.reason",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "Subject",
+            "fields": [
+              {
+                "name": "user_id",
+                "field_type": "Int"
+              },
+              {
+                "name": "name",
+                "field_type": "String"
+              },
+              {
+                "name": "role",
+                "field_type": "String"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "record_def",
+            "name": "AccessRequest",
+            "fields": [
+              {
+                "name": "user_id",
+                "field_type": "Int"
+              },
+              {
+                "name": "resource",
+                "field_type": "String"
+              },
+              {
+                "name": "action",
+                "field_type": "String"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "record_def",
+            "name": "Decision",
+            "fields": [
+              {
+                "name": "allowed",
+                "field_type": "Bool"
+              },
+              {
+                "name": "reason",
+                "field_type": "String"
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "func_def",
+            "name": "check_permission",
+            "params": [
+              {
+                "name": "req",
+                "param_type": "AccessRequest"
+              },
+              {
+                "name": "users",
+                "param_type": "Map<Int, Subject>"
+              },
+              {
+                "name": "role_perms",
+                "param_type": "Map<String, List<String>>"
+              }
+            ],
+            "return_type": "Decision",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "map_has_key",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "users"
+                  },
+                  "key": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "req"
+                    },
+                    "field_name": "user_id"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "sub",
+                    "var_type": "Subject",
+                    "value": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "users"
+                      },
+                      "index": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "req"
+                        },
+                        "field_name": "user_id"
+                      }
+                    },
+                    "source_line": 17
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "map_has_key",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "role_perms"
+                      },
+                      "key": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "sub"
+                        },
+                        "field_name": "role"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "var_decl",
+                        "name": "perms",
+                        "var_type": "List<String>",
+                        "value": {
+                          "expr_type": "list_index",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "role_perms"
+                          },
+                          "index": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "sub"
+                            },
+                            "field_name": "role"
+                          }
+                        },
+                        "source_line": 19
+                      },
+                      {
+                        "op": "var_decl",
+                        "name": "target_perm",
+                        "var_type": "String",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "binary_op",
+                            "op": "+",
+                            "left": {
+                              "expr_type": "record_field",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "req"
+                              },
+                              "field_name": "resource"
+                            },
+                            "right": {
+                              "expr_type": "literal",
+                              "value": ":",
+                              "data_type": "String"
+                            }
+                          },
+                          "right": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "req"
+                            },
+                            "field_name": "action"
+                          }
+                        },
+                        "source_line": 20
+                      },
+                      {
+                        "op": "var_decl",
+                        "name": "has_grant",
+                        "var_type": "Bool",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": false,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 21
+                      },
+                      {
+                        "op": "for_each",
+                        "item_var": "p",
+                        "collection": "perms",
+                        "body": [
+                          {
+                            "op": "if_stmt",
+                            "condition": {
+                              "expr_type": "binary_op",
+                              "op": "==",
+                              "left": {
+                                "expr_type": "var_ref",
+                                "name": "p"
+                              },
+                              "right": {
+                                "expr_type": "var_ref",
+                                "name": "target_perm"
+                              }
+                            },
+                            "then_body": [
+                              {
+                                "op": "assign",
+                                "name": "has_grant",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": true,
+                                  "data_type": "Bool"
+                                },
+                                "source_line": 24
+                              }
+                            ],
+                            "else_body": [],
+                            "source_line": 23
+                          }
+                        ],
+                        "source_line": 22
+                      },
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "var_ref",
+                          "name": "has_grant"
+                        },
+                        "then_body": [
+                          {
+                            "op": "return_stmt",
+                            "value": {
+                              "expr_type": "record_literal",
+                              "record_name": "Decision",
+                              "fields": [
+                                {
+                                  "name": "allowed",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": true,
+                                    "data_type": "Bool"
+                                  }
+                                },
+                                {
+                                  "name": "reason",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": "ROLE_PERMISSION_GRANTED",
+                                    "data_type": "String"
+                                  }
+                                }
+                              ]
+                            },
+                            "source_line": 26
+                          }
+                        ],
+                        "else_body": [
+                          {
+                            "op": "return_stmt",
+                            "value": {
+                              "expr_type": "record_literal",
+                              "record_name": "Decision",
+                              "fields": [
+                                {
+                                  "name": "allowed",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": false,
+                                    "data_type": "Bool"
+                                  }
+                                },
+                                {
+                                  "name": "reason",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": "ACTION_DENIED",
+                                    "data_type": "String"
+                                  }
+                                }
+                              ]
+                            },
+                            "source_line": 28
+                          }
+                        ],
+                        "source_line": 25
+                      }
+                    ],
+                    "else_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "record_literal",
+                          "record_name": "Decision",
+                          "fields": [
+                            {
+                              "name": "allowed",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": false,
+                                "data_type": "Bool"
+                              }
+                            },
+                            {
+                              "name": "reason",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": "ROLE_NOT_CONFIGURED",
+                                "data_type": "String"
+                              }
+                            }
+                          ]
+                        },
+                        "source_line": 30
+                      }
+                    ],
+                    "source_line": 18
+                  }
+                ],
+                "else_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "record_literal",
+                      "record_name": "Decision",
+                      "fields": [
+                        {
+                          "name": "allowed",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": false,
+                            "data_type": "Bool"
+                          }
+                        },
+                        {
+                          "name": "reason",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": "UNKNOWN_SUBJECT",
+                            "data_type": "String"
+                          }
+                        }
+                      ]
+                    },
+                    "source_line": 32
+                  }
+                ],
+                "source_line": 16
+              }
+            ],
+            "source_line": 15
+          },
+          {
+            "op": "var_decl",
+            "name": "s1",
+            "var_type": "Subject",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Subject",
+              "fields": [
+                {
+                  "name": "user_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Alice",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "role",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "admin",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 34
+          },
+          {
+            "op": "var_decl",
+            "name": "s2",
+            "var_type": "Subject",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Subject",
+              "fields": [
+                {
+                  "name": "user_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Bob",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "role",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "auditor",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 35
+          },
+          {
+            "op": "var_decl",
+            "name": "s3",
+            "var_type": "Subject",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Subject",
+              "fields": [
+                {
+                  "name": "user_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Charlie",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "role",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "member",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 36
+          },
+          {
+            "op": "var_decl",
+            "name": "users",
+            "var_type": "Map<Int, Subject>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "Int",
+              "value_type": "Subject",
+              "entries": []
+            },
+            "source_line": 38
+          },
+          {
+            "op": "map_set",
+            "target": "users",
+            "key": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            },
+            "value": {
+              "expr_type": "var_ref",
+              "name": "s1"
+            },
+            "source_line": 39
+          },
+          {
+            "op": "map_set",
+            "target": "users",
+            "key": {
+              "expr_type": "literal",
+              "value": 2,
+              "data_type": "Int"
+            },
+            "value": {
+              "expr_type": "var_ref",
+              "name": "s2"
+            },
+            "source_line": 40
+          },
+          {
+            "op": "map_set",
+            "target": "users",
+            "key": {
+              "expr_type": "literal",
+              "value": 3,
+              "data_type": "Int"
+            },
+            "value": {
+              "expr_type": "var_ref",
+              "name": "s3"
+            },
+            "source_line": 41
+          },
+          {
+            "op": "var_decl",
+            "name": "role_perms",
+            "var_type": "Map<String, List<String>>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "List<String>",
+              "entries": []
+            },
+            "source_line": 43
+          },
+          {
+            "op": "map_set",
+            "target": "role_perms",
+            "key": {
+              "expr_type": "literal",
+              "value": "admin",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "users:read",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "users:write",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "billing:read",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "billing:write",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 44
+          },
+          {
+            "op": "map_set",
+            "target": "role_perms",
+            "key": {
+              "expr_type": "literal",
+              "value": "auditor",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "users:read",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "billing:read",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 45
+          },
+          {
+            "op": "map_set",
+            "target": "role_perms",
+            "key": {
+              "expr_type": "literal",
+              "value": "member",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "users:read",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 46
+          },
+          {
+            "op": "var_decl",
+            "name": "r1",
+            "var_type": "AccessRequest",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "AccessRequest",
+              "fields": [
+                {
+                  "name": "user_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "resource",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "billing",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "action",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "write",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 49
+          },
+          {
+            "op": "var_decl",
+            "name": "d1",
+            "var_type": "Decision",
+            "value": {
+              "expr_type": "call",
+              "func_name": "check_permission",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "users"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "role_perms"
+                }
+              ]
+            },
+            "source_line": 50
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "d1"
+                },
+                "field_name": "allowed"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "d1"
+                },
+                "field_name": "reason"
+              }
+            ],
+            "source_line": 51
+          },
+          {
+            "op": "var_decl",
+            "name": "r2",
+            "var_type": "AccessRequest",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "AccessRequest",
+              "fields": [
+                {
+                  "name": "user_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "resource",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "billing",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "action",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "write",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 54
+          },
+          {
+            "op": "var_decl",
+            "name": "d2",
+            "var_type": "Decision",
+            "value": {
+              "expr_type": "call",
+              "func_name": "check_permission",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "r2"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "users"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "role_perms"
+                }
+              ]
+            },
+            "source_line": 55
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "d2"
+                },
+                "field_name": "allowed"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "d2"
+                },
+                "field_name": "reason"
+              }
+            ],
+            "source_line": 56
+          },
+          {
+            "op": "var_decl",
+            "name": "r3",
+            "var_type": "AccessRequest",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "AccessRequest",
+              "fields": [
+                {
+                  "name": "user_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "resource",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "billing",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "action",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "read",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 59
+          },
+          {
+            "op": "var_decl",
+            "name": "d3",
+            "var_type": "Decision",
+            "value": {
+              "expr_type": "call",
+              "func_name": "check_permission",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "r3"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "users"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "role_perms"
+                }
+              ]
+            },
+            "source_line": 60
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "d3"
+                },
+                "field_name": "allowed"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "d3"
+                },
+                "field_name": "reason"
+              }
+            ],
+            "source_line": 61
+          },
+          {
+            "op": "var_decl",
+            "name": "r4",
+            "var_type": "AccessRequest",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "AccessRequest",
+              "fields": [
+                {
+                  "name": "user_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 999,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "resource",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "users",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "action",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "read",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 64
+          },
+          {
+            "op": "var_decl",
+            "name": "d4",
+            "var_type": "Decision",
+            "value": {
+              "expr_type": "call",
+              "func_name": "check_permission",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "r4"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "users"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "role_perms"
+                }
+              ]
+            },
+            "source_line": 65
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "d4"
+                },
+                "field_name": "allowed"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "d4"
+                },
+                "field_name": "reason"
+              }
+            ],
+            "source_line": 66
+          }
+        ]
+      }
+    }
+  }
+}

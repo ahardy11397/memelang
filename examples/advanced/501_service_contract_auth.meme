@@ -1,0 +1,41 @@
+record Credentials:
+    username: String
+    token: String
+
+record Session:
+    session_id: String
+    user_id: Int
+    role: String
+    is_valid: Bool
+
+record AuthResponse:
+    status_code: Int
+    message: String
+    session: Session
+
+function authenticate(creds: Credentials, tokens: Map<String, String>, user_ids: Map<String, Int>, roles: Map<String, String>) -> AuthResponse:
+    if tokens has key creds.username:
+        if tokens[creds.username] == creds.token:
+            define uid as user_ids[creds.username] default 0
+            define role_name as roles[creds.username] default "viewer"
+            return AuthResponse(status_code=200, message="OK", session=Session(session_id="sess_valid", user_id=uid, role=role_name, is_valid=true))
+        else:
+            return AuthResponse(status_code=401, message="Invalid token", session=Session(session_id="", user_id=0, role="none", is_valid=false))
+    else:
+        return AuthResponse(status_code=401, message="User not found", session=Session(session_id="", user_id=0, role="none", is_valid=false))
+
+define tokens as {"alice": "tok_alice_secure", "bob": "tok_bob_pass"}
+define user_ids as {"alice": 101, "bob": 102}
+define roles as {"alice": "admin", "bob": "operator"}
+
+define req1 as Credentials(username="alice", token="tok_alice_secure")
+define res1 as authenticate(req1, tokens, user_ids, roles)
+print res1.status_code, res1.message, res1.session.role, res1.session.is_valid
+
+define req2 as Credentials(username="bob", token="wrong_secret")
+define res2 as authenticate(req2, tokens, user_ids, roles)
+print res2.status_code, res2.message, res2.session.is_valid
+
+define req3 as Credentials(username="eve", token="tok_unknown")
+define res3 as authenticate(req3, tokens, user_ids, roles)
+print res3.status_code, res3.message, res3.session.is_valid

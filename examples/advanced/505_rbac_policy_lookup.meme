@@ -1,0 +1,66 @@
+record Subject:
+    user_id: Int
+    name: String
+    role: String
+
+record AccessRequest:
+    user_id: Int
+    resource: String
+    action: String
+
+record Decision:
+    allowed: Bool
+    reason: String
+
+function check_permission(req: AccessRequest, users: Map<Int, Subject>, role_perms: Map<String, List<String>>) -> Decision:
+    if users has key req.user_id:
+        define sub as users[req.user_id]
+        if role_perms has key sub.role:
+            define perms as role_perms[sub.role]
+            define target_perm as req.resource + ":" + req.action
+            define has_grant as false
+            for each p in perms:
+                if p == target_perm:
+                    set has_grant to true
+            if has_grant:
+                return Decision(allowed=true, reason="ROLE_PERMISSION_GRANTED")
+            else:
+                return Decision(allowed=false, reason="ACTION_DENIED")
+        else:
+            return Decision(allowed=false, reason="ROLE_NOT_CONFIGURED")
+    else:
+        return Decision(allowed=false, reason="UNKNOWN_SUBJECT")
+
+define s1 as Subject(user_id=1, name="Alice", role="admin")
+define s2 as Subject(user_id=2, name="Bob", role="auditor")
+define s3 as Subject(user_id=3, name="Charlie", role="member")
+
+define users as empty Map<Int, Subject>
+set users[1] to s1
+set users[2] to s2
+set users[3] to s3
+
+define role_perms as empty Map<String, List<String>>
+set role_perms["admin"] to ["users:read", "users:write", "billing:read", "billing:write"]
+set role_perms["auditor"] to ["users:read", "billing:read"]
+set role_perms["member"] to ["users:read"]
+
+# 1. Admin writing billing
+define r1 as AccessRequest(user_id=1, resource="billing", action="write")
+define d1 as check_permission(r1, users, role_perms)
+print d1.allowed, d1.reason
+
+# 2. Auditor attempting write to billing
+define r2 as AccessRequest(user_id=2, resource="billing", action="write")
+define d2 as check_permission(r2, users, role_perms)
+print d2.allowed, d2.reason
+
+# 3. Auditor reading billing
+define r3 as AccessRequest(user_id=2, resource="billing", action="read")
+define d3 as check_permission(r3, users, role_perms)
+print d3.allowed, d3.reason
+
+# 4. Unknown subject requesting access
+define r4 as AccessRequest(user_id=999, resource="users", action="read")
+define d4 as check_permission(r4, users, role_perms)
+print d4.allowed, d4.reason

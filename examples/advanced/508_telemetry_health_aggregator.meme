@@ -1,0 +1,58 @@
+record ServiceProbe:
+    service_name: String
+    is_up: Bool
+    latency_ms: Int
+
+record HealthSummary:
+    overall_status: String
+    total_services: Int
+    unhealthy_count: Int
+    max_latency_ms: Int
+
+function evaluate_health(probes: List<ServiceProbe>) -> HealthSummary:
+    define total as 0
+    define unhealthy as 0
+    define peak_latency as 0
+    for each probe in probes:
+        set total to total + 1
+        if not probe.is_up:
+            set unhealthy to unhealthy + 1
+        if probe.latency_ms > peak_latency:
+            set peak_latency to probe.latency_ms
+    define status as "HEALTHY"
+    if unhealthy == 0:
+        if peak_latency > 500:
+            set status to "DEGRADED"
+        else:
+            set status to "HEALTHY"
+    else:
+        if unhealthy == total:
+            set status to "DOWN"
+        else:
+            set status to "PARTIAL_OUTAGE"
+    return HealthSummary(overall_status=status, total_services=total, unhealthy_count=unhealthy, max_latency_ms=peak_latency)
+
+# 1. Healthy cluster
+define p1 as ServiceProbe(service_name="primary-db", is_up=true, latency_ms=15)
+define p2 as ServiceProbe(service_name="redis-cache", is_up=true, latency_ms=4)
+define p3 as ServiceProbe(service_name="auth-service", is_up=true, latency_ms=35)
+define h1 as evaluate_health([p1, p2, p3])
+print h1.overall_status, h1.total_services, h1.unhealthy_count, h1.max_latency_ms
+
+# 2. Degraded cluster (high latency)
+define p4 as ServiceProbe(service_name="primary-db", is_up=true, latency_ms=750)
+define p5 as ServiceProbe(service_name="redis-cache", is_up=true, latency_ms=10)
+define h2 as evaluate_health([p4, p5])
+print h2.overall_status, h2.total_services, h2.unhealthy_count, h2.max_latency_ms
+
+# 3. Partial outage
+define p6 as ServiceProbe(service_name="primary-db", is_up=true, latency_ms=20)
+define p7 as ServiceProbe(service_name="redis-cache", is_up=false, latency_ms=0)
+define h3 as evaluate_health([p6, p7])
+print h3.overall_status, h3.total_services, h3.unhealthy_count, h3.max_latency_ms
+
+# 4. Complete system outage
+define p8 as ServiceProbe(service_name="primary-db", is_up=false, latency_ms=0)
+define p9 as ServiceProbe(service_name="redis-cache", is_up=false, latency_ms=0)
+define h4 as evaluate_health([p8, p9])
+print h4.overall_status, h4.total_services, h4.unhealthy_count, h4.max_latency_ms

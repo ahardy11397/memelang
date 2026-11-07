@@ -28,6 +28,11 @@ from memelang.ir.schema import (
     ListLiteralExpr,
     ListSetIndexStmt,
     LiteralExpr,
+    MapEntry,
+    MapGetExpr,
+    MapHasKeyExpr,
+    MapLiteralExpr,
+    MapSetStmt,
     MemeType,
     PrintStmt,
     ProgramIR,
@@ -35,6 +40,12 @@ from memelang.ir.schema import (
     RandomListExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RecordDefStmt,
+    RecordFieldDef,
+    RecordFieldExpr,
+    RecordFieldInit,
+    RecordLiteralExpr,
+    RecordSetFieldStmt,
     ReturnStmt,
     SortCollectionStmt,
     StrEndsWithExpr,
@@ -108,6 +119,26 @@ class _Scope:
 def _element_type_of(list_type: MemeType) -> MemeType | None:
     if list_type.startswith("List<") and list_type.endswith(">"):
         return cast(MemeType, list_type[5:-1])
+    return None
+
+
+def _map_types_of(map_type: MemeType) -> tuple[MemeType, MemeType] | None:
+    if map_type.startswith("Map<") and map_type.endswith(">"):
+        inner = map_type[4:-1]
+        depth = 0
+        comma_pos = -1
+        for i, ch in enumerate(inner):
+            if ch == "<":
+                depth += 1
+            elif ch == ">":
+                depth -= 1
+            elif ch == "," and depth == 0:
+                comma_pos = i
+                break
+        if comma_pos != -1:
+            k = inner[:comma_pos].strip()
+            v = inner[comma_pos + 1 :].strip()
+            return cast(MemeType, k), cast(MemeType, v)
     return None
 
 
@@ -410,6 +441,7 @@ def _check_literal_bounds(lo: IRExpr, hi: IRExpr, stmt_idx: int | None) -> None:
 class _StaticChecker:
     def __init__(self) -> None:
         self.functions: dict[str, tuple[list[MemeType], MemeType]] = {}
+        self.records: dict[str, dict[str, MemeType]] = {}
 
     def infer_expr_type(self, expr: IRExpr, scope: _Scope, stmt_idx: int | None) -> MemeType:
         if isinstance(expr, LiteralExpr):
@@ -528,6 +560,15 @@ class _StaticChecker:
 
         if isinstance(expr, ListIndexExpr):
             target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            map_t = _map_types_of(target_t)
+            if map_t is not None:
+                k_t, v_t = map_t
+                idx_t = self.infer_expr_type(expr.index, scope, stmt_idx)
+                if idx_t != k_t:
+                    raise StaticVerificationError(
+                        f"Map key lookup expected {k_t}, got {idx_t}", stmt_idx
+                    )
+                return v_t
             elem_t = _element_type_of(target_t)
             if elem_t is None:
                 raise StaticVerificationError(
@@ -637,6 +678,100 @@ class _StaticChecker:
                 )
             _check_literal_bounds(expr.start, expr.end, stmt_idx)
             return "String"
+
+        if isinstance(expr, RecordLiteralExpr):
+            if expr.record_name not in self.records:
+                raise StaticVerificationError(
+                    f"Instantiation of unknown record `{expr.record_name}`", stmt_idx
+                )
+            expected_fields = self.records[expr.record_name]
+            seen_fields: set[str] = set()
+            for f in expr.fields:
+                if f.name in seen_fields:
+                    raise StaticVerificationError(
+                        f"Duplicate field `{f.name}` in instantiation of `{expr.record_name}`", stmt_idx
+                    )
+                seen_fields.add(f.name)
+                if f.name not in expected_fields:
+                    raise StaticVerificationError(
+                        f"Unknown field `{f.name}` for record `{expr.record_name}`", stmt_idx
+                    )
+                val_t = self.infer_expr_type(f.value, scope, stmt_idx)
+                if val_t != expected_fields[f.name]:
+                    raise StaticVerificationError(
+                        f"Field `{f.name}` of `{expr.record_name}` expects {expected_fields[f.name]}, got {val_t}",
+                        stmt_idx,
+                    )
+            missing = set(expected_fields.keys()) - seen_fields
+            if missing:
+                raise StaticVerificationError(
+                    f"Missing required fields for record `{expr.record_name}`: {sorted(missing)}",
+                    stmt_idx,
+                )
+            return expr.record_name
+
+        if isinstance(expr, RecordFieldExpr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if target_t not in self.records:
+                raise StaticVerificationError(
+                    f"Field access `{expr.field_name}` on non-record type `{target_t}`", stmt_idx
+                )
+            rec_fields = self.records[target_t]
+            if expr.field_name not in rec_fields:
+                raise StaticVerificationError(
+                    f"Record `{target_t}` has no field `{expr.field_name}`", stmt_idx
+                )
+            return rec_fields[expr.field_name]
+
+        if isinstance(expr, MapLiteralExpr):
+            for e in expr.entries:
+                k_t = self.infer_expr_type(e.key, scope, stmt_idx)
+                v_t = self.infer_expr_type(e.value, scope, stmt_idx)
+                if k_t != expr.key_type:
+                    raise StaticVerificationError(
+                        f"Map literal key expected {expr.key_type}, got {k_t}", stmt_idx
+                    )
+                if v_t != expr.value_type:
+                    raise StaticVerificationError(
+                        f"Map literal value expected {expr.value_type}, got {v_t}", stmt_idx
+                    )
+            return f"Map<{expr.key_type}, {expr.value_type}>"
+
+        if isinstance(expr, MapGetExpr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            map_t = _map_types_of(target_t)
+            if map_t is None:
+                raise StaticVerificationError(
+                    f"`map_get` requires a Map target, got {target_t}", stmt_idx
+                )
+            k_type, v_type = map_t
+            key_t = self.infer_expr_type(expr.key, scope, stmt_idx)
+            if key_t != k_type:
+                raise StaticVerificationError(
+                    f"Map key lookup expected {k_type}, got {key_t}", stmt_idx
+                )
+            if expr.default_val is not None:
+                def_t = self.infer_expr_type(expr.default_val, scope, stmt_idx)
+                if def_t != v_type:
+                    raise StaticVerificationError(
+                        f"Map default value expected {v_type}, got {def_t}", stmt_idx
+                    )
+            return v_type
+
+        if isinstance(expr, MapHasKeyExpr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            map_t = _map_types_of(target_t)
+            if map_t is None:
+                raise StaticVerificationError(
+                    f"`map_has_key` requires a Map target, got {target_t}", stmt_idx
+                )
+            k_type, _ = map_t
+            key_t = self.infer_expr_type(expr.key, scope, stmt_idx)
+            if key_t != k_type:
+                raise StaticVerificationError(
+                    f"Map key check expected {k_type}, got {key_t}", stmt_idx
+                )
+            return "Bool"
 
         raise StaticVerificationError(f"Unsupported expression node: {type(expr)!r}", stmt_idx)
 
@@ -948,6 +1083,76 @@ class _StaticChecker:
                 )
             return True
 
+        if isinstance(stmt, RecordDefStmt):
+            if expected_return is not None:
+                raise StaticVerificationError(
+                    "Nested record definitions inside functions are not supported", stmt_idx
+                )
+            if stmt.name in self.records:
+                raise StaticVerificationError(
+                    f"Duplicate record definition `{stmt.name}`", stmt_idx
+                )
+            fields: dict[str, MemeType] = {}
+            for f in stmt.fields:
+                if f.field_type == "Void":
+                    raise StaticVerificationError(
+                        f"Record field `{f.name}` cannot have type Void", stmt_idx
+                    )
+                if f.name in fields:
+                    raise StaticVerificationError(
+                        f"Duplicate field name `{f.name}` in record `{stmt.name}`", stmt_idx
+                    )
+                fields[f.name] = f.field_type
+            self.records[stmt.name] = fields
+            return False
+
+        if isinstance(stmt, RecordSetFieldStmt):
+            target_t = scope.lookup(stmt.target)
+            if target_t is None:
+                raise StaticVerificationError(
+                    f"Cannot set field on undeclared variable `{stmt.target}`", stmt_idx
+                )
+            if target_t not in self.records:
+                raise StaticVerificationError(
+                    f"Variable `{stmt.target}` of type `{target_t}` is not a record", stmt_idx
+                )
+            rec_fields = self.records[target_t]
+            if stmt.field_name not in rec_fields:
+                raise StaticVerificationError(
+                    f"Record `{target_t}` has no field `{stmt.field_name}`", stmt_idx
+                )
+            val_t = self.infer_expr_type(stmt.value, scope, stmt_idx)
+            if val_t != rec_fields[stmt.field_name]:
+                raise StaticVerificationError(
+                    f"Cannot assign {val_t} to field `{stmt.field_name}` of type {rec_fields[stmt.field_name]}",
+                    stmt_idx,
+                )
+            return False
+
+        if isinstance(stmt, MapSetStmt):
+            target_t = scope.lookup(stmt.target)
+            if target_t is None:
+                raise StaticVerificationError(
+                    f"Cannot set map entry on undeclared variable `{stmt.target}`", stmt_idx
+                )
+            map_t = _map_types_of(target_t)
+            if map_t is None:
+                raise StaticVerificationError(
+                    f"`map_set` requires a Map variable, got {target_t}", stmt_idx
+                )
+            k_type, v_type = map_t
+            key_t = self.infer_expr_type(stmt.key, scope, stmt_idx)
+            if key_t != k_type:
+                raise StaticVerificationError(
+                    f"Map set key expected {k_type}, got {key_t}", stmt_idx
+                )
+            val_t = self.infer_expr_type(stmt.value, scope, stmt_idx)
+            if val_t != v_type:
+                raise StaticVerificationError(
+                    f"Map set value expected {v_type}, got {val_t}", stmt_idx
+                )
+            return False
+
         raise StaticVerificationError(f"Unsupported statement node: {type(stmt)!r}", stmt_idx)
 
 
@@ -1063,6 +1268,8 @@ def _stmts_mutate_var(stmts: list[IRStatement], name: str) -> bool:
                 SortCollectionStmt,
                 ClampCollectionStmt,
                 FilterCollectionStmt,
+                RecordSetFieldStmt,
+                MapSetStmt,
             ),
         ) and s.target == name:
             return True
@@ -1152,7 +1359,7 @@ def verify_synthesis(
 
     # Unwrap `FuncDefStmt(name="main", params=[], return_type="Void")` if no top-level main statements exist
     has_top_exec = any(
-        not isinstance(it, (FuncDefStmt, AmbiguityDiagnostic)) for it in result.items
+        not isinstance(it, (FuncDefStmt, RecordDefStmt, AmbiguityDiagnostic)) for it in result.items
     )
     items_in: list[SynthesisItem] = []
     for it in result.items:

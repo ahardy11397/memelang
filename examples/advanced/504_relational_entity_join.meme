@@ -1,0 +1,68 @@
+record Customer:
+    id: Int
+    name: String
+    tier: String
+
+record Product:
+    id: Int
+    title: String
+    unit_price_cents: Int
+
+record Order:
+    order_id: Int
+    customer_id: Int
+    product_id: Int
+    quantity: Int
+
+record OrderReport:
+    order_id: Int
+    customer_name: String
+    product_title: String
+    subtotal_cents: Int
+    discount_cents: Int
+    final_total_cents: Int
+
+function join_order(ord: Order, customers: Map<Int, Customer>, products: Map<Int, Product>) -> OrderReport:
+    define cust as customers[ord.customer_id]
+    define prod as products[ord.product_id]
+    define subtotal as prod.unit_price_cents * ord.quantity
+    define discount as 0
+    if cust.tier == "VIP":
+        set discount to subtotal * 15 / 100
+    else:
+        if cust.tier == "PRO":
+            set discount to subtotal * 5 / 100
+        else:
+            set discount to 0
+    define final_total as subtotal - discount
+    return OrderReport(order_id=ord.order_id, customer_name=cust.name, product_title=prod.title, subtotal_cents=subtotal, discount_cents=discount, final_total_cents=final_total)
+
+define c1 as Customer(id=1, name="Alice", tier="VIP")
+define c2 as Customer(id=2, name="Bob", tier="PRO")
+define c3 as Customer(id=3, name="Charlie", tier="STANDARD")
+
+define customers as empty Map<Int, Customer>
+set customers[c1.id] to c1
+set customers[c2.id] to c2
+set customers[c3.id] to c3
+
+define p1 as Product(id=10, title="Widget-Pro", unit_price_cents=2000)
+define p2 as Product(id=20, title="USB-Cable", unit_price_cents=1000)
+
+define products as empty Map<Int, Product>
+set products[p1.id] to p1
+set products[p2.id] to p2
+
+define o1 as Order(order_id=501, customer_id=1, product_id=10, quantity=3)
+define o2 as Order(order_id=502, customer_id=2, product_id=20, quantity=4)
+define o3 as Order(order_id=503, customer_id=3, product_id=10, quantity=2)
+
+define orders as [o1, o2, o3]
+define grand_total as 0
+
+for each ord in orders:
+    define rep as join_order(ord, customers, products)
+    print rep.order_id, rep.customer_name, rep.product_title, rep.subtotal_cents, rep.discount_cents, rep.final_total_cents
+    set grand_total to grand_total + rep.final_total_cents
+
+print grand_total

@@ -1,0 +1,1588 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/501_service_contract_auth.meme": {
+      "source_sha256": "04706cba8da60c6346cfb9e46666d7c07a468b950d995896e69a51d4d8c873a5",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "Credentials",
+          "fields": [
+            {
+              "name": "username",
+              "field_type": "String"
+            },
+            {
+              "name": "token",
+              "field_type": "String"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "record_def",
+          "name": "Session",
+          "fields": [
+            {
+              "name": "session_id",
+              "field_type": "String"
+            },
+            {
+              "name": "user_id",
+              "field_type": "Int"
+            },
+            {
+              "name": "role",
+              "field_type": "String"
+            },
+            {
+              "name": "is_valid",
+              "field_type": "Bool"
+            }
+          ],
+          "source_line": 5
+        },
+        {
+          "op": "record_def",
+          "name": "AuthResponse",
+          "fields": [
+            {
+              "name": "status_code",
+              "field_type": "Int"
+            },
+            {
+              "name": "message",
+              "field_type": "String"
+            },
+            {
+              "name": "session",
+              "field_type": "Session"
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "func_def",
+          "name": "authenticate",
+          "params": [
+            {
+              "name": "creds",
+              "param_type": "Credentials"
+            },
+            {
+              "name": "tokens",
+              "param_type": "Map<String, String>"
+            },
+            {
+              "name": "user_ids",
+              "param_type": "Map<String, Int>"
+            },
+            {
+              "name": "roles",
+              "param_type": "Map<String, String>"
+            }
+          ],
+          "return_type": "AuthResponse",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "map_has_key",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "tokens"
+                },
+                "key": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "creds"
+                  },
+                  "field_name": "username"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "tokens"
+                      },
+                      "index": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "creds"
+                        },
+                        "field_name": "username"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "creds"
+                      },
+                      "field_name": "token"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "var_decl",
+                      "name": "uid",
+                      "var_type": "Int",
+                      "value": {
+                        "expr_type": "map_get",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "user_ids"
+                        },
+                        "key": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "creds"
+                          },
+                          "field_name": "username"
+                        },
+                        "default_val": {
+                          "expr_type": "literal",
+                          "value": 0,
+                          "data_type": "Int"
+                        }
+                      },
+                      "source_line": 19
+                    },
+                    {
+                      "op": "var_decl",
+                      "name": "role_name",
+                      "var_type": "String",
+                      "value": {
+                        "expr_type": "map_get",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "roles"
+                        },
+                        "key": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "creds"
+                          },
+                          "field_name": "username"
+                        },
+                        "default_val": {
+                          "expr_type": "literal",
+                          "value": "viewer",
+                          "data_type": "String"
+                        }
+                      },
+                      "source_line": 20
+                    },
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "record_literal",
+                        "record_name": "AuthResponse",
+                        "fields": [
+                          {
+                            "name": "status_code",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": 200,
+                              "data_type": "Int"
+                            }
+                          },
+                          {
+                            "name": "message",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": "OK",
+                              "data_type": "String"
+                            }
+                          },
+                          {
+                            "name": "session",
+                            "value": {
+                              "expr_type": "record_literal",
+                              "record_name": "Session",
+                              "fields": [
+                                {
+                                  "name": "session_id",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": "sess_valid",
+                                    "data_type": "String"
+                                  }
+                                },
+                                {
+                                  "name": "user_id",
+                                  "value": {
+                                    "expr_type": "var_ref",
+                                    "name": "uid"
+                                  }
+                                },
+                                {
+                                  "name": "role",
+                                  "value": {
+                                    "expr_type": "var_ref",
+                                    "name": "role_name"
+                                  }
+                                },
+                                {
+                                  "name": "is_valid",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": true,
+                                    "data_type": "Bool"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "source_line": 21
+                    }
+                  ],
+                  "else_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "record_literal",
+                        "record_name": "AuthResponse",
+                        "fields": [
+                          {
+                            "name": "status_code",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": 401,
+                              "data_type": "Int"
+                            }
+                          },
+                          {
+                            "name": "message",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": "Invalid token",
+                              "data_type": "String"
+                            }
+                          },
+                          {
+                            "name": "session",
+                            "value": {
+                              "expr_type": "record_literal",
+                              "record_name": "Session",
+                              "fields": [
+                                {
+                                  "name": "session_id",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": "",
+                                    "data_type": "String"
+                                  }
+                                },
+                                {
+                                  "name": "user_id",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": 0,
+                                    "data_type": "Int"
+                                  }
+                                },
+                                {
+                                  "name": "role",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": "none",
+                                    "data_type": "String"
+                                  }
+                                },
+                                {
+                                  "name": "is_valid",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": false,
+                                    "data_type": "Bool"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "source_line": 23
+                    }
+                  ],
+                  "source_line": 18
+                }
+              ],
+              "else_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "record_literal",
+                    "record_name": "AuthResponse",
+                    "fields": [
+                      {
+                        "name": "status_code",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": 401,
+                          "data_type": "Int"
+                        }
+                      },
+                      {
+                        "name": "message",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "User not found",
+                          "data_type": "String"
+                        }
+                      },
+                      {
+                        "name": "session",
+                        "value": {
+                          "expr_type": "record_literal",
+                          "record_name": "Session",
+                          "fields": [
+                            {
+                              "name": "session_id",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": "",
+                                "data_type": "String"
+                              }
+                            },
+                            {
+                              "name": "user_id",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": 0,
+                                "data_type": "Int"
+                              }
+                            },
+                            {
+                              "name": "role",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": "none",
+                                "data_type": "String"
+                              }
+                            },
+                            {
+                              "name": "is_valid",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": false,
+                                "data_type": "Bool"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "source_line": 25
+                }
+              ],
+              "source_line": 17
+            }
+          ],
+          "source_line": 16
+        },
+        {
+          "op": "var_decl",
+          "name": "tokens",
+          "var_type": "Map<String, String>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "String",
+            "entries": [
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "alice",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": "tok_alice_secure",
+                  "data_type": "String"
+                }
+              },
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "bob",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": "tok_bob_pass",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 27
+        },
+        {
+          "op": "var_decl",
+          "name": "user_ids",
+          "var_type": "Map<String, Int>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "Int",
+            "entries": [
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "alice",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 101,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "bob",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 102,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 28
+        },
+        {
+          "op": "var_decl",
+          "name": "roles",
+          "var_type": "Map<String, String>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "String",
+            "entries": [
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "alice",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": "admin",
+                  "data_type": "String"
+                }
+              },
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "bob",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": "operator",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 29
+        },
+        {
+          "op": "var_decl",
+          "name": "req1",
+          "var_type": "Credentials",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Credentials",
+            "fields": [
+              {
+                "name": "username",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "alice",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "token",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "tok_alice_secure",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 31
+        },
+        {
+          "op": "var_decl",
+          "name": "res1",
+          "var_type": "AuthResponse",
+          "value": {
+            "expr_type": "call",
+            "func_name": "authenticate",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "req1"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "tokens"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "user_ids"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "roles"
+              }
+            ]
+          },
+          "source_line": 32
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res1"
+              },
+              "field_name": "status_code"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res1"
+              },
+              "field_name": "message"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res1"
+                },
+                "field_name": "session"
+              },
+              "field_name": "role"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res1"
+                },
+                "field_name": "session"
+              },
+              "field_name": "is_valid"
+            }
+          ],
+          "source_line": 33
+        },
+        {
+          "op": "var_decl",
+          "name": "req2",
+          "var_type": "Credentials",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Credentials",
+            "fields": [
+              {
+                "name": "username",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "bob",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "token",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "wrong_secret",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 35
+        },
+        {
+          "op": "var_decl",
+          "name": "res2",
+          "var_type": "AuthResponse",
+          "value": {
+            "expr_type": "call",
+            "func_name": "authenticate",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "req2"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "tokens"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "user_ids"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "roles"
+              }
+            ]
+          },
+          "source_line": 36
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res2"
+              },
+              "field_name": "status_code"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res2"
+              },
+              "field_name": "message"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res2"
+                },
+                "field_name": "session"
+              },
+              "field_name": "is_valid"
+            }
+          ],
+          "source_line": 37
+        },
+        {
+          "op": "var_decl",
+          "name": "req3",
+          "var_type": "Credentials",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Credentials",
+            "fields": [
+              {
+                "name": "username",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "eve",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "token",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "tok_unknown",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 39
+        },
+        {
+          "op": "var_decl",
+          "name": "res3",
+          "var_type": "AuthResponse",
+          "value": {
+            "expr_type": "call",
+            "func_name": "authenticate",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "req3"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "tokens"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "user_ids"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "roles"
+              }
+            ]
+          },
+          "source_line": 40
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res3"
+              },
+              "field_name": "status_code"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res3"
+              },
+              "field_name": "message"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res3"
+                },
+                "field_name": "session"
+              },
+              "field_name": "is_valid"
+            }
+          ],
+          "source_line": 41
+        }
+      ],
+      "canonical_meme": "record Credentials:\n    username: String\n    token: String\nrecord Session:\n    session_id: String\n    user_id: Int\n    role: String\n    is_valid: Bool\nrecord AuthResponse:\n    status_code: Int\n    message: String\n    session: Session\nfunction authenticate(creds: Credentials, tokens: Map<String, String>, user_ids: Map<String, Int>, roles: Map<String, String>) -> AuthResponse:\n    if tokens has key creds.username:\n        if tokens[creds.username] == creds.token:\n            define uid: Int as user_ids[creds.username] default 0\n            define role_name: String as roles[creds.username] default \"viewer\"\n            return AuthResponse(status_code=200, message=\"OK\", session=Session(session_id=\"sess_valid\", user_id=uid, role=role_name, is_valid=true))\n        else:\n            return AuthResponse(status_code=401, message=\"Invalid token\", session=Session(session_id=\"\", user_id=0, role=\"none\", is_valid=false))\n    else:\n        return AuthResponse(status_code=401, message=\"User not found\", session=Session(session_id=\"\", user_id=0, role=\"none\", is_valid=false))\ndefine tokens: Map<String, String> as {\"alice\": \"tok_alice_secure\", \"bob\": \"tok_bob_pass\"}\ndefine user_ids: Map<String, Int> as {\"alice\": 101, \"bob\": 102}\ndefine roles: Map<String, String> as {\"alice\": \"admin\", \"bob\": \"operator\"}\ndefine req1: Credentials as Credentials(username=\"alice\", token=\"tok_alice_secure\")\ndefine res1: AuthResponse as authenticate(req1, tokens, user_ids, roles)\nprint res1.status_code, res1.message, res1.session.role, res1.session.is_valid\ndefine req2: Credentials as Credentials(username=\"bob\", token=\"wrong_secret\")\ndefine res2: AuthResponse as authenticate(req2, tokens, user_ids, roles)\nprint res2.status_code, res2.message, res2.session.is_valid\ndefine req3: Credentials as Credentials(username=\"eve\", token=\"tok_unknown\")\ndefine res3: AuthResponse as authenticate(req3, tokens, user_ids, roles)\nprint res3.status_code, res3.message, res3.session.is_valid",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "Credentials",
+            "fields": [
+              {
+                "name": "username",
+                "field_type": "String"
+              },
+              {
+                "name": "token",
+                "field_type": "String"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "record_def",
+            "name": "Session",
+            "fields": [
+              {
+                "name": "session_id",
+                "field_type": "String"
+              },
+              {
+                "name": "user_id",
+                "field_type": "Int"
+              },
+              {
+                "name": "role",
+                "field_type": "String"
+              },
+              {
+                "name": "is_valid",
+                "field_type": "Bool"
+              }
+            ],
+            "source_line": 5
+          },
+          {
+            "op": "record_def",
+            "name": "AuthResponse",
+            "fields": [
+              {
+                "name": "status_code",
+                "field_type": "Int"
+              },
+              {
+                "name": "message",
+                "field_type": "String"
+              },
+              {
+                "name": "session",
+                "field_type": "Session"
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "func_def",
+            "name": "authenticate",
+            "params": [
+              {
+                "name": "creds",
+                "param_type": "Credentials"
+              },
+              {
+                "name": "tokens",
+                "param_type": "Map<String, String>"
+              },
+              {
+                "name": "user_ids",
+                "param_type": "Map<String, Int>"
+              },
+              {
+                "name": "roles",
+                "param_type": "Map<String, String>"
+              }
+            ],
+            "return_type": "AuthResponse",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "map_has_key",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "tokens"
+                  },
+                  "key": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "creds"
+                    },
+                    "field_name": "username"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "tokens"
+                        },
+                        "index": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "creds"
+                          },
+                          "field_name": "username"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "creds"
+                        },
+                        "field_name": "token"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "var_decl",
+                        "name": "uid",
+                        "var_type": "Int",
+                        "value": {
+                          "expr_type": "map_get",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "user_ids"
+                          },
+                          "key": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "creds"
+                            },
+                            "field_name": "username"
+                          },
+                          "default_val": {
+                            "expr_type": "literal",
+                            "value": 0,
+                            "data_type": "Int"
+                          }
+                        },
+                        "source_line": 19
+                      },
+                      {
+                        "op": "var_decl",
+                        "name": "role_name",
+                        "var_type": "String",
+                        "value": {
+                          "expr_type": "map_get",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "roles"
+                          },
+                          "key": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "creds"
+                            },
+                            "field_name": "username"
+                          },
+                          "default_val": {
+                            "expr_type": "literal",
+                            "value": "viewer",
+                            "data_type": "String"
+                          }
+                        },
+                        "source_line": 20
+                      },
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "record_literal",
+                          "record_name": "AuthResponse",
+                          "fields": [
+                            {
+                              "name": "status_code",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": 200,
+                                "data_type": "Int"
+                              }
+                            },
+                            {
+                              "name": "message",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": "OK",
+                                "data_type": "String"
+                              }
+                            },
+                            {
+                              "name": "session",
+                              "value": {
+                                "expr_type": "record_literal",
+                                "record_name": "Session",
+                                "fields": [
+                                  {
+                                    "name": "session_id",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": "sess_valid",
+                                      "data_type": "String"
+                                    }
+                                  },
+                                  {
+                                    "name": "user_id",
+                                    "value": {
+                                      "expr_type": "var_ref",
+                                      "name": "uid"
+                                    }
+                                  },
+                                  {
+                                    "name": "role",
+                                    "value": {
+                                      "expr_type": "var_ref",
+                                      "name": "role_name"
+                                    }
+                                  },
+                                  {
+                                    "name": "is_valid",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": true,
+                                      "data_type": "Bool"
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        },
+                        "source_line": 21
+                      }
+                    ],
+                    "else_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "record_literal",
+                          "record_name": "AuthResponse",
+                          "fields": [
+                            {
+                              "name": "status_code",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": 401,
+                                "data_type": "Int"
+                              }
+                            },
+                            {
+                              "name": "message",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": "Invalid token",
+                                "data_type": "String"
+                              }
+                            },
+                            {
+                              "name": "session",
+                              "value": {
+                                "expr_type": "record_literal",
+                                "record_name": "Session",
+                                "fields": [
+                                  {
+                                    "name": "session_id",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": "",
+                                      "data_type": "String"
+                                    }
+                                  },
+                                  {
+                                    "name": "user_id",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": 0,
+                                      "data_type": "Int"
+                                    }
+                                  },
+                                  {
+                                    "name": "role",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": "none",
+                                      "data_type": "String"
+                                    }
+                                  },
+                                  {
+                                    "name": "is_valid",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": false,
+                                      "data_type": "Bool"
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        },
+                        "source_line": 23
+                      }
+                    ],
+                    "source_line": 18
+                  }
+                ],
+                "else_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "record_literal",
+                      "record_name": "AuthResponse",
+                      "fields": [
+                        {
+                          "name": "status_code",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": 401,
+                            "data_type": "Int"
+                          }
+                        },
+                        {
+                          "name": "message",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": "User not found",
+                            "data_type": "String"
+                          }
+                        },
+                        {
+                          "name": "session",
+                          "value": {
+                            "expr_type": "record_literal",
+                            "record_name": "Session",
+                            "fields": [
+                              {
+                                "name": "session_id",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": "",
+                                  "data_type": "String"
+                                }
+                              },
+                              {
+                                "name": "user_id",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": 0,
+                                  "data_type": "Int"
+                                }
+                              },
+                              {
+                                "name": "role",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": "none",
+                                  "data_type": "String"
+                                }
+                              },
+                              {
+                                "name": "is_valid",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": false,
+                                  "data_type": "Bool"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    "source_line": 25
+                  }
+                ],
+                "source_line": 17
+              }
+            ],
+            "source_line": 16
+          },
+          {
+            "op": "var_decl",
+            "name": "tokens",
+            "var_type": "Map<String, String>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "String",
+              "entries": [
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "alice",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "tok_alice_secure",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "bob",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "tok_bob_pass",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 27
+          },
+          {
+            "op": "var_decl",
+            "name": "user_ids",
+            "var_type": "Map<String, Int>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "Int",
+              "entries": [
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "alice",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 101,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "bob",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 102,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 28
+          },
+          {
+            "op": "var_decl",
+            "name": "roles",
+            "var_type": "Map<String, String>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "String",
+              "entries": [
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "alice",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "admin",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "bob",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "operator",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 29
+          },
+          {
+            "op": "var_decl",
+            "name": "req1",
+            "var_type": "Credentials",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Credentials",
+              "fields": [
+                {
+                  "name": "username",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "alice",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "token",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "tok_alice_secure",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 31
+          },
+          {
+            "op": "var_decl",
+            "name": "res1",
+            "var_type": "AuthResponse",
+            "value": {
+              "expr_type": "call",
+              "func_name": "authenticate",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "req1"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "tokens"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "user_ids"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "roles"
+                }
+              ]
+            },
+            "source_line": 32
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res1"
+                },
+                "field_name": "status_code"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res1"
+                },
+                "field_name": "message"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "res1"
+                  },
+                  "field_name": "session"
+                },
+                "field_name": "role"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "res1"
+                  },
+                  "field_name": "session"
+                },
+                "field_name": "is_valid"
+              }
+            ],
+            "source_line": 33
+          },
+          {
+            "op": "var_decl",
+            "name": "req2",
+            "var_type": "Credentials",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Credentials",
+              "fields": [
+                {
+                  "name": "username",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "bob",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "token",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "wrong_secret",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 35
+          },
+          {
+            "op": "var_decl",
+            "name": "res2",
+            "var_type": "AuthResponse",
+            "value": {
+              "expr_type": "call",
+              "func_name": "authenticate",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "req2"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "tokens"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "user_ids"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "roles"
+                }
+              ]
+            },
+            "source_line": 36
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res2"
+                },
+                "field_name": "status_code"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res2"
+                },
+                "field_name": "message"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "res2"
+                  },
+                  "field_name": "session"
+                },
+                "field_name": "is_valid"
+              }
+            ],
+            "source_line": 37
+          },
+          {
+            "op": "var_decl",
+            "name": "req3",
+            "var_type": "Credentials",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Credentials",
+              "fields": [
+                {
+                  "name": "username",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "eve",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "token",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "tok_unknown",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 39
+          },
+          {
+            "op": "var_decl",
+            "name": "res3",
+            "var_type": "AuthResponse",
+            "value": {
+              "expr_type": "call",
+              "func_name": "authenticate",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "req3"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "tokens"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "user_ids"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "roles"
+                }
+              ]
+            },
+            "source_line": 40
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res3"
+                },
+                "field_name": "status_code"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res3"
+                },
+                "field_name": "message"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "res3"
+                  },
+                  "field_name": "session"
+                },
+                "field_name": "is_valid"
+              }
+            ],
+            "source_line": 41
+          }
+        ]
+      }
+    }
+  }
+}

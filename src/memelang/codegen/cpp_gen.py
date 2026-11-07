@@ -22,6 +22,11 @@ from memelang.ir.schema import (
     ListLiteralExpr,
     ListSetIndexStmt,
     LiteralExpr,
+    MapEntry,
+    MapGetExpr,
+    MapHasKeyExpr,
+    MapLiteralExpr,
+    MapSetStmt,
     MemeType,
     PrintStmt,
     ProgramIR,
@@ -29,6 +34,12 @@ from memelang.ir.schema import (
     RandomListExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RecordDefStmt,
+    RecordFieldDef,
+    RecordFieldExpr,
+    RecordFieldInit,
+    RecordLiteralExpr,
+    RecordSetFieldStmt,
     ReturnStmt,
     SortCollectionStmt,
     StrEndsWithExpr,
@@ -79,12 +90,35 @@ _CPP_KEYWORDS = {
 }
 
 
+def _map_types_of(map_type: str) -> tuple[str, str] | None:
+    if map_type.startswith("Map<") and map_type.endswith(">"):
+        inner = map_type[4:-1]
+        depth = 0
+        comma = -1
+        for i, ch in enumerate(inner):
+            if ch == "<":
+                depth += 1
+            elif ch == ">":
+                depth -= 1
+            elif ch == "," and depth == 0:
+                comma = i
+                break
+        if comma != -1:
+            return inner[:comma].strip(), inner[comma + 1 :].strip()
+    return None
+
+
 def _cpp_ident(name: str) -> str:
     return f"meme_{name}" if name in _CPP_KEYWORDS or name.startswith("_meme_") else name
+
+
 def _cpp_type(meme_type: MemeType | str) -> str:
     if meme_type.startswith("List<") and meme_type.endswith(">"):
         inner = meme_type[5:-1]
         return f"std::vector<{_cpp_type(inner)}>"
+    map_t = _map_types_of(meme_type)
+    if map_t is not None:
+        return f"std::unordered_map<{_cpp_type(map_t[0])}, {_cpp_type(map_t[1])}>"
     mapping = {
         "Int": "long long",
         "Float": "double",
@@ -92,7 +126,9 @@ def _cpp_type(meme_type: MemeType | str) -> str:
         "String": "std::string",
         "Void": "void",
     }
-    return mapping[meme_type]
+    if meme_type in mapping:
+        return mapping[meme_type]
+    return _cpp_ident(meme_type)
 
 
 class _CppGen:
@@ -102,6 +138,7 @@ class _CppGen:
         self.uses_str_helpers = False
         self.uses_json_io = False
         self.func_returns: dict[str, MemeType] = {}
+        self.records: dict[str, dict[str, MemeType]] = {}
 
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> MemeType:
         if isinstance(expr, LiteralExpr):
@@ -122,11 +159,29 @@ class _CppGen:
             return "String"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
-            return col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[return-value]
+            if col_t.startswith("List<"):
+                return col_t[5:-1]  # type: ignore[return-value]
+            map_t = _map_types_of(col_t)
+            if map_t is not None:
+                return map_t[1]  # type: ignore[return-value]
+            return "Int"
         if isinstance(expr, CallExpr):
             return self.func_returns.get(expr.func_name, "Int")
         if isinstance(expr, ReadInputExpr):
             return expr.target_type
+        if isinstance(expr, RecordLiteralExpr):
+            return expr.record_name
+        if isinstance(expr, RecordFieldExpr):
+            target_t = self.infer_type(expr.target, scope)
+            return self.records.get(target_t, {}).get(expr.field_name, "String")
+        if isinstance(expr, MapLiteralExpr):
+            return f"Map<{expr.key_type}, {expr.value_type}>"
+        if isinstance(expr, MapGetExpr):
+            target_t = self.infer_type(expr.target, scope)
+            mt = _map_types_of(target_t)
+            return mt[1] if mt else "String"
+        if isinstance(expr, MapHasKeyExpr):
+            return "Bool"
         if isinstance(expr, UnaryOpExpr):
             return "Bool" if expr.op == "not" else self.infer_type(expr.operand, scope)
         if isinstance(expr, BinaryOpExpr):
@@ -186,6 +241,9 @@ class _CppGen:
             return f"static_cast<long long>({self.gen_expr(expr.target, scope)}.size())"
 
         if isinstance(expr, ListIndexExpr):
+            tgt_t = self.infer_type(expr.target, scope)
+            if tgt_t.startswith("Map<"):
+                return f"{self.gen_expr(expr.target, scope)}.at({self.gen_expr(expr.index, scope)})"
             indexed = f"{self.gen_expr(expr.target, scope)}.at(static_cast<std::size_t>({self.gen_expr(expr.index, scope)}))"
             if self.infer_type(expr, scope) == "Bool":
                 return f"static_cast<bool>({indexed})"
@@ -226,6 +284,38 @@ class _CppGen:
             self.uses_str_helpers = True
             self.uses_json_io = True
             return f"_meme_read_json_list({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, RecordLiteralExpr):
+            fields = ", ".join(
+                f".{_cpp_ident(f.name)} = {self.gen_expr(f.value, scope)}" for f in expr.fields
+            )
+            return f"{_cpp_ident(expr.record_name)}{{ {fields} }}"
+
+        if isinstance(expr, RecordFieldExpr):
+            return f"{self.gen_expr(expr.target, scope)}.{_cpp_ident(expr.field_name)}"
+
+        if isinstance(expr, MapLiteralExpr):
+            map_t = _cpp_type(f"Map<{expr.key_type}, {expr.value_type}>")
+            if not expr.entries:
+                return f"{map_t}{{}}"
+            entries_str = ", ".join(
+                f"{{{self.gen_expr(e.key, scope)}, {self.gen_expr(e.value, scope)}}}"
+                for e in expr.entries
+            )
+            return f"{map_t}{{{entries_str}}}"
+
+        if isinstance(expr, MapGetExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            k = self.gen_expr(expr.key, scope)
+            if expr.default_val is not None:
+                def_val = self.gen_expr(expr.default_val, scope)
+                return f"({tgt}.count({k}) ? {tgt}.at({k}) : {def_val})"
+            return f"{tgt}.at({k})"
+
+        if isinstance(expr, MapHasKeyExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            k = self.gen_expr(expr.key, scope)
+            return f"({tgt}.count({k}) > 0)"
 
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
@@ -361,6 +451,19 @@ class _CppGen:
                 return [f"{pad}return;"]
             return [f"{pad}return {self.gen_expr(stmt.value, scope)};"]
 
+        if isinstance(stmt, RecordDefStmt):
+            return []
+
+        if isinstance(stmt, RecordSetFieldStmt):
+            return [
+                f"{pad}{_cpp_ident(stmt.target)}.{_cpp_ident(stmt.field_name)} = {self.gen_expr(stmt.value, scope)};"
+            ]
+
+        if isinstance(stmt, MapSetStmt):
+            return [
+                f"{pad}{_cpp_ident(stmt.target)}[{self.gen_expr(stmt.key, scope)}] = {self.gen_expr(stmt.value, scope)};"
+            ]
+
         raise TypeError(f"Unsupported statement inside block: {type(stmt)!r}")
 
     def gen_func(self, fn: FuncDefStmt) -> list[str]:
@@ -376,14 +479,45 @@ class _CppGen:
 
 def generate_cpp(ir: ProgramIR) -> str:
     gen = _CppGen()
+    records: list[RecordDefStmt] = []
     funcs: list[FuncDefStmt] = []
     main_stmts: list[IRStatement] = []
     for stmt in ir.statements:
-        if isinstance(stmt, FuncDefStmt):
+        if isinstance(stmt, RecordDefStmt):
+            gen.records[stmt.name] = {f.name: f.field_type for f in stmt.fields}
+            records.append(stmt)
+        elif isinstance(stmt, FuncDefStmt):
             gen.func_returns[stmt.name] = stmt.return_type
             funcs.append(stmt)
         else:
             main_stmts.append(stmt)
+
+    record_blocks: list[str] = []
+    for r in records:
+        r_name = _cpp_ident(r.name)
+        record_blocks.append(f"struct {r_name} {{")
+        for f in r.fields:
+            record_blocks.append(f"    {_cpp_type(f.field_type)} {_cpp_ident(f.name)}{{}};")
+        record_blocks.append(f"    bool operator==(const {r_name}&) const = default;")
+        record_blocks.append("};")
+        record_blocks.append(f"inline std::string _meme_fmt(const {r_name}& self) {{")
+        if not r.fields:
+            record_blocks.append(f'    return "{r.name}()";')
+        else:
+            parts = [
+                f'oss << "{f.name}=" << _meme_fmt(self.{_cpp_ident(f.name)});'
+                for f in r.fields
+            ]
+            record_blocks.append("    std::ostringstream oss;")
+            record_blocks.append(f'    oss << "{r.name}(";')
+            for idx, part in enumerate(parts):
+                if idx > 0:
+                    record_blocks.append('    oss << ", ";')
+                record_blocks.append(f"    {part}")
+            record_blocks.append('    oss << ")";')
+            record_blocks.append("    return oss.str();")
+        record_blocks.append("}")
+        record_blocks.append("")
 
     fn_blocks: list[str] = []
     for fn in funcs:
@@ -405,6 +539,8 @@ def generate_cpp(ir: ProgramIR) -> str:
         "#include <iostream>",
         "#include <sstream>",
         "#include <string>",
+        "#include <unordered_map>",
+        "#include <utility>",
         "#include <vector>",
     ]
     if gen.uses_random:
@@ -437,6 +573,21 @@ def generate_cpp(ir: ProgramIR) -> str:
         "        oss << _meme_fmt(vec[i]);",
         "    }",
         "    oss << ']';",
+        "    return oss.str();",
+        "}",
+        "template <typename K, typename V>",
+        "std::string _meme_fmt(const std::unordered_map<K, V>& map) {",
+        "    std::vector<std::pair<K, V>> items(map.begin(), map.end());",
+        "    std::sort(items.begin(), items.end(), [](const auto& a, const auto& b) {",
+        "        return _meme_fmt(a.first) < _meme_fmt(b.first);",
+        "    });",
+        "    std::ostringstream oss;",
+        "    oss << '{';",
+        "    for (std::size_t i = 0; i < items.size(); ++i) {",
+        "        if (i > 0) oss << \", \";",
+        "        oss << _meme_fmt(items[i].first) << \": \" << _meme_fmt(items[i].second);",
+        "    }",
+        "    oss << '}';",
         "    return oss.str();",
         "}",
         "",
@@ -611,6 +762,7 @@ def generate_cpp(ir: ProgramIR) -> str:
     out = (
         headers
         + helpers
+        + record_blocks
         + fn_blocks
         + ["int main() {"]
         + main_lines

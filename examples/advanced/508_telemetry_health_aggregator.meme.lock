@@ -1,0 +1,1864 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/508_telemetry_health_aggregator.meme": {
+      "source_sha256": "4ba7aec59ecf3db47fe45ca451d3a1e48ce5fb750b1f04bf77b92b647804def6",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "ServiceProbe",
+          "fields": [
+            {
+              "name": "service_name",
+              "field_type": "String"
+            },
+            {
+              "name": "is_up",
+              "field_type": "Bool"
+            },
+            {
+              "name": "latency_ms",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "record_def",
+          "name": "HealthSummary",
+          "fields": [
+            {
+              "name": "overall_status",
+              "field_type": "String"
+            },
+            {
+              "name": "total_services",
+              "field_type": "Int"
+            },
+            {
+              "name": "unhealthy_count",
+              "field_type": "Int"
+            },
+            {
+              "name": "max_latency_ms",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "func_def",
+          "name": "evaluate_health",
+          "params": [
+            {
+              "name": "probes",
+              "param_type": "List<ServiceProbe>"
+            }
+          ],
+          "return_type": "HealthSummary",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "total",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 13
+            },
+            {
+              "op": "var_decl",
+              "name": "unhealthy",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 14
+            },
+            {
+              "op": "var_decl",
+              "name": "peak_latency",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 15
+            },
+            {
+              "op": "for_each",
+              "item_var": "probe",
+              "collection": "probes",
+              "body": [
+                {
+                  "op": "assign",
+                  "name": "total",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "total"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 17
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "unary_op",
+                    "op": "not",
+                    "operand": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "probe"
+                      },
+                      "field_name": "is_up"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "unhealthy",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "unhealthy"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "source_line": 19
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 18
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": ">",
+                    "left": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "probe"
+                      },
+                      "field_name": "latency_ms"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "peak_latency"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "peak_latency",
+                      "value": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "probe"
+                        },
+                        "field_name": "latency_ms"
+                      },
+                      "source_line": 21
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 20
+                }
+              ],
+              "source_line": 16
+            },
+            {
+              "op": "var_decl",
+              "name": "status",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "HEALTHY",
+                "data_type": "String"
+              },
+              "source_line": 22
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "unhealthy"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": ">",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "peak_latency"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 500,
+                      "data_type": "Int"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "status",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": "DEGRADED",
+                        "data_type": "String"
+                      },
+                      "source_line": 25
+                    }
+                  ],
+                  "else_body": [
+                    {
+                      "op": "assign",
+                      "name": "status",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": "HEALTHY",
+                        "data_type": "String"
+                      },
+                      "source_line": 27
+                    }
+                  ],
+                  "source_line": 24
+                }
+              ],
+              "else_body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "unhealthy"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "total"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "status",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": "DOWN",
+                        "data_type": "String"
+                      },
+                      "source_line": 30
+                    }
+                  ],
+                  "else_body": [
+                    {
+                      "op": "assign",
+                      "name": "status",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": "PARTIAL_OUTAGE",
+                        "data_type": "String"
+                      },
+                      "source_line": 32
+                    }
+                  ],
+                  "source_line": 29
+                }
+              ],
+              "source_line": 23
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "record_literal",
+                "record_name": "HealthSummary",
+                "fields": [
+                  {
+                    "name": "overall_status",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "status"
+                    }
+                  },
+                  {
+                    "name": "total_services",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "total"
+                    }
+                  },
+                  {
+                    "name": "unhealthy_count",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "unhealthy"
+                    }
+                  },
+                  {
+                    "name": "max_latency_ms",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "peak_latency"
+                    }
+                  }
+                ]
+              },
+              "source_line": 33
+            }
+          ],
+          "source_line": 12
+        },
+        {
+          "op": "var_decl",
+          "name": "p1",
+          "var_type": "ServiceProbe",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "ServiceProbe",
+            "fields": [
+              {
+                "name": "service_name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "primary-db",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "is_up",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              },
+              {
+                "name": "latency_ms",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 15,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 36
+        },
+        {
+          "op": "var_decl",
+          "name": "p2",
+          "var_type": "ServiceProbe",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "ServiceProbe",
+            "fields": [
+              {
+                "name": "service_name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "redis-cache",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "is_up",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              },
+              {
+                "name": "latency_ms",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 37
+        },
+        {
+          "op": "var_decl",
+          "name": "p3",
+          "var_type": "ServiceProbe",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "ServiceProbe",
+            "fields": [
+              {
+                "name": "service_name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "auth-service",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "is_up",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              },
+              {
+                "name": "latency_ms",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 35,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 38
+        },
+        {
+          "op": "var_decl",
+          "name": "h1",
+          "var_type": "HealthSummary",
+          "value": {
+            "expr_type": "call",
+            "func_name": "evaluate_health",
+            "args": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "p1"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "p2"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "p3"
+                  }
+                ],
+                "element_type": "ServiceProbe"
+              }
+            ]
+          },
+          "source_line": 39
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h1"
+              },
+              "field_name": "overall_status"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h1"
+              },
+              "field_name": "total_services"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h1"
+              },
+              "field_name": "unhealthy_count"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h1"
+              },
+              "field_name": "max_latency_ms"
+            }
+          ],
+          "source_line": 40
+        },
+        {
+          "op": "var_decl",
+          "name": "p4",
+          "var_type": "ServiceProbe",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "ServiceProbe",
+            "fields": [
+              {
+                "name": "service_name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "primary-db",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "is_up",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              },
+              {
+                "name": "latency_ms",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 750,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 43
+        },
+        {
+          "op": "var_decl",
+          "name": "p5",
+          "var_type": "ServiceProbe",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "ServiceProbe",
+            "fields": [
+              {
+                "name": "service_name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "redis-cache",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "is_up",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              },
+              {
+                "name": "latency_ms",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 44
+        },
+        {
+          "op": "var_decl",
+          "name": "h2",
+          "var_type": "HealthSummary",
+          "value": {
+            "expr_type": "call",
+            "func_name": "evaluate_health",
+            "args": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "p4"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "p5"
+                  }
+                ],
+                "element_type": "ServiceProbe"
+              }
+            ]
+          },
+          "source_line": 45
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h2"
+              },
+              "field_name": "overall_status"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h2"
+              },
+              "field_name": "total_services"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h2"
+              },
+              "field_name": "unhealthy_count"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h2"
+              },
+              "field_name": "max_latency_ms"
+            }
+          ],
+          "source_line": 46
+        },
+        {
+          "op": "var_decl",
+          "name": "p6",
+          "var_type": "ServiceProbe",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "ServiceProbe",
+            "fields": [
+              {
+                "name": "service_name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "primary-db",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "is_up",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              },
+              {
+                "name": "latency_ms",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 49
+        },
+        {
+          "op": "var_decl",
+          "name": "p7",
+          "var_type": "ServiceProbe",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "ServiceProbe",
+            "fields": [
+              {
+                "name": "service_name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "redis-cache",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "is_up",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                }
+              },
+              {
+                "name": "latency_ms",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 50
+        },
+        {
+          "op": "var_decl",
+          "name": "h3",
+          "var_type": "HealthSummary",
+          "value": {
+            "expr_type": "call",
+            "func_name": "evaluate_health",
+            "args": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "p6"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "p7"
+                  }
+                ],
+                "element_type": "ServiceProbe"
+              }
+            ]
+          },
+          "source_line": 51
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h3"
+              },
+              "field_name": "overall_status"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h3"
+              },
+              "field_name": "total_services"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h3"
+              },
+              "field_name": "unhealthy_count"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h3"
+              },
+              "field_name": "max_latency_ms"
+            }
+          ],
+          "source_line": 52
+        },
+        {
+          "op": "var_decl",
+          "name": "p8",
+          "var_type": "ServiceProbe",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "ServiceProbe",
+            "fields": [
+              {
+                "name": "service_name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "primary-db",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "is_up",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                }
+              },
+              {
+                "name": "latency_ms",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 55
+        },
+        {
+          "op": "var_decl",
+          "name": "p9",
+          "var_type": "ServiceProbe",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "ServiceProbe",
+            "fields": [
+              {
+                "name": "service_name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "redis-cache",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "is_up",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                }
+              },
+              {
+                "name": "latency_ms",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 56
+        },
+        {
+          "op": "var_decl",
+          "name": "h4",
+          "var_type": "HealthSummary",
+          "value": {
+            "expr_type": "call",
+            "func_name": "evaluate_health",
+            "args": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "p8"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "p9"
+                  }
+                ],
+                "element_type": "ServiceProbe"
+              }
+            ]
+          },
+          "source_line": 57
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h4"
+              },
+              "field_name": "overall_status"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h4"
+              },
+              "field_name": "total_services"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h4"
+              },
+              "field_name": "unhealthy_count"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "h4"
+              },
+              "field_name": "max_latency_ms"
+            }
+          ],
+          "source_line": 58
+        }
+      ],
+      "canonical_meme": "record ServiceProbe:\n    service_name: String\n    is_up: Bool\n    latency_ms: Int\nrecord HealthSummary:\n    overall_status: String\n    total_services: Int\n    unhealthy_count: Int\n    max_latency_ms: Int\nfunction evaluate_health(probes: List<ServiceProbe>) -> HealthSummary:\n    define total: Int as 0\n    define unhealthy: Int as 0\n    define peak_latency: Int as 0\n    for each probe in probes:\n        set total to total + 1\n        if not probe.is_up:\n            set unhealthy to unhealthy + 1\n        if probe.latency_ms > peak_latency:\n            set peak_latency to probe.latency_ms\n    define status: String as \"HEALTHY\"\n    if unhealthy == 0:\n        if peak_latency > 500:\n            set status to \"DEGRADED\"\n        else:\n            set status to \"HEALTHY\"\n    else:\n        if unhealthy == total:\n            set status to \"DOWN\"\n        else:\n            set status to \"PARTIAL_OUTAGE\"\n    return HealthSummary(overall_status=status, total_services=total, unhealthy_count=unhealthy, max_latency_ms=peak_latency)\ndefine p1: ServiceProbe as ServiceProbe(service_name=\"primary-db\", is_up=true, latency_ms=15)\ndefine p2: ServiceProbe as ServiceProbe(service_name=\"redis-cache\", is_up=true, latency_ms=4)\ndefine p3: ServiceProbe as ServiceProbe(service_name=\"auth-service\", is_up=true, latency_ms=35)\ndefine h1: HealthSummary as evaluate_health([p1, p2, p3])\nprint h1.overall_status, h1.total_services, h1.unhealthy_count, h1.max_latency_ms\ndefine p4: ServiceProbe as ServiceProbe(service_name=\"primary-db\", is_up=true, latency_ms=750)\ndefine p5: ServiceProbe as ServiceProbe(service_name=\"redis-cache\", is_up=true, latency_ms=10)\ndefine h2: HealthSummary as evaluate_health([p4, p5])\nprint h2.overall_status, h2.total_services, h2.unhealthy_count, h2.max_latency_ms\ndefine p6: ServiceProbe as ServiceProbe(service_name=\"primary-db\", is_up=true, latency_ms=20)\ndefine p7: ServiceProbe as ServiceProbe(service_name=\"redis-cache\", is_up=false, latency_ms=0)\ndefine h3: HealthSummary as evaluate_health([p6, p7])\nprint h3.overall_status, h3.total_services, h3.unhealthy_count, h3.max_latency_ms\ndefine p8: ServiceProbe as ServiceProbe(service_name=\"primary-db\", is_up=false, latency_ms=0)\ndefine p9: ServiceProbe as ServiceProbe(service_name=\"redis-cache\", is_up=false, latency_ms=0)\ndefine h4: HealthSummary as evaluate_health([p8, p9])\nprint h4.overall_status, h4.total_services, h4.unhealthy_count, h4.max_latency_ms",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "ServiceProbe",
+            "fields": [
+              {
+                "name": "service_name",
+                "field_type": "String"
+              },
+              {
+                "name": "is_up",
+                "field_type": "Bool"
+              },
+              {
+                "name": "latency_ms",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "record_def",
+            "name": "HealthSummary",
+            "fields": [
+              {
+                "name": "overall_status",
+                "field_type": "String"
+              },
+              {
+                "name": "total_services",
+                "field_type": "Int"
+              },
+              {
+                "name": "unhealthy_count",
+                "field_type": "Int"
+              },
+              {
+                "name": "max_latency_ms",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "func_def",
+            "name": "evaluate_health",
+            "params": [
+              {
+                "name": "probes",
+                "param_type": "List<ServiceProbe>"
+              }
+            ],
+            "return_type": "HealthSummary",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "total",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 13
+              },
+              {
+                "op": "var_decl",
+                "name": "unhealthy",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 14
+              },
+              {
+                "op": "var_decl",
+                "name": "peak_latency",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 15
+              },
+              {
+                "op": "for_each",
+                "item_var": "probe",
+                "collection": "probes",
+                "body": [
+                  {
+                    "op": "assign",
+                    "name": "total",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "total"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 17
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "unary_op",
+                      "op": "not",
+                      "operand": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "probe"
+                        },
+                        "field_name": "is_up"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "unhealthy",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "unhealthy"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "source_line": 19
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 18
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": ">",
+                      "left": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "probe"
+                        },
+                        "field_name": "latency_ms"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "peak_latency"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "peak_latency",
+                        "value": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "probe"
+                          },
+                          "field_name": "latency_ms"
+                        },
+                        "source_line": 21
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 20
+                  }
+                ],
+                "source_line": 16
+              },
+              {
+                "op": "var_decl",
+                "name": "status",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "HEALTHY",
+                  "data_type": "String"
+                },
+                "source_line": 22
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "unhealthy"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": ">",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "peak_latency"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 500,
+                        "data_type": "Int"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "status",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "DEGRADED",
+                          "data_type": "String"
+                        },
+                        "source_line": 25
+                      }
+                    ],
+                    "else_body": [
+                      {
+                        "op": "assign",
+                        "name": "status",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "HEALTHY",
+                          "data_type": "String"
+                        },
+                        "source_line": 27
+                      }
+                    ],
+                    "source_line": 24
+                  }
+                ],
+                "else_body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "unhealthy"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "total"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "status",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "DOWN",
+                          "data_type": "String"
+                        },
+                        "source_line": 30
+                      }
+                    ],
+                    "else_body": [
+                      {
+                        "op": "assign",
+                        "name": "status",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "PARTIAL_OUTAGE",
+                          "data_type": "String"
+                        },
+                        "source_line": 32
+                      }
+                    ],
+                    "source_line": 29
+                  }
+                ],
+                "source_line": 23
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "record_literal",
+                  "record_name": "HealthSummary",
+                  "fields": [
+                    {
+                      "name": "overall_status",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "status"
+                      }
+                    },
+                    {
+                      "name": "total_services",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "total"
+                      }
+                    },
+                    {
+                      "name": "unhealthy_count",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "unhealthy"
+                      }
+                    },
+                    {
+                      "name": "max_latency_ms",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "peak_latency"
+                      }
+                    }
+                  ]
+                },
+                "source_line": 33
+              }
+            ],
+            "source_line": 12
+          },
+          {
+            "op": "var_decl",
+            "name": "p1",
+            "var_type": "ServiceProbe",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "ServiceProbe",
+              "fields": [
+                {
+                  "name": "service_name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "primary-db",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "is_up",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                },
+                {
+                  "name": "latency_ms",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 15,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 36
+          },
+          {
+            "op": "var_decl",
+            "name": "p2",
+            "var_type": "ServiceProbe",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "ServiceProbe",
+              "fields": [
+                {
+                  "name": "service_name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "redis-cache",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "is_up",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                },
+                {
+                  "name": "latency_ms",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 37
+          },
+          {
+            "op": "var_decl",
+            "name": "p3",
+            "var_type": "ServiceProbe",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "ServiceProbe",
+              "fields": [
+                {
+                  "name": "service_name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "auth-service",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "is_up",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                },
+                {
+                  "name": "latency_ms",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 35,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 38
+          },
+          {
+            "op": "var_decl",
+            "name": "h1",
+            "var_type": "HealthSummary",
+            "value": {
+              "expr_type": "call",
+              "func_name": "evaluate_health",
+              "args": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "p1"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "p2"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "p3"
+                    }
+                  ],
+                  "element_type": "ServiceProbe"
+                }
+              ]
+            },
+            "source_line": 39
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h1"
+                },
+                "field_name": "overall_status"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h1"
+                },
+                "field_name": "total_services"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h1"
+                },
+                "field_name": "unhealthy_count"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h1"
+                },
+                "field_name": "max_latency_ms"
+              }
+            ],
+            "source_line": 40
+          },
+          {
+            "op": "var_decl",
+            "name": "p4",
+            "var_type": "ServiceProbe",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "ServiceProbe",
+              "fields": [
+                {
+                  "name": "service_name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "primary-db",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "is_up",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                },
+                {
+                  "name": "latency_ms",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 750,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 43
+          },
+          {
+            "op": "var_decl",
+            "name": "p5",
+            "var_type": "ServiceProbe",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "ServiceProbe",
+              "fields": [
+                {
+                  "name": "service_name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "redis-cache",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "is_up",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                },
+                {
+                  "name": "latency_ms",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 44
+          },
+          {
+            "op": "var_decl",
+            "name": "h2",
+            "var_type": "HealthSummary",
+            "value": {
+              "expr_type": "call",
+              "func_name": "evaluate_health",
+              "args": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "p4"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "p5"
+                    }
+                  ],
+                  "element_type": "ServiceProbe"
+                }
+              ]
+            },
+            "source_line": 45
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h2"
+                },
+                "field_name": "overall_status"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h2"
+                },
+                "field_name": "total_services"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h2"
+                },
+                "field_name": "unhealthy_count"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h2"
+                },
+                "field_name": "max_latency_ms"
+              }
+            ],
+            "source_line": 46
+          },
+          {
+            "op": "var_decl",
+            "name": "p6",
+            "var_type": "ServiceProbe",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "ServiceProbe",
+              "fields": [
+                {
+                  "name": "service_name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "primary-db",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "is_up",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                },
+                {
+                  "name": "latency_ms",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 20,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 49
+          },
+          {
+            "op": "var_decl",
+            "name": "p7",
+            "var_type": "ServiceProbe",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "ServiceProbe",
+              "fields": [
+                {
+                  "name": "service_name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "redis-cache",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "is_up",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": false,
+                    "data_type": "Bool"
+                  }
+                },
+                {
+                  "name": "latency_ms",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 50
+          },
+          {
+            "op": "var_decl",
+            "name": "h3",
+            "var_type": "HealthSummary",
+            "value": {
+              "expr_type": "call",
+              "func_name": "evaluate_health",
+              "args": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "p6"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "p7"
+                    }
+                  ],
+                  "element_type": "ServiceProbe"
+                }
+              ]
+            },
+            "source_line": 51
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h3"
+                },
+                "field_name": "overall_status"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h3"
+                },
+                "field_name": "total_services"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h3"
+                },
+                "field_name": "unhealthy_count"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h3"
+                },
+                "field_name": "max_latency_ms"
+              }
+            ],
+            "source_line": 52
+          },
+          {
+            "op": "var_decl",
+            "name": "p8",
+            "var_type": "ServiceProbe",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "ServiceProbe",
+              "fields": [
+                {
+                  "name": "service_name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "primary-db",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "is_up",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": false,
+                    "data_type": "Bool"
+                  }
+                },
+                {
+                  "name": "latency_ms",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 55
+          },
+          {
+            "op": "var_decl",
+            "name": "p9",
+            "var_type": "ServiceProbe",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "ServiceProbe",
+              "fields": [
+                {
+                  "name": "service_name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "redis-cache",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "is_up",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": false,
+                    "data_type": "Bool"
+                  }
+                },
+                {
+                  "name": "latency_ms",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 56
+          },
+          {
+            "op": "var_decl",
+            "name": "h4",
+            "var_type": "HealthSummary",
+            "value": {
+              "expr_type": "call",
+              "func_name": "evaluate_health",
+              "args": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "p8"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "p9"
+                    }
+                  ],
+                  "element_type": "ServiceProbe"
+                }
+              ]
+            },
+            "source_line": 57
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h4"
+                },
+                "field_name": "overall_status"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h4"
+                },
+                "field_name": "total_services"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h4"
+                },
+                "field_name": "unhealthy_count"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "h4"
+                },
+                "field_name": "max_latency_ms"
+              }
+            ],
+            "source_line": 58
+          }
+        ]
+      }
+    }
+  }
+}

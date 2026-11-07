@@ -1,0 +1,55 @@
+record WebhookPayload:
+    event_id: String
+    topic: String
+    body: String
+    secret_signature: String
+
+record DispatchResult:
+    event_id: String
+    delivered: Bool
+    status_code: Int
+    retry_after_sec: Int
+    endpoint_url: String
+
+function dispatch_event(payload: WebhookPayload, endpoints: Map<String, String>, signatures: Map<String, String>, attempt: Int, mock_status: Int) -> DispatchResult:
+    if endpoints has key payload.topic:
+        define endpoint as endpoints[payload.topic]
+        define expected_sig as signatures[payload.topic] default ""
+        if payload.secret_signature != expected_sig:
+            return DispatchResult(event_id=payload.event_id, delivered=false, status_code=401, retry_after_sec=0, endpoint_url="")
+        else:
+            if mock_status == 200:
+                return DispatchResult(event_id=payload.event_id, delivered=true, status_code=200, retry_after_sec=0, endpoint_url=endpoint)
+            else:
+                define delay as 2 * attempt * attempt
+                return DispatchResult(event_id=payload.event_id, delivered=false, status_code=mock_status, retry_after_sec=delay, endpoint_url=endpoint)
+    else:
+        return DispatchResult(event_id=payload.event_id, delivered=false, status_code=404, retry_after_sec=0, endpoint_url="")
+
+define endpoints as empty Map<String, String>
+set endpoints["order.created"] to "https://billing.internal/webhooks/orders"
+set endpoints["user.deleted"] to "https://compliance.internal/webhooks/gdpr"
+
+define signatures as empty Map<String, String>
+set signatures["order.created"] to "sig_sec_order_99"
+set signatures["user.deleted"] to "sig_sec_gdpr_11"
+
+# 1. Successful event delivery
+define ev1 as WebhookPayload(event_id="evt_001", topic="order.created", body="item_id=42", secret_signature="sig_sec_order_99")
+define r1 as dispatch_event(ev1, endpoints, signatures, 1, 200)
+print r1.event_id, r1.delivered, r1.status_code, r1.retry_after_sec, r1.endpoint_url
+
+# 2. Authentication signature mismatch (401)
+define ev2 as WebhookPayload(event_id="evt_002", topic="order.created", body="item_id=42", secret_signature="wrong_tampered_sig")
+define r2 as dispatch_event(ev2, endpoints, signatures, 1, 200)
+print r2.event_id, r2.delivered, r2.status_code
+
+# 3. Unregistered topic (404)
+define ev3 as WebhookPayload(event_id="evt_003", topic="system.reboot", body="code=0", secret_signature="sig_none")
+define r3 as dispatch_event(ev3, endpoints, signatures, 1, 200)
+print r3.event_id, r3.delivered, r3.status_code
+
+# 4. Downstream 503 outage with exponential backoff on retry attempt 2
+define ev4 as WebhookPayload(event_id="evt_004", topic="user.deleted", body="user=7", secret_signature="sig_sec_gdpr_11")
+define r4 as dispatch_event(ev4, endpoints, signatures, 2, 503)
+print r4.event_id, r4.delivered, r4.status_code, r4.retry_after_sec, r4.endpoint_url

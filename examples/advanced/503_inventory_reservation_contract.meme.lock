@@ -1,0 +1,1658 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/503_inventory_reservation_contract.meme": {
+      "source_sha256": "09a278b0db8b4732e4beb0ab6a5d0bcb641aa071b716f7cab9480446fc8a8be2",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "StockReservation",
+          "fields": [
+            {
+              "name": "order_id",
+              "field_type": "String"
+            },
+            {
+              "name": "sku",
+              "field_type": "String"
+            },
+            {
+              "name": "quantity",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "record_def",
+          "name": "ReservationResult",
+          "fields": [
+            {
+              "name": "order_id",
+              "field_type": "String"
+            },
+            {
+              "name": "sku",
+              "field_type": "String"
+            },
+            {
+              "name": "reserved",
+              "field_type": "Bool"
+            },
+            {
+              "name": "allocated_qty",
+              "field_type": "Int"
+            },
+            {
+              "name": "remaining_stock",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "func_def",
+          "name": "attempt_reservation",
+          "params": [
+            {
+              "name": "req",
+              "param_type": "StockReservation"
+            },
+            {
+              "name": "catalog_stock",
+              "param_type": "Map<String, Int>"
+            }
+          ],
+          "return_type": "ReservationResult",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "map_has_key",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "catalog_stock"
+                },
+                "key": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "req"
+                  },
+                  "field_name": "sku"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "available",
+                  "var_type": "Int",
+                  "value": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "catalog_stock"
+                    },
+                    "index": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "req"
+                      },
+                      "field_name": "sku"
+                    }
+                  },
+                  "source_line": 15
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": ">=",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "available"
+                    },
+                    "right": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "req"
+                      },
+                      "field_name": "quantity"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "var_decl",
+                      "name": "rem",
+                      "var_type": "Int",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "-",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "available"
+                        },
+                        "right": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "req"
+                          },
+                          "field_name": "quantity"
+                        }
+                      },
+                      "source_line": 17
+                    },
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "record_literal",
+                        "record_name": "ReservationResult",
+                        "fields": [
+                          {
+                            "name": "order_id",
+                            "value": {
+                              "expr_type": "record_field",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "req"
+                              },
+                              "field_name": "order_id"
+                            }
+                          },
+                          {
+                            "name": "sku",
+                            "value": {
+                              "expr_type": "record_field",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "req"
+                              },
+                              "field_name": "sku"
+                            }
+                          },
+                          {
+                            "name": "reserved",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": true,
+                              "data_type": "Bool"
+                            }
+                          },
+                          {
+                            "name": "allocated_qty",
+                            "value": {
+                              "expr_type": "record_field",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "req"
+                              },
+                              "field_name": "quantity"
+                            }
+                          },
+                          {
+                            "name": "remaining_stock",
+                            "value": {
+                              "expr_type": "var_ref",
+                              "name": "rem"
+                            }
+                          }
+                        ]
+                      },
+                      "source_line": 18
+                    }
+                  ],
+                  "else_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "record_literal",
+                        "record_name": "ReservationResult",
+                        "fields": [
+                          {
+                            "name": "order_id",
+                            "value": {
+                              "expr_type": "record_field",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "req"
+                              },
+                              "field_name": "order_id"
+                            }
+                          },
+                          {
+                            "name": "sku",
+                            "value": {
+                              "expr_type": "record_field",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "req"
+                              },
+                              "field_name": "sku"
+                            }
+                          },
+                          {
+                            "name": "reserved",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": false,
+                              "data_type": "Bool"
+                            }
+                          },
+                          {
+                            "name": "allocated_qty",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": 0,
+                              "data_type": "Int"
+                            }
+                          },
+                          {
+                            "name": "remaining_stock",
+                            "value": {
+                              "expr_type": "var_ref",
+                              "name": "available"
+                            }
+                          }
+                        ]
+                      },
+                      "source_line": 20
+                    }
+                  ],
+                  "source_line": 16
+                }
+              ],
+              "else_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "record_literal",
+                    "record_name": "ReservationResult",
+                    "fields": [
+                      {
+                        "name": "order_id",
+                        "value": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "req"
+                          },
+                          "field_name": "order_id"
+                        }
+                      },
+                      {
+                        "name": "sku",
+                        "value": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "req"
+                          },
+                          "field_name": "sku"
+                        }
+                      },
+                      {
+                        "name": "reserved",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": false,
+                          "data_type": "Bool"
+                        }
+                      },
+                      {
+                        "name": "allocated_qty",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": 0,
+                          "data_type": "Int"
+                        }
+                      },
+                      {
+                        "name": "remaining_stock",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": 0,
+                          "data_type": "Int"
+                        }
+                      }
+                    ]
+                  },
+                  "source_line": 22
+                }
+              ],
+              "source_line": 14
+            }
+          ],
+          "source_line": 13
+        },
+        {
+          "op": "var_decl",
+          "name": "stock",
+          "var_type": "Map<String, Int>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "Int",
+            "entries": [
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "SKU-A",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "SKU-B",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 24
+        },
+        {
+          "op": "var_decl",
+          "name": "req1",
+          "var_type": "StockReservation",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "StockReservation",
+            "fields": [
+              {
+                "name": "order_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "ord_1001",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "sku",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "SKU-A",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "quantity",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 27
+        },
+        {
+          "op": "var_decl",
+          "name": "res1",
+          "var_type": "ReservationResult",
+          "value": {
+            "expr_type": "call",
+            "func_name": "attempt_reservation",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "req1"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "stock"
+              }
+            ]
+          },
+          "source_line": 28
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res1"
+              },
+              "field_name": "order_id"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res1"
+              },
+              "field_name": "sku"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res1"
+              },
+              "field_name": "reserved"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res1"
+              },
+              "field_name": "allocated_qty"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res1"
+              },
+              "field_name": "remaining_stock"
+            }
+          ],
+          "source_line": 29
+        },
+        {
+          "op": "map_set",
+          "target": "stock",
+          "key": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "res1"
+            },
+            "field_name": "sku"
+          },
+          "value": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "res1"
+            },
+            "field_name": "remaining_stock"
+          },
+          "source_line": 32
+        },
+        {
+          "op": "var_decl",
+          "name": "req2",
+          "var_type": "StockReservation",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "StockReservation",
+            "fields": [
+              {
+                "name": "order_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "ord_1002",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "sku",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "SKU-B",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "quantity",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 35
+        },
+        {
+          "op": "var_decl",
+          "name": "res2",
+          "var_type": "ReservationResult",
+          "value": {
+            "expr_type": "call",
+            "func_name": "attempt_reservation",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "req2"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "stock"
+              }
+            ]
+          },
+          "source_line": 36
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res2"
+              },
+              "field_name": "order_id"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res2"
+              },
+              "field_name": "sku"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res2"
+              },
+              "field_name": "reserved"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res2"
+              },
+              "field_name": "allocated_qty"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res2"
+              },
+              "field_name": "remaining_stock"
+            }
+          ],
+          "source_line": 37
+        },
+        {
+          "op": "var_decl",
+          "name": "req3",
+          "var_type": "StockReservation",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "StockReservation",
+            "fields": [
+              {
+                "name": "order_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "ord_1003",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "sku",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "SKU-A",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "quantity",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 40
+        },
+        {
+          "op": "var_decl",
+          "name": "res3",
+          "var_type": "ReservationResult",
+          "value": {
+            "expr_type": "call",
+            "func_name": "attempt_reservation",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "req3"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "stock"
+              }
+            ]
+          },
+          "source_line": 41
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res3"
+              },
+              "field_name": "order_id"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res3"
+              },
+              "field_name": "sku"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res3"
+              },
+              "field_name": "reserved"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res3"
+              },
+              "field_name": "allocated_qty"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res3"
+              },
+              "field_name": "remaining_stock"
+            }
+          ],
+          "source_line": 42
+        },
+        {
+          "op": "map_set",
+          "target": "stock",
+          "key": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "res3"
+            },
+            "field_name": "sku"
+          },
+          "value": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "res3"
+            },
+            "field_name": "remaining_stock"
+          },
+          "source_line": 43
+        },
+        {
+          "op": "var_decl",
+          "name": "req4",
+          "var_type": "StockReservation",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "StockReservation",
+            "fields": [
+              {
+                "name": "order_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "ord_1004",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "sku",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "SKU-Z",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "quantity",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 46
+        },
+        {
+          "op": "var_decl",
+          "name": "res4",
+          "var_type": "ReservationResult",
+          "value": {
+            "expr_type": "call",
+            "func_name": "attempt_reservation",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "req4"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "stock"
+              }
+            ]
+          },
+          "source_line": 47
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res4"
+              },
+              "field_name": "order_id"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res4"
+              },
+              "field_name": "sku"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res4"
+              },
+              "field_name": "reserved"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res4"
+              },
+              "field_name": "allocated_qty"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res4"
+              },
+              "field_name": "remaining_stock"
+            }
+          ],
+          "source_line": 48
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "stock"
+            }
+          ],
+          "source_line": 51
+        }
+      ],
+      "canonical_meme": "record StockReservation:\n    order_id: String\n    sku: String\n    quantity: Int\nrecord ReservationResult:\n    order_id: String\n    sku: String\n    reserved: Bool\n    allocated_qty: Int\n    remaining_stock: Int\nfunction attempt_reservation(req: StockReservation, catalog_stock: Map<String, Int>) -> ReservationResult:\n    if catalog_stock has key req.sku:\n        define available: Int as catalog_stock[req.sku]\n        if available >= req.quantity:\n            define rem: Int as available - req.quantity\n            return ReservationResult(order_id=req.order_id, sku=req.sku, reserved=true, allocated_qty=req.quantity, remaining_stock=rem)\n        else:\n            return ReservationResult(order_id=req.order_id, sku=req.sku, reserved=false, allocated_qty=0, remaining_stock=available)\n    else:\n        return ReservationResult(order_id=req.order_id, sku=req.sku, reserved=false, allocated_qty=0, remaining_stock=0)\ndefine stock: Map<String, Int> as {\"SKU-A\": 50, \"SKU-B\": 5}\ndefine req1: StockReservation as StockReservation(order_id=\"ord_1001\", sku=\"SKU-A\", quantity=20)\ndefine res1: ReservationResult as attempt_reservation(req1, stock)\nprint res1.order_id, res1.sku, res1.reserved, res1.allocated_qty, res1.remaining_stock\nset stock[res1.sku] to res1.remaining_stock\ndefine req2: StockReservation as StockReservation(order_id=\"ord_1002\", sku=\"SKU-B\", quantity=10)\ndefine res2: ReservationResult as attempt_reservation(req2, stock)\nprint res2.order_id, res2.sku, res2.reserved, res2.allocated_qty, res2.remaining_stock\ndefine req3: StockReservation as StockReservation(order_id=\"ord_1003\", sku=\"SKU-A\", quantity=30)\ndefine res3: ReservationResult as attempt_reservation(req3, stock)\nprint res3.order_id, res3.sku, res3.reserved, res3.allocated_qty, res3.remaining_stock\nset stock[res3.sku] to res3.remaining_stock\ndefine req4: StockReservation as StockReservation(order_id=\"ord_1004\", sku=\"SKU-Z\", quantity=5)\ndefine res4: ReservationResult as attempt_reservation(req4, stock)\nprint res4.order_id, res4.sku, res4.reserved, res4.allocated_qty, res4.remaining_stock\nprint stock",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "StockReservation",
+            "fields": [
+              {
+                "name": "order_id",
+                "field_type": "String"
+              },
+              {
+                "name": "sku",
+                "field_type": "String"
+              },
+              {
+                "name": "quantity",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "record_def",
+            "name": "ReservationResult",
+            "fields": [
+              {
+                "name": "order_id",
+                "field_type": "String"
+              },
+              {
+                "name": "sku",
+                "field_type": "String"
+              },
+              {
+                "name": "reserved",
+                "field_type": "Bool"
+              },
+              {
+                "name": "allocated_qty",
+                "field_type": "Int"
+              },
+              {
+                "name": "remaining_stock",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "func_def",
+            "name": "attempt_reservation",
+            "params": [
+              {
+                "name": "req",
+                "param_type": "StockReservation"
+              },
+              {
+                "name": "catalog_stock",
+                "param_type": "Map<String, Int>"
+              }
+            ],
+            "return_type": "ReservationResult",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "map_has_key",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "catalog_stock"
+                  },
+                  "key": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "req"
+                    },
+                    "field_name": "sku"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "available",
+                    "var_type": "Int",
+                    "value": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "catalog_stock"
+                      },
+                      "index": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "req"
+                        },
+                        "field_name": "sku"
+                      }
+                    },
+                    "source_line": 15
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": ">=",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "available"
+                      },
+                      "right": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "req"
+                        },
+                        "field_name": "quantity"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "var_decl",
+                        "name": "rem",
+                        "var_type": "Int",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "-",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "available"
+                          },
+                          "right": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "req"
+                            },
+                            "field_name": "quantity"
+                          }
+                        },
+                        "source_line": 17
+                      },
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "record_literal",
+                          "record_name": "ReservationResult",
+                          "fields": [
+                            {
+                              "name": "order_id",
+                              "value": {
+                                "expr_type": "record_field",
+                                "target": {
+                                  "expr_type": "var_ref",
+                                  "name": "req"
+                                },
+                                "field_name": "order_id"
+                              }
+                            },
+                            {
+                              "name": "sku",
+                              "value": {
+                                "expr_type": "record_field",
+                                "target": {
+                                  "expr_type": "var_ref",
+                                  "name": "req"
+                                },
+                                "field_name": "sku"
+                              }
+                            },
+                            {
+                              "name": "reserved",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": true,
+                                "data_type": "Bool"
+                              }
+                            },
+                            {
+                              "name": "allocated_qty",
+                              "value": {
+                                "expr_type": "record_field",
+                                "target": {
+                                  "expr_type": "var_ref",
+                                  "name": "req"
+                                },
+                                "field_name": "quantity"
+                              }
+                            },
+                            {
+                              "name": "remaining_stock",
+                              "value": {
+                                "expr_type": "var_ref",
+                                "name": "rem"
+                              }
+                            }
+                          ]
+                        },
+                        "source_line": 18
+                      }
+                    ],
+                    "else_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "record_literal",
+                          "record_name": "ReservationResult",
+                          "fields": [
+                            {
+                              "name": "order_id",
+                              "value": {
+                                "expr_type": "record_field",
+                                "target": {
+                                  "expr_type": "var_ref",
+                                  "name": "req"
+                                },
+                                "field_name": "order_id"
+                              }
+                            },
+                            {
+                              "name": "sku",
+                              "value": {
+                                "expr_type": "record_field",
+                                "target": {
+                                  "expr_type": "var_ref",
+                                  "name": "req"
+                                },
+                                "field_name": "sku"
+                              }
+                            },
+                            {
+                              "name": "reserved",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": false,
+                                "data_type": "Bool"
+                              }
+                            },
+                            {
+                              "name": "allocated_qty",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": 0,
+                                "data_type": "Int"
+                              }
+                            },
+                            {
+                              "name": "remaining_stock",
+                              "value": {
+                                "expr_type": "var_ref",
+                                "name": "available"
+                              }
+                            }
+                          ]
+                        },
+                        "source_line": 20
+                      }
+                    ],
+                    "source_line": 16
+                  }
+                ],
+                "else_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "record_literal",
+                      "record_name": "ReservationResult",
+                      "fields": [
+                        {
+                          "name": "order_id",
+                          "value": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "req"
+                            },
+                            "field_name": "order_id"
+                          }
+                        },
+                        {
+                          "name": "sku",
+                          "value": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "req"
+                            },
+                            "field_name": "sku"
+                          }
+                        },
+                        {
+                          "name": "reserved",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": false,
+                            "data_type": "Bool"
+                          }
+                        },
+                        {
+                          "name": "allocated_qty",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": 0,
+                            "data_type": "Int"
+                          }
+                        },
+                        {
+                          "name": "remaining_stock",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": 0,
+                            "data_type": "Int"
+                          }
+                        }
+                      ]
+                    },
+                    "source_line": 22
+                  }
+                ],
+                "source_line": 14
+              }
+            ],
+            "source_line": 13
+          },
+          {
+            "op": "var_decl",
+            "name": "stock",
+            "var_type": "Map<String, Int>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "Int",
+              "entries": [
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "SKU-A",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 50,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "SKU-B",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 5,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 24
+          },
+          {
+            "op": "var_decl",
+            "name": "req1",
+            "var_type": "StockReservation",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "StockReservation",
+              "fields": [
+                {
+                  "name": "order_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "ord_1001",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "sku",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "SKU-A",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "quantity",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 20,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 27
+          },
+          {
+            "op": "var_decl",
+            "name": "res1",
+            "var_type": "ReservationResult",
+            "value": {
+              "expr_type": "call",
+              "func_name": "attempt_reservation",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "req1"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "stock"
+                }
+              ]
+            },
+            "source_line": 28
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res1"
+                },
+                "field_name": "order_id"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res1"
+                },
+                "field_name": "sku"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res1"
+                },
+                "field_name": "reserved"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res1"
+                },
+                "field_name": "allocated_qty"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res1"
+                },
+                "field_name": "remaining_stock"
+              }
+            ],
+            "source_line": 29
+          },
+          {
+            "op": "map_set",
+            "target": "stock",
+            "key": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res1"
+              },
+              "field_name": "sku"
+            },
+            "value": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res1"
+              },
+              "field_name": "remaining_stock"
+            },
+            "source_line": 32
+          },
+          {
+            "op": "var_decl",
+            "name": "req2",
+            "var_type": "StockReservation",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "StockReservation",
+              "fields": [
+                {
+                  "name": "order_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "ord_1002",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "sku",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "SKU-B",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "quantity",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 35
+          },
+          {
+            "op": "var_decl",
+            "name": "res2",
+            "var_type": "ReservationResult",
+            "value": {
+              "expr_type": "call",
+              "func_name": "attempt_reservation",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "req2"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "stock"
+                }
+              ]
+            },
+            "source_line": 36
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res2"
+                },
+                "field_name": "order_id"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res2"
+                },
+                "field_name": "sku"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res2"
+                },
+                "field_name": "reserved"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res2"
+                },
+                "field_name": "allocated_qty"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res2"
+                },
+                "field_name": "remaining_stock"
+              }
+            ],
+            "source_line": 37
+          },
+          {
+            "op": "var_decl",
+            "name": "req3",
+            "var_type": "StockReservation",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "StockReservation",
+              "fields": [
+                {
+                  "name": "order_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "ord_1003",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "sku",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "SKU-A",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "quantity",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 30,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 40
+          },
+          {
+            "op": "var_decl",
+            "name": "res3",
+            "var_type": "ReservationResult",
+            "value": {
+              "expr_type": "call",
+              "func_name": "attempt_reservation",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "req3"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "stock"
+                }
+              ]
+            },
+            "source_line": 41
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res3"
+                },
+                "field_name": "order_id"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res3"
+                },
+                "field_name": "sku"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res3"
+                },
+                "field_name": "reserved"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res3"
+                },
+                "field_name": "allocated_qty"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res3"
+                },
+                "field_name": "remaining_stock"
+              }
+            ],
+            "source_line": 42
+          },
+          {
+            "op": "map_set",
+            "target": "stock",
+            "key": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res3"
+              },
+              "field_name": "sku"
+            },
+            "value": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res3"
+              },
+              "field_name": "remaining_stock"
+            },
+            "source_line": 43
+          },
+          {
+            "op": "var_decl",
+            "name": "req4",
+            "var_type": "StockReservation",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "StockReservation",
+              "fields": [
+                {
+                  "name": "order_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "ord_1004",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "sku",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "SKU-Z",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "quantity",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 5,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 46
+          },
+          {
+            "op": "var_decl",
+            "name": "res4",
+            "var_type": "ReservationResult",
+            "value": {
+              "expr_type": "call",
+              "func_name": "attempt_reservation",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "req4"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "stock"
+                }
+              ]
+            },
+            "source_line": 47
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res4"
+                },
+                "field_name": "order_id"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res4"
+                },
+                "field_name": "sku"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res4"
+                },
+                "field_name": "reserved"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res4"
+                },
+                "field_name": "allocated_qty"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res4"
+                },
+                "field_name": "remaining_stock"
+              }
+            ],
+            "source_line": 48
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "stock"
+              }
+            ],
+            "source_line": 51
+          }
+        ]
+      }
+    }
+  }
+}

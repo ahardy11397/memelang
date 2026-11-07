@@ -1,0 +1,47 @@
+record ResolutionPlan:
+    target: String
+    valid_package: Bool
+    missing_count: Int
+    to_install: List<String>
+
+function plan_installation(pkg: String, registry: Map<String, List<String>>, installed: Map<String, Bool>) -> ResolutionPlan:
+    if registry has key pkg:
+        define direct_deps as registry[pkg]
+        define missing as empty List<String>
+        define count as 0
+        for each dep in direct_deps:
+            define is_inst as installed[dep] default false
+            if not is_inst:
+                append dep to missing
+                set count to count + 1
+        return ResolutionPlan(target=pkg, valid_package=true, missing_count=count, to_install=missing)
+    else:
+        define empty_list as empty List<String>
+        return ResolutionPlan(target=pkg, valid_package=false, missing_count=0, to_install=empty_list)
+
+define registry as empty Map<String, List<String>>
+set registry["web-service"] to ["database", "auth-lib", "logging"]
+set registry["worker-job"] to ["queue-client", "logging"]
+set registry["auth-lib"] to ["crypto-core"]
+
+define installed as empty Map<String, Bool>
+set installed["logging"] to true
+set installed["crypto-core"] to true
+
+# 1. Plan for web-service
+define p1 as plan_installation("web-service", registry, installed)
+print p1.target, p1.valid_package, p1.missing_count, p1.to_install
+
+# 2. Plan for worker-job
+define p2 as plan_installation("worker-job", registry, installed)
+print p2.target, p2.valid_package, p2.missing_count, p2.to_install
+
+# 3. Mark database and auth-lib as installed, re-plan web-service
+set installed["database"] to true
+set installed["auth-lib"] to true
+define p3 as plan_installation("web-service", registry, installed)
+print p3.target, p3.valid_package, p3.missing_count, p3.to_install
+
+# 4. Unknown package
+define p4 as plan_installation("non-existent-lib", registry, installed)
+print p4.target, p4.valid_package, p4.missing_count, p4.to_install

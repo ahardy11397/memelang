@@ -1,0 +1,51 @@
+record StockReservation:
+    order_id: String
+    sku: String
+    quantity: Int
+
+record ReservationResult:
+    order_id: String
+    sku: String
+    reserved: Bool
+    allocated_qty: Int
+    remaining_stock: Int
+
+function attempt_reservation(req: StockReservation, catalog_stock: Map<String, Int>) -> ReservationResult:
+    if catalog_stock has key req.sku:
+        define available as catalog_stock[req.sku]
+        if available >= req.quantity:
+            define rem as available - req.quantity
+            return ReservationResult(order_id=req.order_id, sku=req.sku, reserved=true, allocated_qty=req.quantity, remaining_stock=rem)
+        else:
+            return ReservationResult(order_id=req.order_id, sku=req.sku, reserved=false, allocated_qty=0, remaining_stock=available)
+    else:
+        return ReservationResult(order_id=req.order_id, sku=req.sku, reserved=false, allocated_qty=0, remaining_stock=0)
+
+define stock as {"SKU-A": 50, "SKU-B": 5}
+
+# 1. Partial allocation within available inventory
+define req1 as StockReservation(order_id="ord_1001", sku="SKU-A", quantity=20)
+define res1 as attempt_reservation(req1, stock)
+print res1.order_id, res1.sku, res1.reserved, res1.allocated_qty, res1.remaining_stock
+
+# Commit reservation to stock
+set stock[res1.sku] to res1.remaining_stock
+
+# 2. Rejection when requested quantity exceeds available stock
+define req2 as StockReservation(order_id="ord_1002", sku="SKU-B", quantity=10)
+define res2 as attempt_reservation(req2, stock)
+print res2.order_id, res2.sku, res2.reserved, res2.allocated_qty, res2.remaining_stock
+
+# 3. Exhausting remaining stock
+define req3 as StockReservation(order_id="ord_1003", sku="SKU-A", quantity=30)
+define res3 as attempt_reservation(req3, stock)
+print res3.order_id, res3.sku, res3.reserved, res3.allocated_qty, res3.remaining_stock
+set stock[res3.sku] to res3.remaining_stock
+
+# 4. Unknown SKU lookup rejection
+define req4 as StockReservation(order_id="ord_1004", sku="SKU-Z", quantity=5)
+define res4 as attempt_reservation(req4, stock)
+print res4.order_id, res4.sku, res4.reserved, res4.allocated_qty, res4.remaining_stock
+
+# Final inventory snapshot
+print stock

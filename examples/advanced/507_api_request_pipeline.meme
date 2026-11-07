@@ -1,0 +1,56 @@
+record HttpRequest:
+    method: String
+    path: String
+    body_username: String
+    body_email: String
+    body_age: Int
+
+record HttpResponse:
+    status_code: Int
+    error_type: String
+    error_detail: String
+    user_id: Int
+    is_success: Bool
+
+function handle_registration(req: HttpRequest, existing: Map<String, Bool>, next_id: Int) -> HttpResponse:
+    if req.method != "POST":
+        return HttpResponse(status_code=405, error_type="METHOD_NOT_ALLOWED", error_detail="Expected POST", user_id=0, is_success=false)
+    else:
+        if req.path != "/api/v1/users":
+            return HttpResponse(status_code=404, error_type="NOT_FOUND", error_detail="Unknown resource", user_id=0, is_success=false)
+        else:
+            if length of string req.body_username < 3:
+                return HttpResponse(status_code=400, error_type="INVALID_FIELD", error_detail="Username too short", user_id=0, is_success=false)
+            else:
+                if req.body_age < 13:
+                    return HttpResponse(status_code=422, error_type="POLICY_VIOLATION", error_detail="Minimum age is 13", user_id=0, is_success=false)
+                else:
+                    if existing has key req.body_username:
+                        return HttpResponse(status_code=409, error_type="CONFLICT", error_detail="Username already taken", user_id=0, is_success=false)
+                    else:
+                        return HttpResponse(status_code=201, error_type="NONE", error_detail="", user_id=next_id, is_success=true)
+
+define existing_users as {"admin": true, "root": true}
+
+# 1. Successful user registration
+define r1 as HttpRequest(method="POST", path="/api/v1/users", body_username="dev_alice", body_email="alice@cloud.corp", body_age=28)
+define res1 as handle_registration(r1, existing_users, 1001)
+print res1.status_code, res1.is_success, res1.user_id
+
+# Commit newly registered user to table
+set existing_users[r1.body_username] to true
+
+# 2. Duplicate username conflict (409)
+define r2 as HttpRequest(method="POST", path="/api/v1/users", body_username="dev_alice", body_email="alice2@cloud.corp", body_age=29)
+define res2 as handle_registration(r2, existing_users, 1002)
+print res2.status_code, res2.is_success, res2.error_type, res2.error_detail
+
+# 3. Underage user validation failure (422)
+define r3 as HttpRequest(method="POST", path="/api/v1/users", body_username="junior_coder", body_email="kid@coder.net", body_age=11)
+define res3 as handle_registration(r3, existing_users, 1003)
+print res3.status_code, res3.is_success, res3.error_type, res3.error_detail
+
+# 4. Method not allowed (405)
+define r4 as HttpRequest(method="GET", path="/api/v1/users", body_username="anybody", body_email="any@corp.net", body_age=25)
+define res4 as handle_registration(r4, existing_users, 1004)
+print res4.status_code, res4.is_success, res4.error_type

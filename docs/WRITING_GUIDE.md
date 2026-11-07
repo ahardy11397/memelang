@@ -380,7 +380,87 @@ next compile, then re-locks.
 
 ---
 
-## 11. CLI Cheat Sheet
+## 11. Records and Maps
+
+Memelang supports typed user-defined records (structs) and key-value maps (dictionaries) for modeling structured data, domain entities, and API contracts.
+
+### Records (Structs)
+
+Define a record type with typed fields:
+
+```meme
+record User:
+    id: Int
+    name: String
+    email: String
+    is_active: Bool
+```
+
+Construct a record using `RecordName(field1=val1, field2=val2)`:
+
+```meme
+define admin as User(id=1, name="Alice", email="alice@corp.internal", is_active=true)
+```
+
+Access fields with dot notation:
+
+```meme
+print admin.name, admin.email
+```
+
+Mutate fields with `set <target>.<field> to <value>`:
+
+```meme
+set admin.is_active to false
+```
+
+Record types can be used as function parameters and return types:
+
+```meme
+record AuthResponse:
+    success: Bool
+    user: User
+
+function authenticate(user_id: Int, username: String) -> AuthResponse:
+    define u as User(id=user_id, name=username, email="user@corp.internal", is_active=true)
+    return AuthResponse(success=true, user=u)
+```
+
+### Maps (Lookup Tables / Dictionaries)
+
+Maps associate keys of a static type with values of a static type. Define maps with literal `{key: value, ...}` or `empty Map<KeyType, ValueType>`:
+
+```meme
+define user_roles as {"alice": "admin", "bob": "editor"}
+define user_scores as empty Map<String, Int>
+```
+
+Set key-value entries:
+
+```meme
+set user_roles["charlie"] to "viewer"
+set user_scores["alice"] to 100
+```
+
+Read entries with index lookup `m[key]` or provide a default fallback with `m[key] default <fallback>`:
+
+```meme
+define role as user_roles["alice"]
+define guest_role as user_roles["nobody"] default "guest"
+```
+
+Check key membership with `target has key key`:
+
+```meme
+if user_roles has key "alice":
+    print "Found alice"
+```
+
+All three compiler backends (Python, standalone Rust, and C++20) generate native representations (Python `@dataclass` and `dict`, Rust `struct` and `std::collections::HashMap`, C++ `struct` and `std::unordered_map`) with deterministic output formatting parity.
+
+---
+
+## 12. CLI Cheat Sheet
 
 ```bash
 uv run meme compile app.meme --target rust      # compile (writes build.lock)
@@ -400,11 +480,11 @@ Targets: `python`, `rust`, `cpp`. Rust output is standalone (compiles with bare
 
 ---
 
-## 12. Teaching the Language: the `examples/` Axis
+## 13. Teaching the Language: the `examples/` Axis
 
 The compiler's BM25 retriever learns phrasing from `.meme` files in `examples/` that
 have a paired, verified `.meme.lock` sidecar (such as the locked examples in
-`examples/cs101/`, `cs102/`, `cs103/`). When you invent a phrasing the compiler doesn't
+`examples/cs101/`, `cs102/`, `cs103/`, and `examples/advanced/`). When you invent a phrasing the compiler doesn't
 know, the fix is usually to **add a locked example**:
 
 1. Write a small, canonical `.meme` file demonstrating the idiom in `examples/`.
@@ -420,7 +500,7 @@ stress-test cases — don't copy phrasing from `typo` or `ambiguous` corpus scri
 
 ---
 
-## 13. A Complete Worked Program
+## 14. A Complete Worked Program
 
 Putting it all together — input, a helper function, and a call
 (verified end-to-end: `meme run --provider llama-cpp --target python`, input `88 92 79`
@@ -481,6 +561,14 @@ widen `Int` to `Float` at call boundaries.
 | Char at position | `s char k` (1-based) |
 | Define a function | `define function f with a, b` |
 | Call it | `define r as f from a, b` |
+| Define a record | `record User:\n    id: Int\n    name: String` |
+| Instantiate a record | `define u as User(id=1, name="Alice")` |
+| Access record field | `u.name` |
+| Mutate record field | `set u.name to "Bob"` |
+| Define a map | `define m as {"a": 1, "b": 2}` / `empty Map<K, V>` |
+| Map lookup / default | `m["a"]` / `m["c"] default 0` |
+| Map key test | `m has key "a"` |
+| Mutate map entry | `set m["a"] to 10` |
 | Fail cleanly | `else return "error message"` |
 | Comment | `# this is ignored` |
 

@@ -5,21 +5,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-MemeType = Literal[
-    "Int",
-    "Float",
-    "Bool",
-    "String",
-    "List<Int>",
-    "List<Float>",
-    "List<Bool>",
-    "List<String>",
-    "List<List<Int>>",
-    "List<List<Float>>",
-    "List<List<Bool>>",
-    "List<List<String>>",
-    "Void",
-]
+MemeType = str
 
 BinaryOperator = Literal[
     "+",
@@ -180,6 +166,48 @@ class StringSliceExpr(IRNode):
     end: IRExpr
 
 
+class RecordFieldInit(IRNode):
+    name: str
+    value: IRExpr
+
+
+class RecordLiteralExpr(IRNode):
+    expr_type: Literal["record_literal"] = "record_literal"
+    record_name: str
+    fields: list[RecordFieldInit] = Field(default_factory=list)
+
+
+class RecordFieldExpr(IRNode):
+    expr_type: Literal["record_field"] = "record_field"
+    target: IRExpr
+    field_name: str
+
+
+class MapEntry(IRNode):
+    key: IRExpr
+    value: IRExpr
+
+
+class MapLiteralExpr(IRNode):
+    expr_type: Literal["map_literal"] = "map_literal"
+    key_type: MemeType
+    value_type: MemeType
+    entries: list[MapEntry] = Field(default_factory=list)
+
+
+class MapGetExpr(IRNode):
+    expr_type: Literal["map_get"] = "map_get"
+    target: IRExpr
+    key: IRExpr
+    default_val: IRExpr | None = None
+
+
+class MapHasKeyExpr(IRNode):
+    expr_type: Literal["map_has_key"] = "map_has_key"
+    target: IRExpr
+    key: IRExpr
+
+
 IRExpr = Annotated[
     LiteralExpr
     | ListLiteralExpr
@@ -195,7 +223,12 @@ IRExpr = Annotated[
     | StrEndsWithExpr
     | ReadJsonListExpr
     | StringLengthExpr
-    | StringSliceExpr,
+    | StringSliceExpr
+    | RecordLiteralExpr
+    | RecordFieldExpr
+    | MapLiteralExpr
+    | MapGetExpr
+    | MapHasKeyExpr,
     Field(discriminator="expr_type"),
 ]
 
@@ -328,6 +361,34 @@ class ReturnStmt(IRNode):
     source_line: int | None = None
 
 
+class RecordFieldDef(IRNode):
+    name: str
+    field_type: MemeType
+
+
+class RecordDefStmt(IRNode):
+    op: Literal["record_def"] = "record_def"
+    name: str
+    fields: list[RecordFieldDef] = Field(default_factory=list)
+    source_line: int | None = None
+
+
+class RecordSetFieldStmt(IRNode):
+    op: Literal["record_set_field"] = "record_set_field"
+    target: str
+    field_name: str
+    value: IRExpr
+    source_line: int | None = None
+
+
+class MapSetStmt(IRNode):
+    op: Literal["map_set"] = "map_set"
+    target: str
+    key: IRExpr
+    value: IRExpr
+    source_line: int | None = None
+
+
 IRStatement = Annotated[
     VarDeclStmt
     | AssignStmt
@@ -344,7 +405,10 @@ IRStatement = Annotated[
     | ForRangeStmt
     | WhileStmt
     | FuncDefStmt
-    | ReturnStmt,
+    | ReturnStmt
+    | RecordDefStmt
+    | RecordSetFieldStmt
+    | MapSetStmt,
     Field(discriminator="op"),
 ]
 
@@ -409,6 +473,11 @@ StrEndsWithExpr.model_rebuild()
 ReadJsonListExpr.model_rebuild()
 StringLengthExpr.model_rebuild()
 StringSliceExpr.model_rebuild()
+RecordLiteralExpr.model_rebuild()
+RecordFieldExpr.model_rebuild()
+MapLiteralExpr.model_rebuild()
+MapGetExpr.model_rebuild()
+MapHasKeyExpr.model_rebuild()
 VarDeclStmt.model_rebuild()
 AssignStmt.model_rebuild()
 ClampCollectionStmt.model_rebuild()
@@ -424,6 +493,9 @@ ForRangeStmt.model_rebuild()
 WhileStmt.model_rebuild()
 FuncDefStmt.model_rebuild()
 ReturnStmt.model_rebuild()
+RecordDefStmt.model_rebuild()
+RecordSetFieldStmt.model_rebuild()
+MapSetStmt.model_rebuild()
 AmbiguityCandidate.model_rebuild()
 AmbiguityDiagnostic.model_rebuild()
 SynthesisResult.model_rebuild()

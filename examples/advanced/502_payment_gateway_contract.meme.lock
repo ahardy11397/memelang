@@ -1,0 +1,2188 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/502_payment_gateway_contract.meme": {
+      "source_sha256": "e981e25c5a67aa0614f0ac92c5ac56f0d132f9d9607a95fcdc993ef019c9786f",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "PaymentRequest",
+          "fields": [
+            {
+              "name": "account_id",
+              "field_type": "String"
+            },
+            {
+              "name": "amount_cents",
+              "field_type": "Int"
+            },
+            {
+              "name": "currency",
+              "field_type": "String"
+            },
+            {
+              "name": "idempotency_key",
+              "field_type": "String"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "record_def",
+          "name": "TxReceipt",
+          "fields": [
+            {
+              "name": "success",
+              "field_type": "Bool"
+            },
+            {
+              "name": "error_code",
+              "field_type": "String"
+            },
+            {
+              "name": "fee_cents",
+              "field_type": "Int"
+            },
+            {
+              "name": "net_debited_cents",
+              "field_type": "Int"
+            },
+            {
+              "name": "new_balance_cents",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "func_def",
+          "name": "validate_and_charge",
+          "params": [
+            {
+              "name": "req",
+              "param_type": "PaymentRequest"
+            },
+            {
+              "name": "balances",
+              "param_type": "Map<String, Int>"
+            },
+            {
+              "name": "processed",
+              "param_type": "Map<String, Bool>"
+            },
+            {
+              "name": "fee_percent",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "TxReceipt",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "!=",
+                "left": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "req"
+                  },
+                  "field_name": "currency"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "USD",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "bal",
+                  "var_type": "Int",
+                  "value": {
+                    "expr_type": "map_get",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "balances"
+                    },
+                    "key": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "req"
+                      },
+                      "field_name": "account_id"
+                    },
+                    "default_val": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 16
+                },
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "record_literal",
+                    "record_name": "TxReceipt",
+                    "fields": [
+                      {
+                        "name": "success",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": false,
+                          "data_type": "Bool"
+                        }
+                      },
+                      {
+                        "name": "error_code",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "UNSUPPORTED_CURRENCY",
+                          "data_type": "String"
+                        }
+                      },
+                      {
+                        "name": "fee_cents",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": 0,
+                          "data_type": "Int"
+                        }
+                      },
+                      {
+                        "name": "net_debited_cents",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": 0,
+                          "data_type": "Int"
+                        }
+                      },
+                      {
+                        "name": "new_balance_cents",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "bal"
+                        }
+                      }
+                    ]
+                  },
+                  "source_line": 17
+                }
+              ],
+              "else_body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "map_has_key",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "processed"
+                    },
+                    "key": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "req"
+                      },
+                      "field_name": "idempotency_key"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "var_decl",
+                      "name": "bal",
+                      "var_type": "Int",
+                      "value": {
+                        "expr_type": "map_get",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "balances"
+                        },
+                        "key": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "req"
+                          },
+                          "field_name": "account_id"
+                        },
+                        "default_val": {
+                          "expr_type": "literal",
+                          "value": 0,
+                          "data_type": "Int"
+                        }
+                      },
+                      "source_line": 20
+                    },
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "record_literal",
+                        "record_name": "TxReceipt",
+                        "fields": [
+                          {
+                            "name": "success",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": false,
+                              "data_type": "Bool"
+                            }
+                          },
+                          {
+                            "name": "error_code",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": "DUPLICATE_REQUEST",
+                              "data_type": "String"
+                            }
+                          },
+                          {
+                            "name": "fee_cents",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": 0,
+                              "data_type": "Int"
+                            }
+                          },
+                          {
+                            "name": "net_debited_cents",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": 0,
+                              "data_type": "Int"
+                            }
+                          },
+                          {
+                            "name": "new_balance_cents",
+                            "value": {
+                              "expr_type": "var_ref",
+                              "name": "bal"
+                            }
+                          }
+                        ]
+                      },
+                      "source_line": 21
+                    }
+                  ],
+                  "else_body": [
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "binary_op",
+                        "op": "<=",
+                        "left": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "req"
+                          },
+                          "field_name": "amount_cents"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 0,
+                          "data_type": "Int"
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "op": "var_decl",
+                          "name": "bal",
+                          "var_type": "Int",
+                          "value": {
+                            "expr_type": "map_get",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "balances"
+                            },
+                            "key": {
+                              "expr_type": "record_field",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "req"
+                              },
+                              "field_name": "account_id"
+                            },
+                            "default_val": {
+                              "expr_type": "literal",
+                              "value": 0,
+                              "data_type": "Int"
+                            }
+                          },
+                          "source_line": 24
+                        },
+                        {
+                          "op": "return_stmt",
+                          "value": {
+                            "expr_type": "record_literal",
+                            "record_name": "TxReceipt",
+                            "fields": [
+                              {
+                                "name": "success",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": false,
+                                  "data_type": "Bool"
+                                }
+                              },
+                              {
+                                "name": "error_code",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": "INVALID_AMOUNT",
+                                  "data_type": "String"
+                                }
+                              },
+                              {
+                                "name": "fee_cents",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": 0,
+                                  "data_type": "Int"
+                                }
+                              },
+                              {
+                                "name": "net_debited_cents",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": 0,
+                                  "data_type": "Int"
+                                }
+                              },
+                              {
+                                "name": "new_balance_cents",
+                                "value": {
+                                  "expr_type": "var_ref",
+                                  "name": "bal"
+                                }
+                              }
+                            ]
+                          },
+                          "source_line": 25
+                        }
+                      ],
+                      "else_body": [
+                        {
+                          "op": "var_decl",
+                          "name": "current_bal",
+                          "var_type": "Int",
+                          "value": {
+                            "expr_type": "map_get",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "balances"
+                            },
+                            "key": {
+                              "expr_type": "record_field",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "req"
+                              },
+                              "field_name": "account_id"
+                            },
+                            "default_val": {
+                              "expr_type": "literal",
+                              "value": 0,
+                              "data_type": "Int"
+                            }
+                          },
+                          "source_line": 27
+                        },
+                        {
+                          "op": "var_decl",
+                          "name": "fee",
+                          "var_type": "Int",
+                          "value": {
+                            "expr_type": "binary_op",
+                            "op": "/",
+                            "left": {
+                              "expr_type": "binary_op",
+                              "op": "*",
+                              "left": {
+                                "expr_type": "record_field",
+                                "target": {
+                                  "expr_type": "var_ref",
+                                  "name": "req"
+                                },
+                                "field_name": "amount_cents"
+                              },
+                              "right": {
+                                "expr_type": "var_ref",
+                                "name": "fee_percent"
+                              }
+                            },
+                            "right": {
+                              "expr_type": "literal",
+                              "value": 100,
+                              "data_type": "Int"
+                            }
+                          },
+                          "source_line": 28
+                        },
+                        {
+                          "op": "var_decl",
+                          "name": "total_debit",
+                          "var_type": "Int",
+                          "value": {
+                            "expr_type": "binary_op",
+                            "op": "+",
+                            "left": {
+                              "expr_type": "record_field",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "req"
+                              },
+                              "field_name": "amount_cents"
+                            },
+                            "right": {
+                              "expr_type": "var_ref",
+                              "name": "fee"
+                            }
+                          },
+                          "source_line": 29
+                        },
+                        {
+                          "op": "if_stmt",
+                          "condition": {
+                            "expr_type": "binary_op",
+                            "op": "<",
+                            "left": {
+                              "expr_type": "var_ref",
+                              "name": "current_bal"
+                            },
+                            "right": {
+                              "expr_type": "var_ref",
+                              "name": "total_debit"
+                            }
+                          },
+                          "then_body": [
+                            {
+                              "op": "return_stmt",
+                              "value": {
+                                "expr_type": "record_literal",
+                                "record_name": "TxReceipt",
+                                "fields": [
+                                  {
+                                    "name": "success",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": false,
+                                      "data_type": "Bool"
+                                    }
+                                  },
+                                  {
+                                    "name": "error_code",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": "INSUFFICIENT_FUNDS",
+                                      "data_type": "String"
+                                    }
+                                  },
+                                  {
+                                    "name": "fee_cents",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": 0,
+                                      "data_type": "Int"
+                                    }
+                                  },
+                                  {
+                                    "name": "net_debited_cents",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": 0,
+                                      "data_type": "Int"
+                                    }
+                                  },
+                                  {
+                                    "name": "new_balance_cents",
+                                    "value": {
+                                      "expr_type": "var_ref",
+                                      "name": "current_bal"
+                                    }
+                                  }
+                                ]
+                              },
+                              "source_line": 31
+                            }
+                          ],
+                          "else_body": [
+                            {
+                              "op": "var_decl",
+                              "name": "rem_bal",
+                              "var_type": "Int",
+                              "value": {
+                                "expr_type": "binary_op",
+                                "op": "-",
+                                "left": {
+                                  "expr_type": "var_ref",
+                                  "name": "current_bal"
+                                },
+                                "right": {
+                                  "expr_type": "var_ref",
+                                  "name": "total_debit"
+                                }
+                              },
+                              "source_line": 33
+                            },
+                            {
+                              "op": "return_stmt",
+                              "value": {
+                                "expr_type": "record_literal",
+                                "record_name": "TxReceipt",
+                                "fields": [
+                                  {
+                                    "name": "success",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": true,
+                                      "data_type": "Bool"
+                                    }
+                                  },
+                                  {
+                                    "name": "error_code",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": "NONE",
+                                      "data_type": "String"
+                                    }
+                                  },
+                                  {
+                                    "name": "fee_cents",
+                                    "value": {
+                                      "expr_type": "var_ref",
+                                      "name": "fee"
+                                    }
+                                  },
+                                  {
+                                    "name": "net_debited_cents",
+                                    "value": {
+                                      "expr_type": "var_ref",
+                                      "name": "total_debit"
+                                    }
+                                  },
+                                  {
+                                    "name": "new_balance_cents",
+                                    "value": {
+                                      "expr_type": "var_ref",
+                                      "name": "rem_bal"
+                                    }
+                                  }
+                                ]
+                              },
+                              "source_line": 34
+                            }
+                          ],
+                          "source_line": 30
+                        }
+                      ],
+                      "source_line": 23
+                    }
+                  ],
+                  "source_line": 19
+                }
+              ],
+              "source_line": 15
+            }
+          ],
+          "source_line": 14
+        },
+        {
+          "op": "var_decl",
+          "name": "balances",
+          "var_type": "Map<String, Int>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "Int",
+            "entries": [
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "acct_prime",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 50000,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 36
+        },
+        {
+          "op": "var_decl",
+          "name": "processed_keys",
+          "var_type": "Map<String, Bool>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "Bool",
+            "entries": []
+          },
+          "source_line": 37
+        },
+        {
+          "op": "var_decl",
+          "name": "tx1",
+          "var_type": "PaymentRequest",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "PaymentRequest",
+            "fields": [
+              {
+                "name": "account_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "acct_prime",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "amount_cents",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 10000,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "currency",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "USD",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "idempotency_key",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "tx_idem_001",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 40
+        },
+        {
+          "op": "var_decl",
+          "name": "r1",
+          "var_type": "TxReceipt",
+          "value": {
+            "expr_type": "call",
+            "func_name": "validate_and_charge",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "tx1"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "balances"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "processed_keys"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 41
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              "field_name": "success"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              "field_name": "error_code"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              "field_name": "fee_cents"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              "field_name": "net_debited_cents"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              "field_name": "new_balance_cents"
+            }
+          ],
+          "source_line": 42
+        },
+        {
+          "op": "map_set",
+          "target": "balances",
+          "key": {
+            "expr_type": "literal",
+            "value": "acct_prime",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "r1"
+            },
+            "field_name": "new_balance_cents"
+          },
+          "source_line": 45
+        },
+        {
+          "op": "map_set",
+          "target": "processed_keys",
+          "key": {
+            "expr_type": "literal",
+            "value": "tx_idem_001",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "literal",
+            "value": true,
+            "data_type": "Bool"
+          },
+          "source_line": 46
+        },
+        {
+          "op": "var_decl",
+          "name": "tx2",
+          "var_type": "PaymentRequest",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "PaymentRequest",
+            "fields": [
+              {
+                "name": "account_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "acct_prime",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "amount_cents",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 10000,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "currency",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "USD",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "idempotency_key",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "tx_idem_001",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 49
+        },
+        {
+          "op": "var_decl",
+          "name": "r2",
+          "var_type": "TxReceipt",
+          "value": {
+            "expr_type": "call",
+            "func_name": "validate_and_charge",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "tx2"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "balances"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "processed_keys"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 50
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r2"
+              },
+              "field_name": "success"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r2"
+              },
+              "field_name": "error_code"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r2"
+              },
+              "field_name": "new_balance_cents"
+            }
+          ],
+          "source_line": 51
+        },
+        {
+          "op": "var_decl",
+          "name": "tx3",
+          "var_type": "PaymentRequest",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "PaymentRequest",
+            "fields": [
+              {
+                "name": "account_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "acct_prime",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "amount_cents",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 45000,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "currency",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "USD",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "idempotency_key",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "tx_idem_002",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 54
+        },
+        {
+          "op": "var_decl",
+          "name": "r3",
+          "var_type": "TxReceipt",
+          "value": {
+            "expr_type": "call",
+            "func_name": "validate_and_charge",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "tx3"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "balances"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "processed_keys"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 55
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r3"
+              },
+              "field_name": "success"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r3"
+              },
+              "field_name": "error_code"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r3"
+              },
+              "field_name": "new_balance_cents"
+            }
+          ],
+          "source_line": 56
+        },
+        {
+          "op": "var_decl",
+          "name": "tx4",
+          "var_type": "PaymentRequest",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "PaymentRequest",
+            "fields": [
+              {
+                "name": "account_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "acct_prime",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "amount_cents",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 5000,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "currency",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "EUR",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "idempotency_key",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "tx_idem_003",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 59
+        },
+        {
+          "op": "var_decl",
+          "name": "r4",
+          "var_type": "TxReceipt",
+          "value": {
+            "expr_type": "call",
+            "func_name": "validate_and_charge",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "tx4"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "balances"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "processed_keys"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 60
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r4"
+              },
+              "field_name": "success"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r4"
+              },
+              "field_name": "error_code"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r4"
+              },
+              "field_name": "new_balance_cents"
+            }
+          ],
+          "source_line": 61
+        }
+      ],
+      "canonical_meme": "record PaymentRequest:\n    account_id: String\n    amount_cents: Int\n    currency: String\n    idempotency_key: String\nrecord TxReceipt:\n    success: Bool\n    error_code: String\n    fee_cents: Int\n    net_debited_cents: Int\n    new_balance_cents: Int\nfunction validate_and_charge(req: PaymentRequest, balances: Map<String, Int>, processed: Map<String, Bool>, fee_percent: Int) -> TxReceipt:\n    if req.currency != \"USD\":\n        define bal: Int as balances[req.account_id] default 0\n        return TxReceipt(success=false, error_code=\"UNSUPPORTED_CURRENCY\", fee_cents=0, net_debited_cents=0, new_balance_cents=bal)\n    else:\n        if processed has key req.idempotency_key:\n            define bal: Int as balances[req.account_id] default 0\n            return TxReceipt(success=false, error_code=\"DUPLICATE_REQUEST\", fee_cents=0, net_debited_cents=0, new_balance_cents=bal)\n        else:\n            if req.amount_cents <= 0:\n                define bal: Int as balances[req.account_id] default 0\n                return TxReceipt(success=false, error_code=\"INVALID_AMOUNT\", fee_cents=0, net_debited_cents=0, new_balance_cents=bal)\n            else:\n                define current_bal: Int as balances[req.account_id] default 0\n                define fee: Int as req.amount_cents * fee_percent / 100\n                define total_debit: Int as req.amount_cents + fee\n                if current_bal < total_debit:\n                    return TxReceipt(success=false, error_code=\"INSUFFICIENT_FUNDS\", fee_cents=0, net_debited_cents=0, new_balance_cents=current_bal)\n                else:\n                    define rem_bal: Int as current_bal - total_debit\n                    return TxReceipt(success=true, error_code=\"NONE\", fee_cents=fee, net_debited_cents=total_debit, new_balance_cents=rem_bal)\ndefine balances: Map<String, Int> as {\"acct_prime\": 50000}\ndefine processed_keys: Map<String, Bool> as empty Map<String, Bool>\ndefine tx1: PaymentRequest as PaymentRequest(account_id=\"acct_prime\", amount_cents=10000, currency=\"USD\", idempotency_key=\"tx_idem_001\")\ndefine r1: TxReceipt as validate_and_charge(tx1, balances, processed_keys, 2)\nprint r1.success, r1.error_code, r1.fee_cents, r1.net_debited_cents, r1.new_balance_cents\nset balances[\"acct_prime\"] to r1.new_balance_cents\nset processed_keys[\"tx_idem_001\"] to true\ndefine tx2: PaymentRequest as PaymentRequest(account_id=\"acct_prime\", amount_cents=10000, currency=\"USD\", idempotency_key=\"tx_idem_001\")\ndefine r2: TxReceipt as validate_and_charge(tx2, balances, processed_keys, 2)\nprint r2.success, r2.error_code, r2.new_balance_cents\ndefine tx3: PaymentRequest as PaymentRequest(account_id=\"acct_prime\", amount_cents=45000, currency=\"USD\", idempotency_key=\"tx_idem_002\")\ndefine r3: TxReceipt as validate_and_charge(tx3, balances, processed_keys, 2)\nprint r3.success, r3.error_code, r3.new_balance_cents\ndefine tx4: PaymentRequest as PaymentRequest(account_id=\"acct_prime\", amount_cents=5000, currency=\"EUR\", idempotency_key=\"tx_idem_003\")\ndefine r4: TxReceipt as validate_and_charge(tx4, balances, processed_keys, 2)\nprint r4.success, r4.error_code, r4.new_balance_cents",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "PaymentRequest",
+            "fields": [
+              {
+                "name": "account_id",
+                "field_type": "String"
+              },
+              {
+                "name": "amount_cents",
+                "field_type": "Int"
+              },
+              {
+                "name": "currency",
+                "field_type": "String"
+              },
+              {
+                "name": "idempotency_key",
+                "field_type": "String"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "record_def",
+            "name": "TxReceipt",
+            "fields": [
+              {
+                "name": "success",
+                "field_type": "Bool"
+              },
+              {
+                "name": "error_code",
+                "field_type": "String"
+              },
+              {
+                "name": "fee_cents",
+                "field_type": "Int"
+              },
+              {
+                "name": "net_debited_cents",
+                "field_type": "Int"
+              },
+              {
+                "name": "new_balance_cents",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "func_def",
+            "name": "validate_and_charge",
+            "params": [
+              {
+                "name": "req",
+                "param_type": "PaymentRequest"
+              },
+              {
+                "name": "balances",
+                "param_type": "Map<String, Int>"
+              },
+              {
+                "name": "processed",
+                "param_type": "Map<String, Bool>"
+              },
+              {
+                "name": "fee_percent",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "TxReceipt",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "!=",
+                  "left": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "req"
+                    },
+                    "field_name": "currency"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "USD",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "bal",
+                    "var_type": "Int",
+                    "value": {
+                      "expr_type": "map_get",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "balances"
+                      },
+                      "key": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "req"
+                        },
+                        "field_name": "account_id"
+                      },
+                      "default_val": {
+                        "expr_type": "literal",
+                        "value": 0,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 16
+                  },
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "record_literal",
+                      "record_name": "TxReceipt",
+                      "fields": [
+                        {
+                          "name": "success",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": false,
+                            "data_type": "Bool"
+                          }
+                        },
+                        {
+                          "name": "error_code",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": "UNSUPPORTED_CURRENCY",
+                            "data_type": "String"
+                          }
+                        },
+                        {
+                          "name": "fee_cents",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": 0,
+                            "data_type": "Int"
+                          }
+                        },
+                        {
+                          "name": "net_debited_cents",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": 0,
+                            "data_type": "Int"
+                          }
+                        },
+                        {
+                          "name": "new_balance_cents",
+                          "value": {
+                            "expr_type": "var_ref",
+                            "name": "bal"
+                          }
+                        }
+                      ]
+                    },
+                    "source_line": 17
+                  }
+                ],
+                "else_body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "map_has_key",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "processed"
+                      },
+                      "key": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "req"
+                        },
+                        "field_name": "idempotency_key"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "var_decl",
+                        "name": "bal",
+                        "var_type": "Int",
+                        "value": {
+                          "expr_type": "map_get",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "balances"
+                          },
+                          "key": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "req"
+                            },
+                            "field_name": "account_id"
+                          },
+                          "default_val": {
+                            "expr_type": "literal",
+                            "value": 0,
+                            "data_type": "Int"
+                          }
+                        },
+                        "source_line": 20
+                      },
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "record_literal",
+                          "record_name": "TxReceipt",
+                          "fields": [
+                            {
+                              "name": "success",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": false,
+                                "data_type": "Bool"
+                              }
+                            },
+                            {
+                              "name": "error_code",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": "DUPLICATE_REQUEST",
+                                "data_type": "String"
+                              }
+                            },
+                            {
+                              "name": "fee_cents",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": 0,
+                                "data_type": "Int"
+                              }
+                            },
+                            {
+                              "name": "net_debited_cents",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": 0,
+                                "data_type": "Int"
+                              }
+                            },
+                            {
+                              "name": "new_balance_cents",
+                              "value": {
+                                "expr_type": "var_ref",
+                                "name": "bal"
+                              }
+                            }
+                          ]
+                        },
+                        "source_line": 21
+                      }
+                    ],
+                    "else_body": [
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "binary_op",
+                          "op": "<=",
+                          "left": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "req"
+                            },
+                            "field_name": "amount_cents"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 0,
+                            "data_type": "Int"
+                          }
+                        },
+                        "then_body": [
+                          {
+                            "op": "var_decl",
+                            "name": "bal",
+                            "var_type": "Int",
+                            "value": {
+                              "expr_type": "map_get",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "balances"
+                              },
+                              "key": {
+                                "expr_type": "record_field",
+                                "target": {
+                                  "expr_type": "var_ref",
+                                  "name": "req"
+                                },
+                                "field_name": "account_id"
+                              },
+                              "default_val": {
+                                "expr_type": "literal",
+                                "value": 0,
+                                "data_type": "Int"
+                              }
+                            },
+                            "source_line": 24
+                          },
+                          {
+                            "op": "return_stmt",
+                            "value": {
+                              "expr_type": "record_literal",
+                              "record_name": "TxReceipt",
+                              "fields": [
+                                {
+                                  "name": "success",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": false,
+                                    "data_type": "Bool"
+                                  }
+                                },
+                                {
+                                  "name": "error_code",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": "INVALID_AMOUNT",
+                                    "data_type": "String"
+                                  }
+                                },
+                                {
+                                  "name": "fee_cents",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": 0,
+                                    "data_type": "Int"
+                                  }
+                                },
+                                {
+                                  "name": "net_debited_cents",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": 0,
+                                    "data_type": "Int"
+                                  }
+                                },
+                                {
+                                  "name": "new_balance_cents",
+                                  "value": {
+                                    "expr_type": "var_ref",
+                                    "name": "bal"
+                                  }
+                                }
+                              ]
+                            },
+                            "source_line": 25
+                          }
+                        ],
+                        "else_body": [
+                          {
+                            "op": "var_decl",
+                            "name": "current_bal",
+                            "var_type": "Int",
+                            "value": {
+                              "expr_type": "map_get",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "balances"
+                              },
+                              "key": {
+                                "expr_type": "record_field",
+                                "target": {
+                                  "expr_type": "var_ref",
+                                  "name": "req"
+                                },
+                                "field_name": "account_id"
+                              },
+                              "default_val": {
+                                "expr_type": "literal",
+                                "value": 0,
+                                "data_type": "Int"
+                              }
+                            },
+                            "source_line": 27
+                          },
+                          {
+                            "op": "var_decl",
+                            "name": "fee",
+                            "var_type": "Int",
+                            "value": {
+                              "expr_type": "binary_op",
+                              "op": "/",
+                              "left": {
+                                "expr_type": "binary_op",
+                                "op": "*",
+                                "left": {
+                                  "expr_type": "record_field",
+                                  "target": {
+                                    "expr_type": "var_ref",
+                                    "name": "req"
+                                  },
+                                  "field_name": "amount_cents"
+                                },
+                                "right": {
+                                  "expr_type": "var_ref",
+                                  "name": "fee_percent"
+                                }
+                              },
+                              "right": {
+                                "expr_type": "literal",
+                                "value": 100,
+                                "data_type": "Int"
+                              }
+                            },
+                            "source_line": 28
+                          },
+                          {
+                            "op": "var_decl",
+                            "name": "total_debit",
+                            "var_type": "Int",
+                            "value": {
+                              "expr_type": "binary_op",
+                              "op": "+",
+                              "left": {
+                                "expr_type": "record_field",
+                                "target": {
+                                  "expr_type": "var_ref",
+                                  "name": "req"
+                                },
+                                "field_name": "amount_cents"
+                              },
+                              "right": {
+                                "expr_type": "var_ref",
+                                "name": "fee"
+                              }
+                            },
+                            "source_line": 29
+                          },
+                          {
+                            "op": "if_stmt",
+                            "condition": {
+                              "expr_type": "binary_op",
+                              "op": "<",
+                              "left": {
+                                "expr_type": "var_ref",
+                                "name": "current_bal"
+                              },
+                              "right": {
+                                "expr_type": "var_ref",
+                                "name": "total_debit"
+                              }
+                            },
+                            "then_body": [
+                              {
+                                "op": "return_stmt",
+                                "value": {
+                                  "expr_type": "record_literal",
+                                  "record_name": "TxReceipt",
+                                  "fields": [
+                                    {
+                                      "name": "success",
+                                      "value": {
+                                        "expr_type": "literal",
+                                        "value": false,
+                                        "data_type": "Bool"
+                                      }
+                                    },
+                                    {
+                                      "name": "error_code",
+                                      "value": {
+                                        "expr_type": "literal",
+                                        "value": "INSUFFICIENT_FUNDS",
+                                        "data_type": "String"
+                                      }
+                                    },
+                                    {
+                                      "name": "fee_cents",
+                                      "value": {
+                                        "expr_type": "literal",
+                                        "value": 0,
+                                        "data_type": "Int"
+                                      }
+                                    },
+                                    {
+                                      "name": "net_debited_cents",
+                                      "value": {
+                                        "expr_type": "literal",
+                                        "value": 0,
+                                        "data_type": "Int"
+                                      }
+                                    },
+                                    {
+                                      "name": "new_balance_cents",
+                                      "value": {
+                                        "expr_type": "var_ref",
+                                        "name": "current_bal"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "source_line": 31
+                              }
+                            ],
+                            "else_body": [
+                              {
+                                "op": "var_decl",
+                                "name": "rem_bal",
+                                "var_type": "Int",
+                                "value": {
+                                  "expr_type": "binary_op",
+                                  "op": "-",
+                                  "left": {
+                                    "expr_type": "var_ref",
+                                    "name": "current_bal"
+                                  },
+                                  "right": {
+                                    "expr_type": "var_ref",
+                                    "name": "total_debit"
+                                  }
+                                },
+                                "source_line": 33
+                              },
+                              {
+                                "op": "return_stmt",
+                                "value": {
+                                  "expr_type": "record_literal",
+                                  "record_name": "TxReceipt",
+                                  "fields": [
+                                    {
+                                      "name": "success",
+                                      "value": {
+                                        "expr_type": "literal",
+                                        "value": true,
+                                        "data_type": "Bool"
+                                      }
+                                    },
+                                    {
+                                      "name": "error_code",
+                                      "value": {
+                                        "expr_type": "literal",
+                                        "value": "NONE",
+                                        "data_type": "String"
+                                      }
+                                    },
+                                    {
+                                      "name": "fee_cents",
+                                      "value": {
+                                        "expr_type": "var_ref",
+                                        "name": "fee"
+                                      }
+                                    },
+                                    {
+                                      "name": "net_debited_cents",
+                                      "value": {
+                                        "expr_type": "var_ref",
+                                        "name": "total_debit"
+                                      }
+                                    },
+                                    {
+                                      "name": "new_balance_cents",
+                                      "value": {
+                                        "expr_type": "var_ref",
+                                        "name": "rem_bal"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "source_line": 34
+                              }
+                            ],
+                            "source_line": 30
+                          }
+                        ],
+                        "source_line": 23
+                      }
+                    ],
+                    "source_line": 19
+                  }
+                ],
+                "source_line": 15
+              }
+            ],
+            "source_line": 14
+          },
+          {
+            "op": "var_decl",
+            "name": "balances",
+            "var_type": "Map<String, Int>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "Int",
+              "entries": [
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "acct_prime",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 50000,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 36
+          },
+          {
+            "op": "var_decl",
+            "name": "processed_keys",
+            "var_type": "Map<String, Bool>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "Bool",
+              "entries": []
+            },
+            "source_line": 37
+          },
+          {
+            "op": "var_decl",
+            "name": "tx1",
+            "var_type": "PaymentRequest",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "PaymentRequest",
+              "fields": [
+                {
+                  "name": "account_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "acct_prime",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "amount_cents",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 10000,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "currency",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "USD",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "idempotency_key",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "tx_idem_001",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 40
+          },
+          {
+            "op": "var_decl",
+            "name": "r1",
+            "var_type": "TxReceipt",
+            "value": {
+              "expr_type": "call",
+              "func_name": "validate_and_charge",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "tx1"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "balances"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "processed_keys"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 41
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                },
+                "field_name": "success"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                },
+                "field_name": "error_code"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                },
+                "field_name": "fee_cents"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                },
+                "field_name": "net_debited_cents"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                },
+                "field_name": "new_balance_cents"
+              }
+            ],
+            "source_line": 42
+          },
+          {
+            "op": "map_set",
+            "target": "balances",
+            "key": {
+              "expr_type": "literal",
+              "value": "acct_prime",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              "field_name": "new_balance_cents"
+            },
+            "source_line": 45
+          },
+          {
+            "op": "map_set",
+            "target": "processed_keys",
+            "key": {
+              "expr_type": "literal",
+              "value": "tx_idem_001",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "literal",
+              "value": true,
+              "data_type": "Bool"
+            },
+            "source_line": 46
+          },
+          {
+            "op": "var_decl",
+            "name": "tx2",
+            "var_type": "PaymentRequest",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "PaymentRequest",
+              "fields": [
+                {
+                  "name": "account_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "acct_prime",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "amount_cents",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 10000,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "currency",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "USD",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "idempotency_key",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "tx_idem_001",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 49
+          },
+          {
+            "op": "var_decl",
+            "name": "r2",
+            "var_type": "TxReceipt",
+            "value": {
+              "expr_type": "call",
+              "func_name": "validate_and_charge",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "tx2"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "balances"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "processed_keys"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 50
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r2"
+                },
+                "field_name": "success"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r2"
+                },
+                "field_name": "error_code"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r2"
+                },
+                "field_name": "new_balance_cents"
+              }
+            ],
+            "source_line": 51
+          },
+          {
+            "op": "var_decl",
+            "name": "tx3",
+            "var_type": "PaymentRequest",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "PaymentRequest",
+              "fields": [
+                {
+                  "name": "account_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "acct_prime",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "amount_cents",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 45000,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "currency",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "USD",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "idempotency_key",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "tx_idem_002",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 54
+          },
+          {
+            "op": "var_decl",
+            "name": "r3",
+            "var_type": "TxReceipt",
+            "value": {
+              "expr_type": "call",
+              "func_name": "validate_and_charge",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "tx3"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "balances"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "processed_keys"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 55
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r3"
+                },
+                "field_name": "success"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r3"
+                },
+                "field_name": "error_code"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r3"
+                },
+                "field_name": "new_balance_cents"
+              }
+            ],
+            "source_line": 56
+          },
+          {
+            "op": "var_decl",
+            "name": "tx4",
+            "var_type": "PaymentRequest",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "PaymentRequest",
+              "fields": [
+                {
+                  "name": "account_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "acct_prime",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "amount_cents",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 5000,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "currency",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "EUR",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "idempotency_key",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "tx_idem_003",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 59
+          },
+          {
+            "op": "var_decl",
+            "name": "r4",
+            "var_type": "TxReceipt",
+            "value": {
+              "expr_type": "call",
+              "func_name": "validate_and_charge",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "tx4"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "balances"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "processed_keys"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 60
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r4"
+                },
+                "field_name": "success"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r4"
+                },
+                "field_name": "error_code"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r4"
+                },
+                "field_name": "new_balance_cents"
+              }
+            ],
+            "source_line": 61
+          }
+        ]
+      }
+    }
+  }
+}

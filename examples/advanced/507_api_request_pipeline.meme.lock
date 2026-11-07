@@ -1,0 +1,2018 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/507_api_request_pipeline.meme": {
+      "source_sha256": "1fa9e86993df98760f3b397b392abda618cc8a73bef17f3eddd9d6f8b781f79c",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "HttpRequest",
+          "fields": [
+            {
+              "name": "method",
+              "field_type": "String"
+            },
+            {
+              "name": "path",
+              "field_type": "String"
+            },
+            {
+              "name": "body_username",
+              "field_type": "String"
+            },
+            {
+              "name": "body_email",
+              "field_type": "String"
+            },
+            {
+              "name": "body_age",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "record_def",
+          "name": "HttpResponse",
+          "fields": [
+            {
+              "name": "status_code",
+              "field_type": "Int"
+            },
+            {
+              "name": "error_type",
+              "field_type": "String"
+            },
+            {
+              "name": "error_detail",
+              "field_type": "String"
+            },
+            {
+              "name": "user_id",
+              "field_type": "Int"
+            },
+            {
+              "name": "is_success",
+              "field_type": "Bool"
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "func_def",
+          "name": "handle_registration",
+          "params": [
+            {
+              "name": "req",
+              "param_type": "HttpRequest"
+            },
+            {
+              "name": "existing",
+              "param_type": "Map<String, Bool>"
+            },
+            {
+              "name": "next_id",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "HttpResponse",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "!=",
+                "left": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "req"
+                  },
+                  "field_name": "method"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "POST",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "record_literal",
+                    "record_name": "HttpResponse",
+                    "fields": [
+                      {
+                        "name": "status_code",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": 405,
+                          "data_type": "Int"
+                        }
+                      },
+                      {
+                        "name": "error_type",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "METHOD_NOT_ALLOWED",
+                          "data_type": "String"
+                        }
+                      },
+                      {
+                        "name": "error_detail",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "Expected POST",
+                          "data_type": "String"
+                        }
+                      },
+                      {
+                        "name": "user_id",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": 0,
+                          "data_type": "Int"
+                        }
+                      },
+                      {
+                        "name": "is_success",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": false,
+                          "data_type": "Bool"
+                        }
+                      }
+                    ]
+                  },
+                  "source_line": 17
+                }
+              ],
+              "else_body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "!=",
+                    "left": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "req"
+                      },
+                      "field_name": "path"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "/api/v1/users",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "record_literal",
+                        "record_name": "HttpResponse",
+                        "fields": [
+                          {
+                            "name": "status_code",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": 404,
+                              "data_type": "Int"
+                            }
+                          },
+                          {
+                            "name": "error_type",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": "NOT_FOUND",
+                              "data_type": "String"
+                            }
+                          },
+                          {
+                            "name": "error_detail",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": "Unknown resource",
+                              "data_type": "String"
+                            }
+                          },
+                          {
+                            "name": "user_id",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": 0,
+                              "data_type": "Int"
+                            }
+                          },
+                          {
+                            "name": "is_success",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": false,
+                              "data_type": "Bool"
+                            }
+                          }
+                        ]
+                      },
+                      "source_line": 20
+                    }
+                  ],
+                  "else_body": [
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "binary_op",
+                        "op": "<",
+                        "left": {
+                          "expr_type": "string_length",
+                          "target": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "req"
+                            },
+                            "field_name": "body_username"
+                          }
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 3,
+                          "data_type": "Int"
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "op": "return_stmt",
+                          "value": {
+                            "expr_type": "record_literal",
+                            "record_name": "HttpResponse",
+                            "fields": [
+                              {
+                                "name": "status_code",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": 400,
+                                  "data_type": "Int"
+                                }
+                              },
+                              {
+                                "name": "error_type",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": "INVALID_FIELD",
+                                  "data_type": "String"
+                                }
+                              },
+                              {
+                                "name": "error_detail",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": "Username too short",
+                                  "data_type": "String"
+                                }
+                              },
+                              {
+                                "name": "user_id",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": 0,
+                                  "data_type": "Int"
+                                }
+                              },
+                              {
+                                "name": "is_success",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": false,
+                                  "data_type": "Bool"
+                                }
+                              }
+                            ]
+                          },
+                          "source_line": 23
+                        }
+                      ],
+                      "else_body": [
+                        {
+                          "op": "if_stmt",
+                          "condition": {
+                            "expr_type": "binary_op",
+                            "op": "<",
+                            "left": {
+                              "expr_type": "record_field",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "req"
+                              },
+                              "field_name": "body_age"
+                            },
+                            "right": {
+                              "expr_type": "literal",
+                              "value": 13,
+                              "data_type": "Int"
+                            }
+                          },
+                          "then_body": [
+                            {
+                              "op": "return_stmt",
+                              "value": {
+                                "expr_type": "record_literal",
+                                "record_name": "HttpResponse",
+                                "fields": [
+                                  {
+                                    "name": "status_code",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": 422,
+                                      "data_type": "Int"
+                                    }
+                                  },
+                                  {
+                                    "name": "error_type",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": "POLICY_VIOLATION",
+                                      "data_type": "String"
+                                    }
+                                  },
+                                  {
+                                    "name": "error_detail",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": "Minimum age is 13",
+                                      "data_type": "String"
+                                    }
+                                  },
+                                  {
+                                    "name": "user_id",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": 0,
+                                      "data_type": "Int"
+                                    }
+                                  },
+                                  {
+                                    "name": "is_success",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": false,
+                                      "data_type": "Bool"
+                                    }
+                                  }
+                                ]
+                              },
+                              "source_line": 26
+                            }
+                          ],
+                          "else_body": [
+                            {
+                              "op": "if_stmt",
+                              "condition": {
+                                "expr_type": "map_has_key",
+                                "target": {
+                                  "expr_type": "var_ref",
+                                  "name": "existing"
+                                },
+                                "key": {
+                                  "expr_type": "record_field",
+                                  "target": {
+                                    "expr_type": "var_ref",
+                                    "name": "req"
+                                  },
+                                  "field_name": "body_username"
+                                }
+                              },
+                              "then_body": [
+                                {
+                                  "op": "return_stmt",
+                                  "value": {
+                                    "expr_type": "record_literal",
+                                    "record_name": "HttpResponse",
+                                    "fields": [
+                                      {
+                                        "name": "status_code",
+                                        "value": {
+                                          "expr_type": "literal",
+                                          "value": 409,
+                                          "data_type": "Int"
+                                        }
+                                      },
+                                      {
+                                        "name": "error_type",
+                                        "value": {
+                                          "expr_type": "literal",
+                                          "value": "CONFLICT",
+                                          "data_type": "String"
+                                        }
+                                      },
+                                      {
+                                        "name": "error_detail",
+                                        "value": {
+                                          "expr_type": "literal",
+                                          "value": "Username already taken",
+                                          "data_type": "String"
+                                        }
+                                      },
+                                      {
+                                        "name": "user_id",
+                                        "value": {
+                                          "expr_type": "literal",
+                                          "value": 0,
+                                          "data_type": "Int"
+                                        }
+                                      },
+                                      {
+                                        "name": "is_success",
+                                        "value": {
+                                          "expr_type": "literal",
+                                          "value": false,
+                                          "data_type": "Bool"
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "source_line": 29
+                                }
+                              ],
+                              "else_body": [
+                                {
+                                  "op": "return_stmt",
+                                  "value": {
+                                    "expr_type": "record_literal",
+                                    "record_name": "HttpResponse",
+                                    "fields": [
+                                      {
+                                        "name": "status_code",
+                                        "value": {
+                                          "expr_type": "literal",
+                                          "value": 201,
+                                          "data_type": "Int"
+                                        }
+                                      },
+                                      {
+                                        "name": "error_type",
+                                        "value": {
+                                          "expr_type": "literal",
+                                          "value": "NONE",
+                                          "data_type": "String"
+                                        }
+                                      },
+                                      {
+                                        "name": "error_detail",
+                                        "value": {
+                                          "expr_type": "literal",
+                                          "value": "",
+                                          "data_type": "String"
+                                        }
+                                      },
+                                      {
+                                        "name": "user_id",
+                                        "value": {
+                                          "expr_type": "var_ref",
+                                          "name": "next_id"
+                                        }
+                                      },
+                                      {
+                                        "name": "is_success",
+                                        "value": {
+                                          "expr_type": "literal",
+                                          "value": true,
+                                          "data_type": "Bool"
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "source_line": 31
+                                }
+                              ],
+                              "source_line": 28
+                            }
+                          ],
+                          "source_line": 25
+                        }
+                      ],
+                      "source_line": 22
+                    }
+                  ],
+                  "source_line": 19
+                }
+              ],
+              "source_line": 16
+            }
+          ],
+          "source_line": 15
+        },
+        {
+          "op": "var_decl",
+          "name": "existing_users",
+          "var_type": "Map<String, Bool>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "Bool",
+            "entries": [
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "admin",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              },
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "root",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              }
+            ]
+          },
+          "source_line": 33
+        },
+        {
+          "op": "var_decl",
+          "name": "r1",
+          "var_type": "HttpRequest",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "HttpRequest",
+            "fields": [
+              {
+                "name": "method",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "POST",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "path",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "/api/v1/users",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body_username",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "dev_alice",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body_email",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "alice@cloud.corp",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body_age",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 28,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 36
+        },
+        {
+          "op": "var_decl",
+          "name": "res1",
+          "var_type": "HttpResponse",
+          "value": {
+            "expr_type": "call",
+            "func_name": "handle_registration",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "existing_users"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1001,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 37
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res1"
+              },
+              "field_name": "status_code"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res1"
+              },
+              "field_name": "is_success"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res1"
+              },
+              "field_name": "user_id"
+            }
+          ],
+          "source_line": 38
+        },
+        {
+          "op": "map_set",
+          "target": "existing_users",
+          "key": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "r1"
+            },
+            "field_name": "body_username"
+          },
+          "value": {
+            "expr_type": "literal",
+            "value": true,
+            "data_type": "Bool"
+          },
+          "source_line": 41
+        },
+        {
+          "op": "var_decl",
+          "name": "r2",
+          "var_type": "HttpRequest",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "HttpRequest",
+            "fields": [
+              {
+                "name": "method",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "POST",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "path",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "/api/v1/users",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body_username",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "dev_alice",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body_email",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "alice2@cloud.corp",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body_age",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 29,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 44
+        },
+        {
+          "op": "var_decl",
+          "name": "res2",
+          "var_type": "HttpResponse",
+          "value": {
+            "expr_type": "call",
+            "func_name": "handle_registration",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "r2"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "existing_users"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1002,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 45
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res2"
+              },
+              "field_name": "status_code"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res2"
+              },
+              "field_name": "is_success"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res2"
+              },
+              "field_name": "error_type"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res2"
+              },
+              "field_name": "error_detail"
+            }
+          ],
+          "source_line": 46
+        },
+        {
+          "op": "var_decl",
+          "name": "r3",
+          "var_type": "HttpRequest",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "HttpRequest",
+            "fields": [
+              {
+                "name": "method",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "POST",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "path",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "/api/v1/users",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body_username",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "junior_coder",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body_email",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "kid@coder.net",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body_age",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 11,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 49
+        },
+        {
+          "op": "var_decl",
+          "name": "res3",
+          "var_type": "HttpResponse",
+          "value": {
+            "expr_type": "call",
+            "func_name": "handle_registration",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "r3"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "existing_users"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1003,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 50
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res3"
+              },
+              "field_name": "status_code"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res3"
+              },
+              "field_name": "is_success"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res3"
+              },
+              "field_name": "error_type"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res3"
+              },
+              "field_name": "error_detail"
+            }
+          ],
+          "source_line": 51
+        },
+        {
+          "op": "var_decl",
+          "name": "r4",
+          "var_type": "HttpRequest",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "HttpRequest",
+            "fields": [
+              {
+                "name": "method",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "GET",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "path",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "/api/v1/users",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body_username",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "anybody",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body_email",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "any@corp.net",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body_age",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 25,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 54
+        },
+        {
+          "op": "var_decl",
+          "name": "res4",
+          "var_type": "HttpResponse",
+          "value": {
+            "expr_type": "call",
+            "func_name": "handle_registration",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "r4"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "existing_users"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1004,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 55
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res4"
+              },
+              "field_name": "status_code"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res4"
+              },
+              "field_name": "is_success"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "res4"
+              },
+              "field_name": "error_type"
+            }
+          ],
+          "source_line": 56
+        }
+      ],
+      "canonical_meme": "record HttpRequest:\n    method: String\n    path: String\n    body_username: String\n    body_email: String\n    body_age: Int\nrecord HttpResponse:\n    status_code: Int\n    error_type: String\n    error_detail: String\n    user_id: Int\n    is_success: Bool\nfunction handle_registration(req: HttpRequest, existing: Map<String, Bool>, next_id: Int) -> HttpResponse:\n    if req.method != \"POST\":\n        return HttpResponse(status_code=405, error_type=\"METHOD_NOT_ALLOWED\", error_detail=\"Expected POST\", user_id=0, is_success=false)\n    else:\n        if req.path != \"/api/v1/users\":\n            return HttpResponse(status_code=404, error_type=\"NOT_FOUND\", error_detail=\"Unknown resource\", user_id=0, is_success=false)\n        else:\n            if length of string req.body_username < 3:\n                return HttpResponse(status_code=400, error_type=\"INVALID_FIELD\", error_detail=\"Username too short\", user_id=0, is_success=false)\n            else:\n                if req.body_age < 13:\n                    return HttpResponse(status_code=422, error_type=\"POLICY_VIOLATION\", error_detail=\"Minimum age is 13\", user_id=0, is_success=false)\n                else:\n                    if existing has key req.body_username:\n                        return HttpResponse(status_code=409, error_type=\"CONFLICT\", error_detail=\"Username already taken\", user_id=0, is_success=false)\n                    else:\n                        return HttpResponse(status_code=201, error_type=\"NONE\", error_detail=\"\", user_id=next_id, is_success=true)\ndefine existing_users: Map<String, Bool> as {\"admin\": true, \"root\": true}\ndefine r1: HttpRequest as HttpRequest(method=\"POST\", path=\"/api/v1/users\", body_username=\"dev_alice\", body_email=\"alice@cloud.corp\", body_age=28)\ndefine res1: HttpResponse as handle_registration(r1, existing_users, 1001)\nprint res1.status_code, res1.is_success, res1.user_id\nset existing_users[r1.body_username] to true\ndefine r2: HttpRequest as HttpRequest(method=\"POST\", path=\"/api/v1/users\", body_username=\"dev_alice\", body_email=\"alice2@cloud.corp\", body_age=29)\ndefine res2: HttpResponse as handle_registration(r2, existing_users, 1002)\nprint res2.status_code, res2.is_success, res2.error_type, res2.error_detail\ndefine r3: HttpRequest as HttpRequest(method=\"POST\", path=\"/api/v1/users\", body_username=\"junior_coder\", body_email=\"kid@coder.net\", body_age=11)\ndefine res3: HttpResponse as handle_registration(r3, existing_users, 1003)\nprint res3.status_code, res3.is_success, res3.error_type, res3.error_detail\ndefine r4: HttpRequest as HttpRequest(method=\"GET\", path=\"/api/v1/users\", body_username=\"anybody\", body_email=\"any@corp.net\", body_age=25)\ndefine res4: HttpResponse as handle_registration(r4, existing_users, 1004)\nprint res4.status_code, res4.is_success, res4.error_type",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "HttpRequest",
+            "fields": [
+              {
+                "name": "method",
+                "field_type": "String"
+              },
+              {
+                "name": "path",
+                "field_type": "String"
+              },
+              {
+                "name": "body_username",
+                "field_type": "String"
+              },
+              {
+                "name": "body_email",
+                "field_type": "String"
+              },
+              {
+                "name": "body_age",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "record_def",
+            "name": "HttpResponse",
+            "fields": [
+              {
+                "name": "status_code",
+                "field_type": "Int"
+              },
+              {
+                "name": "error_type",
+                "field_type": "String"
+              },
+              {
+                "name": "error_detail",
+                "field_type": "String"
+              },
+              {
+                "name": "user_id",
+                "field_type": "Int"
+              },
+              {
+                "name": "is_success",
+                "field_type": "Bool"
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "func_def",
+            "name": "handle_registration",
+            "params": [
+              {
+                "name": "req",
+                "param_type": "HttpRequest"
+              },
+              {
+                "name": "existing",
+                "param_type": "Map<String, Bool>"
+              },
+              {
+                "name": "next_id",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "HttpResponse",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "!=",
+                  "left": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "req"
+                    },
+                    "field_name": "method"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "POST",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "record_literal",
+                      "record_name": "HttpResponse",
+                      "fields": [
+                        {
+                          "name": "status_code",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": 405,
+                            "data_type": "Int"
+                          }
+                        },
+                        {
+                          "name": "error_type",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": "METHOD_NOT_ALLOWED",
+                            "data_type": "String"
+                          }
+                        },
+                        {
+                          "name": "error_detail",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": "Expected POST",
+                            "data_type": "String"
+                          }
+                        },
+                        {
+                          "name": "user_id",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": 0,
+                            "data_type": "Int"
+                          }
+                        },
+                        {
+                          "name": "is_success",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": false,
+                            "data_type": "Bool"
+                          }
+                        }
+                      ]
+                    },
+                    "source_line": 17
+                  }
+                ],
+                "else_body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "!=",
+                      "left": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "req"
+                        },
+                        "field_name": "path"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "/api/v1/users",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "record_literal",
+                          "record_name": "HttpResponse",
+                          "fields": [
+                            {
+                              "name": "status_code",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": 404,
+                                "data_type": "Int"
+                              }
+                            },
+                            {
+                              "name": "error_type",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": "NOT_FOUND",
+                                "data_type": "String"
+                              }
+                            },
+                            {
+                              "name": "error_detail",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": "Unknown resource",
+                                "data_type": "String"
+                              }
+                            },
+                            {
+                              "name": "user_id",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": 0,
+                                "data_type": "Int"
+                              }
+                            },
+                            {
+                              "name": "is_success",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": false,
+                                "data_type": "Bool"
+                              }
+                            }
+                          ]
+                        },
+                        "source_line": 20
+                      }
+                    ],
+                    "else_body": [
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "binary_op",
+                          "op": "<",
+                          "left": {
+                            "expr_type": "string_length",
+                            "target": {
+                              "expr_type": "record_field",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "req"
+                              },
+                              "field_name": "body_username"
+                            }
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 3,
+                            "data_type": "Int"
+                          }
+                        },
+                        "then_body": [
+                          {
+                            "op": "return_stmt",
+                            "value": {
+                              "expr_type": "record_literal",
+                              "record_name": "HttpResponse",
+                              "fields": [
+                                {
+                                  "name": "status_code",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": 400,
+                                    "data_type": "Int"
+                                  }
+                                },
+                                {
+                                  "name": "error_type",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": "INVALID_FIELD",
+                                    "data_type": "String"
+                                  }
+                                },
+                                {
+                                  "name": "error_detail",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": "Username too short",
+                                    "data_type": "String"
+                                  }
+                                },
+                                {
+                                  "name": "user_id",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": 0,
+                                    "data_type": "Int"
+                                  }
+                                },
+                                {
+                                  "name": "is_success",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": false,
+                                    "data_type": "Bool"
+                                  }
+                                }
+                              ]
+                            },
+                            "source_line": 23
+                          }
+                        ],
+                        "else_body": [
+                          {
+                            "op": "if_stmt",
+                            "condition": {
+                              "expr_type": "binary_op",
+                              "op": "<",
+                              "left": {
+                                "expr_type": "record_field",
+                                "target": {
+                                  "expr_type": "var_ref",
+                                  "name": "req"
+                                },
+                                "field_name": "body_age"
+                              },
+                              "right": {
+                                "expr_type": "literal",
+                                "value": 13,
+                                "data_type": "Int"
+                              }
+                            },
+                            "then_body": [
+                              {
+                                "op": "return_stmt",
+                                "value": {
+                                  "expr_type": "record_literal",
+                                  "record_name": "HttpResponse",
+                                  "fields": [
+                                    {
+                                      "name": "status_code",
+                                      "value": {
+                                        "expr_type": "literal",
+                                        "value": 422,
+                                        "data_type": "Int"
+                                      }
+                                    },
+                                    {
+                                      "name": "error_type",
+                                      "value": {
+                                        "expr_type": "literal",
+                                        "value": "POLICY_VIOLATION",
+                                        "data_type": "String"
+                                      }
+                                    },
+                                    {
+                                      "name": "error_detail",
+                                      "value": {
+                                        "expr_type": "literal",
+                                        "value": "Minimum age is 13",
+                                        "data_type": "String"
+                                      }
+                                    },
+                                    {
+                                      "name": "user_id",
+                                      "value": {
+                                        "expr_type": "literal",
+                                        "value": 0,
+                                        "data_type": "Int"
+                                      }
+                                    },
+                                    {
+                                      "name": "is_success",
+                                      "value": {
+                                        "expr_type": "literal",
+                                        "value": false,
+                                        "data_type": "Bool"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "source_line": 26
+                              }
+                            ],
+                            "else_body": [
+                              {
+                                "op": "if_stmt",
+                                "condition": {
+                                  "expr_type": "map_has_key",
+                                  "target": {
+                                    "expr_type": "var_ref",
+                                    "name": "existing"
+                                  },
+                                  "key": {
+                                    "expr_type": "record_field",
+                                    "target": {
+                                      "expr_type": "var_ref",
+                                      "name": "req"
+                                    },
+                                    "field_name": "body_username"
+                                  }
+                                },
+                                "then_body": [
+                                  {
+                                    "op": "return_stmt",
+                                    "value": {
+                                      "expr_type": "record_literal",
+                                      "record_name": "HttpResponse",
+                                      "fields": [
+                                        {
+                                          "name": "status_code",
+                                          "value": {
+                                            "expr_type": "literal",
+                                            "value": 409,
+                                            "data_type": "Int"
+                                          }
+                                        },
+                                        {
+                                          "name": "error_type",
+                                          "value": {
+                                            "expr_type": "literal",
+                                            "value": "CONFLICT",
+                                            "data_type": "String"
+                                          }
+                                        },
+                                        {
+                                          "name": "error_detail",
+                                          "value": {
+                                            "expr_type": "literal",
+                                            "value": "Username already taken",
+                                            "data_type": "String"
+                                          }
+                                        },
+                                        {
+                                          "name": "user_id",
+                                          "value": {
+                                            "expr_type": "literal",
+                                            "value": 0,
+                                            "data_type": "Int"
+                                          }
+                                        },
+                                        {
+                                          "name": "is_success",
+                                          "value": {
+                                            "expr_type": "literal",
+                                            "value": false,
+                                            "data_type": "Bool"
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "source_line": 29
+                                  }
+                                ],
+                                "else_body": [
+                                  {
+                                    "op": "return_stmt",
+                                    "value": {
+                                      "expr_type": "record_literal",
+                                      "record_name": "HttpResponse",
+                                      "fields": [
+                                        {
+                                          "name": "status_code",
+                                          "value": {
+                                            "expr_type": "literal",
+                                            "value": 201,
+                                            "data_type": "Int"
+                                          }
+                                        },
+                                        {
+                                          "name": "error_type",
+                                          "value": {
+                                            "expr_type": "literal",
+                                            "value": "NONE",
+                                            "data_type": "String"
+                                          }
+                                        },
+                                        {
+                                          "name": "error_detail",
+                                          "value": {
+                                            "expr_type": "literal",
+                                            "value": "",
+                                            "data_type": "String"
+                                          }
+                                        },
+                                        {
+                                          "name": "user_id",
+                                          "value": {
+                                            "expr_type": "var_ref",
+                                            "name": "next_id"
+                                          }
+                                        },
+                                        {
+                                          "name": "is_success",
+                                          "value": {
+                                            "expr_type": "literal",
+                                            "value": true,
+                                            "data_type": "Bool"
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "source_line": 31
+                                  }
+                                ],
+                                "source_line": 28
+                              }
+                            ],
+                            "source_line": 25
+                          }
+                        ],
+                        "source_line": 22
+                      }
+                    ],
+                    "source_line": 19
+                  }
+                ],
+                "source_line": 16
+              }
+            ],
+            "source_line": 15
+          },
+          {
+            "op": "var_decl",
+            "name": "existing_users",
+            "var_type": "Map<String, Bool>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "Bool",
+              "entries": [
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "admin",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                },
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "root",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                }
+              ]
+            },
+            "source_line": 33
+          },
+          {
+            "op": "var_decl",
+            "name": "r1",
+            "var_type": "HttpRequest",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "HttpRequest",
+              "fields": [
+                {
+                  "name": "method",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "POST",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "path",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "/api/v1/users",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body_username",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "dev_alice",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body_email",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "alice@cloud.corp",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body_age",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 28,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 36
+          },
+          {
+            "op": "var_decl",
+            "name": "res1",
+            "var_type": "HttpResponse",
+            "value": {
+              "expr_type": "call",
+              "func_name": "handle_registration",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "existing_users"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1001,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 37
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res1"
+                },
+                "field_name": "status_code"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res1"
+                },
+                "field_name": "is_success"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res1"
+                },
+                "field_name": "user_id"
+              }
+            ],
+            "source_line": 38
+          },
+          {
+            "op": "map_set",
+            "target": "existing_users",
+            "key": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              "field_name": "body_username"
+            },
+            "value": {
+              "expr_type": "literal",
+              "value": true,
+              "data_type": "Bool"
+            },
+            "source_line": 41
+          },
+          {
+            "op": "var_decl",
+            "name": "r2",
+            "var_type": "HttpRequest",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "HttpRequest",
+              "fields": [
+                {
+                  "name": "method",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "POST",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "path",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "/api/v1/users",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body_username",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "dev_alice",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body_email",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "alice2@cloud.corp",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body_age",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 29,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 44
+          },
+          {
+            "op": "var_decl",
+            "name": "res2",
+            "var_type": "HttpResponse",
+            "value": {
+              "expr_type": "call",
+              "func_name": "handle_registration",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "r2"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "existing_users"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1002,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 45
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res2"
+                },
+                "field_name": "status_code"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res2"
+                },
+                "field_name": "is_success"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res2"
+                },
+                "field_name": "error_type"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res2"
+                },
+                "field_name": "error_detail"
+              }
+            ],
+            "source_line": 46
+          },
+          {
+            "op": "var_decl",
+            "name": "r3",
+            "var_type": "HttpRequest",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "HttpRequest",
+              "fields": [
+                {
+                  "name": "method",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "POST",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "path",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "/api/v1/users",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body_username",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "junior_coder",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body_email",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "kid@coder.net",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body_age",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 11,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 49
+          },
+          {
+            "op": "var_decl",
+            "name": "res3",
+            "var_type": "HttpResponse",
+            "value": {
+              "expr_type": "call",
+              "func_name": "handle_registration",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "r3"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "existing_users"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1003,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 50
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res3"
+                },
+                "field_name": "status_code"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res3"
+                },
+                "field_name": "is_success"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res3"
+                },
+                "field_name": "error_type"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res3"
+                },
+                "field_name": "error_detail"
+              }
+            ],
+            "source_line": 51
+          },
+          {
+            "op": "var_decl",
+            "name": "r4",
+            "var_type": "HttpRequest",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "HttpRequest",
+              "fields": [
+                {
+                  "name": "method",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "GET",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "path",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "/api/v1/users",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body_username",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "anybody",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body_email",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "any@corp.net",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body_age",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 25,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 54
+          },
+          {
+            "op": "var_decl",
+            "name": "res4",
+            "var_type": "HttpResponse",
+            "value": {
+              "expr_type": "call",
+              "func_name": "handle_registration",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "r4"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "existing_users"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1004,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 55
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res4"
+                },
+                "field_name": "status_code"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res4"
+                },
+                "field_name": "is_success"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "res4"
+                },
+                "field_name": "error_type"
+              }
+            ],
+            "source_line": 56
+          }
+        ]
+      }
+    }
+  }
+}

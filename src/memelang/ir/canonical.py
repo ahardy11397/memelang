@@ -23,12 +23,23 @@ from memelang.ir.schema import (
     ListLiteralExpr,
     ListSetIndexStmt,
     LiteralExpr,
+    MapEntry,
+    MapGetExpr,
+    MapHasKeyExpr,
+    MapLiteralExpr,
+    MapSetStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
     RandomListExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RecordDefStmt,
+    RecordFieldDef,
+    RecordFieldExpr,
+    RecordFieldInit,
+    RecordLiteralExpr,
+    RecordSetFieldStmt,
     ReturnStmt,
     SortCollectionStmt,
     StrEndsWithExpr,
@@ -121,6 +132,28 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
     if isinstance(expr, StringSliceExpr):
         return f"slice {format_expr(expr.target)} from {format_expr(expr.start)} to {format_expr(expr.end)}"
 
+    if isinstance(expr, RecordLiteralExpr):
+        fields_str = ", ".join(f"{f.name}={format_expr(f.value)}" for f in expr.fields)
+        return f"{expr.record_name}({fields_str})"
+
+    if isinstance(expr, RecordFieldExpr):
+        return f"{format_expr(expr.target, 6)}.{expr.field_name}"
+
+    if isinstance(expr, MapLiteralExpr):
+        if not expr.entries:
+            return f"empty Map<{expr.key_type}, {expr.value_type}>"
+        entries_str = ", ".join(f"{format_expr(e.key)}: {format_expr(e.value)}" for e in expr.entries)
+        return f"{{{entries_str}}}"
+
+    if isinstance(expr, MapGetExpr):
+        base = f"{format_expr(expr.target, 6)}[{format_expr(expr.key)}]"
+        if expr.default_val is not None:
+            return f"{base} default {format_expr(expr.default_val)}"
+        return base
+
+    if isinstance(expr, MapHasKeyExpr):
+        return f"{format_expr(expr.target, 3)} has key {format_expr(expr.key, 4)}"
+
     raise TypeError(f"Unsupported expression node: {type(expr)!r}")
 
 
@@ -205,6 +238,20 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
         if stmt.value is None:
             return [f"{pad}return"]
         return [f"{pad}return {format_expr(stmt.value)}"]
+
+    if isinstance(stmt, RecordDefStmt):
+        lines = [f"{pad}record {stmt.name}:"]
+        if not stmt.fields:
+            lines.append(f"{pad}    pass")
+        for f in stmt.fields:
+            lines.append(f"{pad}    {f.name}: {f.field_type}")
+        return lines
+
+    if isinstance(stmt, RecordSetFieldStmt):
+        return [f"{pad}set {stmt.target}.{stmt.field_name} to {format_expr(stmt.value)}"]
+
+    if isinstance(stmt, MapSetStmt):
+        return [f"{pad}set {stmt.target}[{format_expr(stmt.key)}] to {format_expr(stmt.value)}"]
 
     raise TypeError(f"Unsupported statement node: {type(stmt)!r}")
 

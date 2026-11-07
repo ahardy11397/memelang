@@ -50,6 +50,26 @@ def test_heuristic_structured_and_control_flow():
     assert out2.is_unambiguous is True
 
 
+def test_heuristic_records_and_maps():
+    prov = HeuristicProvider()
+    src = (
+        "record User:\n"
+        "    id: Int\n"
+        "    name: String\n"
+        "\n"
+        'define u as User(id=1, name="Alice")\n'
+        'set u.name to "Bob"\n'
+        'define scores as {"Alice": 100, "Bob": 90}\n'
+        'set scores["Bob"] to 95\n'
+        'print u.name, scores["Bob"], scores has key "Alice"\n'
+    )
+    res = prov.synthesize(src)
+    out = verify_synthesis(res)
+    assert out.is_unambiguous is True
+    assert out.program is not None
+    assert len(out.program.statements) == 6
+
+
 def test_heuristic_ambiguous_prompt_example():
     prov = HeuristicProvider()
     ambiguous_src = (

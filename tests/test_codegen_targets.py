@@ -1,7 +1,9 @@
 import ast
+from pathlib import Path
 import pytest
 
 from memelang.codegen import TargetLang, generate_code
+from memelang.lockfile.manager import LockfileManager
 from memelang.ir.schema import (
     AssignStmt,
     BinaryOpExpr,
@@ -16,9 +18,20 @@ from memelang.ir.schema import (
     ListLiteralExpr,
     ListSetIndexStmt,
     LiteralExpr,
+    MapEntry,
+    MapGetExpr,
+    MapHasKeyExpr,
+    MapLiteralExpr,
+    MapSetStmt,
     PrintStmt,
     ProgramIR,
     RandomListExpr,
+    RecordDefStmt,
+    RecordFieldDef,
+    RecordFieldExpr,
+    RecordFieldInit,
+    RecordLiteralExpr,
+    RecordSetFieldStmt,
     ReturnStmt,
     SortCollectionStmt,
     StringLengthExpr,
@@ -645,6 +658,241 @@ def test_codegen_string_slice_end_less_than_start_empty_parity(target: TargetLan
     )
     output = _run_target(program, target)
     assert output.strip() == "-1 -3"
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_codegen_record_definition_and_mutation(target: TargetLang):
+    program = ProgramIR(
+        items=[
+            RecordDefStmt(
+                name="User",
+                fields=[
+                    RecordFieldDef(name="id", field_type="Int"),
+                    RecordFieldDef(name="name", field_type="String"),
+                ],
+            ),
+            VarDeclStmt(
+                name="u",
+                var_type="User",
+                value=RecordLiteralExpr(
+                    record_name="User",
+                    fields=[
+                        RecordFieldInit(name="id", value=LiteralExpr(value=1, data_type="Int")),
+                        RecordFieldInit(name="name", value=LiteralExpr(value="Alice", data_type="String")),
+                    ],
+                ),
+            ),
+            PrintStmt(
+                expressions=[
+                    VarRefExpr(name="u"),
+                    RecordFieldExpr(target=VarRefExpr(name="u"), field_name="name"),
+                ]
+            ),
+            RecordSetFieldStmt(
+                target="u",
+                field_name="name",
+                value=LiteralExpr(value="Bob", data_type="String"),
+            ),
+            PrintStmt(
+                expressions=[
+                    VarRefExpr(name="u"),
+                ]
+            ),
+        ]
+    )
+    output = _run_target(program, target)
+    assert output.strip().splitlines() == [
+        "User(id=1, name=Alice) Alice",
+        "User(id=1, name=Bob)",
+    ]
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_codegen_map_operations_and_formatting(target: TargetLang):
+    program = ProgramIR(
+        items=[
+            VarDeclStmt(
+                name="scores",
+                var_type="Map<String, Int>",
+                value=MapLiteralExpr(
+                    key_type="String",
+                    value_type="Int",
+                    entries=[
+                        MapEntry(
+                            key=LiteralExpr(value="Alice", data_type="String"),
+                            value=LiteralExpr(value=95, data_type="Int"),
+                        ),
+                        MapEntry(
+                            key=LiteralExpr(value="Bob", data_type="String"),
+                            value=LiteralExpr(value=80, data_type="Int"),
+                        ),
+                    ],
+                ),
+            ),
+            PrintStmt(
+                expressions=[
+                    MapGetExpr(
+                        target=VarRefExpr(name="scores"),
+                        key=LiteralExpr(value="Alice", data_type="String"),
+                    ),
+                    MapGetExpr(
+                        target=VarRefExpr(name="scores"),
+                        key=LiteralExpr(value="Charlie", data_type="String"),
+                        default_val=LiteralExpr(value=0, data_type="Int"),
+                    ),
+                    MapHasKeyExpr(
+                        target=VarRefExpr(name="scores"),
+                        key=LiteralExpr(value="Bob", data_type="String"),
+                    ),
+                    MapHasKeyExpr(
+                        target=VarRefExpr(name="scores"),
+                        key=LiteralExpr(value="Dave", data_type="String"),
+                    ),
+                ]
+            ),
+            MapSetStmt(
+                target="scores",
+                key=LiteralExpr(value="Charlie", data_type="String"),
+                value=LiteralExpr(value=88, data_type="Int"),
+            ),
+            PrintStmt(
+                expressions=[
+                    VarRefExpr(name="scores"),
+                ]
+            ),
+        ]
+    )
+    output = _run_target(program, target)
+    assert output.strip().splitlines() == [
+        "95 0 true false",
+        "{Alice: 95, Bob: 80, Charlie: 88}",
+    ]
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_codegen_function_with_records_and_maps(target: TargetLang):
+    program = ProgramIR(
+        items=[
+            RecordDefStmt(
+                name="Request",
+                fields=[
+                    RecordFieldDef(name="action", field_type="String"),
+                    RecordFieldDef(name="user_id", field_type="Int"),
+                ],
+            ),
+            RecordDefStmt(
+                name="Response",
+                fields=[
+                    RecordFieldDef(name="status", field_type="Int"),
+                    RecordFieldDef(name="message", field_type="String"),
+                ],
+            ),
+            FuncDefStmt(
+                name="handle_req",
+                params=[
+                    FuncParam(name="req", param_type="Request"),
+                    FuncParam(name="roles", param_type="Map<Int, String>"),
+                ],
+                return_type="Response",
+                body=[
+                    ReturnStmt(
+                        value=RecordLiteralExpr(
+                            record_name="Response",
+                            fields=[
+                                RecordFieldInit(name="status", value=LiteralExpr(value=200, data_type="Int")),
+                                RecordFieldInit(
+                                    name="message",
+                                    value=MapGetExpr(
+                                        target=VarRefExpr(name="roles"),
+                                        key=RecordFieldExpr(
+                                            target=VarRefExpr(name="req"),
+                                            field_name="user_id",
+                                        ),
+                                        default_val=LiteralExpr(value="guest", data_type="String"),
+                                    ),
+                                ),
+                            ],
+                        )
+                    )
+                ],
+            ),
+            VarDeclStmt(
+                name="req",
+                var_type="Request",
+                value=RecordLiteralExpr(
+                    record_name="Request",
+                    fields=[
+                        RecordFieldInit(name="action", value=LiteralExpr(value="login", data_type="String")),
+                        RecordFieldInit(name="user_id", value=LiteralExpr(value=42, data_type="Int")),
+                    ],
+                ),
+            ),
+            VarDeclStmt(
+                name="roles",
+                var_type="Map<Int, String>",
+                value=MapLiteralExpr(
+                    key_type="Int",
+                    value_type="String",
+                    entries=[
+                        MapEntry(
+                            key=LiteralExpr(value=42, data_type="Int"),
+                            value=LiteralExpr(value="admin", data_type="String"),
+                        )
+                    ],
+                ),
+            ),
+            VarDeclStmt(
+                name="resp",
+                var_type="Response",
+                value=CallExpr(
+                    func_name="handle_req",
+                    args=[VarRefExpr(name="req"), VarRefExpr(name="roles")],
+                ),
+            ),
+            PrintStmt(
+                expressions=[
+                    RecordFieldExpr(target=VarRefExpr(name="resp"), field_name="status"),
+                    RecordFieldExpr(target=VarRefExpr(name="resp"), field_name="message"),
+                ]
+            ),
+        ]
+    )
+    output = _run_target(program, target)
+    assert output.strip().splitlines() == ["200 admin"]
+
+
+def test_advanced_examples_output_parity():
+    adv_dir = Path("examples/advanced")
+    scripts = sorted(adv_dir.glob("*.meme"))
+    assert len(scripts) >= 9, f"Expected at least 9 advanced scripts, found {len(scripts)}"
+
+    for script in scripts:
+        lock_path = script.with_suffix(".meme.lock")
+        assert lock_path.exists(), f"Missing lockfile: {lock_path}"
+
+        mgr = LockfileManager(lock_path)
+        src = script.read_text(encoding="utf-8")
+        prog = mgr.get_cached_program(str(script), src)
+        assert prog is not None, f"Failed to load cached ProgramIR from {lock_path}"
+
+        py_res = execute_ir(prog, "python")
+        assert py_res.returncode == 0, f"Python failed on {script.name}: {py_res.stderr}"
+
+        rust_res = execute_ir(prog, "rust")
+        assert rust_res.returncode == 0, f"Rust failed on {script.name}: {rust_res.stderr}"
+
+        cpp_res = execute_ir(prog, "cpp")
+        assert cpp_res.returncode == 0, f"C++ failed on {script.name}: {cpp_res.stderr}"
+
+        assert py_res.stdout == rust_res.stdout == cpp_res.stdout, (
+            f"Output parity mismatch on {script.name}:\n"
+            f"Python:\n{py_res.stdout}\n"
+            f"Rust:\n{rust_res.stdout}\n"
+            f"C++:\n{cpp_res.stdout}"
+        )
+
+
+
 
 
 

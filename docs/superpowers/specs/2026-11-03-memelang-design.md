@@ -94,7 +94,9 @@ Every variable, expression, and function parameter resolves to one of:
 * `Float` (64-bit floating point)
 * `Bool` (boolean)
 * `String` (UTF-8 string)
-* `List<Int>`, `List<Float>`, `List<String>`, `List<Bool>`
+* `List<Int>`, `List<Float>`, `List<String>`, `List<Bool>`, nested lists
+* `Map<KeyType, ValueType>` (key-value dictionary / lookup table, e.g., `Map<String, Int>`, `Map<Int, String>`)
+* Named Record types (e.g., `User`, `Request`, `Response`)
 * `Void` (function return type only)
 
 ### 3.2 Expressions (`IRExpr`)
@@ -110,6 +112,11 @@ Discriminated by `expr_type`:
 * **`ListIndexExpr`**: `{"expr_type": "list_index", "target": IRExpr, "index": IRExpr}`
 * **`CallExpr`**: `{"expr_type": "call", "func_name": str, "args": list[IRExpr]}`
 * **`ReadInputExpr`**: `{"expr_type": "read_input", "prompt": str, "target_type": MemeType}`
+* **`RecordLiteralExpr`**: `{"expr_type": "record_literal", "record_name": str, "fields": list[RecordFieldInit]}` — Phrasing: `RecordName(field1=val1, field2=val2)`
+* **`RecordFieldExpr`**: `{"expr_type": "record_field", "target": IRExpr, "field_name": str}` — Phrasing: `target.field_name`
+* **`MapLiteralExpr`**: `{"expr_type": "map_literal", "key_type": MemeType, "value_type": MemeType, "entries": list[MapEntry]}` — Phrasing: `{k1: v1, k2: v2}` or `empty Map<K, V>`
+* **`MapGetExpr`**: `{"expr_type": "map_get", "target": IRExpr, "key": IRExpr, "default_val": IRExpr | None}` — Phrasing: `target[key]` or `target[key] default def_val`
+* **`MapHasKeyExpr`**: `{"expr_type": "map_has_key", "target": IRExpr, "key": IRExpr}` — Phrasing: `target has key key`
 
 ### 3.3 Concrete Statements (`IRStatement`)
 Discriminated by `op`:
@@ -160,6 +167,20 @@ Discriminated by `op`:
     * `body: list[IRStatement]`
 13. **`ReturnStmt` (`op: "return_stmt"`)**:
     * `value: IRExpr | None`
+14. **`RecordDefStmt` (`op: "record_def"`)**:
+    * `name: str`
+    * `fields: list[RecordFieldDef]` (`name: str`, `field_type: MemeType`)
+    * Phrasing: `record Name:\n    field1: Type\n    field2: Type`
+15. **`RecordSetFieldStmt` (`op: "record_set_field"`)**:
+    * `target: str`
+    * `field_name: str`
+    * `value: IRExpr`
+    * Phrasing: `set target.field to value`
+16. **`MapSetStmt` (`op: "map_set"`)**:
+    * `target: str`
+    * `key: IRExpr`
+    * `value: IRExpr`
+    * Phrasing: `set target[key] to value`
 
 ### 3.4 Self-Contained Ambiguity Diagnostic (`AmbiguityDiagnostic`)
 In `SynthesisResult`, top-level items can include `AmbiguityDiagnostic` objects alongside `statements`:

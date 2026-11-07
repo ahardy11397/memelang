@@ -22,6 +22,11 @@ from memelang.ir.schema import (
     ListLiteralExpr,
     ListSetIndexStmt,
     LiteralExpr,
+    MapEntry,
+    MapGetExpr,
+    MapHasKeyExpr,
+    MapLiteralExpr,
+    MapSetStmt,
     MemeType,
     PrintStmt,
     ProgramIR,
@@ -29,6 +34,12 @@ from memelang.ir.schema import (
     RandomListExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RecordDefStmt,
+    RecordFieldDef,
+    RecordFieldExpr,
+    RecordFieldInit,
+    RecordLiteralExpr,
+    RecordSetFieldStmt,
     ReturnStmt,
     SortCollectionStmt,
     StrEndsWithExpr,
@@ -72,6 +83,24 @@ _RUST_KEYWORDS = {
 }
 
 
+def _map_types_of(map_type: str) -> tuple[str, str] | None:
+    if map_type.startswith("Map<") and map_type.endswith(">"):
+        inner = map_type[4:-1]
+        depth = 0
+        comma = -1
+        for i, ch in enumerate(inner):
+            if ch == "<":
+                depth += 1
+            elif ch == ">":
+                depth -= 1
+            elif ch == "," and depth == 0:
+                comma = i
+                break
+        if comma != -1:
+            return inner[:comma].strip(), inner[comma + 1 :].strip()
+    return None
+
+
 def _rust_ident(name: str) -> str:
     return f"meme_{name}" if name in _RUST_KEYWORDS or name.startswith("_meme_") else name
 
@@ -80,6 +109,9 @@ def _rust_type(meme_type: MemeType | str) -> str:
     if meme_type.startswith("List<") and meme_type.endswith(">"):
         inner = meme_type[5:-1]
         return f"Vec<{_rust_type(inner)}>"
+    map_t = _map_types_of(meme_type)
+    if map_t is not None:
+        return f"std::collections::HashMap<{_rust_type(map_t[0])}, {_rust_type(map_t[1])}>"
     mapping = {
         "Int": "i64",
         "Float": "f64",
@@ -87,7 +119,9 @@ def _rust_type(meme_type: MemeType | str) -> str:
         "String": "String",
         "Void": "()",
     }
-    return mapping[meme_type]
+    if meme_type in mapping:
+        return mapping[meme_type]
+    return _rust_ident(meme_type)
 
 
 class _RustGen:
@@ -96,6 +130,7 @@ class _RustGen:
         self.uses_input = False
         self.uses_json_io = False
         self.func_returns: dict[str, MemeType] = {}
+        self.records: dict[str, dict[str, MemeType]] = {}
 
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> MemeType:
         if isinstance(expr, LiteralExpr):
@@ -116,11 +151,29 @@ class _RustGen:
             return "String"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
-            return col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[return-value]
+            if col_t.startswith("List<"):
+                return col_t[5:-1]  # type: ignore[return-value]
+            map_t = _map_types_of(col_t)
+            if map_t is not None:
+                return map_t[1]  # type: ignore[return-value]
+            return "Int"
         if isinstance(expr, CallExpr):
             return self.func_returns.get(expr.func_name, "Int")
         if isinstance(expr, ReadInputExpr):
             return expr.target_type
+        if isinstance(expr, RecordLiteralExpr):
+            return expr.record_name
+        if isinstance(expr, RecordFieldExpr):
+            target_t = self.infer_type(expr.target, scope)
+            return self.records.get(target_t, {}).get(expr.field_name, "String")
+        if isinstance(expr, MapLiteralExpr):
+            return f"Map<{expr.key_type}, {expr.value_type}>"
+        if isinstance(expr, MapGetExpr):
+            target_t = self.infer_type(expr.target, scope)
+            mt = _map_types_of(target_t)
+            return mt[1] if mt else "String"
+        if isinstance(expr, MapHasKeyExpr):
+            return "Bool"
         if isinstance(expr, UnaryOpExpr):
             return "Bool" if expr.op == "not" else self.infer_type(expr.operand, scope)
         if isinstance(expr, BinaryOpExpr):
@@ -153,7 +206,7 @@ class _RustGen:
         if isinstance(expr, VarRefExpr):
             ident = _rust_ident(expr.name)
             t = scope.get(expr.name, "Int")
-            if t == "String" or t.startswith("List<"):
+            if t == "String" or t.startswith("List<") or t.startswith("Map<") or t in self.records:
                 return f"{ident}.clone()"
             return ident
 
@@ -186,9 +239,14 @@ class _RustGen:
             return f"({self.gen_expr(expr.target, scope)}.len() as i64)"
 
         if isinstance(expr, ListIndexExpr):
+            tgt_t = self.infer_type(expr.target, scope)
+            if tgt_t.startswith("Map<"):
+                tgt = self.gen_expr(expr.target, scope)
+                k = self.gen_expr(expr.index, scope)
+                return f"{tgt}.get(&({k})).unwrap().clone()"
             t = self.infer_type(expr, scope)
             base = f"{self.gen_expr(expr.target, scope)}[({self.gen_expr(expr.index, scope)}) as usize]"
-            if t == "String" or t.startswith("List<"):
+            if t == "String" or t.startswith("List<") or t in self.records or t.startswith("Map<"):
                 return f"{base}.clone()"
             return base
 
@@ -226,6 +284,37 @@ class _RustGen:
             self.uses_json_io = True
             return f"_meme_read_json_list(&({self.gen_expr(expr.filepath, scope)}))"
 
+        if isinstance(expr, RecordLiteralExpr):
+            fields = ", ".join(
+                f"{_rust_ident(f.name)}: {self.gen_expr(f.value, scope)}" for f in expr.fields
+            )
+            return f"{_rust_ident(expr.record_name)} {{ {fields} }}"
+
+        if isinstance(expr, RecordFieldExpr):
+            return f"{self.gen_expr(expr.target, scope)}.{_rust_ident(expr.field_name)}.clone()"
+
+        if isinstance(expr, MapLiteralExpr):
+            if not expr.entries:
+                return f"std::collections::HashMap::<{_rust_type(expr.key_type)}, {_rust_type(expr.value_type)}>::new()"
+            inits = "; ".join(
+                f"_m.insert({self.gen_expr(e.key, scope)}, {self.gen_expr(e.value, scope)})"
+                for e in expr.entries
+            )
+            return f"{{ let mut _m = std::collections::HashMap::new(); {inits}; _m }}"
+
+        if isinstance(expr, MapGetExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            k = self.gen_expr(expr.key, scope)
+            if expr.default_val is not None:
+                def_val = self.gen_expr(expr.default_val, scope)
+                return f"{tgt}.get(&({k})).cloned().unwrap_or({def_val})"
+            return f"{tgt}.get(&({k})).unwrap().clone()"
+
+        if isinstance(expr, MapHasKeyExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            k = self.gen_expr(expr.key, scope)
+            return f"{tgt}.contains_key(&({k}))"
+
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
     def _fmt_expr_for_print(self, expr: IRExpr, scope: dict[str, MemeType]) -> str:
@@ -233,7 +322,7 @@ class _RustGen:
         code = self.gen_expr(expr, scope)
         if t.startswith("List<"):
             return f"_meme_fmt_slice(&({code}))"
-        return f"format!(\"{{}}\", {code})"
+        return f"({code}).meme_fmt()"
 
     def gen_stmt(
         self, stmt: IRStatement, scope: dict[str, MemeType], indent: int = 1
@@ -357,6 +446,19 @@ class _RustGen:
                 return [f"{pad}return;"]
             return [f"{pad}return {self.gen_expr(stmt.value, scope)};"]
 
+        if isinstance(stmt, RecordDefStmt):
+            return []
+
+        if isinstance(stmt, RecordSetFieldStmt):
+            return [
+                f"{pad}{_rust_ident(stmt.target)}.{_rust_ident(stmt.field_name)} = {self.gen_expr(stmt.value, scope)};"
+            ]
+
+        if isinstance(stmt, MapSetStmt):
+            return [
+                f"{pad}{_rust_ident(stmt.target)}.insert({self.gen_expr(stmt.key, scope)}, {self.gen_expr(stmt.value, scope)});"
+            ]
+
         raise TypeError(f"Unsupported statement inside block: {type(stmt)!r}")
 
     def gen_func(self, fn: FuncDefStmt) -> list[str]:
@@ -373,14 +475,40 @@ class _RustGen:
 
 def generate_rust(ir: ProgramIR) -> str:
     gen = _RustGen()
+    records: list[RecordDefStmt] = []
     funcs: list[FuncDefStmt] = []
     main_stmts: list[IRStatement] = []
     for stmt in ir.statements:
-        if isinstance(stmt, FuncDefStmt):
+        if isinstance(stmt, RecordDefStmt):
+            gen.records[stmt.name] = {f.name: f.field_type for f in stmt.fields}
+            records.append(stmt)
+        elif isinstance(stmt, FuncDefStmt):
             gen.func_returns[stmt.name] = stmt.return_type
             funcs.append(stmt)
         else:
             main_stmts.append(stmt)
+
+    record_blocks: list[str] = []
+    for r in records:
+        r_name = _rust_ident(r.name)
+        record_blocks.append("#[derive(Clone, Debug, PartialEq)]")
+        record_blocks.append(f"struct {r_name} {{")
+        for f in r.fields:
+            record_blocks.append(f"    {_rust_ident(f.name)}: {_rust_type(f.field_type)},")
+        record_blocks.append("}")
+        record_blocks.append(f"impl _MemeFmt for {r_name} {{")
+        record_blocks.append("    fn meme_fmt(&self) -> String {")
+        if not r.fields:
+            record_blocks.append(f'        format!("{r.name}()")')
+        else:
+            f_fmts = ", ".join(
+                f'format!("{f.name}={{}}", self.{_rust_ident(f.name)}.meme_fmt())' for f in r.fields
+            )
+            record_blocks.append(f"        let _parts = vec![{f_fmts}];")
+            record_blocks.append(f'        format!("{r.name}({{}})", _parts.join(", "))')
+        record_blocks.append("    }")
+        record_blocks.append("}")
+        record_blocks.append("")
 
     fn_blocks: list[str] = []
     for fn in funcs:
@@ -414,6 +542,13 @@ def generate_rust(ir: ProgramIR) -> str:
         "    fn meme_fmt(&self) -> String {",
         "        let parts: Vec<String> = self.iter().map(|x| x.meme_fmt()).collect();",
         "        format!(\"[{}]\", parts.join(\", \"))",
+        "    }",
+        "}",
+        "impl<K: _MemeFmt + std::cmp::Eq + std::hash::Hash, V: _MemeFmt> _MemeFmt for std::collections::HashMap<K, V> {",
+        "    fn meme_fmt(&self) -> String {",
+        "        let mut parts: Vec<String> = self.iter().map(|(k, v)| format!(\"{}: {}\", k.meme_fmt(), v.meme_fmt())).collect();",
+        "        parts.sort();",
+        "        format!(\"{{{}}}\", parts.join(\", \"))",
         "    }",
         "}",
         "fn _meme_fmt_slice<T: _MemeFmt>(items: &[T]) -> String {",
@@ -531,5 +666,5 @@ def generate_rust(ir: ProgramIR) -> str:
             ]
         )
 
-    out = preamble + fn_blocks + ["fn main() {"] + main_lines + ["}", ""]
+    out = preamble + record_blocks + fn_blocks + ["fn main() {"] + main_lines + ["}", ""]
     return "\n".join(out)

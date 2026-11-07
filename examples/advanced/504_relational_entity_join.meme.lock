@@ -1,0 +1,1942 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/504_relational_entity_join.meme": {
+      "source_sha256": "afa8811d09fd2dff21c9c33b0e9dc0ffa6628f9fb5315347abce6bf6d8205437",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "Customer",
+          "fields": [
+            {
+              "name": "id",
+              "field_type": "Int"
+            },
+            {
+              "name": "name",
+              "field_type": "String"
+            },
+            {
+              "name": "tier",
+              "field_type": "String"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "record_def",
+          "name": "Product",
+          "fields": [
+            {
+              "name": "id",
+              "field_type": "Int"
+            },
+            {
+              "name": "title",
+              "field_type": "String"
+            },
+            {
+              "name": "unit_price_cents",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "record_def",
+          "name": "Order",
+          "fields": [
+            {
+              "name": "order_id",
+              "field_type": "Int"
+            },
+            {
+              "name": "customer_id",
+              "field_type": "Int"
+            },
+            {
+              "name": "product_id",
+              "field_type": "Int"
+            },
+            {
+              "name": "quantity",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "record_def",
+          "name": "OrderReport",
+          "fields": [
+            {
+              "name": "order_id",
+              "field_type": "Int"
+            },
+            {
+              "name": "customer_name",
+              "field_type": "String"
+            },
+            {
+              "name": "product_title",
+              "field_type": "String"
+            },
+            {
+              "name": "subtotal_cents",
+              "field_type": "Int"
+            },
+            {
+              "name": "discount_cents",
+              "field_type": "Int"
+            },
+            {
+              "name": "final_total_cents",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 17
+        },
+        {
+          "op": "func_def",
+          "name": "join_order",
+          "params": [
+            {
+              "name": "ord",
+              "param_type": "Order"
+            },
+            {
+              "name": "customers",
+              "param_type": "Map<Int, Customer>"
+            },
+            {
+              "name": "products",
+              "param_type": "Map<Int, Product>"
+            }
+          ],
+          "return_type": "OrderReport",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "cust",
+              "var_type": "Customer",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "customers"
+                },
+                "index": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "ord"
+                  },
+                  "field_name": "customer_id"
+                }
+              },
+              "source_line": 26
+            },
+            {
+              "op": "var_decl",
+              "name": "prod",
+              "var_type": "Product",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "products"
+                },
+                "index": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "ord"
+                  },
+                  "field_name": "product_id"
+                }
+              },
+              "source_line": 27
+            },
+            {
+              "op": "var_decl",
+              "name": "subtotal",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "prod"
+                  },
+                  "field_name": "unit_price_cents"
+                },
+                "right": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "ord"
+                  },
+                  "field_name": "quantity"
+                }
+              },
+              "source_line": 28
+            },
+            {
+              "op": "var_decl",
+              "name": "discount",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 29
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "cust"
+                  },
+                  "field_name": "tier"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "VIP",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "discount",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "/",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "*",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "subtotal"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 15,
+                        "data_type": "Int"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 100,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 31
+                }
+              ],
+              "else_body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "cust"
+                      },
+                      "field_name": "tier"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "PRO",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "discount",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "/",
+                        "left": {
+                          "expr_type": "binary_op",
+                          "op": "*",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "subtotal"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 5,
+                            "data_type": "Int"
+                          }
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 100,
+                          "data_type": "Int"
+                        }
+                      },
+                      "source_line": 34
+                    }
+                  ],
+                  "else_body": [
+                    {
+                      "op": "assign",
+                      "name": "discount",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": 0,
+                        "data_type": "Int"
+                      },
+                      "source_line": 36
+                    }
+                  ],
+                  "source_line": 33
+                }
+              ],
+              "source_line": 30
+            },
+            {
+              "op": "var_decl",
+              "name": "final_total",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "subtotal"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "discount"
+                }
+              },
+              "source_line": 37
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "record_literal",
+                "record_name": "OrderReport",
+                "fields": [
+                  {
+                    "name": "order_id",
+                    "value": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "ord"
+                      },
+                      "field_name": "order_id"
+                    }
+                  },
+                  {
+                    "name": "customer_name",
+                    "value": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "cust"
+                      },
+                      "field_name": "name"
+                    }
+                  },
+                  {
+                    "name": "product_title",
+                    "value": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "prod"
+                      },
+                      "field_name": "title"
+                    }
+                  },
+                  {
+                    "name": "subtotal_cents",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "subtotal"
+                    }
+                  },
+                  {
+                    "name": "discount_cents",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "discount"
+                    }
+                  },
+                  {
+                    "name": "final_total_cents",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "final_total"
+                    }
+                  }
+                ]
+              },
+              "source_line": 38
+            }
+          ],
+          "source_line": 25
+        },
+        {
+          "op": "var_decl",
+          "name": "c1",
+          "var_type": "Customer",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Customer",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Alice",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "tier",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "VIP",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 40
+        },
+        {
+          "op": "var_decl",
+          "name": "c2",
+          "var_type": "Customer",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Customer",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Bob",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "tier",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "PRO",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 41
+        },
+        {
+          "op": "var_decl",
+          "name": "c3",
+          "var_type": "Customer",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Customer",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Charlie",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "tier",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "STANDARD",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 42
+        },
+        {
+          "op": "var_decl",
+          "name": "customers",
+          "var_type": "Map<Int, Customer>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "Int",
+            "value_type": "Customer",
+            "entries": []
+          },
+          "source_line": 44
+        },
+        {
+          "op": "map_set",
+          "target": "customers",
+          "key": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "c1"
+            },
+            "field_name": "id"
+          },
+          "value": {
+            "expr_type": "var_ref",
+            "name": "c1"
+          },
+          "source_line": 45
+        },
+        {
+          "op": "map_set",
+          "target": "customers",
+          "key": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "c2"
+            },
+            "field_name": "id"
+          },
+          "value": {
+            "expr_type": "var_ref",
+            "name": "c2"
+          },
+          "source_line": 46
+        },
+        {
+          "op": "map_set",
+          "target": "customers",
+          "key": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "c3"
+            },
+            "field_name": "id"
+          },
+          "value": {
+            "expr_type": "var_ref",
+            "name": "c3"
+          },
+          "source_line": 47
+        },
+        {
+          "op": "var_decl",
+          "name": "p1",
+          "var_type": "Product",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Product",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "title",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Widget-Pro",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "unit_price_cents",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2000,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 49
+        },
+        {
+          "op": "var_decl",
+          "name": "p2",
+          "var_type": "Product",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Product",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "title",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "USB-Cable",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "unit_price_cents",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1000,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 50
+        },
+        {
+          "op": "var_decl",
+          "name": "products",
+          "var_type": "Map<Int, Product>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "Int",
+            "value_type": "Product",
+            "entries": []
+          },
+          "source_line": 52
+        },
+        {
+          "op": "map_set",
+          "target": "products",
+          "key": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "p1"
+            },
+            "field_name": "id"
+          },
+          "value": {
+            "expr_type": "var_ref",
+            "name": "p1"
+          },
+          "source_line": 53
+        },
+        {
+          "op": "map_set",
+          "target": "products",
+          "key": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "p2"
+            },
+            "field_name": "id"
+          },
+          "value": {
+            "expr_type": "var_ref",
+            "name": "p2"
+          },
+          "source_line": 54
+        },
+        {
+          "op": "var_decl",
+          "name": "o1",
+          "var_type": "Order",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Order",
+            "fields": [
+              {
+                "name": "order_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 501,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "customer_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "product_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "quantity",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 56
+        },
+        {
+          "op": "var_decl",
+          "name": "o2",
+          "var_type": "Order",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Order",
+            "fields": [
+              {
+                "name": "order_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 502,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "customer_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "product_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "quantity",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 57
+        },
+        {
+          "op": "var_decl",
+          "name": "o3",
+          "var_type": "Order",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Order",
+            "fields": [
+              {
+                "name": "order_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 503,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "customer_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "product_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "quantity",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 58
+        },
+        {
+          "op": "var_decl",
+          "name": "orders",
+          "var_type": "List<Order>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "var_ref",
+                "name": "o1"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "o2"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "o3"
+              }
+            ],
+            "element_type": "Order"
+          },
+          "source_line": 60
+        },
+        {
+          "op": "var_decl",
+          "name": "grand_total",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 61
+        },
+        {
+          "op": "for_each",
+          "item_var": "ord",
+          "collection": "orders",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "rep",
+              "var_type": "OrderReport",
+              "value": {
+                "expr_type": "call",
+                "func_name": "join_order",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "ord"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "customers"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "products"
+                  }
+                ]
+              },
+              "source_line": 64
+            },
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "rep"
+                  },
+                  "field_name": "order_id"
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "rep"
+                  },
+                  "field_name": "customer_name"
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "rep"
+                  },
+                  "field_name": "product_title"
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "rep"
+                  },
+                  "field_name": "subtotal_cents"
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "rep"
+                  },
+                  "field_name": "discount_cents"
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "rep"
+                  },
+                  "field_name": "final_total_cents"
+                }
+              ],
+              "source_line": 65
+            },
+            {
+              "op": "assign",
+              "name": "grand_total",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "grand_total"
+                },
+                "right": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "rep"
+                  },
+                  "field_name": "final_total_cents"
+                }
+              },
+              "source_line": 66
+            }
+          ],
+          "source_line": 63
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "grand_total"
+            }
+          ],
+          "source_line": 68
+        }
+      ],
+      "canonical_meme": "record Customer:\n    id: Int\n    name: String\n    tier: String\nrecord Product:\n    id: Int\n    title: String\n    unit_price_cents: Int\nrecord Order:\n    order_id: Int\n    customer_id: Int\n    product_id: Int\n    quantity: Int\nrecord OrderReport:\n    order_id: Int\n    customer_name: String\n    product_title: String\n    subtotal_cents: Int\n    discount_cents: Int\n    final_total_cents: Int\nfunction join_order(ord: Order, customers: Map<Int, Customer>, products: Map<Int, Product>) -> OrderReport:\n    define cust: Customer as customers[ord.customer_id]\n    define prod: Product as products[ord.product_id]\n    define subtotal: Int as prod.unit_price_cents * ord.quantity\n    define discount: Int as 0\n    if cust.tier == \"VIP\":\n        set discount to subtotal * 15 / 100\n    else:\n        if cust.tier == \"PRO\":\n            set discount to subtotal * 5 / 100\n        else:\n            set discount to 0\n    define final_total: Int as subtotal - discount\n    return OrderReport(order_id=ord.order_id, customer_name=cust.name, product_title=prod.title, subtotal_cents=subtotal, discount_cents=discount, final_total_cents=final_total)\ndefine c1: Customer as Customer(id=1, name=\"Alice\", tier=\"VIP\")\ndefine c2: Customer as Customer(id=2, name=\"Bob\", tier=\"PRO\")\ndefine c3: Customer as Customer(id=3, name=\"Charlie\", tier=\"STANDARD\")\ndefine customers: Map<Int, Customer> as empty Map<Int, Customer>\nset customers[c1.id] to c1\nset customers[c2.id] to c2\nset customers[c3.id] to c3\ndefine p1: Product as Product(id=10, title=\"Widget-Pro\", unit_price_cents=2000)\ndefine p2: Product as Product(id=20, title=\"USB-Cable\", unit_price_cents=1000)\ndefine products: Map<Int, Product> as empty Map<Int, Product>\nset products[p1.id] to p1\nset products[p2.id] to p2\ndefine o1: Order as Order(order_id=501, customer_id=1, product_id=10, quantity=3)\ndefine o2: Order as Order(order_id=502, customer_id=2, product_id=20, quantity=4)\ndefine o3: Order as Order(order_id=503, customer_id=3, product_id=10, quantity=2)\ndefine list orders as [o1, o2, o3]\ndefine grand_total: Int as 0\nfor each ord in orders:\n    define rep: OrderReport as join_order(ord, customers, products)\n    print rep.order_id, rep.customer_name, rep.product_title, rep.subtotal_cents, rep.discount_cents, rep.final_total_cents\n    set grand_total to grand_total + rep.final_total_cents\nprint grand_total",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "Customer",
+            "fields": [
+              {
+                "name": "id",
+                "field_type": "Int"
+              },
+              {
+                "name": "name",
+                "field_type": "String"
+              },
+              {
+                "name": "tier",
+                "field_type": "String"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "record_def",
+            "name": "Product",
+            "fields": [
+              {
+                "name": "id",
+                "field_type": "Int"
+              },
+              {
+                "name": "title",
+                "field_type": "String"
+              },
+              {
+                "name": "unit_price_cents",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "record_def",
+            "name": "Order",
+            "fields": [
+              {
+                "name": "order_id",
+                "field_type": "Int"
+              },
+              {
+                "name": "customer_id",
+                "field_type": "Int"
+              },
+              {
+                "name": "product_id",
+                "field_type": "Int"
+              },
+              {
+                "name": "quantity",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "record_def",
+            "name": "OrderReport",
+            "fields": [
+              {
+                "name": "order_id",
+                "field_type": "Int"
+              },
+              {
+                "name": "customer_name",
+                "field_type": "String"
+              },
+              {
+                "name": "product_title",
+                "field_type": "String"
+              },
+              {
+                "name": "subtotal_cents",
+                "field_type": "Int"
+              },
+              {
+                "name": "discount_cents",
+                "field_type": "Int"
+              },
+              {
+                "name": "final_total_cents",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 17
+          },
+          {
+            "op": "func_def",
+            "name": "join_order",
+            "params": [
+              {
+                "name": "ord",
+                "param_type": "Order"
+              },
+              {
+                "name": "customers",
+                "param_type": "Map<Int, Customer>"
+              },
+              {
+                "name": "products",
+                "param_type": "Map<Int, Product>"
+              }
+            ],
+            "return_type": "OrderReport",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "cust",
+                "var_type": "Customer",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "customers"
+                  },
+                  "index": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "ord"
+                    },
+                    "field_name": "customer_id"
+                  }
+                },
+                "source_line": 26
+              },
+              {
+                "op": "var_decl",
+                "name": "prod",
+                "var_type": "Product",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "products"
+                  },
+                  "index": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "ord"
+                    },
+                    "field_name": "product_id"
+                  }
+                },
+                "source_line": 27
+              },
+              {
+                "op": "var_decl",
+                "name": "subtotal",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "prod"
+                    },
+                    "field_name": "unit_price_cents"
+                  },
+                  "right": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "ord"
+                    },
+                    "field_name": "quantity"
+                  }
+                },
+                "source_line": 28
+              },
+              {
+                "op": "var_decl",
+                "name": "discount",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 29
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "cust"
+                    },
+                    "field_name": "tier"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "VIP",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "discount",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "/",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "*",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "subtotal"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 15,
+                          "data_type": "Int"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 100,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 31
+                  }
+                ],
+                "else_body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "cust"
+                        },
+                        "field_name": "tier"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "PRO",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "discount",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "/",
+                          "left": {
+                            "expr_type": "binary_op",
+                            "op": "*",
+                            "left": {
+                              "expr_type": "var_ref",
+                              "name": "subtotal"
+                            },
+                            "right": {
+                              "expr_type": "literal",
+                              "value": 5,
+                              "data_type": "Int"
+                            }
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 100,
+                            "data_type": "Int"
+                          }
+                        },
+                        "source_line": 34
+                      }
+                    ],
+                    "else_body": [
+                      {
+                        "op": "assign",
+                        "name": "discount",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": 0,
+                          "data_type": "Int"
+                        },
+                        "source_line": 36
+                      }
+                    ],
+                    "source_line": 33
+                  }
+                ],
+                "source_line": 30
+              },
+              {
+                "op": "var_decl",
+                "name": "final_total",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "subtotal"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "discount"
+                  }
+                },
+                "source_line": 37
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "record_literal",
+                  "record_name": "OrderReport",
+                  "fields": [
+                    {
+                      "name": "order_id",
+                      "value": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "ord"
+                        },
+                        "field_name": "order_id"
+                      }
+                    },
+                    {
+                      "name": "customer_name",
+                      "value": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "cust"
+                        },
+                        "field_name": "name"
+                      }
+                    },
+                    {
+                      "name": "product_title",
+                      "value": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "prod"
+                        },
+                        "field_name": "title"
+                      }
+                    },
+                    {
+                      "name": "subtotal_cents",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "subtotal"
+                      }
+                    },
+                    {
+                      "name": "discount_cents",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "discount"
+                      }
+                    },
+                    {
+                      "name": "final_total_cents",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "final_total"
+                      }
+                    }
+                  ]
+                },
+                "source_line": 38
+              }
+            ],
+            "source_line": 25
+          },
+          {
+            "op": "var_decl",
+            "name": "c1",
+            "var_type": "Customer",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Customer",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Alice",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "tier",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "VIP",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 40
+          },
+          {
+            "op": "var_decl",
+            "name": "c2",
+            "var_type": "Customer",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Customer",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Bob",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "tier",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "PRO",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 41
+          },
+          {
+            "op": "var_decl",
+            "name": "c3",
+            "var_type": "Customer",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Customer",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Charlie",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "tier",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "STANDARD",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 42
+          },
+          {
+            "op": "var_decl",
+            "name": "customers",
+            "var_type": "Map<Int, Customer>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "Int",
+              "value_type": "Customer",
+              "entries": []
+            },
+            "source_line": 44
+          },
+          {
+            "op": "map_set",
+            "target": "customers",
+            "key": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "c1"
+              },
+              "field_name": "id"
+            },
+            "value": {
+              "expr_type": "var_ref",
+              "name": "c1"
+            },
+            "source_line": 45
+          },
+          {
+            "op": "map_set",
+            "target": "customers",
+            "key": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "c2"
+              },
+              "field_name": "id"
+            },
+            "value": {
+              "expr_type": "var_ref",
+              "name": "c2"
+            },
+            "source_line": 46
+          },
+          {
+            "op": "map_set",
+            "target": "customers",
+            "key": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "c3"
+              },
+              "field_name": "id"
+            },
+            "value": {
+              "expr_type": "var_ref",
+              "name": "c3"
+            },
+            "source_line": 47
+          },
+          {
+            "op": "var_decl",
+            "name": "p1",
+            "var_type": "Product",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Product",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "title",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Widget-Pro",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "unit_price_cents",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2000,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 49
+          },
+          {
+            "op": "var_decl",
+            "name": "p2",
+            "var_type": "Product",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Product",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 20,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "title",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "USB-Cable",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "unit_price_cents",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1000,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 50
+          },
+          {
+            "op": "var_decl",
+            "name": "products",
+            "var_type": "Map<Int, Product>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "Int",
+              "value_type": "Product",
+              "entries": []
+            },
+            "source_line": 52
+          },
+          {
+            "op": "map_set",
+            "target": "products",
+            "key": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p1"
+              },
+              "field_name": "id"
+            },
+            "value": {
+              "expr_type": "var_ref",
+              "name": "p1"
+            },
+            "source_line": 53
+          },
+          {
+            "op": "map_set",
+            "target": "products",
+            "key": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p2"
+              },
+              "field_name": "id"
+            },
+            "value": {
+              "expr_type": "var_ref",
+              "name": "p2"
+            },
+            "source_line": 54
+          },
+          {
+            "op": "var_decl",
+            "name": "o1",
+            "var_type": "Order",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Order",
+              "fields": [
+                {
+                  "name": "order_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 501,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "customer_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "product_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "quantity",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 56
+          },
+          {
+            "op": "var_decl",
+            "name": "o2",
+            "var_type": "Order",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Order",
+              "fields": [
+                {
+                  "name": "order_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 502,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "customer_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "product_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 20,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "quantity",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 57
+          },
+          {
+            "op": "var_decl",
+            "name": "o3",
+            "var_type": "Order",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Order",
+              "fields": [
+                {
+                  "name": "order_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 503,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "customer_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "product_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "quantity",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 58
+          },
+          {
+            "op": "var_decl",
+            "name": "orders",
+            "var_type": "List<Order>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "o1"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "o2"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "o3"
+                }
+              ],
+              "element_type": "Order"
+            },
+            "source_line": 60
+          },
+          {
+            "op": "var_decl",
+            "name": "grand_total",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 61
+          },
+          {
+            "op": "for_each",
+            "item_var": "ord",
+            "collection": "orders",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "rep",
+                "var_type": "OrderReport",
+                "value": {
+                  "expr_type": "call",
+                  "func_name": "join_order",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "ord"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "customers"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "products"
+                    }
+                  ]
+                },
+                "source_line": 64
+              },
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "rep"
+                    },
+                    "field_name": "order_id"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "rep"
+                    },
+                    "field_name": "customer_name"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "rep"
+                    },
+                    "field_name": "product_title"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "rep"
+                    },
+                    "field_name": "subtotal_cents"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "rep"
+                    },
+                    "field_name": "discount_cents"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "rep"
+                    },
+                    "field_name": "final_total_cents"
+                  }
+                ],
+                "source_line": 65
+              },
+              {
+                "op": "assign",
+                "name": "grand_total",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "grand_total"
+                  },
+                  "right": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "rep"
+                    },
+                    "field_name": "final_total_cents"
+                  }
+                },
+                "source_line": 66
+              }
+            ],
+            "source_line": 63
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "grand_total"
+              }
+            ],
+            "source_line": 68
+          }
+        ]
+      }
+    }
+  }
+}

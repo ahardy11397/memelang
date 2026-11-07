@@ -1,0 +1,1974 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/509_webhook_dispatch_pipeline.meme": {
+      "source_sha256": "9be46fdb99f550fd5627634ce4bfcfd01f7168c4cafcc19633d67e3489c4b543",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "WebhookPayload",
+          "fields": [
+            {
+              "name": "event_id",
+              "field_type": "String"
+            },
+            {
+              "name": "topic",
+              "field_type": "String"
+            },
+            {
+              "name": "body",
+              "field_type": "String"
+            },
+            {
+              "name": "secret_signature",
+              "field_type": "String"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "record_def",
+          "name": "DispatchResult",
+          "fields": [
+            {
+              "name": "event_id",
+              "field_type": "String"
+            },
+            {
+              "name": "delivered",
+              "field_type": "Bool"
+            },
+            {
+              "name": "status_code",
+              "field_type": "Int"
+            },
+            {
+              "name": "retry_after_sec",
+              "field_type": "Int"
+            },
+            {
+              "name": "endpoint_url",
+              "field_type": "String"
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "func_def",
+          "name": "dispatch_event",
+          "params": [
+            {
+              "name": "payload",
+              "param_type": "WebhookPayload"
+            },
+            {
+              "name": "endpoints",
+              "param_type": "Map<String, String>"
+            },
+            {
+              "name": "signatures",
+              "param_type": "Map<String, String>"
+            },
+            {
+              "name": "attempt",
+              "param_type": "Int"
+            },
+            {
+              "name": "mock_status",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "DispatchResult",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "map_has_key",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "endpoints"
+                },
+                "key": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "payload"
+                  },
+                  "field_name": "topic"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "endpoint",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "endpoints"
+                    },
+                    "index": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "payload"
+                      },
+                      "field_name": "topic"
+                    }
+                  },
+                  "source_line": 16
+                },
+                {
+                  "op": "var_decl",
+                  "name": "expected_sig",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "map_get",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "signatures"
+                    },
+                    "key": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "payload"
+                      },
+                      "field_name": "topic"
+                    },
+                    "default_val": {
+                      "expr_type": "literal",
+                      "value": "",
+                      "data_type": "String"
+                    }
+                  },
+                  "source_line": 17
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "!=",
+                    "left": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "payload"
+                      },
+                      "field_name": "secret_signature"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "expected_sig"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "record_literal",
+                        "record_name": "DispatchResult",
+                        "fields": [
+                          {
+                            "name": "event_id",
+                            "value": {
+                              "expr_type": "record_field",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "payload"
+                              },
+                              "field_name": "event_id"
+                            }
+                          },
+                          {
+                            "name": "delivered",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": false,
+                              "data_type": "Bool"
+                            }
+                          },
+                          {
+                            "name": "status_code",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": 401,
+                              "data_type": "Int"
+                            }
+                          },
+                          {
+                            "name": "retry_after_sec",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": 0,
+                              "data_type": "Int"
+                            }
+                          },
+                          {
+                            "name": "endpoint_url",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": "",
+                              "data_type": "String"
+                            }
+                          }
+                        ]
+                      },
+                      "source_line": 19
+                    }
+                  ],
+                  "else_body": [
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "binary_op",
+                        "op": "==",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "mock_status"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 200,
+                          "data_type": "Int"
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "op": "return_stmt",
+                          "value": {
+                            "expr_type": "record_literal",
+                            "record_name": "DispatchResult",
+                            "fields": [
+                              {
+                                "name": "event_id",
+                                "value": {
+                                  "expr_type": "record_field",
+                                  "target": {
+                                    "expr_type": "var_ref",
+                                    "name": "payload"
+                                  },
+                                  "field_name": "event_id"
+                                }
+                              },
+                              {
+                                "name": "delivered",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": true,
+                                  "data_type": "Bool"
+                                }
+                              },
+                              {
+                                "name": "status_code",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": 200,
+                                  "data_type": "Int"
+                                }
+                              },
+                              {
+                                "name": "retry_after_sec",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": 0,
+                                  "data_type": "Int"
+                                }
+                              },
+                              {
+                                "name": "endpoint_url",
+                                "value": {
+                                  "expr_type": "var_ref",
+                                  "name": "endpoint"
+                                }
+                              }
+                            ]
+                          },
+                          "source_line": 22
+                        }
+                      ],
+                      "else_body": [
+                        {
+                          "op": "var_decl",
+                          "name": "delay",
+                          "var_type": "Int",
+                          "value": {
+                            "expr_type": "binary_op",
+                            "op": "*",
+                            "left": {
+                              "expr_type": "binary_op",
+                              "op": "*",
+                              "left": {
+                                "expr_type": "literal",
+                                "value": 2,
+                                "data_type": "Int"
+                              },
+                              "right": {
+                                "expr_type": "var_ref",
+                                "name": "attempt"
+                              }
+                            },
+                            "right": {
+                              "expr_type": "var_ref",
+                              "name": "attempt"
+                            }
+                          },
+                          "source_line": 24
+                        },
+                        {
+                          "op": "return_stmt",
+                          "value": {
+                            "expr_type": "record_literal",
+                            "record_name": "DispatchResult",
+                            "fields": [
+                              {
+                                "name": "event_id",
+                                "value": {
+                                  "expr_type": "record_field",
+                                  "target": {
+                                    "expr_type": "var_ref",
+                                    "name": "payload"
+                                  },
+                                  "field_name": "event_id"
+                                }
+                              },
+                              {
+                                "name": "delivered",
+                                "value": {
+                                  "expr_type": "literal",
+                                  "value": false,
+                                  "data_type": "Bool"
+                                }
+                              },
+                              {
+                                "name": "status_code",
+                                "value": {
+                                  "expr_type": "var_ref",
+                                  "name": "mock_status"
+                                }
+                              },
+                              {
+                                "name": "retry_after_sec",
+                                "value": {
+                                  "expr_type": "var_ref",
+                                  "name": "delay"
+                                }
+                              },
+                              {
+                                "name": "endpoint_url",
+                                "value": {
+                                  "expr_type": "var_ref",
+                                  "name": "endpoint"
+                                }
+                              }
+                            ]
+                          },
+                          "source_line": 25
+                        }
+                      ],
+                      "source_line": 21
+                    }
+                  ],
+                  "source_line": 18
+                }
+              ],
+              "else_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "record_literal",
+                    "record_name": "DispatchResult",
+                    "fields": [
+                      {
+                        "name": "event_id",
+                        "value": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "payload"
+                          },
+                          "field_name": "event_id"
+                        }
+                      },
+                      {
+                        "name": "delivered",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": false,
+                          "data_type": "Bool"
+                        }
+                      },
+                      {
+                        "name": "status_code",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": 404,
+                          "data_type": "Int"
+                        }
+                      },
+                      {
+                        "name": "retry_after_sec",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": 0,
+                          "data_type": "Int"
+                        }
+                      },
+                      {
+                        "name": "endpoint_url",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "",
+                          "data_type": "String"
+                        }
+                      }
+                    ]
+                  },
+                  "source_line": 27
+                }
+              ],
+              "source_line": 15
+            }
+          ],
+          "source_line": 14
+        },
+        {
+          "op": "var_decl",
+          "name": "endpoints",
+          "var_type": "Map<String, String>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "String",
+            "entries": []
+          },
+          "source_line": 29
+        },
+        {
+          "op": "map_set",
+          "target": "endpoints",
+          "key": {
+            "expr_type": "literal",
+            "value": "order.created",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "literal",
+            "value": "https://billing.internal/webhooks/orders",
+            "data_type": "String"
+          },
+          "source_line": 30
+        },
+        {
+          "op": "map_set",
+          "target": "endpoints",
+          "key": {
+            "expr_type": "literal",
+            "value": "user.deleted",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "literal",
+            "value": "https://compliance.internal/webhooks/gdpr",
+            "data_type": "String"
+          },
+          "source_line": 31
+        },
+        {
+          "op": "var_decl",
+          "name": "signatures",
+          "var_type": "Map<String, String>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "String",
+            "entries": []
+          },
+          "source_line": 33
+        },
+        {
+          "op": "map_set",
+          "target": "signatures",
+          "key": {
+            "expr_type": "literal",
+            "value": "order.created",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "literal",
+            "value": "sig_sec_order_99",
+            "data_type": "String"
+          },
+          "source_line": 34
+        },
+        {
+          "op": "map_set",
+          "target": "signatures",
+          "key": {
+            "expr_type": "literal",
+            "value": "user.deleted",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "literal",
+            "value": "sig_sec_gdpr_11",
+            "data_type": "String"
+          },
+          "source_line": 35
+        },
+        {
+          "op": "var_decl",
+          "name": "ev1",
+          "var_type": "WebhookPayload",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "WebhookPayload",
+            "fields": [
+              {
+                "name": "event_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "evt_001",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "topic",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "order.created",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "item_id=42",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "secret_signature",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "sig_sec_order_99",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 38
+        },
+        {
+          "op": "var_decl",
+          "name": "r1",
+          "var_type": "DispatchResult",
+          "value": {
+            "expr_type": "call",
+            "func_name": "dispatch_event",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "ev1"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "endpoints"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "signatures"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 200,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 39
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              "field_name": "event_id"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              "field_name": "delivered"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              "field_name": "status_code"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              "field_name": "retry_after_sec"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              "field_name": "endpoint_url"
+            }
+          ],
+          "source_line": 40
+        },
+        {
+          "op": "var_decl",
+          "name": "ev2",
+          "var_type": "WebhookPayload",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "WebhookPayload",
+            "fields": [
+              {
+                "name": "event_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "evt_002",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "topic",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "order.created",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "item_id=42",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "secret_signature",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "wrong_tampered_sig",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 43
+        },
+        {
+          "op": "var_decl",
+          "name": "r2",
+          "var_type": "DispatchResult",
+          "value": {
+            "expr_type": "call",
+            "func_name": "dispatch_event",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "ev2"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "endpoints"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "signatures"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 200,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 44
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r2"
+              },
+              "field_name": "event_id"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r2"
+              },
+              "field_name": "delivered"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r2"
+              },
+              "field_name": "status_code"
+            }
+          ],
+          "source_line": 45
+        },
+        {
+          "op": "var_decl",
+          "name": "ev3",
+          "var_type": "WebhookPayload",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "WebhookPayload",
+            "fields": [
+              {
+                "name": "event_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "evt_003",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "topic",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "system.reboot",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "code=0",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "secret_signature",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "sig_none",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 48
+        },
+        {
+          "op": "var_decl",
+          "name": "r3",
+          "var_type": "DispatchResult",
+          "value": {
+            "expr_type": "call",
+            "func_name": "dispatch_event",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "ev3"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "endpoints"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "signatures"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 200,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 49
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r3"
+              },
+              "field_name": "event_id"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r3"
+              },
+              "field_name": "delivered"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r3"
+              },
+              "field_name": "status_code"
+            }
+          ],
+          "source_line": 50
+        },
+        {
+          "op": "var_decl",
+          "name": "ev4",
+          "var_type": "WebhookPayload",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "WebhookPayload",
+            "fields": [
+              {
+                "name": "event_id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "evt_004",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "topic",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "user.deleted",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "body",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "user=7",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "secret_signature",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "sig_sec_gdpr_11",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 53
+        },
+        {
+          "op": "var_decl",
+          "name": "r4",
+          "var_type": "DispatchResult",
+          "value": {
+            "expr_type": "call",
+            "func_name": "dispatch_event",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "ev4"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "endpoints"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "signatures"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 503,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 54
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r4"
+              },
+              "field_name": "event_id"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r4"
+              },
+              "field_name": "delivered"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r4"
+              },
+              "field_name": "status_code"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r4"
+              },
+              "field_name": "retry_after_sec"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r4"
+              },
+              "field_name": "endpoint_url"
+            }
+          ],
+          "source_line": 55
+        }
+      ],
+      "canonical_meme": "record WebhookPayload:\n    event_id: String\n    topic: String\n    body: String\n    secret_signature: String\nrecord DispatchResult:\n    event_id: String\n    delivered: Bool\n    status_code: Int\n    retry_after_sec: Int\n    endpoint_url: String\nfunction dispatch_event(payload: WebhookPayload, endpoints: Map<String, String>, signatures: Map<String, String>, attempt: Int, mock_status: Int) -> DispatchResult:\n    if endpoints has key payload.topic:\n        define endpoint: String as endpoints[payload.topic]\n        define expected_sig: String as signatures[payload.topic] default \"\"\n        if payload.secret_signature != expected_sig:\n            return DispatchResult(event_id=payload.event_id, delivered=false, status_code=401, retry_after_sec=0, endpoint_url=\"\")\n        else:\n            if mock_status == 200:\n                return DispatchResult(event_id=payload.event_id, delivered=true, status_code=200, retry_after_sec=0, endpoint_url=endpoint)\n            else:\n                define delay: Int as 2 * attempt * attempt\n                return DispatchResult(event_id=payload.event_id, delivered=false, status_code=mock_status, retry_after_sec=delay, endpoint_url=endpoint)\n    else:\n        return DispatchResult(event_id=payload.event_id, delivered=false, status_code=404, retry_after_sec=0, endpoint_url=\"\")\ndefine endpoints: Map<String, String> as empty Map<String, String>\nset endpoints[\"order.created\"] to \"https://billing.internal/webhooks/orders\"\nset endpoints[\"user.deleted\"] to \"https://compliance.internal/webhooks/gdpr\"\ndefine signatures: Map<String, String> as empty Map<String, String>\nset signatures[\"order.created\"] to \"sig_sec_order_99\"\nset signatures[\"user.deleted\"] to \"sig_sec_gdpr_11\"\ndefine ev1: WebhookPayload as WebhookPayload(event_id=\"evt_001\", topic=\"order.created\", body=\"item_id=42\", secret_signature=\"sig_sec_order_99\")\ndefine r1: DispatchResult as dispatch_event(ev1, endpoints, signatures, 1, 200)\nprint r1.event_id, r1.delivered, r1.status_code, r1.retry_after_sec, r1.endpoint_url\ndefine ev2: WebhookPayload as WebhookPayload(event_id=\"evt_002\", topic=\"order.created\", body=\"item_id=42\", secret_signature=\"wrong_tampered_sig\")\ndefine r2: DispatchResult as dispatch_event(ev2, endpoints, signatures, 1, 200)\nprint r2.event_id, r2.delivered, r2.status_code\ndefine ev3: WebhookPayload as WebhookPayload(event_id=\"evt_003\", topic=\"system.reboot\", body=\"code=0\", secret_signature=\"sig_none\")\ndefine r3: DispatchResult as dispatch_event(ev3, endpoints, signatures, 1, 200)\nprint r3.event_id, r3.delivered, r3.status_code\ndefine ev4: WebhookPayload as WebhookPayload(event_id=\"evt_004\", topic=\"user.deleted\", body=\"user=7\", secret_signature=\"sig_sec_gdpr_11\")\ndefine r4: DispatchResult as dispatch_event(ev4, endpoints, signatures, 2, 503)\nprint r4.event_id, r4.delivered, r4.status_code, r4.retry_after_sec, r4.endpoint_url",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "WebhookPayload",
+            "fields": [
+              {
+                "name": "event_id",
+                "field_type": "String"
+              },
+              {
+                "name": "topic",
+                "field_type": "String"
+              },
+              {
+                "name": "body",
+                "field_type": "String"
+              },
+              {
+                "name": "secret_signature",
+                "field_type": "String"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "record_def",
+            "name": "DispatchResult",
+            "fields": [
+              {
+                "name": "event_id",
+                "field_type": "String"
+              },
+              {
+                "name": "delivered",
+                "field_type": "Bool"
+              },
+              {
+                "name": "status_code",
+                "field_type": "Int"
+              },
+              {
+                "name": "retry_after_sec",
+                "field_type": "Int"
+              },
+              {
+                "name": "endpoint_url",
+                "field_type": "String"
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "func_def",
+            "name": "dispatch_event",
+            "params": [
+              {
+                "name": "payload",
+                "param_type": "WebhookPayload"
+              },
+              {
+                "name": "endpoints",
+                "param_type": "Map<String, String>"
+              },
+              {
+                "name": "signatures",
+                "param_type": "Map<String, String>"
+              },
+              {
+                "name": "attempt",
+                "param_type": "Int"
+              },
+              {
+                "name": "mock_status",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "DispatchResult",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "map_has_key",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "endpoints"
+                  },
+                  "key": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "payload"
+                    },
+                    "field_name": "topic"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "endpoint",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "endpoints"
+                      },
+                      "index": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "payload"
+                        },
+                        "field_name": "topic"
+                      }
+                    },
+                    "source_line": 16
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "expected_sig",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "map_get",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "signatures"
+                      },
+                      "key": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "payload"
+                        },
+                        "field_name": "topic"
+                      },
+                      "default_val": {
+                        "expr_type": "literal",
+                        "value": "",
+                        "data_type": "String"
+                      }
+                    },
+                    "source_line": 17
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "!=",
+                      "left": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "payload"
+                        },
+                        "field_name": "secret_signature"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "expected_sig"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "record_literal",
+                          "record_name": "DispatchResult",
+                          "fields": [
+                            {
+                              "name": "event_id",
+                              "value": {
+                                "expr_type": "record_field",
+                                "target": {
+                                  "expr_type": "var_ref",
+                                  "name": "payload"
+                                },
+                                "field_name": "event_id"
+                              }
+                            },
+                            {
+                              "name": "delivered",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": false,
+                                "data_type": "Bool"
+                              }
+                            },
+                            {
+                              "name": "status_code",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": 401,
+                                "data_type": "Int"
+                              }
+                            },
+                            {
+                              "name": "retry_after_sec",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": 0,
+                                "data_type": "Int"
+                              }
+                            },
+                            {
+                              "name": "endpoint_url",
+                              "value": {
+                                "expr_type": "literal",
+                                "value": "",
+                                "data_type": "String"
+                              }
+                            }
+                          ]
+                        },
+                        "source_line": 19
+                      }
+                    ],
+                    "else_body": [
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "binary_op",
+                          "op": "==",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "mock_status"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 200,
+                            "data_type": "Int"
+                          }
+                        },
+                        "then_body": [
+                          {
+                            "op": "return_stmt",
+                            "value": {
+                              "expr_type": "record_literal",
+                              "record_name": "DispatchResult",
+                              "fields": [
+                                {
+                                  "name": "event_id",
+                                  "value": {
+                                    "expr_type": "record_field",
+                                    "target": {
+                                      "expr_type": "var_ref",
+                                      "name": "payload"
+                                    },
+                                    "field_name": "event_id"
+                                  }
+                                },
+                                {
+                                  "name": "delivered",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": true,
+                                    "data_type": "Bool"
+                                  }
+                                },
+                                {
+                                  "name": "status_code",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": 200,
+                                    "data_type": "Int"
+                                  }
+                                },
+                                {
+                                  "name": "retry_after_sec",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": 0,
+                                    "data_type": "Int"
+                                  }
+                                },
+                                {
+                                  "name": "endpoint_url",
+                                  "value": {
+                                    "expr_type": "var_ref",
+                                    "name": "endpoint"
+                                  }
+                                }
+                              ]
+                            },
+                            "source_line": 22
+                          }
+                        ],
+                        "else_body": [
+                          {
+                            "op": "var_decl",
+                            "name": "delay",
+                            "var_type": "Int",
+                            "value": {
+                              "expr_type": "binary_op",
+                              "op": "*",
+                              "left": {
+                                "expr_type": "binary_op",
+                                "op": "*",
+                                "left": {
+                                  "expr_type": "literal",
+                                  "value": 2,
+                                  "data_type": "Int"
+                                },
+                                "right": {
+                                  "expr_type": "var_ref",
+                                  "name": "attempt"
+                                }
+                              },
+                              "right": {
+                                "expr_type": "var_ref",
+                                "name": "attempt"
+                              }
+                            },
+                            "source_line": 24
+                          },
+                          {
+                            "op": "return_stmt",
+                            "value": {
+                              "expr_type": "record_literal",
+                              "record_name": "DispatchResult",
+                              "fields": [
+                                {
+                                  "name": "event_id",
+                                  "value": {
+                                    "expr_type": "record_field",
+                                    "target": {
+                                      "expr_type": "var_ref",
+                                      "name": "payload"
+                                    },
+                                    "field_name": "event_id"
+                                  }
+                                },
+                                {
+                                  "name": "delivered",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": false,
+                                    "data_type": "Bool"
+                                  }
+                                },
+                                {
+                                  "name": "status_code",
+                                  "value": {
+                                    "expr_type": "var_ref",
+                                    "name": "mock_status"
+                                  }
+                                },
+                                {
+                                  "name": "retry_after_sec",
+                                  "value": {
+                                    "expr_type": "var_ref",
+                                    "name": "delay"
+                                  }
+                                },
+                                {
+                                  "name": "endpoint_url",
+                                  "value": {
+                                    "expr_type": "var_ref",
+                                    "name": "endpoint"
+                                  }
+                                }
+                              ]
+                            },
+                            "source_line": 25
+                          }
+                        ],
+                        "source_line": 21
+                      }
+                    ],
+                    "source_line": 18
+                  }
+                ],
+                "else_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "record_literal",
+                      "record_name": "DispatchResult",
+                      "fields": [
+                        {
+                          "name": "event_id",
+                          "value": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "payload"
+                            },
+                            "field_name": "event_id"
+                          }
+                        },
+                        {
+                          "name": "delivered",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": false,
+                            "data_type": "Bool"
+                          }
+                        },
+                        {
+                          "name": "status_code",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": 404,
+                            "data_type": "Int"
+                          }
+                        },
+                        {
+                          "name": "retry_after_sec",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": 0,
+                            "data_type": "Int"
+                          }
+                        },
+                        {
+                          "name": "endpoint_url",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": "",
+                            "data_type": "String"
+                          }
+                        }
+                      ]
+                    },
+                    "source_line": 27
+                  }
+                ],
+                "source_line": 15
+              }
+            ],
+            "source_line": 14
+          },
+          {
+            "op": "var_decl",
+            "name": "endpoints",
+            "var_type": "Map<String, String>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "String",
+              "entries": []
+            },
+            "source_line": 29
+          },
+          {
+            "op": "map_set",
+            "target": "endpoints",
+            "key": {
+              "expr_type": "literal",
+              "value": "order.created",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "literal",
+              "value": "https://billing.internal/webhooks/orders",
+              "data_type": "String"
+            },
+            "source_line": 30
+          },
+          {
+            "op": "map_set",
+            "target": "endpoints",
+            "key": {
+              "expr_type": "literal",
+              "value": "user.deleted",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "literal",
+              "value": "https://compliance.internal/webhooks/gdpr",
+              "data_type": "String"
+            },
+            "source_line": 31
+          },
+          {
+            "op": "var_decl",
+            "name": "signatures",
+            "var_type": "Map<String, String>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "String",
+              "entries": []
+            },
+            "source_line": 33
+          },
+          {
+            "op": "map_set",
+            "target": "signatures",
+            "key": {
+              "expr_type": "literal",
+              "value": "order.created",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "literal",
+              "value": "sig_sec_order_99",
+              "data_type": "String"
+            },
+            "source_line": 34
+          },
+          {
+            "op": "map_set",
+            "target": "signatures",
+            "key": {
+              "expr_type": "literal",
+              "value": "user.deleted",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "literal",
+              "value": "sig_sec_gdpr_11",
+              "data_type": "String"
+            },
+            "source_line": 35
+          },
+          {
+            "op": "var_decl",
+            "name": "ev1",
+            "var_type": "WebhookPayload",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "WebhookPayload",
+              "fields": [
+                {
+                  "name": "event_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "evt_001",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "topic",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "order.created",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "item_id=42",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "secret_signature",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "sig_sec_order_99",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 38
+          },
+          {
+            "op": "var_decl",
+            "name": "r1",
+            "var_type": "DispatchResult",
+            "value": {
+              "expr_type": "call",
+              "func_name": "dispatch_event",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "ev1"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "endpoints"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "signatures"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 200,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 39
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                },
+                "field_name": "event_id"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                },
+                "field_name": "delivered"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                },
+                "field_name": "status_code"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                },
+                "field_name": "retry_after_sec"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                },
+                "field_name": "endpoint_url"
+              }
+            ],
+            "source_line": 40
+          },
+          {
+            "op": "var_decl",
+            "name": "ev2",
+            "var_type": "WebhookPayload",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "WebhookPayload",
+              "fields": [
+                {
+                  "name": "event_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "evt_002",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "topic",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "order.created",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "item_id=42",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "secret_signature",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "wrong_tampered_sig",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 43
+          },
+          {
+            "op": "var_decl",
+            "name": "r2",
+            "var_type": "DispatchResult",
+            "value": {
+              "expr_type": "call",
+              "func_name": "dispatch_event",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "ev2"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "endpoints"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "signatures"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 200,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 44
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r2"
+                },
+                "field_name": "event_id"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r2"
+                },
+                "field_name": "delivered"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r2"
+                },
+                "field_name": "status_code"
+              }
+            ],
+            "source_line": 45
+          },
+          {
+            "op": "var_decl",
+            "name": "ev3",
+            "var_type": "WebhookPayload",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "WebhookPayload",
+              "fields": [
+                {
+                  "name": "event_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "evt_003",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "topic",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "system.reboot",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "code=0",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "secret_signature",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "sig_none",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 48
+          },
+          {
+            "op": "var_decl",
+            "name": "r3",
+            "var_type": "DispatchResult",
+            "value": {
+              "expr_type": "call",
+              "func_name": "dispatch_event",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "ev3"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "endpoints"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "signatures"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 200,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 49
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r3"
+                },
+                "field_name": "event_id"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r3"
+                },
+                "field_name": "delivered"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r3"
+                },
+                "field_name": "status_code"
+              }
+            ],
+            "source_line": 50
+          },
+          {
+            "op": "var_decl",
+            "name": "ev4",
+            "var_type": "WebhookPayload",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "WebhookPayload",
+              "fields": [
+                {
+                  "name": "event_id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "evt_004",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "topic",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "user.deleted",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "body",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "user=7",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "secret_signature",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "sig_sec_gdpr_11",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 53
+          },
+          {
+            "op": "var_decl",
+            "name": "r4",
+            "var_type": "DispatchResult",
+            "value": {
+              "expr_type": "call",
+              "func_name": "dispatch_event",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "ev4"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "endpoints"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "signatures"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 503,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 54
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r4"
+                },
+                "field_name": "event_id"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r4"
+                },
+                "field_name": "delivered"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r4"
+                },
+                "field_name": "status_code"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r4"
+                },
+                "field_name": "retry_after_sec"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r4"
+                },
+                "field_name": "endpoint_url"
+              }
+            ],
+            "source_line": 55
+          }
+        ]
+      }
+    }
+  }
+}

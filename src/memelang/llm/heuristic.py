@@ -33,6 +33,11 @@ from memelang.ir.schema import (
     ListLiteralExpr,
     ListSetIndexStmt,
     LiteralExpr,
+    MapEntry,
+    MapGetExpr,
+    MapHasKeyExpr,
+    MapLiteralExpr,
+    MapSetStmt,
     MemeType,
     PrintStmt,
     ProgramIR,
@@ -40,6 +45,12 @@ from memelang.ir.schema import (
     RandomListExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RecordDefStmt,
+    RecordFieldDef,
+    RecordFieldExpr,
+    RecordFieldInit,
+    RecordLiteralExpr,
+    RecordSetFieldStmt,
     ReturnStmt,
     SortCollectionStmt,
     SortDirection,
@@ -72,6 +83,52 @@ _VALID_TYPES: set[str] = {
 }
 
 
+def _is_valid_type(t: str) -> bool:
+    t = t.strip().replace(" ", "")
+    if t in _VALID_TYPES:
+        return True
+    if t.startswith("List<") and t.endswith(">"):
+        return _is_valid_type(t[5:-1])
+    if t.startswith("Map<") and t.endswith(">"):
+        inner = t[4:-1]
+        depth = 0
+        comma = -1
+        for i, ch in enumerate(inner):
+            if ch == "<":
+                depth += 1
+            elif ch == ">":
+                depth -= 1
+            elif ch == "," and depth == 0:
+                comma = i
+                break
+        if comma != -1:
+            return _is_valid_type(inner[:comma]) and _is_valid_type(inner[comma + 1 :])
+    return False
+
+
+def _normalize_type(t: str) -> str:
+    t = t.strip()
+    if t.startswith("List<") and t.endswith(">"):
+        return f"List<{_normalize_type(t[5:-1])}>"
+    if t.startswith("Map<") and t.endswith(">"):
+        inner = t[4:-1]
+        depth = 0
+        comma = -1
+        for i, ch in enumerate(inner):
+            if ch == "<":
+                depth += 1
+            elif ch == ">":
+                depth -= 1
+            elif ch == "," and depth == 0:
+                comma = i
+                break
+        if comma != -1:
+            k = _normalize_type(inner[:comma])
+            v = _normalize_type(inner[comma + 1 :])
+            return f"Map<{k}, {v}>"
+    return t.replace(" ", "")
+
+
 @dataclass
 class _SourceLine:
     lineno: int
@@ -87,7 +144,7 @@ _TOKEN_RE = re.compile(
         (?P<STRING>"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')
       | (?P<FLOAT>\d+\.\d+)
       | (?P<INT>\d+)
-      | (?P<OP>==|!=|<=|>=|[+\-*/%<>(),\[\]])
+      | (?P<OP>==|!=|<=|>=|[+\-*/%<>(),\[\]\{\}\.:=])
       | (?P<IDENT>[A-Za-z_][A-Za-z0-9_]*)
     )
     """,
@@ -133,9 +190,18 @@ def _tokenize_expr(text: str) -> list[_Tok]:
 
 
 class _ExprParser:
-    def __init__(self, tokens: list[_Tok]) -> None:
+    def __init__(
+        self,
+        tokens: list[_Tok],
+        symbols: dict[str, MemeType] | None = None,
+        func_returns: dict[str, MemeType] | None = None,
+        records: dict[str, dict[str, MemeType]] | None = None,
+    ) -> None:
         self.tokens = tokens
         self.pos = 0
+        self.symbols = symbols or {}
+        self.func_returns = func_returns
+        self.records = records
 
     def peek(self) -> _Tok | None:
         return self.tokens[self.pos] if self.pos < len(self.tokens) else None
@@ -218,11 +284,29 @@ class _ExprParser:
 
     def parse_postfix(self) -> IRExpr:
         node = self.parse_primary()
-        while (t := self.peek()) and t.kind == "OP" and t.val == "[":
-            self.consume("OP", "[")
-            idx = self.parse_or()
-            self.consume("OP", "]")
-            node = ListIndexExpr(target=node, index=idx)
+        while (t := self.peek()):
+            if t.kind == "OP" and t.val == "[":
+                self.consume("OP", "[")
+                idx = self.parse_or()
+                self.consume("OP", "]")
+                if (nxt := self.peek()) and nxt.kind == "IDENT" and nxt.val == "default":
+                    self.consume("IDENT", "default")
+                    def_val = self.parse_or()
+                    node = MapGetExpr(target=node, key=idx, default_val=def_val)
+                else:
+                    node = ListIndexExpr(target=node, index=idx)
+            elif t.kind == "OP" and t.val == ".":
+                self.consume("OP", ".")
+                f_tok = self.consume("IDENT")
+                node = RecordFieldExpr(target=node, field_name=f_tok.val)
+            elif t.kind == "IDENT" and t.val == "has":
+                self.consume("IDENT", "has")
+                if (nxt := self.peek()) and nxt.kind == "IDENT" and nxt.val == "key":
+                    self.consume("IDENT", "key")
+                key_expr = self.parse_or()
+                node = MapHasKeyExpr(target=node, key=key_expr)
+            else:
+                break
         return node
 
     def parse_primary(self) -> IRExpr:
@@ -257,11 +341,43 @@ class _ExprParser:
             self.consume("OP", "]")
             el_type: MemeType = "Int"
             if elems:
-                if isinstance(elems[0], LiteralExpr):
-                    el_type = elems[0].data_type
-                elif isinstance(elems[0], ListLiteralExpr):
-                    el_type = cast(MemeType, f"List<{elems[0].element_type}>")
+                guessed = _guess_expr_type(
+                    elems[0], self.symbols, self.func_returns, self.records
+                )
+                if _is_valid_type(guessed):
+                    el_type = guessed
             return ListLiteralExpr(elements=elems, element_type=el_type)
+
+        if t.kind == "OP" and t.val == "{":
+            self.consume("OP", "{")
+            entries: list[MapEntry] = []
+            if not ((nxt := self.peek()) and nxt.kind == "OP" and nxt.val == "}"):
+                while True:
+                    k = self.parse_or()
+                    self.consume("OP", ":")
+                    v = self.parse_or()
+                    entries.append(MapEntry(key=k, value=v))
+                    if (nxt := self.peek()) and nxt.kind == "OP" and nxt.val == ",":
+                        self.consume("OP", ",")
+                        if (nxt := self.peek()) and nxt.kind == "OP" and nxt.val == "}":
+                            break
+                    else:
+                        break
+            self.consume("OP", "}")
+            k_type: MemeType = "String"
+            v_type: MemeType = "String"
+            if entries:
+                k_guessed = _guess_expr_type(
+                    entries[0].key, self.symbols, self.func_returns, self.records
+                )
+                v_guessed = _guess_expr_type(
+                    entries[0].value, self.symbols, self.func_returns, self.records
+                )
+                if _is_valid_type(k_guessed):
+                    k_type = k_guessed
+                if _is_valid_type(v_guessed):
+                    v_type = v_guessed
+            return MapLiteralExpr(key_type=k_type, value_type=v_type, entries=entries)
 
         if t.kind == "IDENT":
             if t.val in ("true", "True"):
@@ -293,6 +409,28 @@ class _ExprParser:
             ident = self.consume("IDENT").val
             if (nxt := self.peek()) and nxt.kind == "OP" and nxt.val == "(":
                 self.consume("OP", "(")
+                # Check for named field arguments: ident(foo=..., bar=...)
+                is_record_ctor = False
+                if (
+                    (p0 := self.peek())
+                    and p0.kind == "IDENT"
+                    and self.pos + 1 < len(self.tokens)
+                    and self.tokens[self.pos + 1].kind == "OP"
+                    and self.tokens[self.pos + 1].val == "="
+                ):
+                    is_record_ctor = True
+                if is_record_ctor:
+                    fields: list[RecordFieldInit] = []
+                    while not ((c := self.peek()) and c.kind == "OP" and c.val == ")"):
+                        f_name = self.consume("IDENT").val
+                        self.consume("OP", "=")
+                        f_val = self.parse_or()
+                        fields.append(RecordFieldInit(name=f_name, value=f_val))
+                        if (c := self.peek()) and c.kind == "OP" and c.val == ",":
+                            self.consume("OP", ",")
+                    self.consume("OP", ")")
+                    return RecordLiteralExpr(record_name=ident, fields=fields)
+
                 args: list[IRExpr] = []
                 if not ((c := self.peek()) and c.kind == "OP" and c.val == ")"):
                     args.append(self.parse_or())
@@ -307,16 +445,31 @@ class _ExprParser:
         raise LLMProviderError(f"Unexpected token in expression: {t.val!r}")
 
 
-def _parse_expr(raw: str) -> IRExpr:
+def _parse_expr(
+    raw: str,
+    symbols: dict[str, MemeType] | None = None,
+    func_returns: dict[str, MemeType] | None = None,
+    records: dict[str, dict[str, MemeType]] | None = None,
+) -> IRExpr:
     s = raw.strip()
 
     # Special English phrase expressions
     m_empty = re.fullmatch(
-        r"empty\s+List<(Int|Float|Bool|String|List<Int>|List<Float>|List<Bool>|List<String>)>", s
+        r"empty\s+List<(.+?)>", s
     )
     if m_empty:
         el_t = cast(MemeType, m_empty.group(1))
         return ListLiteralExpr(elements=[], element_type=el_t)
+
+    m_empty_map = re.fullmatch(
+        r"empty\s+Map<([A-Za-z0-9_]+),\s*([A-Za-z0-9_<>]+)>", s
+    )
+    if m_empty_map:
+        return MapLiteralExpr(
+            key_type=m_empty_map.group(1),
+            value_type=m_empty_map.group(2),
+            entries=[],
+        )
 
     m_slice = re.fullmatch(
         r"slice\s+(.+?)\s+from\s+(.+?)\s+to\s+(.+)",
@@ -397,7 +550,7 @@ def _parse_expr(raw: str) -> IRExpr:
         return ReadInputExpr(prompt=prompt, target_type=t_type)
 
     tokens = _tokenize_expr(s)
-    return _ExprParser(tokens).parse()
+    return _ExprParser(tokens, symbols, func_returns, records).parse()
 
 
 def _split_top_level_commas(text: str) -> list[str]:
@@ -419,10 +572,10 @@ def _split_top_level_commas(text: str) -> list[str]:
         if ch in ('"', "'"):
             in_str = ch
             cur.append(ch)
-        elif ch in "([":
+        elif ch in "([{<":
             depth += 1
             cur.append(ch)
-        elif ch in ")]":
+        elif ch in ")]}>":
             depth = max(0, depth - 1)
             cur.append(ch)
         elif ch == "," and depth == 0:
@@ -435,10 +588,29 @@ def _split_top_level_commas(text: str) -> list[str]:
     return [p for p in parts if p]
 
 
+def _map_types_of(map_type: str) -> tuple[str, str] | None:
+    if map_type.startswith("Map<") and map_type.endswith(">"):
+        inner = map_type[4:-1]
+        depth = 0
+        comma = -1
+        for i, ch in enumerate(inner):
+            if ch == "<":
+                depth += 1
+            elif ch == ">":
+                depth -= 1
+            elif ch == "," and depth == 0:
+                comma = i
+                break
+        if comma != -1:
+            return inner[:comma].strip(), inner[comma + 1 :].strip()
+    return None
+
+
 def _guess_expr_type(
     expr: IRExpr,
     symbols: dict[str, MemeType],
     func_returns: dict[str, MemeType] | None = None,
+    records: dict[str, dict[str, MemeType]] | None = None,
 ) -> MemeType:
     if isinstance(expr, LiteralExpr):
         return expr.data_type
@@ -456,21 +628,43 @@ def _guess_expr_type(
         return "Int"
     if isinstance(expr, ReadInputExpr):
         return expr.target_type
+    if isinstance(expr, RecordLiteralExpr):
+        return expr.record_name
+    if isinstance(expr, RecordFieldExpr):
+        tgt_t = _guess_expr_type(expr.target, symbols, func_returns, records)
+        if records and tgt_t in records:
+            return records[tgt_t].get(expr.field_name, "String")
+        return "String"
+    if isinstance(expr, MapLiteralExpr):
+        return cast(MemeType, f"Map<{expr.key_type}, {expr.value_type}>")
+    if isinstance(expr, MapGetExpr):
+        tgt_t = _guess_expr_type(expr.target, symbols, func_returns, records)
+        mt = _map_types_of(tgt_t)
+        if mt is not None:
+            return mt[1]
+        if expr.default_val:
+            return _guess_expr_type(expr.default_val, symbols, func_returns, records)
+        return "String"
+    if isinstance(expr, MapHasKeyExpr):
+        return "Bool"
     if isinstance(expr, VarRefExpr) and expr.name in symbols:
         return symbols[expr.name]
     if isinstance(expr, ListIndexExpr):
-        col_t = _guess_expr_type(expr.target, symbols, func_returns)
+        col_t = _guess_expr_type(expr.target, symbols, func_returns, records)
         if col_t.startswith("List<"):
             return cast(MemeType, col_t[5:-1])
+        mt = _map_types_of(col_t)
+        if mt is not None:
+            return mt[1]
         return "Int"
     if isinstance(expr, CallExpr) and func_returns and expr.func_name in func_returns:
         return func_returns[expr.func_name]
     if isinstance(expr, BinaryOpExpr):
         if expr.op in ("==", "!=", "<", "<=", ">", ">=", "and", "or"):
             return "Bool"
-        return _guess_expr_type(expr.left, symbols, func_returns)
+        return _guess_expr_type(expr.left, symbols, func_returns, records)
     if isinstance(expr, UnaryOpExpr):
-        return "Bool" if expr.op == "not" else _guess_expr_type(expr.operand, symbols, func_returns)
+        return "Bool" if expr.op == "not" else _guess_expr_type(expr.operand, symbols, func_returns, records)
     return "Int"
 
 
@@ -478,20 +672,14 @@ def _refine_list_literal_types(
     expr: IRExpr,
     symbols: dict[str, MemeType],
     func_returns: dict[str, MemeType],
+    records: dict[str, dict[str, MemeType]] | None = None,
 ) -> IRExpr:
     if isinstance(expr, ListLiteralExpr) and expr.elements:
-        refined_elems = [_refine_list_literal_types(e, symbols, func_returns) for e in expr.elements]
-        first_t = _guess_expr_type(refined_elems[0], symbols, func_returns)
-        if first_t in (
-            "Int",
-            "Float",
-            "Bool",
-            "String",
-            "List<Int>",
-            "List<Float>",
-            "List<Bool>",
-            "List<String>",
-        ):
+        refined_elems = [
+            _refine_list_literal_types(e, symbols, func_returns, records) for e in expr.elements
+        ]
+        first_t = _guess_expr_type(refined_elems[0], symbols, func_returns, records)
+        if _is_valid_type(first_t):
             return ListLiteralExpr(
                 elements=refined_elems,
                 element_type=cast(MemeType, first_t),
@@ -524,6 +712,7 @@ class HeuristicProvider:
 
         symbols: dict[str, MemeType] = {}
         self._func_returns: dict[str, MemeType] = {}
+        self._records: dict[str, dict[str, MemeType]] = {}
         items, _ = self._parse_block(lines, 0, lines[0].indent, symbols, top_level=True)
 
         # Post-process top-level AmbiguityDiagnostic candidates with replaces_whole_program=True
@@ -700,27 +889,58 @@ class HeuristicProvider:
                 items.append(if_stmt)
                 continue
 
-            # 5. `function <name>(<params>) [-> <RetType>][:]`
+            # 5. `record <name>[:]`
+            m_rec = re.fullmatch(r"record\s+([A-Za-z_]\w*)\s*:?", text, flags=re.IGNORECASE)
+            if m_rec:
+                rec_name = m_rec.group(1)
+                _VALID_TYPES.add(rec_name)
+                _VALID_TYPES.add(f"List<{rec_name}>")
+                if i + 1 >= len(lines) or lines[i + 1].indent <= base_indent:
+                    raise LLMProviderError(f"Expected indented block after line {line.lineno}")
+                rec_indent = lines[i + 1].indent
+                curr = i + 1
+                rec_fields: list[RecordFieldDef] = []
+                while curr < len(lines) and lines[curr].indent >= rec_indent:
+                    fl_txt = lines[curr].text.strip()
+                    if fl_txt and not fl_txt.startswith("#") and fl_txt != "pass":
+                        fn_p, _, ft_p = fl_txt.partition(":")
+                        fn_p = fn_p.strip()
+                        ft_p = ft_p.strip().replace(" ", "")
+                        if not fn_p or not ft_p:
+                            raise LLMProviderError(
+                                f"Invalid field declaration in record {rec_name}: {lines[curr].text!r}"
+                            )
+                        _VALID_TYPES.add(ft_p)
+                        rec_fields.append(RecordFieldDef(name=fn_p, field_type=ft_p))
+                    curr += 1
+                i = curr
+                self._records[rec_name] = {f.name: f.field_type for f in rec_fields}
+                items.append(
+                    RecordDefStmt(name=rec_name, fields=rec_fields, source_line=line.lineno)
+                )
+                continue
+
+            # 6. `function <name>(<params>) [-> <RetType>][:]`
             m_fn = re.fullmatch(
-                r"function\s+([A-Za-z_]\w*)\s*\((.*?)\)(?:\s*->\s*([A-Za-z<>]+))?\s*:?",
+                r"function\s+([A-Za-z_]\w*)\s*\((.*?)\)(?:\s*->\s*([A-Za-z0-9_<>,\s]+))?\s*:?",
                 text,
             )
             if m_fn:
                 fn_name = m_fn.group(1)
                 raw_params = m_fn.group(2).strip()
-                ret_str = m_fn.group(3) or "Void"
-                if ret_str not in _VALID_TYPES:
+                ret_str = _normalize_type((m_fn.group(3) or "Void").strip())
+                if not _is_valid_type(ret_str):
                     raise LLMProviderError(f"Unknown return type {ret_str!r} at line {line.lineno}")
                 ret_mt = cast(MemeType, ret_str)
                 self._func_returns[fn_name] = ret_mt
                 params: list[FuncParam] = []
                 fn_syms: dict[str, MemeType] = {}
                 if raw_params:
-                    for p_chunk in raw_params.split(","):
+                    for p_chunk in _split_top_level_commas(raw_params):
                         p_name, _, p_type = p_chunk.partition(":")
                         p_name = p_name.strip()
-                        p_type = p_type.strip() or "Int"
-                        if p_type not in _VALID_TYPES:
+                        p_type = _normalize_type(p_type.strip() or "Int")
+                        if not _is_valid_type(p_type):
                             raise LLMProviderError(
                                 f"Unknown parameter type {p_type!r} at line {line.lineno}"
                             )
@@ -796,6 +1016,10 @@ class HeuristicProvider:
     ) -> IRStatement:
         text = line.text
         fn_rets = getattr(self, "_func_returns", {})
+        recs = getattr(self, "_records", None)
+
+        def _pe(e_str: str) -> IRExpr:
+            return _parse_expr(e_str, symbols, fn_rets, recs)
 
         # `define list <name> as <expr>`
         m_def_list = re.fullmatch(
@@ -805,12 +1029,14 @@ class HeuristicProvider:
         )
         if m_def_list:
             name = m_def_list.group(1)
-            val = _refine_list_literal_types(_parse_expr(m_def_list.group(3)), symbols, fn_rets)
+            val = _refine_list_literal_types(
+                _pe(m_def_list.group(3)), symbols, fn_rets, recs
+            )
             explicit_t = m_def_list.group(2)
             v_type = (
                 cast(MemeType, explicit_t)
                 if explicit_t in _VALID_TYPES
-                else _guess_expr_type(val, symbols, fn_rets)
+                else _guess_expr_type(val, symbols, fn_rets, recs)
             )
             if not v_type.startswith("List<"):
                 v_type = "List<Int>"
@@ -819,21 +1045,38 @@ class HeuristicProvider:
 
         # `define <name>[: <Type>] as <expr>`
         m_def = re.fullmatch(
-            r"define\s+([A-Za-z_]\w*)(?:\s*:\s*([A-Za-z<>]+))?\s+as\s+(.+)",
+            r"define\s+([A-Za-z_]\w*)(?:\s*:\s*([A-Za-z0-9_<>,\s]+))?\s+as\s+(.+)",
             text,
         )
         if m_def:
             name = m_def.group(1)
             explicit_t = m_def.group(2)
-            val = _refine_list_literal_types(_parse_expr(m_def.group(3)), symbols, fn_rets)
+            val = _refine_list_literal_types(
+                _pe(m_def.group(3)), symbols, fn_rets, recs
+            )
             if explicit_t:
-                if explicit_t not in _VALID_TYPES:
+                cleaned_t = _normalize_type(explicit_t)
+                if not _is_valid_type(cleaned_t):
                     raise LLMProviderError(f"Unknown type {explicit_t!r} at line {line.lineno}")
-                v_type = cast(MemeType, explicit_t)
+                v_type = cast(MemeType, cleaned_t)
             else:
-                v_type = _guess_expr_type(val, symbols, fn_rets)
+                v_type = _guess_expr_type(val, symbols, fn_rets, recs)
             symbols[name] = v_type
             return VarDeclStmt(name=name, var_type=v_type, value=val, source_line=line.lineno)
+
+        # `set <target>.<field> to <expr>`
+        m_set_field = re.fullmatch(
+            r"set\s+([A-Za-z_]\w*)\.([A-Za-z_]\w*)\s+to\s+(.+)",
+            text,
+            flags=re.IGNORECASE,
+        )
+        if m_set_field:
+            return RecordSetFieldStmt(
+                target=m_set_field.group(1),
+                field_name=m_set_field.group(2),
+                value=_pe(m_set_field.group(3)),
+                source_line=line.lineno,
+            )
 
         # `set <target>[<index>] to <expr>`
         m_set_idx = re.fullmatch(
@@ -842,10 +1085,21 @@ class HeuristicProvider:
             flags=re.IGNORECASE,
         )
         if m_set_idx:
+            tgt = m_set_idx.group(1)
+            idx_e = _pe(m_set_idx.group(2))
+            val_e = _pe(m_set_idx.group(3))
+            tgt_t = symbols.get(tgt, "")
+            if tgt_t.startswith("Map<"):
+                return MapSetStmt(
+                    target=tgt,
+                    key=idx_e,
+                    value=val_e,
+                    source_line=line.lineno,
+                )
             return ListSetIndexStmt(
-                target=m_set_idx.group(1),
-                index=_parse_expr(m_set_idx.group(2)),
-                value=_parse_expr(m_set_idx.group(3)),
+                target=tgt,
+                index=idx_e,
+                value=val_e,
                 source_line=line.lineno,
             )
 
@@ -854,7 +1108,7 @@ class HeuristicProvider:
         if m_set:
             return AssignStmt(
                 name=m_set.group(1),
-                value=_parse_expr(m_set.group(2)),
+                value=_pe(m_set.group(2)),
                 source_line=line.lineno,
             )
 
@@ -879,8 +1133,8 @@ class HeuristicProvider:
         if m_clamp:
             return ClampCollectionStmt(
                 target=m_clamp.group(1),
-                min_val=_parse_expr(m_clamp.group(2)),
-                max_val=_parse_expr(m_clamp.group(3)),
+                min_val=_pe(m_clamp.group(2)),
+                max_val=_pe(m_clamp.group(3)),
                 source_line=line.lineno,
             )
 
@@ -892,20 +1146,20 @@ class HeuristicProvider:
         )
         if m_filter:
             target = m_filter.group(1)
-            pred = _parse_expr(m_filter.group(2))
+            pred = _pe(m_filter.group(2))
             item_var = self._find_free_var(pred, symbols) or "item"
             return FilterCollectionStmt(
                 target=target, item_var=item_var, predicate=pred, source_line=line.lineno
             )
 
-        # `append <expr> to <target>`
+        # `append|add <expr> to <target>`
         m_append = re.fullmatch(
-            r"append\s+(.+?)\s+to\s+([A-Za-z_]\w*)", text, flags=re.IGNORECASE
+            r"(?:append|add)\s+(.+?)\s+to\s+([A-Za-z_]\w*)", text, flags=re.IGNORECASE
         )
         if m_append:
             return ListAppendStmt(
                 target=m_append.group(2),
-                value=_parse_expr(m_append.group(1)),
+                value=_pe(m_append.group(1)),
                 source_line=line.lineno,
             )
 
@@ -918,8 +1172,8 @@ class HeuristicProvider:
         if m_insert:
             return ListInsertStmt(
                 target=m_insert.group(2),
-                index=_parse_expr(m_insert.group(3)),
-                value=_parse_expr(m_insert.group(1)),
+                index=_pe(m_insert.group(3)),
+                value=_pe(m_insert.group(1)),
                 source_line=line.lineno,
             )
 
@@ -927,7 +1181,7 @@ class HeuristicProvider:
         m_fail = re.fullmatch(r"fail\s+with\s+(.+)", text, flags=re.IGNORECASE)
         if m_fail:
             return FailStmt(
-                message=_parse_expr(m_fail.group(1)),
+                message=_pe(m_fail.group(1)),
                 source_line=line.lineno,
             )
 
@@ -936,7 +1190,7 @@ class HeuristicProvider:
         if m_print:
             chunks = _split_top_level_commas(m_print.group(1))
             return PrintStmt(
-                expressions=[_parse_expr(c) for c in chunks], source_line=line.lineno
+                expressions=[_pe(c) for c in chunks], source_line=line.lineno
             )
 
         # `return [<expr>]`
@@ -944,16 +1198,23 @@ class HeuristicProvider:
             return ReturnStmt(value=None, source_line=line.lineno)
         m_ret = re.fullmatch(r"return\s+(.+)", text, flags=re.IGNORECASE)
         if m_ret:
-            return ReturnStmt(value=_parse_expr(m_ret.group(1)), source_line=line.lineno)
+            return ReturnStmt(value=_pe(m_ret.group(1)), source_line=line.lineno)
 
         # Freeform `<name> = <expr>`
         m_eq = re.fullmatch(r"([A-Za-z_]\w*)\s*=\s*(.+)", text)
         if m_eq:
             name = m_eq.group(1)
-            val = _refine_list_literal_types(_parse_expr(m_eq.group(2)), symbols, fn_rets)
+            val = _refine_list_literal_types(
+                _pe(m_eq.group(2)), symbols, fn_rets, recs
+            )
             if name in symbols:
                 return AssignStmt(name=name, value=val, source_line=line.lineno)
-            v_type = _guess_expr_type(val, symbols, fn_rets)
+            v_type = _guess_expr_type(val, symbols, fn_rets, recs)
+            symbols[name] = v_type
+            return VarDeclStmt(name=name, var_type=v_type, value=val, source_line=line.lineno)
+            if name in symbols:
+                return AssignStmt(name=name, value=val, source_line=line.lineno)
+            v_type = _guess_expr_type(val, symbols, fn_rets, getattr(self, "_records", None))
             symbols[name] = v_type
             return VarDeclStmt(name=name, var_type=v_type, value=val, source_line=line.lineno)
 

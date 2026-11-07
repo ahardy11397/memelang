@@ -1,0 +1,61 @@
+record PaymentRequest:
+    account_id: String
+    amount_cents: Int
+    currency: String
+    idempotency_key: String
+
+record TxReceipt:
+    success: Bool
+    error_code: String
+    fee_cents: Int
+    net_debited_cents: Int
+    new_balance_cents: Int
+
+function validate_and_charge(req: PaymentRequest, balances: Map<String, Int>, processed: Map<String, Bool>, fee_percent: Int) -> TxReceipt:
+    if req.currency != "USD":
+        define bal as balances[req.account_id] default 0
+        return TxReceipt(success=false, error_code="UNSUPPORTED_CURRENCY", fee_cents=0, net_debited_cents=0, new_balance_cents=bal)
+    else:
+        if processed has key req.idempotency_key:
+            define bal as balances[req.account_id] default 0
+            return TxReceipt(success=false, error_code="DUPLICATE_REQUEST", fee_cents=0, net_debited_cents=0, new_balance_cents=bal)
+        else:
+            if req.amount_cents <= 0:
+                define bal as balances[req.account_id] default 0
+                return TxReceipt(success=false, error_code="INVALID_AMOUNT", fee_cents=0, net_debited_cents=0, new_balance_cents=bal)
+            else:
+                define current_bal as balances[req.account_id] default 0
+                define fee as req.amount_cents * fee_percent / 100
+                define total_debit as req.amount_cents + fee
+                if current_bal < total_debit:
+                    return TxReceipt(success=false, error_code="INSUFFICIENT_FUNDS", fee_cents=0, net_debited_cents=0, new_balance_cents=current_bal)
+                else:
+                    define rem_bal as current_bal - total_debit
+                    return TxReceipt(success=true, error_code="NONE", fee_cents=fee, net_debited_cents=total_debit, new_balance_cents=rem_bal)
+
+define balances as {"acct_prime": 50000}
+define processed_keys as empty Map<String, Bool>
+
+# 1. Successful payment with 2% processing fee
+define tx1 as PaymentRequest(account_id="acct_prime", amount_cents=10000, currency="USD", idempotency_key="tx_idem_001")
+define r1 as validate_and_charge(tx1, balances, processed_keys, 2)
+print r1.success, r1.error_code, r1.fee_cents, r1.net_debited_cents, r1.new_balance_cents
+
+# Apply state updates
+set balances["acct_prime"] to r1.new_balance_cents
+set processed_keys["tx_idem_001"] to true
+
+# 2. Duplicate submission with same idempotency key
+define tx2 as PaymentRequest(account_id="acct_prime", amount_cents=10000, currency="USD", idempotency_key="tx_idem_001")
+define r2 as validate_and_charge(tx2, balances, processed_keys, 2)
+print r2.success, r2.error_code, r2.new_balance_cents
+
+# 3. Transaction exceeding remaining balance ($450.00 requested, $398.00 remaining)
+define tx3 as PaymentRequest(account_id="acct_prime", amount_cents=45000, currency="USD", idempotency_key="tx_idem_002")
+define r3 as validate_and_charge(tx3, balances, processed_keys, 2)
+print r3.success, r3.error_code, r3.new_balance_cents
+
+# 4. Foreign currency rejection
+define tx4 as PaymentRequest(account_id="acct_prime", amount_cents=5000, currency="EUR", idempotency_key="tx_idem_003")
+define r4 as validate_and_charge(tx4, balances, processed_keys, 2)
+print r4.success, r4.error_code, r4.new_balance_cents

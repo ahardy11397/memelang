@@ -418,3 +418,101 @@ def test_exhaustive_ir_synchronization_across_canonical_heuristic_verifier_gbnf_
         assert code.strip() != ""
 
 
+def test_records_and_maps_canonical_and_roundtrip():
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.ir.schema import (
+        MapEntry,
+        MapGetExpr,
+        MapHasKeyExpr,
+        MapLiteralExpr,
+        MapSetStmt,
+        RecordDefStmt,
+        RecordFieldDef,
+        RecordFieldExpr,
+        RecordFieldInit,
+        RecordLiteralExpr,
+        RecordSetFieldStmt,
+    )
+    from memelang.llm.heuristic import HeuristicProvider
+
+    prog = ProgramIR(
+        statements=[
+            RecordDefStmt(
+                name="User",
+                fields=[
+                    RecordFieldDef(name="id", field_type="Int"),
+                    RecordFieldDef(name="name", field_type="String"),
+                ],
+            ),
+            VarDeclStmt(
+                name="u",
+                var_type="User",
+                value=RecordLiteralExpr(
+                    record_name="User",
+                    fields=[
+                        RecordFieldInit(name="id", value=LiteralExpr(value=1, data_type="Int")),
+                        RecordFieldInit(name="name", value=LiteralExpr(value="Alice", data_type="String")),
+                    ],
+                ),
+            ),
+            RecordSetFieldStmt(
+                target="u",
+                field_name="name",
+                value=LiteralExpr(value="Bob", data_type="String"),
+            ),
+            VarDeclStmt(
+                name="scores",
+                var_type="Map<String, Int>",
+                value=MapLiteralExpr(
+                    key_type="String",
+                    value_type="Int",
+                    entries=[
+                        MapEntry(
+                            key=LiteralExpr(value="Alice", data_type="String"),
+                            value=LiteralExpr(value=100, data_type="Int"),
+                        ),
+                        MapEntry(
+                            key=LiteralExpr(value="Bob", data_type="String"),
+                            value=LiteralExpr(value=90, data_type="Int"),
+                        ),
+                    ],
+                ),
+            ),
+            MapSetStmt(
+                target="scores",
+                key=LiteralExpr(value="Bob", data_type="String"),
+                value=LiteralExpr(value=95, data_type="Int"),
+            ),
+            PrintStmt(
+                expressions=[
+                    RecordFieldExpr(target=VarRefExpr(name="u"), field_name="name"),
+                    MapGetExpr(
+                        target=VarRefExpr(name="scores"),
+                        key=LiteralExpr(value="Bob", data_type="String"),
+                    ),
+                    MapHasKeyExpr(
+                        target=VarRefExpr(name="scores"),
+                        key=LiteralExpr(value="Alice", data_type="String"),
+                    ),
+                ]
+            ),
+        ]
+    )
+
+    canonical = to_canonical_meme(prog)
+    assert "record User:" in canonical
+    assert "    id: Int" in canonical
+    assert "    name: String" in canonical
+    assert 'define u: User as User(id=1, name="Alice")' in canonical
+    assert 'set u.name to "Bob"' in canonical
+    assert 'define scores: Map<String, Int> as {"Alice": 100, "Bob": 90}' in canonical
+    assert 'set scores["Bob"] to 95' in canonical
+    assert 'print u.name, scores["Bob"], scores has key "Alice"' in canonical
+
+    roundtrip_syn = HeuristicProvider().synthesize(canonical)
+    roundtrip_out = verify_synthesis(roundtrip_syn)
+    assert roundtrip_out.is_unambiguous and roundtrip_out.program is not None
+    assert to_canonical_meme(roundtrip_out.program) == canonical
+
+
+

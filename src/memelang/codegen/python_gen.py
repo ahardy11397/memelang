@@ -24,6 +24,11 @@ from memelang.ir.schema import (
     ListLiteralExpr,
     ListSetIndexStmt,
     LiteralExpr,
+    MapEntry,
+    MapGetExpr,
+    MapHasKeyExpr,
+    MapLiteralExpr,
+    MapSetStmt,
     MemeType,
     PrintStmt,
     ProgramIR,
@@ -31,6 +36,12 @@ from memelang.ir.schema import (
     RandomListExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RecordDefStmt,
+    RecordFieldDef,
+    RecordFieldExpr,
+    RecordFieldInit,
+    RecordLiteralExpr,
+    RecordSetFieldStmt,
     ReturnStmt,
     SortCollectionStmt,
     StrEndsWithExpr,
@@ -47,14 +58,34 @@ def _py_ident(name: str) -> str:
     return f"meme_{name}" if keyword.iskeyword(name) or name.startswith("_meme_") else name
 
 
+def _map_types_of(map_type: str) -> tuple[str, str] | None:
+    if map_type.startswith("Map<") and map_type.endswith(">"):
+        inner = map_type[4:-1]
+        depth = 0
+        comma = -1
+        for i, ch in enumerate(inner):
+            if ch == "<":
+                depth += 1
+            elif ch == ">":
+                depth -= 1
+            elif ch == "," and depth == 0:
+                comma = i
+                break
+        if comma != -1:
+            return inner[:comma].strip(), inner[comma + 1 :].strip()
+    return None
+
+
 class _PyGen:
     def __init__(self) -> None:
         self.uses_random = False
         self.uses_math = False
         self.uses_json_io = False
         self.uses_input_helpers = False
+        self.uses_dataclass = False
         self.symbols: dict[str, MemeType] = {}
         self.func_returns: dict[str, MemeType] = {}
+        self.records: dict[str, dict[str, MemeType]] = {}
 
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> MemeType:
         if isinstance(expr, LiteralExpr):
@@ -75,11 +106,29 @@ class _PyGen:
             return "String"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
-            return col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[return-value]
+            if col_t.startswith("List<"):
+                return col_t[5:-1]  # type: ignore[return-value]
+            mt = _map_types_of(col_t)
+            if mt is not None:
+                return mt[1]
+            return "Int"
         if isinstance(expr, CallExpr):
             return self.func_returns.get(expr.func_name, "Int")
         if isinstance(expr, ReadInputExpr):
             return expr.target_type
+        if isinstance(expr, RecordLiteralExpr):
+            return expr.record_name
+        if isinstance(expr, RecordFieldExpr):
+            target_t = self.infer_type(expr.target, scope)
+            return self.records.get(target_t, {}).get(expr.field_name, "String")
+        if isinstance(expr, MapLiteralExpr):
+            return f"Map<{expr.key_type}, {expr.value_type}>"
+        if isinstance(expr, MapGetExpr):
+            target_t = self.infer_type(expr.target, scope)
+            mt = _map_types_of(target_t)
+            return mt[1] if mt else "String"
+        if isinstance(expr, MapHasKeyExpr):
+            return "Bool"
         if isinstance(expr, UnaryOpExpr):
             return "Bool" if expr.op == "not" else self.infer_type(expr.operand, scope)
         if isinstance(expr, BinaryOpExpr):
@@ -171,6 +220,37 @@ class _PyGen:
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True
             return f"_meme_read_json_list({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, RecordLiteralExpr):
+            fields_code = ", ".join(
+                f"{_py_ident(f.name)}={self.gen_expr(f.value, scope)}" for f in expr.fields
+            )
+            return f"{expr.record_name}({fields_code})"
+
+        if isinstance(expr, RecordFieldExpr):
+            return f"{self.gen_expr(expr.target, scope)}.{_py_ident(expr.field_name)}"
+
+        if isinstance(expr, MapLiteralExpr):
+            if not expr.entries:
+                return "{}"
+            entries_code = ", ".join(
+                f"{self.gen_expr(e.key, scope)}: {self.gen_expr(e.value, scope)}"
+                for e in expr.entries
+            )
+            return f"{{{entries_code}}}"
+
+        if isinstance(expr, MapGetExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            k = self.gen_expr(expr.key, scope)
+            if expr.default_val is not None:
+                def_val = self.gen_expr(expr.default_val, scope)
+                return f"({tgt}.get({k}, {def_val}))"
+            return f"{tgt}[{k}]"
+
+        if isinstance(expr, MapHasKeyExpr):
+            k = self.gen_expr(expr.key, scope)
+            tgt = self.gen_expr(expr.target, scope)
+            return f"({k} in {tgt})"
 
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
@@ -308,21 +388,53 @@ class _PyGen:
                 return [f"{pad}return"]
             return [f"{pad}return {self.gen_expr(stmt.value, scope)}"]
 
+        if isinstance(stmt, RecordDefStmt):
+            self.uses_dataclass = True
+            self.records[stmt.name] = {f.name: f.field_type for f in stmt.fields}
+            lines = [f"{pad}@_dataclass", f"{pad}class {stmt.name}:"]
+            if not stmt.fields:
+                lines.append(f"{pad}    pass")
+            else:
+                for f in stmt.fields:
+                    lines.append(f"{pad}    {_py_ident(f.name)}: object = None")
+            return lines
+
+        if isinstance(stmt, RecordSetFieldStmt):
+            return [
+                f"{pad}{_py_ident(stmt.target)}.{_py_ident(stmt.field_name)} = {self.gen_expr(stmt.value, scope)}"
+            ]
+
+        if isinstance(stmt, MapSetStmt):
+            return [
+                f"{pad}{_py_ident(stmt.target)}[{self.gen_expr(stmt.key, scope)}] = {self.gen_expr(stmt.value, scope)}"
+            ]
+
         raise TypeError(f"Unsupported IRStatement: {type(stmt)!r}")
 
 
 def generate_python(ir: ProgramIR) -> str:
     gen = _PyGen()
     for stmt in ir.statements:
-        if isinstance(stmt, FuncDefStmt):
+        if isinstance(stmt, RecordDefStmt):
+            gen.records[stmt.name] = {f.name: f.field_type for f in stmt.fields}
+            gen.uses_dataclass = True
+        elif isinstance(stmt, FuncDefStmt):
             gen.func_returns[stmt.name] = stmt.return_type
+
+    record_lines: list[str] = []
     body_lines: list[str] = []
     for stmt in ir.statements:
-        body_lines.extend(gen.gen_stmt(stmt, gen.symbols, indent=1))
+        if isinstance(stmt, RecordDefStmt):
+            record_lines.extend(gen.gen_stmt(stmt, gen.symbols, indent=0))
+            record_lines.append("")
+        else:
+            body_lines.extend(gen.gen_stmt(stmt, gen.symbols, indent=1))
     if not body_lines:
         body_lines.append("    pass")
 
     header: list[str] = ["import builtins as _meme_builtins"]
+    if gen.uses_dataclass:
+        header.append("from dataclasses import dataclass as _dataclass")
     if gen.uses_json_io:
         header.append("import json as _meme_json")
         header.append("import os as _meme_os")
@@ -409,11 +521,18 @@ def generate_python(ir: ProgramIR) -> str:
             "        return _meme_builtins.str(_meme_builtins.int(val))",
             "    if _meme_builtins.isinstance(val, _meme_builtins.list):",
             "        return '[' + ', '.join(_meme_fmt(x) for x in val) + ']'",
+            "    if _meme_builtins.isinstance(val, _meme_builtins.dict):",
+            "        return '{' + ', '.join(_meme_fmt(k) + ': ' + _meme_fmt(v) for k, v in val.items()) + '}'",
+            "    if _meme_builtins.hasattr(val, '__dataclass_fields__'):",
+            "        _fields = [f'{k}={_meme_fmt(_meme_builtins.getattr(val, k))}' for k in val.__dataclass_fields__]",
+            "        return f'{val.__class__.__name__}({', '.join(_fields)})'",
             "    return _meme_builtins.str(val)",
             "",
-            "def main() -> None:",
         ]
     )
+    if record_lines:
+        header.extend(record_lines)
+    header.append("def main() -> None:")
     header.extend(body_lines)
     header.extend(["", 'if __name__ == "__main__":', "    main()", ""])
     return "\n".join(header)
