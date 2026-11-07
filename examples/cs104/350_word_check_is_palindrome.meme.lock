@@ -1,0 +1,476 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/350_word_check_is_palindrome.meme": {
+      "source_sha256": "8485de92d9d927d3ae8742bdf59d54d7d039f03b38698911cb4a2fd28d102791",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_palindrome",
+          "params": [
+            {
+              "name": "text",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "text"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "front_c",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "text"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "var_decl",
+                  "name": "back_c",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "text"
+                    },
+                    "start": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "-",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "n"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      }
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      }
+                    }
+                  },
+                  "source_line": 5
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "!=",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "front_c"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "back_c"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": false,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 7
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 6
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": true,
+                "data_type": "Bool"
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "is_pal1",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "is_palindrome",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "radar",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 10
+        },
+        {
+          "op": "var_decl",
+          "name": "is_pal2",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "is_palindrome",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "rocket",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Radar palindrome check:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "is_pal1"
+            }
+          ],
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Rocket palindrome check:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "is_pal2"
+            }
+          ],
+          "source_line": 13
+        }
+      ],
+      "canonical_meme": "function is_palindrome(text: String) -> Bool:\n    define n: Int as length of string text\n    for i from 0 to n - 1:\n        define front_c: String as slice text from i to i + 1\n        define back_c: String as slice text from n - 1 - i to n - i\n        if front_c != back_c:\n            return false\n    return true\ndefine is_pal1: Bool as is_palindrome(\"radar\")\ndefine is_pal2: Bool as is_palindrome(\"rocket\")\nprint \"Radar palindrome check:\", is_pal1\nprint \"Rocket palindrome check:\", is_pal2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_palindrome",
+            "params": [
+              {
+                "name": "text",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "text"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "front_c",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "text"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "back_c",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "text"
+                      },
+                      "start": {
+                        "expr_type": "binary_op",
+                        "op": "-",
+                        "left": {
+                          "expr_type": "binary_op",
+                          "op": "-",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "n"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        }
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "-",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "n"
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        }
+                      }
+                    },
+                    "source_line": 5
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "!=",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "front_c"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "back_c"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": false,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 7
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 6
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "is_pal1",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "is_palindrome",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "radar",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 10
+          },
+          {
+            "op": "var_decl",
+            "name": "is_pal2",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "is_palindrome",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "rocket",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Radar palindrome check:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "is_pal1"
+              }
+            ],
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Rocket palindrome check:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "is_pal2"
+              }
+            ],
+            "source_line": 13
+          }
+        ]
+      }
+    }
+  }
+}

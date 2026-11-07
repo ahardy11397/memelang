@@ -1,0 +1,162 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/469_unit_meters_to_feet_approx.meme": {
+      "source_sha256": "5dd6774f9a1944d3bb207afd7745167b705d32d6a88eac29e192728dbb2c5569",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "meters_to_feet",
+          "params": [
+            {
+              "name": "m",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "m"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 328,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "ft",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "meters_to_feet",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "10 meters in feet:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "ft"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function meters_to_feet(m: Int) -> Int:\n    return m * 328 / 100\ndefine ft: Int as meters_to_feet(10)\nprint \"10 meters in feet:\", ft",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "meters_to_feet",
+            "params": [
+              {
+                "name": "m",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "m"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 328,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 100,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "ft",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "meters_to_feet",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "10 meters in feet:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "ft"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+define list numbers: List<Int> as [1, 2, 3, 4, 5]
+define list reversed_nums: List<Int> as empty List<Int>
+define n as length of numbers
+for i from 0 to (n - 1)
+    append numbers[n - 1 - i] to reversed_nums
+print "Reversed first element:", reversed_nums[0]
+print "Reversed last element:", reversed_nums[4]

@@ -1,0 +1,5 @@
+function order_grand_total(subtotal: Int, discount: Int, tax: Int, shipping: Int) -> Int:
+    return subtotal - discount + tax + shipping
+
+define total as order_grand_total(100, 15, 8, 12)
+print "Order final grand total:", total

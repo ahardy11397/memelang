@@ -1,0 +1,162 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/465_unit_kg_to_pounds_approx.meme": {
+      "source_sha256": "2ab5746c946c4c65768be68b38c9f3620a6b91eab58c8157fe35fa245df60c20",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "kg_to_lbs",
+          "params": [
+            {
+              "name": "kg",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "kg"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 22,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "lbs",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "kg_to_lbs",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 70,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "70 kg in pounds:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "lbs"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function kg_to_lbs(kg: Int) -> Int:\n    return kg * 22 / 10\ndefine lbs: Int as kg_to_lbs(70)\nprint \"70 kg in pounds:\", lbs",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "kg_to_lbs",
+            "params": [
+              {
+                "name": "kg",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "kg"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 22,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "lbs",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "kg_to_lbs",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 70,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "70 kg in pounds:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "lbs"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

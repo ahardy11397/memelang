@@ -1,0 +1,11 @@
+function is_e164_format(phone: String) -> Bool:
+    define n as length of string phone
+    if n >= 8
+        if n <= 16
+            define first_ch as slice phone from 0 to 1
+            if first_ch == "+"
+                return true
+    return false
+
+print "E.164 plus check 1:", is_e164_format("+14155552671")
+print "E.164 plus check 2:", is_e164_format("14155552671")

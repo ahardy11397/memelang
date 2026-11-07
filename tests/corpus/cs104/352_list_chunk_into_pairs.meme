@@ -1,0 +1,3 @@
+define list raw_points: List<Int> as [10, 20, 30, 40, 50, 60]
+define num_pairs: Int as (length of raw_points) / 2
+print "Total coordinate pairs:", num_pairs

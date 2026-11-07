@@ -1,0 +1,9 @@
+function coupon_deduction(code: String) -> Int:
+    if code == "SAVE10"
+        return 10
+    if code == "SUMMER25"
+        return 25
+    return 0
+
+define off as coupon_deduction("SUMMER25")
+print "Promotional coupon deduction:", off

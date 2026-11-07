@@ -1,0 +1,214 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/446_fin_break_even_unit_volume.meme": {
+      "source_sha256": "9498d0f794aecf0497901933ccda43b295608b168f0907bc16aba17fedd0fc3c",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "break_even_volume",
+          "params": [
+            {
+              "name": "fixed_costs",
+              "param_type": "Int"
+            },
+            {
+              "name": "unit_price",
+              "param_type": "Int"
+            },
+            {
+              "name": "unit_cost",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "margin_per_unit",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "unit_price"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "unit_cost"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "fixed_costs"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "margin_per_unit"
+                }
+              },
+              "source_line": 3
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "be_units",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "break_even_volume",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 20000,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 50,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 30,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Break-even unit volume:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "be_units"
+            }
+          ],
+          "source_line": 6
+        }
+      ],
+      "canonical_meme": "function break_even_volume(fixed_costs: Int, unit_price: Int, unit_cost: Int) -> Int:\n    define margin_per_unit: Int as unit_price - unit_cost\n    return fixed_costs / margin_per_unit\ndefine be_units: Int as break_even_volume(20000, 50, 30)\nprint \"Break-even unit volume:\", be_units",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "break_even_volume",
+            "params": [
+              {
+                "name": "fixed_costs",
+                "param_type": "Int"
+              },
+              {
+                "name": "unit_price",
+                "param_type": "Int"
+              },
+              {
+                "name": "unit_cost",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "margin_per_unit",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "unit_price"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "unit_cost"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "fixed_costs"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "margin_per_unit"
+                  }
+                },
+                "source_line": 3
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "be_units",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "break_even_volume",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 20000,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Break-even unit volume:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "be_units"
+              }
+            ],
+            "source_line": 6
+          }
+        ]
+      }
+    }
+  }
+}

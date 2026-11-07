@@ -1,0 +1,252 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/484_buffer_ring_read_slot.meme": {
+      "source_sha256": "03a52864d5f712f2a6792be81a55061fc8f107eabf9b9bc88b149817e3e110bd",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "next_read_slot",
+          "params": [
+            {
+              "name": "tail",
+              "param_type": "Int"
+            },
+            {
+              "name": "ring_size",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "%",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "tail"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "ring_size"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "r1",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "next_read_slot",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "r2",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "next_read_slot",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Read next slot 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "r1"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Read wrap slot 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "r2"
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "function next_read_slot(tail: Int, ring_size: Int) -> Int:\n    return (tail + 1) % ring_size\ndefine r1: Int as next_read_slot(0, 4)\ndefine r2: Int as next_read_slot(3, 4)\nprint \"Read next slot 1:\", r1\nprint \"Read wrap slot 2:\", r2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "next_read_slot",
+            "params": [
+              {
+                "name": "tail",
+                "param_type": "Int"
+              },
+              {
+                "name": "ring_size",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "%",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "tail"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "ring_size"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "r1",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "next_read_slot",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "r2",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "next_read_slot",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Read next slot 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "r1"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Read wrap slot 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "r2"
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

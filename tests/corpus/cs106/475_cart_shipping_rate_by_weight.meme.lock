@@ -1,0 +1,268 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/475_cart_shipping_rate_by_weight.meme": {
+      "source_sha256": "a115365a89e1d222126145719daa6e6b78f210c0ab47f38fb3638297ea828998",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "shipping_cost",
+          "params": [
+            {
+              "name": "weight_kg",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "weight_kg"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 25,
+                    "data_type": "Int"
+                  },
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "weight_kg"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 15,
+                    "data_type": "Int"
+                  },
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": 8,
+                "data_type": "Int"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Shipping 12kg:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "shipping_cost",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Shipping 3kg:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "shipping_cost",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "function shipping_cost(weight_kg: Int) -> Int:\n    if weight_kg > 10:\n        return 25\n    if weight_kg > 5:\n        return 15\n    return 8\nprint \"Shipping 12kg:\", shipping_cost(12)\nprint \"Shipping 3kg:\", shipping_cost(3)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "shipping_cost",
+            "params": [
+              {
+                "name": "weight_kg",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "weight_kg"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 25,
+                      "data_type": "Int"
+                    },
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "weight_kg"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 5,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 15,
+                      "data_type": "Int"
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Shipping 12kg:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "shipping_cost",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 12,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Shipping 3kg:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "shipping_cost",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

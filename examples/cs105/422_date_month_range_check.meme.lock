@@ -1,0 +1,294 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/422_date_month_range_check.meme": {
+      "source_sha256": "b7f00601c0cbfb67c3760937de63e455e0c84bdf8a89b2a48873b2ab53c1d2f3",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_valid_month",
+          "params": [
+            {
+              "name": "m",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "m"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "<=",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "m"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 12,
+                      "data_type": "Int"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 4
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Month 7 valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_month",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 7,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Month 0 invalid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_month",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Month 13 invalid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_month",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 13,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "function is_valid_month(m: Int) -> Bool:\n    if m >= 1:\n        if m <= 12:\n            return true\n    return false\nprint \"Month 7 valid:\", is_valid_month(7)\nprint \"Month 0 invalid:\", is_valid_month(0)\nprint \"Month 13 invalid:\", is_valid_month(13)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_valid_month",
+            "params": [
+              {
+                "name": "m",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "m"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "<=",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "m"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 12,
+                        "data_type": "Int"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 4
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Month 7 valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_month",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 7,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Month 0 invalid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_month",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Month 13 invalid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_month",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 13,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

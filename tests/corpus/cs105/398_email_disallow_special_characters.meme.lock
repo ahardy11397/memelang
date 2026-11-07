@@ -1,0 +1,578 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/398_email_disallow_special_characters.meme": {
+      "source_sha256": "7e953acb9cfc481d0479924c11aaae8edb12b376a760c91400ceb4673f39c5db",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "has_forbidden_chars",
+          "params": [
+            {
+              "name": "s",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "s"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "s"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": ";",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 6
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 5
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": ":",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 8
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 7
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "<",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 10
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 9
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": ">",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 12
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 11
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": ",",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 14
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 13
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 15
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Forbidden in clean:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "has_forbidden_chars",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "hello@world.com",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 17
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Forbidden in bad:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "has_forbidden_chars",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "hello<bad>@world.com",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 18
+        }
+      ],
+      "canonical_meme": "function has_forbidden_chars(s: String) -> Bool:\n    define n: Int as length of string s\n    for i from 0 to n - 1:\n        define ch: String as slice s from i to i + 1\n        if ch == \";\":\n            return true\n        if ch == \":\":\n            return true\n        if ch == \"<\":\n            return true\n        if ch == \">\":\n            return true\n        if ch == \",\":\n            return true\n    return false\nprint \"Forbidden in clean:\", has_forbidden_chars(\"hello@world.com\")\nprint \"Forbidden in bad:\", has_forbidden_chars(\"hello<bad>@world.com\")",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "has_forbidden_chars",
+            "params": [
+              {
+                "name": "s",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "s"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "s"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": ";",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 6
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 5
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": ":",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 8
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 7
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "<",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 10
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 9
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": ">",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 12
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 11
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": ",",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 14
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 13
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 15
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Forbidden in clean:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "has_forbidden_chars",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "hello@world.com",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 17
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Forbidden in bad:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "has_forbidden_chars",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "hello<bad>@world.com",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 18
+          }
+        ]
+      }
+    }
+  }
+}

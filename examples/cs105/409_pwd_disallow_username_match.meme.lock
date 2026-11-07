@@ -1,0 +1,194 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/409_pwd_disallow_username_match.meme": {
+      "source_sha256": "2437c73ca27526317972123a4b9f6d450f411bba02436ea4e0cf4edf7dba5ea0",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "password_differs_from_user",
+          "params": [
+            {
+              "name": "pwd",
+              "param_type": "String"
+            },
+            {
+              "name": "user",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "!=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "pwd"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "user"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Differs test 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "password_differs_from_user",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "secure99!",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "bob",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Differs test 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "password_differs_from_user",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "alice",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "alice",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function password_differs_from_user(pwd: String, user: String) -> Bool:\n    return pwd != user\nprint \"Differs test 1:\", password_differs_from_user(\"secure99!\", \"bob\")\nprint \"Differs test 2:\", password_differs_from_user(\"alice\", \"alice\")",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "password_differs_from_user",
+            "params": [
+              {
+                "name": "pwd",
+                "param_type": "String"
+              },
+              {
+                "name": "user",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "!=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "pwd"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "user"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Differs test 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "password_differs_from_user",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "secure99!",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "bob",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Differs test 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "password_differs_from_user",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "alice",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "alice",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

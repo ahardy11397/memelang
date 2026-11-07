@@ -1,0 +1,5 @@
+function format_kv(k: String, v: String) -> String:
+    return k + ": " + v
+
+define line as format_kv("Service Status", "OPERATIONAL")
+print "Generated summary line:", line

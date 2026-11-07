@@ -1,0 +1,216 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/455_date_estimate_day_of_year.meme": {
+      "source_sha256": "0c662b72bb10b327f64c4f0ef838c94c249ff8c87a55e02f6c14fc395ba94015",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "day_of_year_approx",
+          "params": [
+            {
+              "name": "month",
+              "param_type": "Int"
+            },
+            {
+              "name": "day",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "days_before",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "month"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "days_before"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "day"
+                }
+              },
+              "source_line": 3
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "doy",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "day_of_year_approx",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 15,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Approximate day of year:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "doy"
+            }
+          ],
+          "source_line": 6
+        }
+      ],
+      "canonical_meme": "function day_of_year_approx(month: Int, day: Int) -> Int:\n    define days_before: Int as (month - 1) * 30\n    return days_before + day\ndefine doy: Int as day_of_year_approx(4, 15)\nprint \"Approximate day of year:\", doy",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "day_of_year_approx",
+            "params": [
+              {
+                "name": "month",
+                "param_type": "Int"
+              },
+              {
+                "name": "day",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "days_before",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "month"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 30,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "days_before"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "day"
+                  }
+                },
+                "source_line": 3
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "doy",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "day_of_year_approx",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 15,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Approximate day of year:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "doy"
+              }
+            ],
+            "source_line": 6
+          }
+        ]
+      }
+    }
+  }
+}

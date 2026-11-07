@@ -1,0 +1,14 @@
+function is_amex_number(pan: String) -> Bool:
+    define n as length of string pan
+    if n == 15
+        define prefix as slice pan from 0 to 2
+        if prefix == "34"
+            return true
+        if prefix == "37"
+            return true
+    return false
+
+define ax1 as is_amex_number("378282246310005")
+define ax2 as is_amex_number("358282246310005")
+print "Amex card check 1:", ax1
+print "Amex card check 2:", ax2

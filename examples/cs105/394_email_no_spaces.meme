@@ -1,0 +1,10 @@
+function has_no_whitespace(text: String) -> Bool:
+    define n as length of string text
+    for i from 0 to (n - 1)
+        define ch as slice text from i to (i + 1)
+        if ch == " "
+            return false
+    return true
+
+print "No whitespace check 1:", has_no_whitespace("user@domain.com")
+print "No whitespace check 2:", has_no_whitespace("user name@domain.com")

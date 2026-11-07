@@ -1,0 +1,11 @@
+function has_consecutive_dots(s: String) -> Bool:
+    define n as length of string s
+    if n >= 2
+        for i from 0 to (n - 2)
+            define pair as slice s from i to (i + 2)
+            if pair == ".."
+                return true
+    return false
+
+print "Has double dot 1:", has_consecutive_dots("john..doe@domain.com")
+print "Has double dot 2:", has_consecutive_dots("john.doe@domain.com")

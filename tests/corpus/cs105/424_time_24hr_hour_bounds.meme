@@ -1,0 +1,8 @@
+function is_valid_24hr_hour(h: Int) -> Bool:
+    if h >= 0
+        if h <= 23
+            return true
+    return false
+
+print "Hour 14 valid:", is_valid_24hr_hour(14)
+print "Hour 24 invalid:", is_valid_24hr_hour(24)

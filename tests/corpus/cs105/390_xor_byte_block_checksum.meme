@@ -1,0 +1,9 @@
+function longitudinal_sum(bytes_arr: List<Int>) -> Int:
+    define acc: Int as 0
+    for each b in bytes_arr
+        set acc to (acc + b) % 256
+    return acc
+
+define list packet_payload: List<Int> as [65, 66, 67, 10]
+define lrc as longitudinal_sum(packet_payload)
+print "Longitudinal sum result:", lrc

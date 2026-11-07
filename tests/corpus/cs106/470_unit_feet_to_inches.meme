@@ -1,0 +1,5 @@
+function feet_to_inches(ft: Int) -> Int:
+    return ft * 12
+
+define in_val as feet_to_inches(6)
+print "6 feet in inches:", in_val

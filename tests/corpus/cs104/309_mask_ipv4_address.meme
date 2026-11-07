@@ -1,0 +1,4 @@
+define ip: String as "192.168.001.105"
+define prefix: String as slice ip from 0 to 12
+define masked: String as prefix + "xxx"
+print "Masked IP:", masked

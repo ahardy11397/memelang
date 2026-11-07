@@ -1,0 +1,23 @@
+function password_score(pwd: String) -> Int:
+    define score: Int as 0
+    define n as length of string pwd
+    if n >= 8
+        set score to score + 1
+    if n >= 12
+        set score to score + 1
+    define has_dig as false
+    define has_sym as false
+    for i from 0 to (n - 1)
+        define ch as slice pwd from i to (i + 1)
+        if ch == "1"
+            set has_dig to true
+        if ch == "!"
+            set has_sym to true
+    if has_dig
+        set score to score + 1
+    if has_sym
+        set score to score + 1
+    return score
+
+define s1 as password_score("V3ryLongSecret!1")
+print "Password score result:", s1

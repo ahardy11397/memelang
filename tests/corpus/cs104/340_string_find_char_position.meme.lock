@@ -1,0 +1,336 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/340_string_find_char_position.meme": {
+      "source_sha256": "3976650c345bc967ff3d5d960d18db8c6a36125bdb50113e36d4e68523cf66a9",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "find_first",
+          "params": [
+            {
+              "name": "haystack",
+              "param_type": "String"
+            },
+            {
+              "name": "needle",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "haystack"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "haystack"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "needle"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "source_line": 6
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 5
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": -1,
+                "data_type": "Int"
+              },
+              "source_line": 7
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "at_pos",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "find_first",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "support@company.org",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "@",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "At symbol index:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "at_pos"
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "function find_first(haystack: String, needle: String) -> Int:\n    define n: Int as length of string haystack\n    for i from 0 to n - 1:\n        define ch: String as slice haystack from i to i + 1\n        if ch == needle:\n            return i\n    return -1\ndefine at_pos: Int as find_first(\"support@company.org\", \"@\")\nprint \"At symbol index:\", at_pos",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "find_first",
+            "params": [
+              {
+                "name": "haystack",
+                "param_type": "String"
+              },
+              {
+                "name": "needle",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "haystack"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "haystack"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "needle"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "source_line": 6
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 5
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": -1,
+                  "data_type": "Int"
+                },
+                "source_line": 7
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "at_pos",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "find_first",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "support@company.org",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "@",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "At symbol index:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "at_pos"
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    }
+  }
+}

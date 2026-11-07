@@ -1,0 +1,11 @@
+function backoff_delay_ms(base_ms: Int, attempt: Int) -> Int:
+    define delay as base_ms
+    if attempt > 1
+        for a from 2 to attempt
+            set delay to delay * 2
+    return delay
+
+define d1 as backoff_delay_ms(100, 1)
+define d3 as backoff_delay_ms(100, 3)
+print "Backoff attempt 1 ms:", d1
+print "Backoff attempt 3 ms:", d3

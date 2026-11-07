@@ -1,0 +1,302 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/371_card_luhn_double_digit.meme": {
+      "source_sha256": "f65d55c534b22e9446cf183bdcdc4324742a3c89771c968169a385e673267e84",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "luhn_double",
+          "params": [
+            {
+              "name": "d",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "doubled",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "d"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "doubled"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 9,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "doubled"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 9,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 4
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "doubled"
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "r1",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "luhn_double",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 7
+        },
+        {
+          "op": "var_decl",
+          "name": "r2",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "luhn_double",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 7,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Doubled 4:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "r1"
+            }
+          ],
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Doubled 7:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "r2"
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "function luhn_double(d: Int) -> Int:\n    define doubled: Int as d * 2\n    if doubled > 9:\n        return doubled - 9\n    return doubled\ndefine r1: Int as luhn_double(4)\ndefine r2: Int as luhn_double(7)\nprint \"Doubled 4:\", r1\nprint \"Doubled 7:\", r2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "luhn_double",
+            "params": [
+              {
+                "name": "d",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "doubled",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "d"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "doubled"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 9,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "doubled"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 9,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 4
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "doubled"
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "r1",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "luhn_double",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 7
+          },
+          {
+            "op": "var_decl",
+            "name": "r2",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "luhn_double",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 7,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Doubled 4:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "r1"
+              }
+            ],
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Doubled 7:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "r2"
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    }
+  }
+}

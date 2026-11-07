@@ -1,0 +1,716 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/407_pwd_calculate_strength_score.meme": {
+      "source_sha256": "f4070168a750f6c5c67e3aeab0a18aa721de710103d40b4fb5316cac4cfc6d0a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "password_score",
+          "params": [
+            {
+              "name": "pwd",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "score",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "pwd"
+                }
+              },
+              "source_line": 3
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "score",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "score"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 4
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "score",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "score"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 7
+                }
+              ],
+              "else_body": [],
+              "source_line": 6
+            },
+            {
+              "op": "var_decl",
+              "name": "has_dig",
+              "var_type": "Bool",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 8
+            },
+            {
+              "op": "var_decl",
+              "name": "has_sym",
+              "var_type": "Bool",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 9
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "pwd"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 11
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "1",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "has_dig",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 13
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 12
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "!",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "has_sym",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 15
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 14
+                }
+              ],
+              "source_line": 10
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "var_ref",
+                "name": "has_dig"
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "score",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "score"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 17
+                }
+              ],
+              "else_body": [],
+              "source_line": 16
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "var_ref",
+                "name": "has_sym"
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "score",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "score"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 19
+                }
+              ],
+              "else_body": [],
+              "source_line": 18
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "score"
+              },
+              "source_line": 20
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "s1",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "password_score",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "V3ryLongSecret!1",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 22
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Password score result:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "s1"
+            }
+          ],
+          "source_line": 23
+        }
+      ],
+      "canonical_meme": "function password_score(pwd: String) -> Int:\n    define score: Int as 0\n    define n: Int as length of string pwd\n    if n >= 8:\n        set score to score + 1\n    if n >= 12:\n        set score to score + 1\n    define has_dig: Bool as false\n    define has_sym: Bool as false\n    for i from 0 to n - 1:\n        define ch: String as slice pwd from i to i + 1\n        if ch == \"1\":\n            set has_dig to true\n        if ch == \"!\":\n            set has_sym to true\n    if has_dig:\n        set score to score + 1\n    if has_sym:\n        set score to score + 1\n    return score\ndefine s1: Int as password_score(\"V3ryLongSecret!1\")\nprint \"Password score result:\", s1",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "password_score",
+            "params": [
+              {
+                "name": "pwd",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "score",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "pwd"
+                  }
+                },
+                "source_line": 3
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 8,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "score",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "score"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 4
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 12,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "score",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "score"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 7
+                  }
+                ],
+                "else_body": [],
+                "source_line": 6
+              },
+              {
+                "op": "var_decl",
+                "name": "has_dig",
+                "var_type": "Bool",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 8
+              },
+              {
+                "op": "var_decl",
+                "name": "has_sym",
+                "var_type": "Bool",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 9
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "pwd"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 11
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "1",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "has_dig",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 13
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 12
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "!",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "has_sym",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 15
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 14
+                  }
+                ],
+                "source_line": 10
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "var_ref",
+                  "name": "has_dig"
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "score",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "score"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 17
+                  }
+                ],
+                "else_body": [],
+                "source_line": 16
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "var_ref",
+                  "name": "has_sym"
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "score",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "score"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 19
+                  }
+                ],
+                "else_body": [],
+                "source_line": 18
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "score"
+                },
+                "source_line": 20
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "s1",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "password_score",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "V3ryLongSecret!1",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 22
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Password score result:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "s1"
+              }
+            ],
+            "source_line": 23
+          }
+        ]
+      }
+    }
+  }
+}

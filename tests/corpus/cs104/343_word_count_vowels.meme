@@ -1,0 +1,19 @@
+function count_vowels(phrase: String) -> Int:
+    define n as length of string phrase
+    define vowel_count: Int as 0
+    for i from 0 to (n - 1)
+        define ch as slice phrase from i to (i + 1)
+        if ch == "a"
+            set vowel_count to vowel_count + 1
+        if ch == "e"
+            set vowel_count to vowel_count + 1
+        if ch == "i"
+            set vowel_count to vowel_count + 1
+        if ch == "o"
+            set vowel_count to vowel_count + 1
+        if ch == "u"
+            set vowel_count to vowel_count + 1
+    return vowel_count
+
+define num_vowels as count_vowels("cryptographic algorithms")
+print "Total lowercase vowels:", num_vowels

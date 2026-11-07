@@ -1,0 +1,10 @@
+function isbn10_weight_sum(digits: List<Int>) -> Int:
+    define total: Int as 0
+    for i from 0 to 8
+        define weight as 10 - i
+        set total to total + (digits[i] * weight)
+    return total
+
+define list isbn_nine: List<Int> as [0, 3, 0, 6, 4, 0, 6, 1, 5]
+define sum_val as isbn10_weight_sum(isbn_nine)
+print "ISBN-10 weighted total:", sum_val

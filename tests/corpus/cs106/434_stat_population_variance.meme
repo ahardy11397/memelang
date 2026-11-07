@@ -1,0 +1,10 @@
+function variance_approx(vals: List<Int>, avg: Int) -> Int:
+    define sum_sq_diff: Int as 0
+    for each v in vals
+        define diff as v - avg
+        set sum_sq_diff to sum_sq_diff + (diff * diff)
+    return sum_sq_diff / (length of vals)
+
+define list observations: List<Int> as [10, 20, 30]
+define var_val as variance_approx(observations, 20)
+print "Population variance approx:", var_val

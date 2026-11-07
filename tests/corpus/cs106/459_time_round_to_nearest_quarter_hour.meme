@@ -1,0 +1,5 @@
+function round_quarter_hour(m: Int) -> Int:
+    return ((m + 7) / 15) * 15
+
+print "Round 22 min:", round_quarter_hour(22)
+print "Round 39 min:", round_quarter_hour(39)

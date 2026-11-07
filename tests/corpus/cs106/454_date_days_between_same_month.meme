@@ -1,0 +1,5 @@
+function days_diff(day_start: Int, day_end: Int) -> Int:
+    return day_end - day_start
+
+define span as days_diff(4, 21)
+print "Days in interval span:", span

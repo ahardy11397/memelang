@@ -1,0 +1,11 @@
+function pad_zeroes(input_str: String, target_len: Int) -> String:
+    define cur_len as length of string input_str
+    define padding as ""
+    define needed as target_len - cur_len
+    if needed > 0
+        for step from 1 to needed
+            set padding to padding + "0"
+    return padding + input_str
+
+define code as pad_zeroes("742", 6)
+print "Padded zero serial:", code

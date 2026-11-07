@@ -1,0 +1,8 @@
+function get_column(row: List<String>, col_index: Int) -> String:
+    if col_index < length of row
+        return row[col_index]
+    return "NOT_FOUND"
+
+define record: List<String> as ["1042", "Widget", "99", "Warehouse A"]
+define projected as get_column(record, 1)
+print "Projected column:", projected

@@ -1,0 +1,14 @@
+function is_section_header(line: String) -> Bool:
+    define sz as length of string line
+    if sz >= 2
+        define start_ch as slice line from 0 to 1
+        define end_ch as slice line from (sz - 1) to sz
+        if start_ch == "["
+            if end_ch == "]"
+                return true
+    return false
+
+define header_line as "[database_cluster]"
+define normal_line as "host=localhost"
+print "Is header 1:", is_section_header(header_line)
+print "Is header 2:", is_section_header(normal_line)

@@ -1,0 +1,434 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/311_csv_split_fields.meme": {
+      "source_sha256": "0ab308b015c12a3a1afb395307f068dc550122527b5f55925bd9d8c881d1324f",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "csv_line",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "alice,developer,seattle",
+            "data_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "fields",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "String"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "current_field",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "",
+            "data_type": "String"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "var_decl",
+          "name": "n",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "string_length",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "csv_line"
+            }
+          },
+          "source_line": 4
+        },
+        {
+          "op": "for_range",
+          "loop_var": "i",
+          "start": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "binary_op",
+            "op": "-",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "n"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            }
+          },
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "ch",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_slice",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "csv_line"
+                },
+                "start": {
+                  "expr_type": "var_ref",
+                  "name": "i"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                }
+              },
+              "source_line": 6
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "ch"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": ",",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "list_append",
+                  "target": "fields",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "current_field"
+                  },
+                  "source_line": 8
+                },
+                {
+                  "op": "assign",
+                  "name": "current_field",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "",
+                    "data_type": "String"
+                  },
+                  "source_line": 9
+                }
+              ],
+              "else_body": [
+                {
+                  "op": "assign",
+                  "name": "current_field",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "current_field"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    }
+                  },
+                  "source_line": 11
+                }
+              ],
+              "source_line": 7
+            }
+          ],
+          "source_line": 5
+        },
+        {
+          "op": "list_append",
+          "target": "fields",
+          "value": {
+            "expr_type": "var_ref",
+            "name": "current_field"
+          },
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Field count:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "fields"
+              }
+            }
+          ],
+          "source_line": 13
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "First field:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "fields"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 14
+        }
+      ],
+      "canonical_meme": "define csv_line: String as \"alice,developer,seattle\"\ndefine list fields as empty List<String>\ndefine current_field: String as \"\"\ndefine n: Int as length of string csv_line\nfor i from 0 to n - 1:\n    define ch: String as slice csv_line from i to i + 1\n    if ch == \",\":\n        append current_field to fields\n        set current_field to \"\"\n    else:\n        set current_field to current_field + ch\nappend current_field to fields\nprint \"Field count:\", length of fields\nprint \"First field:\", fields[0]",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "csv_line",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "alice,developer,seattle",
+              "data_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "fields",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "String"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "current_field",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "",
+              "data_type": "String"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "var_decl",
+            "name": "n",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "string_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "csv_line"
+              }
+            },
+            "source_line": 4
+          },
+          {
+            "op": "for_range",
+            "loop_var": "i",
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "binary_op",
+              "op": "-",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "n"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            },
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "ch",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_slice",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "csv_line"
+                  },
+                  "start": {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  },
+                  "end": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  }
+                },
+                "source_line": 6
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "ch"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": ",",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "list_append",
+                    "target": "fields",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "current_field"
+                    },
+                    "source_line": 8
+                  },
+                  {
+                    "op": "assign",
+                    "name": "current_field",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "",
+                      "data_type": "String"
+                    },
+                    "source_line": 9
+                  }
+                ],
+                "else_body": [
+                  {
+                    "op": "assign",
+                    "name": "current_field",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "current_field"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      }
+                    },
+                    "source_line": 11
+                  }
+                ],
+                "source_line": 7
+              }
+            ],
+            "source_line": 5
+          },
+          {
+            "op": "list_append",
+            "target": "fields",
+            "value": {
+              "expr_type": "var_ref",
+              "name": "current_field"
+            },
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Field count:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "fields"
+                }
+              }
+            ],
+            "source_line": 13
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "First field:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "fields"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 14
+          }
+        ]
+      }
+    }
+  }
+}

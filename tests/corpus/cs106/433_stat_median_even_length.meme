@@ -1,0 +1,10 @@
+function median_even(items: List<Int>) -> Int:
+    sort items ascending
+    define n as length of items
+    define mid_right as n / 2
+    define mid_left as mid_right - 1
+    return (items[mid_left] + items[mid_right]) / 2
+
+define list dataset: List<Int> as [10, 20, 30, 40]
+define med_e as median_even(dataset)
+print "Calculated even median:", med_e

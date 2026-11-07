@@ -1,0 +1,15 @@
+function quote_if_comma_present(field_text: String) -> String:
+    define text_len as length of string field_text
+    define has_delimiter: Bool as false
+    for pos from 0 to (text_len - 1)
+        define ch as slice field_text from pos to (pos + 1)
+        if ch == ","
+            set has_delimiter to true
+    if has_delimiter
+        return "'" + field_text + "'"
+    return field_text
+
+define f1 as quote_if_comma_present("standard_val")
+define f2 as quote_if_comma_present("smith, john")
+print "Field 1 escaped:", f1
+print "Field 2 escaped:", f2

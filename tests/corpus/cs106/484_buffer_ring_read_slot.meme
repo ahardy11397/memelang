@@ -1,0 +1,7 @@
+function next_read_slot(tail: Int, ring_size: Int) -> Int:
+    return (tail + 1) % ring_size
+
+define r1 as next_read_slot(0, 4)
+define r2 as next_read_slot(3, 4)
+print "Read next slot 1:", r1
+print "Read wrap slot 2:", r2

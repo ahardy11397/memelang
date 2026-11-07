@@ -1,0 +1,338 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/357_list_element_frequency.meme": {
+      "source_sha256": "bcc0b302a7d94f8dc7b0729629cc905e45864be6af951f23ae7d40e64aeaa121",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "count_freq",
+          "params": [
+            {
+              "name": "data",
+              "param_type": "List<Int>"
+            },
+            {
+              "name": "query",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "freq",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_each",
+              "item_var": "v",
+              "collection": "data",
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "v"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "query"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "freq",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "freq"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "source_line": 5
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "freq"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "scores",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 30,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "f20",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "count_freq",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "scores"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Frequency of target 20:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "f20"
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "function count_freq(data: List<Int>, query: Int) -> Int:\n    define freq: Int as 0\n    for each v in data:\n        if v == query:\n            set freq to freq + 1\n    return freq\ndefine list scores as [10, 20, 20, 10, 20, 30]\ndefine f20: Int as count_freq(scores, 20)\nprint \"Frequency of target 20:\", f20",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "count_freq",
+            "params": [
+              {
+                "name": "data",
+                "param_type": "List<Int>"
+              },
+              {
+                "name": "query",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "freq",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_each",
+                "item_var": "v",
+                "collection": "data",
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "v"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "query"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "freq",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "freq"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "source_line": 5
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "freq"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "scores",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "f20",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "count_freq",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "scores"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Frequency of target 20:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "f20"
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    }
+  }
+}

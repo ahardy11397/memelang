@@ -1,0 +1,5 @@
+function gal_to_liters(gal: Int) -> Int:
+    return (gal * 3785) / 1000
+
+define lit as gal_to_liters(10)
+print "10 gallons in liters:", lit

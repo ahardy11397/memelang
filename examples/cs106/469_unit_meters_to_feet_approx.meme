@@ -1,0 +1,5 @@
+function meters_to_feet(m: Int) -> Int:
+    return (m * 328) / 100
+
+define ft as meters_to_feet(10)
+print "10 meters in feet:", ft

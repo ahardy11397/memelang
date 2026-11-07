@@ -1,0 +1,206 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/485_stack_push_operation.meme": {
+      "source_sha256": "6e1b221a9cd559abfe633957872db4937bc35b42016af9ede104c11a12e644d8",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "exec_stack",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "list_append",
+          "target": "exec_stack",
+          "value": {
+            "expr_type": "literal",
+            "value": 99,
+            "data_type": "Int"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "top_idx",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "-",
+            "left": {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "exec_stack"
+              }
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Stack depth:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "exec_stack"
+              }
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Pushed top value:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "exec_stack"
+              },
+              "index": {
+                "expr_type": "var_ref",
+                "name": "top_idx"
+              }
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "define list exec_stack as [10, 20]\nappend 99 to exec_stack\ndefine top_idx: Int as length of exec_stack - 1\nprint \"Stack depth:\", length of exec_stack\nprint \"Pushed top value:\", exec_stack[top_idx]",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "exec_stack",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "list_append",
+            "target": "exec_stack",
+            "value": {
+              "expr_type": "literal",
+              "value": 99,
+              "data_type": "Int"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "top_idx",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "-",
+              "left": {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "exec_stack"
+                }
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Stack depth:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "exec_stack"
+                }
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Pushed top value:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "exec_stack"
+                },
+                "index": {
+                  "expr_type": "var_ref",
+                  "name": "top_idx"
+                }
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

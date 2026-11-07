@@ -1,0 +1,18 @@
+function has_forbidden_chars(s: String) -> Bool:
+    define n as length of string s
+    for i from 0 to (n - 1)
+        define ch as slice s from i to (i + 1)
+        if ch == ";"
+            return true
+        if ch == ":"
+            return true
+        if ch == "<"
+            return true
+        if ch == ">"
+            return true
+        if ch == ","
+            return true
+    return false
+
+print "Forbidden in clean:", has_forbidden_chars("hello@world.com")
+print "Forbidden in bad:", has_forbidden_chars("hello<bad>@world.com")

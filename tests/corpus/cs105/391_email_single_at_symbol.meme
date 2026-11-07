@@ -1,0 +1,12 @@
+function has_single_at(email: String) -> Bool:
+    define n as length of string email
+    define at_count: Int as 0
+    for i from 0 to (n - 1)
+        define ch as slice email from i to (i + 1)
+        if ch == "@"
+            set at_count to at_count + 1
+    return at_count == 1
+
+print "Valid single at:", has_single_at("user@domain.com")
+print "Invalid multiple at:", has_single_at("user@@domain.com")
+print "Missing at:", has_single_at("userdomain.com")

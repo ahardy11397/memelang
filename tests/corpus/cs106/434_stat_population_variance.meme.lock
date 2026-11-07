@@ -1,0 +1,342 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/434_stat_population_variance.meme": {
+      "source_sha256": "af4163959f3f7fff274ed454131a0585c865f37fa8116a2f6fc663dc88a11523",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "variance_approx",
+          "params": [
+            {
+              "name": "vals",
+              "param_type": "List<Int>"
+            },
+            {
+              "name": "avg",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "sum_sq_diff",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_each",
+              "item_var": "v",
+              "collection": "vals",
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "diff",
+                  "var_type": "Int",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "v"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "avg"
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "assign",
+                  "name": "sum_sq_diff",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "sum_sq_diff"
+                    },
+                    "right": {
+                      "expr_type": "binary_op",
+                      "op": "*",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "diff"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "diff"
+                      }
+                    }
+                  },
+                  "source_line": 5
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "sum_sq_diff"
+                },
+                "right": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "vals"
+                  }
+                }
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "observations",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 30,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "var_val",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "variance_approx",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "observations"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Population variance approx:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "var_val"
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "function variance_approx(vals: List<Int>, avg: Int) -> Int:\n    define sum_sq_diff: Int as 0\n    for each v in vals:\n        define diff: Int as v - avg\n        set sum_sq_diff to sum_sq_diff + diff * diff\n    return sum_sq_diff / length of vals\ndefine list observations as [10, 20, 30]\ndefine var_val: Int as variance_approx(observations, 20)\nprint \"Population variance approx:\", var_val",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "variance_approx",
+            "params": [
+              {
+                "name": "vals",
+                "param_type": "List<Int>"
+              },
+              {
+                "name": "avg",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "sum_sq_diff",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_each",
+                "item_var": "v",
+                "collection": "vals",
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "diff",
+                    "var_type": "Int",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "v"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "avg"
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "assign",
+                    "name": "sum_sq_diff",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "sum_sq_diff"
+                      },
+                      "right": {
+                        "expr_type": "binary_op",
+                        "op": "*",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "diff"
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "diff"
+                        }
+                      }
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "sum_sq_diff"
+                  },
+                  "right": {
+                    "expr_type": "list_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "vals"
+                    }
+                  }
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "observations",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "var_val",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "variance_approx",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "observations"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Population variance approx:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "var_val"
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    }
+  }
+}

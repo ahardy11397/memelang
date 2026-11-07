@@ -1,0 +1,4 @@
+define list latencies: List<Int> as [120, 540, 80, 950, 210, 680]
+filter latencies where item > 500
+sort latencies ascending
+print latencies

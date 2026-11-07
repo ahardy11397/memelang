@@ -1,0 +1,11 @@
+function render_progress_bar(completed: Int, total_steps: Int) -> String:
+    define bar as "["
+    for s from 1 to total_steps
+        if s <= completed
+            set bar to bar + "#"
+        else
+            set bar to bar + "-"
+    return bar + "]"
+
+define meter as render_progress_bar(7, 10)
+print "Rendered progress bar:", meter

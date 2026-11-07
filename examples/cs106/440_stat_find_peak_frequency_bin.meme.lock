@@ -1,0 +1,434 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/440_stat_find_peak_frequency_bin.meme": {
+      "source_sha256": "74b3df5f2860b2bba11b3ca796c2b132c10205a22b2d3965b6be5436dbca9e9a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "highest_frequency_bin",
+          "params": [
+            {
+              "name": "bins",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "best_idx",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "max_count",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "bins"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 3
+            },
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "bins"
+                }
+              },
+              "source_line": 4
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": ">",
+                    "left": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "bins"
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "max_count"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "max_count",
+                      "value": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "bins"
+                        },
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        }
+                      },
+                      "source_line": 7
+                    },
+                    {
+                      "op": "assign",
+                      "name": "best_idx",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "source_line": 8
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 6
+                }
+              ],
+              "source_line": 5
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "best_idx"
+              },
+              "source_line": 9
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "bin_counts",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 45,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 98,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 23,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 11
+        },
+        {
+          "op": "var_decl",
+          "name": "peak_bin",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "highest_frequency_bin",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "bin_counts"
+              }
+            ]
+          },
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Peak frequency bin index:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "peak_bin"
+            }
+          ],
+          "source_line": 13
+        }
+      ],
+      "canonical_meme": "function highest_frequency_bin(bins: List<Int>) -> Int:\n    define best_idx: Int as 0\n    define max_count: Int as bins[0]\n    define n: Int as length of bins\n    for i from 1 to n - 1:\n        if bins[i] > max_count:\n            set max_count to bins[i]\n            set best_idx to i\n    return best_idx\ndefine list bin_counts as [12, 45, 98, 23, 10]\ndefine peak_bin: Int as highest_frequency_bin(bin_counts)\nprint \"Peak frequency bin index:\", peak_bin",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "highest_frequency_bin",
+            "params": [
+              {
+                "name": "bins",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "best_idx",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "max_count",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "bins"
+                  },
+                  "index": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 3
+              },
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "bins"
+                  }
+                },
+                "source_line": 4
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": ">",
+                      "left": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "bins"
+                        },
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "max_count"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "max_count",
+                        "value": {
+                          "expr_type": "list_index",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "bins"
+                          },
+                          "index": {
+                            "expr_type": "var_ref",
+                            "name": "i"
+                          }
+                        },
+                        "source_line": 7
+                      },
+                      {
+                        "op": "assign",
+                        "name": "best_idx",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "source_line": 8
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 6
+                  }
+                ],
+                "source_line": 5
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "best_idx"
+                },
+                "source_line": 9
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "bin_counts",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 45,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 98,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 23,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 11
+          },
+          {
+            "op": "var_decl",
+            "name": "peak_bin",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "highest_frequency_bin",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "bin_counts"
+                }
+              ]
+            },
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Peak frequency bin index:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "peak_bin"
+              }
+            ],
+            "source_line": 13
+          }
+        ]
+      }
+    }
+  }
+}

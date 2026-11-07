@@ -1,0 +1,7 @@
+function is_row_valid(row: List<String>, required_cols: Int) -> Bool:
+    return length of row == required_cols
+
+define valid_row: List<String> as ["alpha", "beta", "gamma", "delta"]
+define invalid_row: List<String> as ["alpha", "beta"]
+print "Row 1 valid:", is_row_valid(valid_row, 4)
+print "Row 2 valid:", is_row_valid(invalid_row, 4)

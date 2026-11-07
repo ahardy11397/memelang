@@ -1,0 +1,200 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/401_pwd_minimum_length_check.meme": {
+      "source_sha256": "dbec32f2ef393bdd7f4bb11d817fe7dbb5abd72a9299ee5e57f5b77b13f1f5e7",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "meets_min_length",
+          "params": [
+            {
+              "name": "pwd",
+              "param_type": "String"
+            },
+            {
+              "name": "min_len",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "pwd"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "min_len"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Length check 8 char:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "meets_min_length",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "S3cret!A",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Length check 5 char:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "meets_min_length",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "short",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function meets_min_length(pwd: String, min_len: Int) -> Bool:\n    return length of string pwd >= min_len\nprint \"Length check 8 char:\", meets_min_length(\"S3cret!A\", 8)\nprint \"Length check 5 char:\", meets_min_length(\"short\", 8)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "meets_min_length",
+            "params": [
+              {
+                "name": "pwd",
+                "param_type": "String"
+              },
+              {
+                "name": "min_len",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "string_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "pwd"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "min_len"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Length check 8 char:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "meets_min_length",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "S3cret!A",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 8,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Length check 5 char:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "meets_min_length",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "short",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 8,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

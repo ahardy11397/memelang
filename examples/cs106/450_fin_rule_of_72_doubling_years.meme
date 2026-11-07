@@ -1,0 +1,5 @@
+function doubling_years(interest_rate: Int) -> Int:
+    return 72 / interest_rate
+
+define years_needed as doubling_years(6)
+print "Years to double investment:", years_needed

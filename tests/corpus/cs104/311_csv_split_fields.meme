@@ -1,0 +1,14 @@
+define csv_line as "alice,developer,seattle"
+define list fields: List<String> as empty List<String>
+define current_field as ""
+define n as length of string csv_line
+for i from 0 to (n - 1)
+    define ch as slice csv_line from i to (i + 1)
+    if ch == ","
+        append current_field to fields
+        set current_field to ""
+    else
+        set current_field to current_field + ch
+append current_field to fields
+print "Field count:", length of fields
+print "First field:", fields[0]

@@ -1,0 +1,3 @@
+define log_line: String as "192.168.1.42 - - [10/Oct/2000:13:55:36] GET /index.html 200"
+define client_ip: String as slice log_line from 0 to 12
+print "IP:", client_ip

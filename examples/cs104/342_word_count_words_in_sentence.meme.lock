@@ -1,0 +1,456 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/342_word_count_words_in_sentence.meme": {
+      "source_sha256": "0e85006b7d8c8043efbf0c16a100c0567e1dbc46534fef26859834da6a78fecd",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "count_words",
+          "params": [
+            {
+              "name": "sentence",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "sentence"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "source_line": 4
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "var_decl",
+              "name": "spaces",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 5
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "sentence"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 7
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": " ",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "spaces",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "spaces"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "source_line": 9
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 8
+                }
+              ],
+              "source_line": 6
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "spaces"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 10
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "text_sample",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "quick brown fox jumps over lazy dog",
+            "data_type": "String"
+          },
+          "source_line": 12
+        },
+        {
+          "op": "var_decl",
+          "name": "total_words",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "count_words",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "text_sample"
+              }
+            ]
+          },
+          "source_line": 13
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Total sentence words:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "total_words"
+            }
+          ],
+          "source_line": 14
+        }
+      ],
+      "canonical_meme": "function count_words(sentence: String) -> Int:\n    define n: Int as length of string sentence\n    if n == 0:\n        return 0\n    define spaces: Int as 0\n    for i from 0 to n - 1:\n        define ch: String as slice sentence from i to i + 1\n        if ch == \" \":\n            set spaces to spaces + 1\n    return spaces + 1\ndefine text_sample: String as \"quick brown fox jumps over lazy dog\"\ndefine total_words: Int as count_words(text_sample)\nprint \"Total sentence words:\", total_words",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "count_words",
+            "params": [
+              {
+                "name": "sentence",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "sentence"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "source_line": 4
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "var_decl",
+                "name": "spaces",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 5
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "sentence"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 7
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": " ",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "spaces",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "spaces"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "source_line": 9
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 8
+                  }
+                ],
+                "source_line": 6
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "spaces"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 10
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "text_sample",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "quick brown fox jumps over lazy dog",
+              "data_type": "String"
+            },
+            "source_line": 12
+          },
+          {
+            "op": "var_decl",
+            "name": "total_words",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "count_words",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "text_sample"
+                }
+              ]
+            },
+            "source_line": 13
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Total sentence words:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "total_words"
+              }
+            ],
+            "source_line": 14
+          }
+        ]
+      }
+    }
+  }
+}

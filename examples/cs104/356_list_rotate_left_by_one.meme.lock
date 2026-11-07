@@ -1,0 +1,338 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/356_list_rotate_left_by_one.meme": {
+      "source_sha256": "8961945e6807b4b991c3921b33786b5bf2b7f0f9cea75fa15ca221295eaf6346",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "original_queue",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 100,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 200,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 300,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 400,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "rotated_queue",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "Int"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "q_len",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "list_length",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "original_queue"
+            }
+          },
+          "source_line": 3
+        },
+        {
+          "op": "for_range",
+          "loop_var": "i",
+          "start": {
+            "expr_type": "literal",
+            "value": 1,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "binary_op",
+            "op": "-",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "q_len"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            }
+          },
+          "body": [
+            {
+              "op": "list_append",
+              "target": "rotated_queue",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "original_queue"
+                },
+                "index": {
+                  "expr_type": "var_ref",
+                  "name": "i"
+                }
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "list_append",
+          "target": "rotated_queue",
+          "value": {
+            "expr_type": "list_index",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "original_queue"
+            },
+            "index": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Head after rotation:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "rotated_queue"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Tail after rotation:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "rotated_queue"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "define list original_queue as [100, 200, 300, 400]\ndefine list rotated_queue as empty List<Int>\ndefine q_len: Int as length of original_queue\nfor i from 1 to q_len - 1:\n    append original_queue[i] to rotated_queue\nappend original_queue[0] to rotated_queue\nprint \"Head after rotation:\", rotated_queue[0]\nprint \"Tail after rotation:\", rotated_queue[3]",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "original_queue",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 200,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 300,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 400,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "rotated_queue",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "Int"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "q_len",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "original_queue"
+              }
+            },
+            "source_line": 3
+          },
+          {
+            "op": "for_range",
+            "loop_var": "i",
+            "start": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "binary_op",
+              "op": "-",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "q_len"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            },
+            "body": [
+              {
+                "op": "list_append",
+                "target": "rotated_queue",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "original_queue"
+                  },
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  }
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "list_append",
+            "target": "rotated_queue",
+            "value": {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "original_queue"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Head after rotation:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "rotated_queue"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Tail after rotation:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "rotated_queue"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

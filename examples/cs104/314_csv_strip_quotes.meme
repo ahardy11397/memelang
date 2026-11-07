@@ -1,0 +1,13 @@
+function clean_quoted_field(raw: String) -> String:
+    define len_raw as length of string raw
+    if len_raw >= 2
+        define first_ch as slice raw from 0 to 1
+        define last_ch as slice raw from (len_raw - 1) to len_raw
+        if first_ch == "'"
+            if last_ch == "'"
+                return slice raw from 1 to (len_raw - 1)
+    return raw
+
+define sample as "'san francisco'"
+define cleaned as clean_quoted_field(sample)
+print "Unquoted field:", cleaned

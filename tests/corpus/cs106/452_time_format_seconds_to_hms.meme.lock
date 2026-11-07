@@ -1,0 +1,282 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/452_time_format_seconds_to_hms.meme": {
+      "source_sha256": "9d4f845432ce65ea4ab93d64e66c716627a805a1006c2ae791286470e297631a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "total_sec",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 3665,
+            "data_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "hours",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "/",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "total_sec"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 3600,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "rem",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "%",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "total_sec"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 3600,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 3
+        },
+        {
+          "op": "var_decl",
+          "name": "minutes",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "/",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "rem"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 60,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "seconds",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "%",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "rem"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 60,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Hours component:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "hours"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Minutes component:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "minutes"
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Seconds component:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "seconds"
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "define total_sec: Int as 3665\ndefine hours: Int as total_sec / 3600\ndefine rem: Int as total_sec % 3600\ndefine minutes: Int as rem / 60\ndefine seconds: Int as rem % 60\nprint \"Hours component:\", hours\nprint \"Minutes component:\", minutes\nprint \"Seconds component:\", seconds",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "total_sec",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 3665,
+              "data_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "hours",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "/",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "total_sec"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 3600,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "rem",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "%",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "total_sec"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 3600,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 3
+          },
+          {
+            "op": "var_decl",
+            "name": "minutes",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "/",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "rem"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 60,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "seconds",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "%",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "rem"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 60,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Hours component:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "hours"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Minutes component:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "minutes"
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Seconds component:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "seconds"
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

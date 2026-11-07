@@ -1,0 +1,250 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/425_time_minute_range_check.meme": {
+      "source_sha256": "f678de8cad8ec876c1e84aa2902d25b7ba5536f1b93958322156302ed0d4a07d",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_valid_minute",
+          "params": [
+            {
+              "name": "min_val",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "min_val"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "<=",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "min_val"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 59,
+                      "data_type": "Int"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 4
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Minute 45 valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_minute",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 45,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Minute 60 invalid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_minute",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 60,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "function is_valid_minute(min_val: Int) -> Bool:\n    if min_val >= 0:\n        if min_val <= 59:\n            return true\n    return false\nprint \"Minute 45 valid:\", is_valid_minute(45)\nprint \"Minute 60 invalid:\", is_valid_minute(60)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_valid_minute",
+            "params": [
+              {
+                "name": "min_val",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "min_val"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "<=",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "min_val"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 59,
+                        "data_type": "Int"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 4
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Minute 45 valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_minute",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 45,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Minute 60 invalid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_minute",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 60,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

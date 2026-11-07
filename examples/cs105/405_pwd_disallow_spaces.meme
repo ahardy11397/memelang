@@ -1,0 +1,10 @@
+function contains_no_spaces(pwd: String) -> Bool:
+    define n as length of string pwd
+    for i from 0 to (n - 1)
+        define ch as slice pwd from i to (i + 1)
+        if ch == " "
+            return false
+    return true
+
+print "No spaces in clean_pass:", contains_no_spaces("clean_pass123")
+print "No spaces in space pass:", contains_no_spaces("space pass123")

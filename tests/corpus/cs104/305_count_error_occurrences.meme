@@ -1,0 +1,6 @@
+define list messages: List<String> as ["job 1 success", "job 2 failed", "job 3 timeout", "job 4 failed"]
+define err_count: Int as 0
+for each msg in messages:
+    if msg ends with "failed":
+        set err_count to err_count + 1
+print "Total failures:", err_count

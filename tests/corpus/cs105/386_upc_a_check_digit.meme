@@ -1,0 +1,17 @@
+function upc_check_digit(d11: List<Int>) -> Int:
+    define odd_sum: Int as 0
+    define even_sum: Int as 0
+    for i from 0 to 10
+        if i % 2 == 0
+            set odd_sum to odd_sum + d11[i]
+        else
+            set even_sum to even_sum + d11[i]
+    define total as (odd_sum * 3) + even_sum
+    define rem as total % 10
+    if rem == 0
+        return 0
+    return 10 - rem
+
+define list upc11: List<Int> as [0, 3, 6, 0, 0, 0, 2, 4, 1, 4, 5]
+define upc_cd as upc_check_digit(upc11)
+print "Calculated UPC-A check digit:", upc_cd

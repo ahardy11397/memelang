@@ -1,0 +1,194 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/429_range_start_precedes_end.meme": {
+      "source_sha256": "a7a38b5e57922e92fcd782732165fa3b30d21da2a9c2eecb813aedeeaa1ecfe4",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_valid_interval",
+          "params": [
+            {
+              "name": "start_val",
+              "param_type": "Int"
+            },
+            {
+              "name": "end_val",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "<=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "start_val"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "end_val"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Interval 10..20 valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_interval",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Interval 50..30 invalid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_interval",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function is_valid_interval(start_val: Int, end_val: Int) -> Bool:\n    return start_val <= end_val\nprint \"Interval 10..20 valid:\", is_valid_interval(10, 20)\nprint \"Interval 50..30 invalid:\", is_valid_interval(50, 30)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_valid_interval",
+            "params": [
+              {
+                "name": "start_val",
+                "param_type": "Int"
+              },
+              {
+                "name": "end_val",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "<=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "start_val"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "end_val"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Interval 10..20 valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_interval",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 20,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Interval 50..30 invalid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_interval",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 50,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 30,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

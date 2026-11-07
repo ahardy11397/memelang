@@ -1,0 +1,346 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/490_workflow_exponential_backoff_delay.meme": {
+      "source_sha256": "39a6ee6ce743644aec29dc61c192d47ede9c5d49e429e134cc33c34d3df2a97f",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "backoff_delay_ms",
+          "params": [
+            {
+              "name": "base_ms",
+              "param_type": "Int"
+            },
+            {
+              "name": "attempt",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "delay",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "base_ms"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "attempt"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "for_range",
+                  "loop_var": "a",
+                  "start": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  },
+                  "end": {
+                    "expr_type": "var_ref",
+                    "name": "attempt"
+                  },
+                  "body": [
+                    {
+                      "op": "assign",
+                      "name": "delay",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "*",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "delay"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 2,
+                          "data_type": "Int"
+                        }
+                      },
+                      "source_line": 5
+                    }
+                  ],
+                  "source_line": 4
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "delay"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "d1",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "backoff_delay_ms",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 100,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "d3",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "backoff_delay_ms",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 100,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Backoff attempt 1 ms:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "d1"
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Backoff attempt 3 ms:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "d3"
+            }
+          ],
+          "source_line": 11
+        }
+      ],
+      "canonical_meme": "function backoff_delay_ms(base_ms: Int, attempt: Int) -> Int:\n    define delay: Int as base_ms\n    if attempt > 1:\n        for a from 2 to attempt:\n            set delay to delay * 2\n    return delay\ndefine d1: Int as backoff_delay_ms(100, 1)\ndefine d3: Int as backoff_delay_ms(100, 3)\nprint \"Backoff attempt 1 ms:\", d1\nprint \"Backoff attempt 3 ms:\", d3",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "backoff_delay_ms",
+            "params": [
+              {
+                "name": "base_ms",
+                "param_type": "Int"
+              },
+              {
+                "name": "attempt",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "delay",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "base_ms"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "attempt"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "for_range",
+                    "loop_var": "a",
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "var_ref",
+                      "name": "attempt"
+                    },
+                    "body": [
+                      {
+                        "op": "assign",
+                        "name": "delay",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "*",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "delay"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 2,
+                            "data_type": "Int"
+                          }
+                        },
+                        "source_line": 5
+                      }
+                    ],
+                    "source_line": 4
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "delay"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "d1",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "backoff_delay_ms",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "d3",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "backoff_delay_ms",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Backoff attempt 1 ms:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "d1"
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Backoff attempt 3 ms:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "d3"
+              }
+            ],
+            "source_line": 11
+          }
+        ]
+      }
+    }
+  }
+}

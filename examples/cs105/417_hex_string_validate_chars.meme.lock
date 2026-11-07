@@ -1,0 +1,468 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/417_hex_string_validate_chars.meme": {
+      "source_sha256": "ecd04abc97fef96f827f445bdba89a66bf8d2f8614010ab5a77791e98586e554",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_valid_hex_digit",
+          "params": [
+            {
+              "name": "ch",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "hex_chars",
+              "var_type": "List<String>",
+              "value": {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": "0",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "1",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "2",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "3",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "4",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "5",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "6",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "7",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "8",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "9",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "a",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "b",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "c",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "d",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "e",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "f",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "A",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "B",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "C",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "D",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "E",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "F",
+                    "data_type": "String"
+                  }
+                ],
+                "element_type": "String"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_each",
+              "item_var": "h",
+              "collection": "hex_chars",
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "h"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 5
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Hex char f valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_hex_digit",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "f",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Hex char g invalid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_hex_digit",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "g",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "function is_valid_hex_digit(ch: String) -> Bool:\n    define list hex_chars as [\"0\", \"1\", \"2\", \"3\", \"4\", \"5\", \"6\", \"7\", \"8\", \"9\", \"a\", \"b\", \"c\", \"d\", \"e\", \"f\", \"A\", \"B\", \"C\", \"D\", \"E\", \"F\"]\n    for each h in hex_chars:\n        if ch == h:\n            return true\n    return false\nprint \"Hex char f valid:\", is_valid_hex_digit(\"f\")\nprint \"Hex char g invalid:\", is_valid_hex_digit(\"g\")",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_valid_hex_digit",
+            "params": [
+              {
+                "name": "ch",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "hex_chars",
+                "var_type": "List<String>",
+                "value": {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": "0",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "1",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "2",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "3",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "4",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "5",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "6",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "7",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "8",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "9",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "a",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "b",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "c",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "d",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "e",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "f",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "A",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "B",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "C",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "D",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "E",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "F",
+                      "data_type": "String"
+                    }
+                  ],
+                  "element_type": "String"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_each",
+                "item_var": "h",
+                "collection": "hex_chars",
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "h"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 5
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Hex char f valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_hex_digit",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "f",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Hex char g invalid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_hex_digit",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "g",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

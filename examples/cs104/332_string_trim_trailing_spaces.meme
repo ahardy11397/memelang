@@ -1,0 +1,12 @@
+function rtrim(text: String) -> String:
+    define n as length of string text
+    define last_non_space: Int as 0
+    for i from 0 to (n - 1)
+        define ch as slice text from i to (i + 1)
+        if ch != " "
+            set last_non_space to i + 1
+    return slice text from 0 to last_non_space
+
+define raw as "server_output   "
+define trimmed as rtrim(raw)
+print "Right trimmed text:", trimmed

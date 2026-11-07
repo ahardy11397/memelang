@@ -1,0 +1,288 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/453_time_add_minutes_to_clock.meme": {
+      "source_sha256": "73c92ed4406103a19b606655b0accacfdf892682b604cc3a222dcf4c27d1c558",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "add_mins",
+          "params": [
+            {
+              "name": "h",
+              "param_type": "Int"
+            },
+            {
+              "name": "m",
+              "param_type": "Int"
+            },
+            {
+              "name": "delta_m",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "total_m",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "h"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 60,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "m"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "delta_m"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "new_h",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "%",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "total_m"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 60,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 24,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "new_h"
+              },
+              "source_line": 4
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "later_hour",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "add_mins",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 22,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 30,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 120,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Later hour result:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "later_hour"
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "function add_mins(h: Int, m: Int, delta_m: Int) -> Int:\n    define total_m: Int as h * 60 + m + delta_m\n    define new_h: Int as total_m / 60 % 24\n    return new_h\ndefine later_hour: Int as add_mins(22, 30, 120)\nprint \"Later hour result:\", later_hour",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "add_mins",
+            "params": [
+              {
+                "name": "h",
+                "param_type": "Int"
+              },
+              {
+                "name": "m",
+                "param_type": "Int"
+              },
+              {
+                "name": "delta_m",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "total_m",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "*",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "h"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 60,
+                        "data_type": "Int"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "m"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "delta_m"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "new_h",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "%",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "/",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "total_m"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 60,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 24,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "new_h"
+                },
+                "source_line": 4
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "later_hour",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "add_mins",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 22,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 120,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Later hour result:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "later_hour"
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

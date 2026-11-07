@@ -1,0 +1,324 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/337_string_truncate_ellipsis.meme": {
+      "source_sha256": "bdbaf800591b8c2b254b20ba35c9478a60833e01856671c4547247d8d34faf8f",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "truncate_with_ellipsis",
+          "params": [
+            {
+              "name": "message",
+              "param_type": "String"
+            },
+            {
+              "name": "max_len",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "msg_len",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "message"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "msg_len"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "max_len"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "truncated",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "message"
+                    },
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "max_len"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 3,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "truncated"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "...",
+                      "data_type": "String"
+                    }
+                  },
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "message"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "long_title",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "Comprehensive Architectural Overview of Distributed Storage",
+            "data_type": "String"
+          },
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "short_view",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "truncate_with_ellipsis",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "long_title"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Truncated overview:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "short_view"
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "function truncate_with_ellipsis(message: String, max_len: Int) -> String:\n    define msg_len: Int as length of string message\n    if msg_len > max_len:\n        define truncated: String as slice message from 0 to max_len - 3\n        return truncated + \"...\"\n    return message\ndefine long_title: String as \"Comprehensive Architectural Overview of Distributed Storage\"\ndefine short_view: String as truncate_with_ellipsis(long_title, 20)\nprint \"Truncated overview:\", short_view",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "truncate_with_ellipsis",
+            "params": [
+              {
+                "name": "message",
+                "param_type": "String"
+              },
+              {
+                "name": "max_len",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "msg_len",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "message"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "msg_len"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "max_len"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "truncated",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "message"
+                      },
+                      "start": {
+                        "expr_type": "literal",
+                        "value": 0,
+                        "data_type": "Int"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "-",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "max_len"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 3,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "truncated"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "...",
+                        "data_type": "String"
+                      }
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "message"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "long_title",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "Comprehensive Architectural Overview of Distributed Storage",
+              "data_type": "String"
+            },
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "short_view",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "truncate_with_ellipsis",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "long_title"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Truncated overview:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "short_view"
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    }
+  }
+}

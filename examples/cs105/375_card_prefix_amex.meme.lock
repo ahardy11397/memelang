@@ -1,0 +1,420 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/375_card_prefix_amex.meme": {
+      "source_sha256": "21de6d0157044b114f20a924bf1b666ac5e7088305ced130ab8217f30e106e1e",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_amex_number",
+          "params": [
+            {
+              "name": "pan",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "pan"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 15,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "prefix",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "pan"
+                    },
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "prefix"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "34",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 6
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 5
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "prefix"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "37",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 8
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 7
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 9
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "ax1",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "is_amex_number",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "378282246310005",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 11
+        },
+        {
+          "op": "var_decl",
+          "name": "ax2",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "is_amex_number",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "358282246310005",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Amex card check 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "ax1"
+            }
+          ],
+          "source_line": 13
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Amex card check 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "ax2"
+            }
+          ],
+          "source_line": 14
+        }
+      ],
+      "canonical_meme": "function is_amex_number(pan: String) -> Bool:\n    define n: Int as length of string pan\n    if n == 15:\n        define prefix: String as slice pan from 0 to 2\n        if prefix == \"34\":\n            return true\n        if prefix == \"37\":\n            return true\n    return false\ndefine ax1: Bool as is_amex_number(\"378282246310005\")\ndefine ax2: Bool as is_amex_number(\"358282246310005\")\nprint \"Amex card check 1:\", ax1\nprint \"Amex card check 2:\", ax2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_amex_number",
+            "params": [
+              {
+                "name": "pan",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "pan"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 15,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "prefix",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "pan"
+                      },
+                      "start": {
+                        "expr_type": "literal",
+                        "value": 0,
+                        "data_type": "Int"
+                      },
+                      "end": {
+                        "expr_type": "literal",
+                        "value": 2,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "prefix"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "34",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 6
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 5
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "prefix"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "37",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 8
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 7
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 9
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "ax1",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "is_amex_number",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "378282246310005",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 11
+          },
+          {
+            "op": "var_decl",
+            "name": "ax2",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "is_amex_number",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "358282246310005",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Amex card check 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "ax1"
+              }
+            ],
+            "source_line": 13
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Amex card check 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "ax2"
+              }
+            ],
+            "source_line": 14
+          }
+        ]
+      }
+    }
+  }
+}

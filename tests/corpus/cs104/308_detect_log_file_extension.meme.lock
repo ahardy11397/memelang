@@ -1,0 +1,106 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/308_detect_log_file_extension.meme": {
+      "source_sha256": "2984a9bacde616dcef1e547e1a31efd521e945f40e81133a751bad7dcd308c5d",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "filename",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "application_audit_2026.log",
+            "data_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "is_log",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "str_ends_with",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "filename"
+            },
+            "suffix": {
+              "expr_type": "literal",
+              "value": ".log",
+              "data_type": "String"
+            }
+          },
+          "source_line": 2
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Is log file:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "is_log"
+            }
+          ],
+          "source_line": 3
+        }
+      ],
+      "canonical_meme": "define filename: String as \"application_audit_2026.log\"\ndefine is_log: Bool as filename ends with \".log\"\nprint \"Is log file:\", is_log",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "filename",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "application_audit_2026.log",
+              "data_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "is_log",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "str_ends_with",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "filename"
+              },
+              "suffix": {
+                "expr_type": "literal",
+                "value": ".log",
+                "data_type": "String"
+              }
+            },
+            "source_line": 2
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Is log file:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "is_log"
+              }
+            ],
+            "source_line": 3
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,456 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/314_csv_strip_quotes.meme": {
+      "source_sha256": "e149d21ae36549989992772cdc4bdf0ae03a2d1bf6f1b20706d5196db26930bc",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "clean_quoted_field",
+          "params": [
+            {
+              "name": "raw",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "len_raw",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "raw"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "len_raw"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "first_ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "raw"
+                    },
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "var_decl",
+                  "name": "last_ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "raw"
+                    },
+                    "start": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "len_raw"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "end": {
+                      "expr_type": "var_ref",
+                      "name": "len_raw"
+                    }
+                  },
+                  "source_line": 5
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "first_ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "'",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "binary_op",
+                        "op": "==",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "last_ch"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": "'",
+                          "data_type": "String"
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "op": "return_stmt",
+                          "value": {
+                            "expr_type": "string_slice",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "raw"
+                            },
+                            "start": {
+                              "expr_type": "literal",
+                              "value": 1,
+                              "data_type": "Int"
+                            },
+                            "end": {
+                              "expr_type": "binary_op",
+                              "op": "-",
+                              "left": {
+                                "expr_type": "var_ref",
+                                "name": "len_raw"
+                              },
+                              "right": {
+                                "expr_type": "literal",
+                                "value": 1,
+                                "data_type": "Int"
+                              }
+                            }
+                          },
+                          "source_line": 8
+                        }
+                      ],
+                      "else_body": [],
+                      "source_line": 7
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 6
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "raw"
+              },
+              "source_line": 9
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "sample",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "'san francisco'",
+            "data_type": "String"
+          },
+          "source_line": 11
+        },
+        {
+          "op": "var_decl",
+          "name": "cleaned",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "clean_quoted_field",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "sample"
+              }
+            ]
+          },
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Unquoted field:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "cleaned"
+            }
+          ],
+          "source_line": 13
+        }
+      ],
+      "canonical_meme": "function clean_quoted_field(raw: String) -> String:\n    define len_raw: Int as length of string raw\n    if len_raw >= 2:\n        define first_ch: String as slice raw from 0 to 1\n        define last_ch: String as slice raw from len_raw - 1 to len_raw\n        if first_ch == \"'\":\n            if last_ch == \"'\":\n                return slice raw from 1 to len_raw - 1\n    return raw\ndefine sample: String as \"'san francisco'\"\ndefine cleaned: String as clean_quoted_field(sample)\nprint \"Unquoted field:\", cleaned",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "clean_quoted_field",
+            "params": [
+              {
+                "name": "raw",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "len_raw",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "raw"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "len_raw"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "first_ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "raw"
+                      },
+                      "start": {
+                        "expr_type": "literal",
+                        "value": 0,
+                        "data_type": "Int"
+                      },
+                      "end": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "last_ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "raw"
+                      },
+                      "start": {
+                        "expr_type": "binary_op",
+                        "op": "-",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "len_raw"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "end": {
+                        "expr_type": "var_ref",
+                        "name": "len_raw"
+                      }
+                    },
+                    "source_line": 5
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "first_ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "'",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "binary_op",
+                          "op": "==",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "last_ch"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": "'",
+                            "data_type": "String"
+                          }
+                        },
+                        "then_body": [
+                          {
+                            "op": "return_stmt",
+                            "value": {
+                              "expr_type": "string_slice",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "raw"
+                              },
+                              "start": {
+                                "expr_type": "literal",
+                                "value": 1,
+                                "data_type": "Int"
+                              },
+                              "end": {
+                                "expr_type": "binary_op",
+                                "op": "-",
+                                "left": {
+                                  "expr_type": "var_ref",
+                                  "name": "len_raw"
+                                },
+                                "right": {
+                                  "expr_type": "literal",
+                                  "value": 1,
+                                  "data_type": "Int"
+                                }
+                              }
+                            },
+                            "source_line": 8
+                          }
+                        ],
+                        "else_body": [],
+                        "source_line": 7
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 6
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "raw"
+                },
+                "source_line": 9
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "sample",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "'san francisco'",
+              "data_type": "String"
+            },
+            "source_line": 11
+          },
+          {
+            "op": "var_decl",
+            "name": "cleaned",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "clean_quoted_field",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "sample"
+                }
+              ]
+            },
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Unquoted field:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "cleaned"
+              }
+            ],
+            "source_line": 13
+          }
+        ]
+      }
+    }
+  }
+}

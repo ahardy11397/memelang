@@ -1,0 +1,5 @@
+function password_differs_from_user(pwd: String, user: String) -> Bool:
+    return pwd != user
+
+print "Differs test 1:", password_differs_from_user("secure99!", "bob")
+print "Differs test 2:", password_differs_from_user("alice", "alice")

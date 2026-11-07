@@ -1,0 +1,314 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/413_phone_area_code_not_zero_or_one.meme": {
+      "source_sha256": "2098363dc6daa1d422469c3869d342d5935e29bc079ffba59cd35be524899ada",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_valid_nanp_area_code",
+          "params": [
+            {
+              "name": "area_code",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "first_ch",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_slice",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "area_code"
+                },
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "first_ch"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "0",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": false,
+                    "data_type": "Bool"
+                  },
+                  "source_line": 4
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "first_ch"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "1",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": false,
+                    "data_type": "Bool"
+                  },
+                  "source_line": 6
+                }
+              ],
+              "else_body": [],
+              "source_line": 5
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": true,
+                "data_type": "Bool"
+              },
+              "source_line": 7
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Area code 415 valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_nanp_area_code",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "415",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Area code 012 invalid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_nanp_area_code",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "012",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "function is_valid_nanp_area_code(area_code: String) -> Bool:\n    define first_ch: String as slice area_code from 0 to 1\n    if first_ch == \"0\":\n        return false\n    if first_ch == \"1\":\n        return false\n    return true\nprint \"Area code 415 valid:\", is_valid_nanp_area_code(\"415\")\nprint \"Area code 012 invalid:\", is_valid_nanp_area_code(\"012\")",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_valid_nanp_area_code",
+            "params": [
+              {
+                "name": "area_code",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "first_ch",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_slice",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "area_code"
+                  },
+                  "start": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "end": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "first_ch"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "0",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": false,
+                      "data_type": "Bool"
+                    },
+                    "source_line": 4
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "first_ch"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "1",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": false,
+                      "data_type": "Bool"
+                    },
+                    "source_line": 6
+                  }
+                ],
+                "else_body": [],
+                "source_line": 5
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                },
+                "source_line": 7
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Area code 415 valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_nanp_area_code",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "415",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Area code 012 invalid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_nanp_area_code",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "012",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    }
+  }
+}

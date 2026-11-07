@@ -1,0 +1,15 @@
+function get_config_value(line: String) -> String:
+    define line_len as length of string line
+    define found_eq as false
+    define val_buf as ""
+    for idx from 0 to (line_len - 1)
+        define ch as slice line from idx to (idx + 1)
+        if found_eq
+            set val_buf to val_buf + ch
+        if ch == "="
+            set found_eq to true
+    return val_buf
+
+define directive as "database_host=db.internal.net"
+define val as get_config_value(directive)
+print "Config value string:", val

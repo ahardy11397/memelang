@@ -1,0 +1,144 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/480_cart_reward_points_accrual.meme": {
+      "source_sha256": "35e02b276a200d507a0cadab1c1eea9836e10452e1976e705b24600e2d0a33c3",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "loyalty_points",
+          "params": [
+            {
+              "name": "spend_dollars",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "spend_dollars"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "points",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "loyalty_points",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 245,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Accrued loyalty points:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "points"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function loyalty_points(spend_dollars: Int) -> Int:\n    return spend_dollars / 10\ndefine points: Int as loyalty_points(245)\nprint \"Accrued loyalty points:\", points",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "loyalty_points",
+            "params": [
+              {
+                "name": "spend_dollars",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "spend_dollars"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "points",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "loyalty_points",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 245,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Accrued loyalty points:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "points"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

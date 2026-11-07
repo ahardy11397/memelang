@@ -1,0 +1,278 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/390_xor_byte_block_checksum.meme": {
+      "source_sha256": "29783d046697a9a9b882f43b3ad8789376a12f36868888c3be1fbe0188e3106a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "longitudinal_sum",
+          "params": [
+            {
+              "name": "bytes_arr",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "acc",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_each",
+              "item_var": "b",
+              "collection": "bytes_arr",
+              "body": [
+                {
+                  "op": "assign",
+                  "name": "acc",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "%",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "acc"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "b"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 256,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "acc"
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "packet_payload",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 65,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 66,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 67,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 7
+        },
+        {
+          "op": "var_decl",
+          "name": "lrc",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "longitudinal_sum",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "packet_payload"
+              }
+            ]
+          },
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Longitudinal sum result:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "lrc"
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "function longitudinal_sum(bytes_arr: List<Int>) -> Int:\n    define acc: Int as 0\n    for each b in bytes_arr:\n        set acc to (acc + b) % 256\n    return acc\ndefine list packet_payload as [65, 66, 67, 10]\ndefine lrc: Int as longitudinal_sum(packet_payload)\nprint \"Longitudinal sum result:\", lrc",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "longitudinal_sum",
+            "params": [
+              {
+                "name": "bytes_arr",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "acc",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_each",
+                "item_var": "b",
+                "collection": "bytes_arr",
+                "body": [
+                  {
+                    "op": "assign",
+                    "name": "acc",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "%",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "acc"
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "b"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 256,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "acc"
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "packet_payload",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 65,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 66,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 67,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 7
+          },
+          {
+            "op": "var_decl",
+            "name": "lrc",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "longitudinal_sum",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "packet_payload"
+                }
+              ]
+            },
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Longitudinal sum result:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "lrc"
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

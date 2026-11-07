@@ -1,0 +1,15 @@
+function pluralize_word(noun: String, count: Int) -> String:
+    if count == 1
+        return noun
+    define sz as length of string noun
+    define last_ch as slice noun from (sz - 1) to sz
+    if last_ch == "s"
+        return noun + "es"
+    return noun + "s"
+
+define p1 as pluralize_word("item", 1)
+define p2 as pluralize_word("item", 5)
+define p3 as pluralize_word("bus", 2)
+print "Single item:", p1
+print "Multiple items:", p2
+print "Plural bus:", p3

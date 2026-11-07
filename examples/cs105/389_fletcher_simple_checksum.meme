@@ -1,0 +1,11 @@
+function simple_fletcher_sum(data: List<Int>) -> Int:
+    define sum1: Int as 0
+    define sum2: Int as 0
+    for each b in data
+        set sum1 to (sum1 + b) % 255
+        set sum2 to (sum2 + sum1) % 255
+    return sum1 + sum2
+
+define list chunk: List<Int> as [10, 20, 30, 40]
+define f_sum as simple_fletcher_sum(chunk)
+print "Fletcher checksum result:", f_sum

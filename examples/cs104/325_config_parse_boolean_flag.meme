@@ -1,0 +1,13 @@
+function parse_bool_flag(raw_val: String) -> Bool:
+    if raw_val == "true"
+        return true
+    if raw_val == "yes"
+        return true
+    if raw_val == "1"
+        return true
+    return false
+
+define opt1 as parse_bool_flag("true")
+define opt2 as parse_bool_flag("0")
+print "Parsed flag 1:", opt1
+print "Parsed flag 2:", opt2

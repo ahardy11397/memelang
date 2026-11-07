@@ -1,0 +1,7 @@
+function advance_head(current_head: Int, max_capacity: Int) -> Int:
+    if current_head < (max_capacity - 1)
+        return current_head + 1
+    return 0
+
+define next_head as advance_head(2, 10)
+print "Advanced queue head:", next_head

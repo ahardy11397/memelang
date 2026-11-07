@@ -1,0 +1,116 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/304_parse_syslog_timestamp.meme": {
+      "source_sha256": "8c3722d5c44510b9cae1f0e02ac8f00c49cfce2de288fda29ea98b161ee1232e",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "log_entry",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "Oct 11 22:14:15 server01 sshd[1234]: Accepted publickey",
+            "data_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "timestamp",
+          "var_type": "String",
+          "value": {
+            "expr_type": "string_slice",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "log_entry"
+            },
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 15,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 2
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Timestamp:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "timestamp"
+            }
+          ],
+          "source_line": 3
+        }
+      ],
+      "canonical_meme": "define log_entry: String as \"Oct 11 22:14:15 server01 sshd[1234]: Accepted publickey\"\ndefine timestamp: String as slice log_entry from 0 to 15\nprint \"Timestamp:\", timestamp",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "log_entry",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "Oct 11 22:14:15 server01 sshd[1234]: Accepted publickey",
+              "data_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "timestamp",
+            "var_type": "String",
+            "value": {
+              "expr_type": "string_slice",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "log_entry"
+              },
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 15,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 2
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Timestamp:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "timestamp"
+              }
+            ],
+            "source_line": 3
+          }
+        ]
+      }
+    }
+  }
+}

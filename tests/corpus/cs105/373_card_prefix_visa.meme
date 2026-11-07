@@ -1,0 +1,13 @@
+function is_visa_number(pan: String) -> Bool:
+    define n as length of string pan
+    if n >= 13
+        if n <= 19
+            define lead as slice pan from 0 to 1
+            if lead == "4"
+                return true
+    return false
+
+define v1 as is_visa_number("4012888888881881")
+define v2 as is_visa_number("5105105105105100")
+print "Visa card match 1:", v1
+print "Visa card match 2:", v2

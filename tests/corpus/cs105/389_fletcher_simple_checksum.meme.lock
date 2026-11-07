@@ -1,0 +1,368 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/389_fletcher_simple_checksum.meme": {
+      "source_sha256": "d02e659018a61bd10b7f6f0d53e04e678a302061973e95f83a14eea09e8c7f2b",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "simple_fletcher_sum",
+          "params": [
+            {
+              "name": "data",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "sum1",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "sum2",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "for_each",
+              "item_var": "b",
+              "collection": "data",
+              "body": [
+                {
+                  "op": "assign",
+                  "name": "sum1",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "%",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "sum1"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "b"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 255,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 5
+                },
+                {
+                  "op": "assign",
+                  "name": "sum2",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "%",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "sum2"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "sum1"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 255,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 6
+                }
+              ],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "sum1"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "sum2"
+                }
+              },
+              "source_line": 7
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "chunk",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 30,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 40,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 9
+        },
+        {
+          "op": "var_decl",
+          "name": "f_sum",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "simple_fletcher_sum",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "chunk"
+              }
+            ]
+          },
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Fletcher checksum result:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "f_sum"
+            }
+          ],
+          "source_line": 11
+        }
+      ],
+      "canonical_meme": "function simple_fletcher_sum(data: List<Int>) -> Int:\n    define sum1: Int as 0\n    define sum2: Int as 0\n    for each b in data:\n        set sum1 to (sum1 + b) % 255\n        set sum2 to (sum2 + sum1) % 255\n    return sum1 + sum2\ndefine list chunk as [10, 20, 30, 40]\ndefine f_sum: Int as simple_fletcher_sum(chunk)\nprint \"Fletcher checksum result:\", f_sum",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "simple_fletcher_sum",
+            "params": [
+              {
+                "name": "data",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "sum1",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "sum2",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "for_each",
+                "item_var": "b",
+                "collection": "data",
+                "body": [
+                  {
+                    "op": "assign",
+                    "name": "sum1",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "%",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "sum1"
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "b"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 255,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 5
+                  },
+                  {
+                    "op": "assign",
+                    "name": "sum2",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "%",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "sum2"
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "sum1"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 255,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 6
+                  }
+                ],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "sum1"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "sum2"
+                  }
+                },
+                "source_line": 7
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "chunk",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 40,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 9
+          },
+          {
+            "op": "var_decl",
+            "name": "f_sum",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "simple_fletcher_sum",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "chunk"
+                }
+              ]
+            },
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Fletcher checksum result:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "f_sum"
+              }
+            ],
+            "source_line": 11
+          }
+        ]
+      }
+    }
+  }
+}

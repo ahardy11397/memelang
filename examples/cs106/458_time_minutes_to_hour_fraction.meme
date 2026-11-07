@@ -1,0 +1,5 @@
+function split_minutes(total_m: Int) -> Int:
+    return total_m % 60
+
+define leftover_m as split_minutes(135)
+print "Leftover minutes:", leftover_m

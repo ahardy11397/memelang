@@ -1,0 +1,9 @@
+define list sub1: List<Int> as [10, 20, 30]
+define list sub2: List<Int> as [40, 50]
+define list merged: List<Int> as empty List<Int>
+for each a in sub1
+    append a to merged
+for each b in sub2
+    append b to merged
+print "Merged list count:", length of merged
+print "Last merged element:", merged[4]

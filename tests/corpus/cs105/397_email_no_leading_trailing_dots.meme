@@ -1,0 +1,15 @@
+function user_dots_safe(user: String) -> Bool:
+    define n as length of string user
+    if n == 0
+        return false
+    define first_ch as slice user from 0 to 1
+    define last_ch as slice user from (n - 1) to n
+    if first_ch == "."
+        return false
+    if last_ch == "."
+        return false
+    return true
+
+print "Safe user dots 1:", user_dots_safe("alex.smith")
+print "Safe user dots 2:", user_dots_safe(".alex")
+print "Safe user dots 3:", user_dots_safe("alex.")

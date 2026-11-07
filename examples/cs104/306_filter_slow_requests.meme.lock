@@ -1,0 +1,172 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/306_filter_slow_requests.meme": {
+      "source_sha256": "6759dec66214131df4782acc7b4445e3fb8ffbead8d62d6d91ec3365711ddf70",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "latencies",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 120,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 540,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 80,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 950,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 210,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 680,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "filter_collection",
+          "target": "latencies",
+          "item_var": "item",
+          "predicate": {
+            "expr_type": "binary_op",
+            "op": ">",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "item"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 500,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 2
+        },
+        {
+          "op": "sort_collection",
+          "target": "latencies",
+          "direction": "ascending",
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "latencies"
+            }
+          ],
+          "source_line": 4
+        }
+      ],
+      "canonical_meme": "define list latencies as [120, 540, 80, 950, 210, 680]\nfilter latencies where item > 500\nsort latencies ascending\nprint latencies",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "latencies",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 120,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 540,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 80,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 950,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 210,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 680,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "filter_collection",
+            "target": "latencies",
+            "item_var": "item",
+            "predicate": {
+              "expr_type": "binary_op",
+              "op": ">",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "item"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 500,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 2
+          },
+          {
+            "op": "sort_collection",
+            "target": "latencies",
+            "direction": "ascending",
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "latencies"
+              }
+            ],
+            "source_line": 4
+          }
+        ]
+      }
+    }
+  }
+}

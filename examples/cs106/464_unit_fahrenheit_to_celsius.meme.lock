@@ -1,0 +1,180 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/464_unit_fahrenheit_to_celsius.meme": {
+      "source_sha256": "6cd98fd4f6247aeb168bc2024948cf78001534209e9e84707016f6ed75627f31",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "f_to_c",
+          "params": [
+            {
+              "name": "f",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "f"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 32,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 5,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 9,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "c_temp",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "f_to_c",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 77,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "77 F in Celsius:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "c_temp"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function f_to_c(f: Int) -> Int:\n    return (f - 32) * 5 / 9\ndefine c_temp: Int as f_to_c(77)\nprint \"77 F in Celsius:\", c_temp",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "f_to_c",
+            "params": [
+              {
+                "name": "f",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "f"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 32,
+                        "data_type": "Int"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 5,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 9,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "c_temp",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "f_to_c",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 77,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "77 F in Celsius:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "c_temp"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

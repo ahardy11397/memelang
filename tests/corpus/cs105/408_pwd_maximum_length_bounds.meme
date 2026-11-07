@@ -1,0 +1,5 @@
+function within_max_length(pwd: String, max_limit: Int) -> Bool:
+    return length of string pwd <= max_limit
+
+print "Max limit 32 check 1:", within_max_length("normal_password", 32)
+print "Max limit 10 check 2:", within_max_length("this_password_is_way_too_long", 10)

@@ -1,0 +1,5 @@
+function make_pipe_row(c1: String, c2: String, c3: String) -> String:
+    return "| " + c1 + " | " + c2 + " | " + c3 + " |"
+
+define row_str as make_pipe_row("CPU", "85%", "NORMAL")
+print "Markdown table row:", row_str

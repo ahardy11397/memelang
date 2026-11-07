@@ -1,0 +1,294 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/315_csv_skip_header_row.meme": {
+      "source_sha256": "7df64110ddacd088e3d1c12e49916c89ced665b0bb68a0a4f30c0ce6d43d8c33",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "raw_table",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "name,role,team",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "bob,qa,core",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "carol,dev,ops",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "dave,pm,growth",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "data_rows",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "String"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "total_rows",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "list_length",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "raw_table"
+            }
+          },
+          "source_line": 3
+        },
+        {
+          "op": "for_range",
+          "loop_var": "row_idx",
+          "start": {
+            "expr_type": "literal",
+            "value": 1,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "binary_op",
+            "op": "-",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "total_rows"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            }
+          },
+          "body": [
+            {
+              "op": "list_append",
+              "target": "data_rows",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "raw_table"
+                },
+                "index": {
+                  "expr_type": "var_ref",
+                  "name": "row_idx"
+                }
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Data row count:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "data_rows"
+              }
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "First data row:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "data_rows"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "define list raw_table as [\"name,role,team\", \"bob,qa,core\", \"carol,dev,ops\", \"dave,pm,growth\"]\ndefine list data_rows as empty List<String>\ndefine total_rows: Int as length of raw_table\nfor row_idx from 1 to total_rows - 1:\n    append raw_table[row_idx] to data_rows\nprint \"Data row count:\", length of data_rows\nprint \"First data row:\", data_rows[0]",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "raw_table",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "name,role,team",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "bob,qa,core",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "carol,dev,ops",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "dave,pm,growth",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "data_rows",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "String"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "total_rows",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "raw_table"
+              }
+            },
+            "source_line": 3
+          },
+          {
+            "op": "for_range",
+            "loop_var": "row_idx",
+            "start": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "binary_op",
+              "op": "-",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "total_rows"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            },
+            "body": [
+              {
+                "op": "list_append",
+                "target": "data_rows",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "raw_table"
+                  },
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "row_idx"
+                  }
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Data row count:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "data_rows"
+                }
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "First data row:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "data_rows"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

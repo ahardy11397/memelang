@@ -1,0 +1,5 @@
+function next_worker_id(current_w: Int, total_w: Int) -> Int:
+    return (current_w + 1) % total_w
+
+define w_next as next_worker_id(2, 3)
+print "Next round robin worker id:", w_next

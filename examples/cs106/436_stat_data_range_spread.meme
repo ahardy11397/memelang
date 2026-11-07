@@ -1,0 +1,10 @@
+function data_spread(arr: List<Int>) -> Int:
+    sort arr ascending
+    define n as length of arr
+    define min_v as arr[0]
+    define max_v as arr[n - 1]
+    return max_v - min_v
+
+define list measures: List<Int> as [5, 12, 3, 22, 9]
+define spread as data_spread(measures)
+print "Dataset range spread:", spread

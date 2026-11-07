@@ -1,0 +1,402 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/373_card_prefix_visa.meme": {
+      "source_sha256": "399e814972c1489eea6e310578a98dd265b2d1571b4b222d951a0631880bf3e8",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_visa_number",
+          "params": [
+            {
+              "name": "pan",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "pan"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 13,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "<=",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 19,
+                      "data_type": "Int"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "var_decl",
+                      "name": "lead",
+                      "var_type": "String",
+                      "value": {
+                        "expr_type": "string_slice",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "pan"
+                        },
+                        "start": {
+                          "expr_type": "literal",
+                          "value": 0,
+                          "data_type": "Int"
+                        },
+                        "end": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "source_line": 5
+                    },
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "binary_op",
+                        "op": "==",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "lead"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": "4",
+                          "data_type": "String"
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "op": "return_stmt",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": true,
+                            "data_type": "Bool"
+                          },
+                          "source_line": 7
+                        }
+                      ],
+                      "else_body": [],
+                      "source_line": 6
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 4
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "v1",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "is_visa_number",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "4012888888881881",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 10
+        },
+        {
+          "op": "var_decl",
+          "name": "v2",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "is_visa_number",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "5105105105105100",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Visa card match 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "v1"
+            }
+          ],
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Visa card match 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "v2"
+            }
+          ],
+          "source_line": 13
+        }
+      ],
+      "canonical_meme": "function is_visa_number(pan: String) -> Bool:\n    define n: Int as length of string pan\n    if n >= 13:\n        if n <= 19:\n            define lead: String as slice pan from 0 to 1\n            if lead == \"4\":\n                return true\n    return false\ndefine v1: Bool as is_visa_number(\"4012888888881881\")\ndefine v2: Bool as is_visa_number(\"5105105105105100\")\nprint \"Visa card match 1:\", v1\nprint \"Visa card match 2:\", v2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_visa_number",
+            "params": [
+              {
+                "name": "pan",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "pan"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 13,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "<=",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 19,
+                        "data_type": "Int"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "var_decl",
+                        "name": "lead",
+                        "var_type": "String",
+                        "value": {
+                          "expr_type": "string_slice",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "pan"
+                          },
+                          "start": {
+                            "expr_type": "literal",
+                            "value": 0,
+                            "data_type": "Int"
+                          },
+                          "end": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "source_line": 5
+                      },
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "binary_op",
+                          "op": "==",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "lead"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": "4",
+                            "data_type": "String"
+                          }
+                        },
+                        "then_body": [
+                          {
+                            "op": "return_stmt",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": true,
+                              "data_type": "Bool"
+                            },
+                            "source_line": 7
+                          }
+                        ],
+                        "else_body": [],
+                        "source_line": 6
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 4
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "v1",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "is_visa_number",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "4012888888881881",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 10
+          },
+          {
+            "op": "var_decl",
+            "name": "v2",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "is_visa_number",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "5105105105105100",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Visa card match 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "v1"
+              }
+            ],
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Visa card match 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "v2"
+              }
+            ],
+            "source_line": 13
+          }
+        ]
+      }
+    }
+  }
+}

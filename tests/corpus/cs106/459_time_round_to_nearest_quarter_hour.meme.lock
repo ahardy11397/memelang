@@ -1,0 +1,204 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/459_time_round_to_nearest_quarter_hour.meme": {
+      "source_sha256": "53e5ffdd2ae79f407d8327143d55b430e639cfc09a18165205d0a50cfe7db3bf",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "round_quarter_hour",
+          "params": [
+            {
+              "name": "m",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "m"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 7,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 15,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 15,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Round 22 min:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "round_quarter_hour",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 22,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Round 39 min:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "round_quarter_hour",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 39,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function round_quarter_hour(m: Int) -> Int:\n    return (m + 7) / 15 * 15\nprint \"Round 22 min:\", round_quarter_hour(22)\nprint \"Round 39 min:\", round_quarter_hour(39)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "round_quarter_hour",
+            "params": [
+              {
+                "name": "m",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "/",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "m"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 7,
+                        "data_type": "Int"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 15,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 15,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Round 22 min:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "round_quarter_hour",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 22,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Round 39 min:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "round_quarter_hour",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 39,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

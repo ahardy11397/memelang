@@ -1,0 +1,12 @@
+function join_with_comma(parts: List<String>) -> String:
+    define out_line as ""
+    define cnt as length of parts
+    for idx from 0 to (cnt - 1)
+        if idx > 0
+            set out_line to out_line + ","
+        set out_line to out_line + parts[idx]
+    return out_line
+
+define cells: List<String> as ["prod-99", "Keyboard", "49", "In Stock"]
+define serialized as join_with_comma(cells)
+print "Serialized line:", serialized

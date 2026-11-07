@@ -1,0 +1,116 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/302_extract_http_status_code.meme": {
+      "source_sha256": "ed84e8f015a5a296d98818fb7b0cf1f64117ce7cf840d98d38b820f2f29dba21",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "log_line",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "2026-11-03 14:20:00 HTTP GET /api/v1/users 200 15ms",
+            "data_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "status_str",
+          "var_type": "String",
+          "value": {
+            "expr_type": "string_slice",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "log_line"
+            },
+            "start": {
+              "expr_type": "literal",
+              "value": 43,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 46,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 2
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Status code:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "status_str"
+            }
+          ],
+          "source_line": 3
+        }
+      ],
+      "canonical_meme": "define log_line: String as \"2026-11-03 14:20:00 HTTP GET /api/v1/users 200 15ms\"\ndefine status_str: String as slice log_line from 43 to 46\nprint \"Status code:\", status_str",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "log_line",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "2026-11-03 14:20:00 HTTP GET /api/v1/users 200 15ms",
+              "data_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "status_str",
+            "var_type": "String",
+            "value": {
+              "expr_type": "string_slice",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "log_line"
+              },
+              "start": {
+                "expr_type": "literal",
+                "value": 43,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 46,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 2
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Status code:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "status_str"
+              }
+            ],
+            "source_line": 3
+          }
+        ]
+      }
+    }
+  }
+}

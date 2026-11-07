@@ -1,0 +1,5 @@
+function is_us_10_digit(num_str: String) -> Bool:
+    return length of string num_str == 10
+
+print "US 10 digit check 1:", is_us_10_digit("4155552671")
+print "US 10 digit check 2:", is_us_10_digit("5552671")

@@ -1,0 +1,13 @@
+function trim_inline_comment(directive_text: String) -> String:
+    define total_len as length of string directive_text
+    define clean_part as ""
+    for idx from 0 to (total_len - 1)
+        define sym as slice directive_text from idx to (idx + 1)
+        if sym == "#"
+            return clean_part
+        set clean_part to clean_part + sym
+    return clean_part
+
+define raw_directive as "cache_size=1024 # megabytes"
+define cleaned_directive as trim_inline_comment(raw_directive)
+print "Cleaned directive:", cleaned_directive

@@ -1,0 +1,266 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/362_report_format_table_pipe_row.meme": {
+      "source_sha256": "534f4b992f0b3b39f31409be99eb8bfd9b87aca4da8fc4616f787226329c68c5",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "make_pipe_row",
+          "params": [
+            {
+              "name": "c1",
+              "param_type": "String"
+            },
+            {
+              "name": "c2",
+              "param_type": "String"
+            },
+            {
+              "name": "c3",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "literal",
+                            "value": "| ",
+                            "data_type": "String"
+                          },
+                          "right": {
+                            "expr_type": "var_ref",
+                            "name": "c1"
+                          }
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": " | ",
+                          "data_type": "String"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "c2"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": " | ",
+                      "data_type": "String"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "c3"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": " |",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "row_str",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "make_pipe_row",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "CPU",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "85%",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "NORMAL",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Markdown table row:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "row_str"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function make_pipe_row(c1: String, c2: String, c3: String) -> String:\n    return \"| \" + c1 + \" | \" + c2 + \" | \" + c3 + \" |\"\ndefine row_str: String as make_pipe_row(\"CPU\", \"85%\", \"NORMAL\")\nprint \"Markdown table row:\", row_str",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "make_pipe_row",
+            "params": [
+              {
+                "name": "c1",
+                "param_type": "String"
+              },
+              {
+                "name": "c2",
+                "param_type": "String"
+              },
+              {
+                "name": "c3",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "binary_op",
+                            "op": "+",
+                            "left": {
+                              "expr_type": "literal",
+                              "value": "| ",
+                              "data_type": "String"
+                            },
+                            "right": {
+                              "expr_type": "var_ref",
+                              "name": "c1"
+                            }
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": " | ",
+                            "data_type": "String"
+                          }
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "c2"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": " | ",
+                        "data_type": "String"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "c3"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": " |",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "row_str",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "make_pipe_row",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "CPU",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "85%",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "NORMAL",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Markdown table row:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "row_str"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+function truncate_with_ellipsis(message: String, max_len: Int) -> String:
+    define msg_len as length of string message
+    if msg_len > max_len
+        define truncated as slice message from 0 to (max_len - 3)
+        return truncated + "..."
+    return message
+
+define long_title as "Comprehensive Architectural Overview of Distributed Storage"
+define short_view as truncate_with_ellipsis(long_title, 20)
+print "Truncated overview:", short_view

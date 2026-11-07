@@ -53,7 +53,7 @@ def test_shared_fixtures_exist_and_valid():
 def test_parse_id_filter_valid_and_invalid():
     rc = _load_runner_module()
     assert rc.parse_id_filter("1-3,7,10-11") == {1, 2, 3, 7, 10, 11}
-    for bad in ("10-5", "0", "301", "abc", ""):
+    for bad in ("10-5", "0", "501", "abc", ""):
         with pytest.raises(ValueError):
             rc.parse_id_filter(bad)
 
@@ -293,20 +293,20 @@ def test_full_300_uniqueness_examples_purity_and_cli_smoke(tmp_path):
     manifest = rc.CorpusManifest.model_validate_json(
         (REPO_ROOT / "tests" / "corpus" / "manifest.json").read_text(encoding="utf-8")
     )
-    assert manifest.total_scripts == 300
-    assert len(manifest.scripts) == 300
-    assert len({s.slug for s in manifest.scripts}) == 300
-    assert len({s.title.lower() for s in manifest.scripts}) == 300
+    assert manifest.total_scripts == len(manifest.scripts)
+    assert manifest.total_scripts >= 300
+    assert len({s.slug for s in manifest.scripts}) == manifest.total_scripts
+    assert len({s.title.lower() for s in manifest.scripts}) == manifest.total_scripts
 
-    # Anti-clone gate: stripping whitespace and numeric literals must still leave 300 unique skeletons
+    # Anti-clone gate: stripping whitespace and numeric literals must still leave unique skeletons
     skeletons = set()
     for s in manifest.scripts:
         raw = (REPO_ROOT / s.path).read_text(encoding="utf-8")
         skel = re.sub(r"\d+", "#", re.sub(r"\s+", " ", raw.strip().lower()))
         skeletons.add(skel)
-    assert len(skeletons) == 300
+    assert len(skeletons) == manifest.total_scripts
 
-    # `examples/` mirror verification: verify all 300 scripts and fixtures exist in `examples/`
+    # `examples/` mirror verification: verify all scripts and fixtures exist in `examples/`
     for s in manifest.scripts:
         ex_p = REPO_ROOT / s.path.replace("tests/corpus/", "examples/")
         assert ex_p.is_file(), f"Missing example mirror for {s.path}"

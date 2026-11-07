@@ -1,0 +1,350 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/349_word_reverse_character_order.meme": {
+      "source_sha256": "e994ba68961f132f65b218823acb501362c5eab20079d32c64d0fafe547ca6e3",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "reverse_string",
+          "params": [
+            {
+              "name": "orig",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "orig"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "rev",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "",
+                "data_type": "String"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "orig"
+                    },
+                    "start": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "-",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "n"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      }
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      }
+                    }
+                  },
+                  "source_line": 5
+                },
+                {
+                  "op": "assign",
+                  "name": "rev",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "rev"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    }
+                  },
+                  "source_line": 6
+                }
+              ],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "rev"
+              },
+              "source_line": 7
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "backwards",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "reverse_string",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "stressed",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Backwards word:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "backwards"
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "function reverse_string(orig: String) -> String:\n    define n: Int as length of string orig\n    define rev: String as \"\"\n    for i from 0 to n - 1:\n        define ch: String as slice orig from n - 1 - i to n - i\n        set rev to rev + ch\n    return rev\ndefine backwards: String as reverse_string(\"stressed\")\nprint \"Backwards word:\", backwards",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "reverse_string",
+            "params": [
+              {
+                "name": "orig",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "orig"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "rev",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "",
+                  "data_type": "String"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "orig"
+                      },
+                      "start": {
+                        "expr_type": "binary_op",
+                        "op": "-",
+                        "left": {
+                          "expr_type": "binary_op",
+                          "op": "-",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "n"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        }
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "-",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "n"
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        }
+                      }
+                    },
+                    "source_line": 5
+                  },
+                  {
+                    "op": "assign",
+                    "name": "rev",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "rev"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      }
+                    },
+                    "source_line": 6
+                  }
+                ],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "rev"
+                },
+                "source_line": 7
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "backwards",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "reverse_string",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "stressed",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Backwards word:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "backwards"
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    }
+  }
+}

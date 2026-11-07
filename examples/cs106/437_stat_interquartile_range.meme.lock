@@ -1,0 +1,160 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/437_stat_interquartile_range.meme": {
+      "source_sha256": "d5c9160d692eb469c1e4fb92d4c97a6116dac674c68291558593343187660663",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "compute_iqr",
+          "params": [
+            {
+              "name": "q1",
+              "param_type": "Int"
+            },
+            {
+              "name": "q3",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "q3"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "q1"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "iqr_val",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "compute_iqr",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 25,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 75,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Interquartile range:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "iqr_val"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function compute_iqr(q1: Int, q3: Int) -> Int:\n    return q3 - q1\ndefine iqr_val: Int as compute_iqr(25, 75)\nprint \"Interquartile range:\", iqr_val",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "compute_iqr",
+            "params": [
+              {
+                "name": "q1",
+                "param_type": "Int"
+              },
+              {
+                "name": "q3",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "q3"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "q1"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "iqr_val",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "compute_iqr",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 25,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 75,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Interquartile range:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "iqr_val"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

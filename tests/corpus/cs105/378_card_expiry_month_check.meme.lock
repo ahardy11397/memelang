@@ -1,0 +1,368 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/378_card_expiry_month_check.meme": {
+      "source_sha256": "b0bb8ee3de6481726db43383eb4c675e532496c9482047de499992d12950dc50",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_valid_expiry_month",
+          "params": [
+            {
+              "name": "m_str",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "valid_months",
+              "var_type": "List<String>",
+              "value": {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": "01",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "02",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "03",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "04",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "05",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "06",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "07",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "08",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "09",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "10",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "11",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "12",
+                    "data_type": "String"
+                  }
+                ],
+                "element_type": "String"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_each",
+              "item_var": "m",
+              "collection": "valid_months",
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "m"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "m_str"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 5
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Month 09 valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_expiry_month",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "09",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Month 13 valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_expiry_month",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "13",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "function is_valid_expiry_month(m_str: String) -> Bool:\n    define list valid_months as [\"01\", \"02\", \"03\", \"04\", \"05\", \"06\", \"07\", \"08\", \"09\", \"10\", \"11\", \"12\"]\n    for each m in valid_months:\n        if m == m_str:\n            return true\n    return false\nprint \"Month 09 valid:\", is_valid_expiry_month(\"09\")\nprint \"Month 13 valid:\", is_valid_expiry_month(\"13\")",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_valid_expiry_month",
+            "params": [
+              {
+                "name": "m_str",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "valid_months",
+                "var_type": "List<String>",
+                "value": {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": "01",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "02",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "03",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "04",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "05",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "06",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "07",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "08",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "09",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "10",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "11",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "12",
+                      "data_type": "String"
+                    }
+                  ],
+                  "element_type": "String"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_each",
+                "item_var": "m",
+                "collection": "valid_months",
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "m"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "m_str"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 5
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Month 09 valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_expiry_month",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "09",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Month 13 valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_expiry_month",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "13",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

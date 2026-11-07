@@ -1,0 +1,242 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/346_word_find_longest_length.meme": {
+      "source_sha256": "4f557fbf30d38c63cb1ddf887c30ad2207e0048043039448c36b1b6d946f8c4d",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "dictionary",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "data",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "algorithm",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "tree",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "verification",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "node",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "max_len",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "for_each",
+          "item_var": "word",
+          "collection": "dictionary",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "wl",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "word"
+                }
+              },
+              "source_line": 4
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "wl"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "max_len"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "max_len",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "wl"
+                  },
+                  "source_line": 6
+                }
+              ],
+              "else_body": [],
+              "source_line": 5
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Longest word length:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "max_len"
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "define list dictionary as [\"data\", \"algorithm\", \"tree\", \"verification\", \"node\"]\ndefine max_len: Int as 0\nfor each word in dictionary:\n    define wl: Int as length of string word\n    if wl > max_len:\n        set max_len to wl\nprint \"Longest word length:\", max_len",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "dictionary",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "data",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "algorithm",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "tree",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "verification",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "node",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "max_len",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "for_each",
+            "item_var": "word",
+            "collection": "dictionary",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "wl",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "word"
+                  }
+                },
+                "source_line": 4
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "wl"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "max_len"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "max_len",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "wl"
+                    },
+                    "source_line": 6
+                  }
+                ],
+                "else_body": [],
+                "source_line": 5
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Longest word length:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "max_len"
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,394 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/322_config_parse_key.meme": {
+      "source_sha256": "0cf00ca013ce4e4cd9c2523e0496c4b50ea5ee16adec3f896678aae557c54e31",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "get_config_key",
+          "params": [
+            {
+              "name": "line",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "line_len",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "line"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "key_buf",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "",
+                "data_type": "String"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "for_range",
+              "loop_var": "idx",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "line_len"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "line"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "idx"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "idx"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 5
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "=",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "key_buf"
+                      },
+                      "source_line": 7
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 6
+                },
+                {
+                  "op": "assign",
+                  "name": "key_buf",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "key_buf"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    }
+                  },
+                  "source_line": 8
+                }
+              ],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "key_buf"
+              },
+              "source_line": 9
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "directive",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "max_connections=500",
+            "data_type": "String"
+          },
+          "source_line": 11
+        },
+        {
+          "op": "var_decl",
+          "name": "key_name",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "get_config_key",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "directive"
+              }
+            ]
+          },
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Config key name:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "key_name"
+            }
+          ],
+          "source_line": 13
+        }
+      ],
+      "canonical_meme": "function get_config_key(line: String) -> String:\n    define line_len: Int as length of string line\n    define key_buf: String as \"\"\n    for idx from 0 to line_len - 1:\n        define ch: String as slice line from idx to idx + 1\n        if ch == \"=\":\n            return key_buf\n        set key_buf to key_buf + ch\n    return key_buf\ndefine directive: String as \"max_connections=500\"\ndefine key_name: String as get_config_key(directive)\nprint \"Config key name:\", key_name",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "get_config_key",
+            "params": [
+              {
+                "name": "line",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "line_len",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "line"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "key_buf",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "",
+                  "data_type": "String"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "for_range",
+                "loop_var": "idx",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "line_len"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "line"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "idx"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "idx"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 5
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "=",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "key_buf"
+                        },
+                        "source_line": 7
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 6
+                  },
+                  {
+                    "op": "assign",
+                    "name": "key_buf",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "key_buf"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      }
+                    },
+                    "source_line": 8
+                  }
+                ],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "key_buf"
+                },
+                "source_line": 9
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "directive",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "max_connections=500",
+              "data_type": "String"
+            },
+            "source_line": 11
+          },
+          {
+            "op": "var_decl",
+            "name": "key_name",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "get_config_key",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "directive"
+                }
+              ]
+            },
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Config key name:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "key_name"
+              }
+            ],
+            "source_line": 13
+          }
+        ]
+      }
+    }
+  }
+}

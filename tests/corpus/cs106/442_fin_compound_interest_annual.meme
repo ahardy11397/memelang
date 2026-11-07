@@ -1,0 +1,9 @@
+function compound_annual(principal: Int, rate_pct: Int, years: Int) -> Int:
+    define balance as principal
+    for y from 1 to years
+        define earned as (balance * rate_pct) / 100
+        set balance to balance + earned
+    return balance
+
+define final_bal as compound_annual(1000, 10, 3)
+print "Compounded final balance:", final_bal

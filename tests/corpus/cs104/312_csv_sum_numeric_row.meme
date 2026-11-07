@@ -1,0 +1,5 @@
+define row_values: List<Int> as [120, 45, 80, 210]
+define total_sum: Int as 0
+for each val in row_values
+    set total_sum to total_sum + val
+print "Row total sum:", total_sum

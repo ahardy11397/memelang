@@ -1,0 +1,12 @@
+function is_leap_year(year: Int) -> Bool:
+    if year % 400 == 0
+        return true
+    if year % 100 == 0
+        return false
+    if year % 4 == 0
+        return true
+    return false
+
+print "Leap year 2024:", is_leap_year(2024)
+print "Leap year 2100:", is_leap_year(2100)
+print "Leap year 2000:", is_leap_year(2000)

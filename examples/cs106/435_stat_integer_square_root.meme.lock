@@ -1,0 +1,394 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/435_stat_integer_square_root.meme": {
+      "source_sha256": "8a064465833fdf11ce5da1e6dc2ad626d9a2f61431e1d6ff84e0f8dcb5ed51c8",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "int_sqrt",
+          "params": [
+            {
+              "name": "n",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "<=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "root",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "source_line": 4
+            },
+            {
+              "op": "while_loop",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "<=",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "root"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "root"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                }
+              },
+              "body": [
+                {
+                  "op": "assign",
+                  "name": "root",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "root"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 6
+                }
+              ],
+              "source_line": 5
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "root"
+              },
+              "source_line": 7
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "s1",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "int_sqrt",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 64,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "var_decl",
+          "name": "s2",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "int_sqrt",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 66,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Int sqrt 64:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "s1"
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Int sqrt 66:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "s2"
+            }
+          ],
+          "source_line": 12
+        }
+      ],
+      "canonical_meme": "function int_sqrt(n: Int) -> Int:\n    if n <= 0:\n        return 0\n    define root: Int as 1\n    while (root + 1) * (root + 1) <= n:\n        set root to root + 1\n    return root\ndefine s1: Int as int_sqrt(64)\ndefine s2: Int as int_sqrt(66)\nprint \"Int sqrt 64:\", s1\nprint \"Int sqrt 66:\", s2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "int_sqrt",
+            "params": [
+              {
+                "name": "n",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "<=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "root",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "source_line": 4
+              },
+              {
+                "op": "while_loop",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "<=",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "root"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "root"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "assign",
+                    "name": "root",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "root"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 6
+                  }
+                ],
+                "source_line": 5
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "root"
+                },
+                "source_line": 7
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "s1",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "int_sqrt",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 64,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "var_decl",
+            "name": "s2",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "int_sqrt",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 66,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Int sqrt 64:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "s1"
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Int sqrt 66:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "s2"
+              }
+            ],
+            "source_line": 12
+          }
+        ]
+      }
+    }
+  }
+}

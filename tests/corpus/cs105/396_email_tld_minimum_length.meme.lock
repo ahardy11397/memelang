@@ -1,0 +1,238 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/396_email_tld_minimum_length.meme": {
+      "source_sha256": "bce982b12d79435e784f1213bfd7968dd67d7141fda331413b354e554d7f9eeb",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_valid_tld_len",
+          "params": [
+            {
+              "name": "tld",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "sz",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "tld"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "sz"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 3
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "TLD org valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_tld_len",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "org",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "TLD io valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_tld_len",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "io",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "TLD single x invalid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_tld_len",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "x",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "function is_valid_tld_len(tld: String) -> Bool:\n    define sz: Int as length of string tld\n    return sz >= 2\nprint \"TLD org valid:\", is_valid_tld_len(\"org\")\nprint \"TLD io valid:\", is_valid_tld_len(\"io\")\nprint \"TLD single x invalid:\", is_valid_tld_len(\"x\")",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_valid_tld_len",
+            "params": [
+              {
+                "name": "tld",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "sz",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "tld"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "sz"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 3
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "TLD org valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_tld_len",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "org",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "TLD io valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_tld_len",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "io",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "TLD single x invalid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_tld_len",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "x",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

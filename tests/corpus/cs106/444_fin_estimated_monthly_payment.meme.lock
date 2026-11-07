@@ -1,0 +1,214 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/444_fin_estimated_monthly_payment.meme": {
+      "source_sha256": "9969da169cf7c2bc729ca4c88d632454f9b1e1782b09841a0693369c0a6466eb",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "estimate_monthly_loan",
+          "params": [
+            {
+              "name": "amount",
+              "param_type": "Int"
+            },
+            {
+              "name": "months",
+              "param_type": "Int"
+            },
+            {
+              "name": "service_fee",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "base_monthly",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "amount"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "months"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "base_monthly"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "service_fee"
+                }
+              },
+              "source_line": 3
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "monthly",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "estimate_monthly_loan",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 12000,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 24,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 15,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Estimated monthly installment:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "monthly"
+            }
+          ],
+          "source_line": 6
+        }
+      ],
+      "canonical_meme": "function estimate_monthly_loan(amount: Int, months: Int, service_fee: Int) -> Int:\n    define base_monthly: Int as amount / months\n    return base_monthly + service_fee\ndefine monthly: Int as estimate_monthly_loan(12000, 24, 15)\nprint \"Estimated monthly installment:\", monthly",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "estimate_monthly_loan",
+            "params": [
+              {
+                "name": "amount",
+                "param_type": "Int"
+              },
+              {
+                "name": "months",
+                "param_type": "Int"
+              },
+              {
+                "name": "service_fee",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "base_monthly",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "amount"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "months"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "base_monthly"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "service_fee"
+                  }
+                },
+                "source_line": 3
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "monthly",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "estimate_monthly_loan",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 12000,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 24,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 15,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Estimated monthly installment:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "monthly"
+              }
+            ],
+            "source_line": 6
+          }
+        ]
+      }
+    }
+  }
+}

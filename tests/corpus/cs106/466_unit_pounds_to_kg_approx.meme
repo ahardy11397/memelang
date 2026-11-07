@@ -1,0 +1,5 @@
+function lbs_to_kg(lbs: Int) -> Int:
+    return (lbs * 10) / 22
+
+define kg_amt as lbs_to_kg(154)
+print "154 lbs in kg:", kg_amt

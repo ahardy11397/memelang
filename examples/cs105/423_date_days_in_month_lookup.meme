@@ -1,0 +1,16 @@
+function days_in_month_standard(m: Int) -> Int:
+    if m == 2
+        return 28
+    if m == 4
+        return 30
+    if m == 6
+        return 30
+    if m == 9
+        return 30
+    if m == 11
+        return 30
+    return 31
+
+print "Days in February:", days_in_month_standard(2)
+print "Days in April:", days_in_month_standard(4)
+print "Days in July:", days_in_month_standard(7)

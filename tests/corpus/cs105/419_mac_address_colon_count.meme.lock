@@ -1,0 +1,436 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/419_mac_address_colon_count.meme": {
+      "source_sha256": "4ca8f698977cc22ca57322ed12b3714aaab4d2e2d36b89fc1a44c47b596ff9d1",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_mac_format",
+          "params": [
+            {
+              "name": "mac",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "mac"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 17,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "colons",
+                  "var_type": "Int",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "for_range",
+                  "loop_var": "i",
+                  "start": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "end": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "body": [
+                    {
+                      "op": "var_decl",
+                      "name": "ch",
+                      "var_type": "String",
+                      "value": {
+                        "expr_type": "string_slice",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "mac"
+                        },
+                        "start": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "end": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "i"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        }
+                      },
+                      "source_line": 6
+                    },
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "binary_op",
+                        "op": "==",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "ch"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": ":",
+                          "data_type": "String"
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "op": "assign",
+                          "name": "colons",
+                          "value": {
+                            "expr_type": "binary_op",
+                            "op": "+",
+                            "left": {
+                              "expr_type": "var_ref",
+                              "name": "colons"
+                            },
+                            "right": {
+                              "expr_type": "literal",
+                              "value": 1,
+                              "data_type": "Int"
+                            }
+                          },
+                          "source_line": 8
+                        }
+                      ],
+                      "else_body": [],
+                      "source_line": 7
+                    }
+                  ],
+                  "source_line": 5
+                },
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "colons"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 5,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 9
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 10
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "mac_addr",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "00:1A:2B:3C:4D:5E",
+            "data_type": "String"
+          },
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "MAC address format valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_mac_format",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "mac_addr"
+                }
+              ]
+            }
+          ],
+          "source_line": 13
+        }
+      ],
+      "canonical_meme": "function is_mac_format(mac: String) -> Bool:\n    define n: Int as length of string mac\n    if n == 17:\n        define colons: Int as 0\n        for i from 0 to n - 1:\n            define ch: String as slice mac from i to i + 1\n            if ch == \":\":\n                set colons to colons + 1\n        return colons == 5\n    return false\ndefine mac_addr: String as \"00:1A:2B:3C:4D:5E\"\nprint \"MAC address format valid:\", is_mac_format(mac_addr)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_mac_format",
+            "params": [
+              {
+                "name": "mac",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "mac"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 17,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "colons",
+                    "var_type": "Int",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "for_range",
+                    "loop_var": "i",
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "body": [
+                      {
+                        "op": "var_decl",
+                        "name": "ch",
+                        "var_type": "String",
+                        "value": {
+                          "expr_type": "string_slice",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "mac"
+                          },
+                          "start": {
+                            "expr_type": "var_ref",
+                            "name": "i"
+                          },
+                          "end": {
+                            "expr_type": "binary_op",
+                            "op": "+",
+                            "left": {
+                              "expr_type": "var_ref",
+                              "name": "i"
+                            },
+                            "right": {
+                              "expr_type": "literal",
+                              "value": 1,
+                              "data_type": "Int"
+                            }
+                          }
+                        },
+                        "source_line": 6
+                      },
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "binary_op",
+                          "op": "==",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "ch"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": ":",
+                            "data_type": "String"
+                          }
+                        },
+                        "then_body": [
+                          {
+                            "op": "assign",
+                            "name": "colons",
+                            "value": {
+                              "expr_type": "binary_op",
+                              "op": "+",
+                              "left": {
+                                "expr_type": "var_ref",
+                                "name": "colons"
+                              },
+                              "right": {
+                                "expr_type": "literal",
+                                "value": 1,
+                                "data_type": "Int"
+                              }
+                            },
+                            "source_line": 8
+                          }
+                        ],
+                        "else_body": [],
+                        "source_line": 7
+                      }
+                    ],
+                    "source_line": 5
+                  },
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "colons"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 5,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 9
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 10
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "mac_addr",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "00:1A:2B:3C:4D:5E",
+              "data_type": "String"
+            },
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "MAC address format valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_mac_format",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "mac_addr"
+                  }
+                ]
+              }
+            ],
+            "source_line": 13
+          }
+        ]
+      }
+    }
+  }
+}

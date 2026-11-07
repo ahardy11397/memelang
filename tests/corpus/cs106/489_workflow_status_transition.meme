@@ -1,0 +1,11 @@
+function advance_state(state: String) -> String:
+    if state == "QUEUED"
+        return "RUNNING"
+    if state == "RUNNING"
+        return "SUCCESS"
+    return "UNKNOWN"
+
+define s1 as advance_state("QUEUED")
+define s2 as advance_state("RUNNING")
+print "State transition 1:", s1
+print "State transition 2:", s2

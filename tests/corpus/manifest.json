@@ -1,6 +1,6 @@
 {
   "corpus_version": 1,
-  "total_scripts": 300,
+  "total_scripts": 491,
   "scripts": [
     {
       "id": 1,
@@ -6765,6 +6765,4192 @@
         "examples": [
           "loop_mutation_collision"
         ],
+        "language": []
+      }
+    },
+    {
+      "id": 301,
+      "slug": "301_parse_apache_log_ip",
+      "path": "tests/corpus/cs104/301_parse_apache_log_ip.meme",
+      "course": "cs104",
+      "topic": "log_parsing",
+      "title": "Parse Client IP from Apache Web Server Log",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "IP: 192.168.1.42",
+      "feature_tags": [
+        "string_slice",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 302,
+      "slug": "302_extract_http_status_code",
+      "path": "tests/corpus/cs104/302_extract_http_status_code.meme",
+      "course": "cs104",
+      "topic": "log_parsing",
+      "title": "Extract HTTP Status Code from Access Log",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Status code: 200",
+      "feature_tags": [
+        "string_slice",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 303,
+      "slug": "303_extract_log_severity_level",
+      "path": "tests/corpus/cs104/303_extract_log_severity_level.meme",
+      "course": "cs104",
+      "topic": "log_parsing",
+      "title": "Extract Severity Level from Application Log",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Severity: ERROR",
+      "feature_tags": [
+        "string_slice",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 304,
+      "slug": "304_parse_syslog_timestamp",
+      "path": "tests/corpus/cs104/304_parse_syslog_timestamp.meme",
+      "course": "cs104",
+      "topic": "log_parsing",
+      "title": "Parse Syslog RFC3164 Timestamp Header",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Timestamp: Oct 11 22:14:15",
+      "feature_tags": [
+        "string_slice",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 305,
+      "slug": "305_count_error_occurrences",
+      "path": "tests/corpus/cs104/305_count_error_occurrences.meme",
+      "course": "cs104",
+      "topic": "log_parsing",
+      "title": "Count Failure Outcomes Across Log Messages",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Total failures: 2",
+      "feature_tags": [
+        "for_each",
+        "str_ends_with",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 306,
+      "slug": "306_filter_slow_requests",
+      "path": "tests/corpus/cs104/306_filter_slow_requests.meme",
+      "course": "cs104",
+      "topic": "log_parsing",
+      "title": "Filter and Sort Slow Latency Measurements",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "[540, 680, 950]",
+      "feature_tags": [
+        "filter_collection",
+        "sort_collection",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 307,
+      "slug": "307_parse_query_parameter",
+      "path": "tests/corpus/cs104/307_parse_query_parameter.meme",
+      "course": "cs104",
+      "topic": "log_parsing",
+      "title": "Parse Query Parameter from Request URL",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Param: user_id=1042",
+      "feature_tags": [
+        "string_slice",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 308,
+      "slug": "308_detect_log_file_extension",
+      "path": "tests/corpus/cs104/308_detect_log_file_extension.meme",
+      "course": "cs104",
+      "topic": "log_parsing",
+      "title": "Detect File Log Extension in Filename",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Is log file: true",
+      "feature_tags": [
+        "str_ends_with",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 309,
+      "slug": "309_mask_ipv4_address",
+      "path": "tests/corpus/cs104/309_mask_ipv4_address.meme",
+      "course": "cs104",
+      "topic": "log_parsing",
+      "title": "Mask Subnet Octet of IPv4 Address for Privacy",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Masked IP: 192.168.001.xxx",
+      "feature_tags": [
+        "string_slice",
+        "binary_op",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 310,
+      "slug": "310_aggregate_status_counts",
+      "path": "tests/corpus/cs104/310_aggregate_status_counts.meme",
+      "course": "cs104",
+      "topic": "log_parsing",
+      "title": "Aggregate HTTP Response Success and Error Counts",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Success: 3 Errors: 3",
+      "feature_tags": [
+        "for_each",
+        "if_stmt",
+        "print"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 311,
+      "slug": "311_csv_split_fields",
+      "path": "tests/corpus/cs104/311_csv_split_fields.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "CSV Line Field Extraction",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Field count: 3",
+      "feature_tags": [
+        "csv",
+        "string_slice",
+        "list",
+        "loop"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 312,
+      "slug": "312_csv_sum_numeric_row",
+      "path": "tests/corpus/cs104/312_csv_sum_numeric_row.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Sum Numeric Values in CSV Row",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Row total sum: 455",
+      "feature_tags": [
+        "csv",
+        "numeric",
+        "loop",
+        "sum"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 313,
+      "slug": "313_csv_project_column",
+      "path": "tests/corpus/cs104/313_csv_project_column.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Project CSV Column by Index",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Projected column: Widget",
+      "feature_tags": [
+        "csv",
+        "function",
+        "projection",
+        "list"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 314,
+      "slug": "314_csv_strip_quotes",
+      "path": "tests/corpus/cs104/314_csv_strip_quotes.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Strip Quotes from CSV Field",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Unquoted field: san francisco",
+      "feature_tags": [
+        "csv",
+        "string_slice",
+        "function",
+        "cleanup"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 315,
+      "slug": "315_csv_skip_header_row",
+      "path": "tests/corpus/cs104/315_csv_skip_header_row.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Process CSV Rows Skipping Header",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Data row count: 3",
+      "feature_tags": [
+        "csv",
+        "table",
+        "header_skip",
+        "list"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 316,
+      "slug": "316_csv_validate_field_count",
+      "path": "tests/corpus/cs104/316_csv_validate_field_count.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Validate CSV Record Length",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Row 1 valid: true",
+      "feature_tags": [
+        "csv",
+        "validation",
+        "function",
+        "bool"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 317,
+      "slug": "317_csv_filter_by_status",
+      "path": "tests/corpus/cs104/317_csv_filter_by_status.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Filter CSV Records by Column Value",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Active records: 3",
+      "feature_tags": [
+        "csv",
+        "filter",
+        "status",
+        "counter"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 318,
+      "slug": "318_csv_format_row",
+      "path": "tests/corpus/cs104/318_csv_format_row.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Serialize Fields into Delimited Row",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Serialized line: prod-99,Keyboard,49,In Stock",
+      "feature_tags": [
+        "csv",
+        "formatting",
+        "serialization",
+        "string"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 319,
+      "slug": "319_csv_find_max_metric",
+      "path": "tests/corpus/cs104/319_csv_find_max_metric.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Locate Maximum Value in CSV Metric Column",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Highest metric found: 930",
+      "feature_tags": [
+        "csv",
+        "metrics",
+        "max",
+        "loop"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 320,
+      "slug": "320_csv_escape_commas",
+      "path": "tests/corpus/cs104/320_csv_escape_commas.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Quote Wrap Field Containing Delimiter",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Field 2 escaped: 'smith, john'",
+      "feature_tags": [
+        "csv",
+        "escaping",
+        "delimiter",
+        "string_slice"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 321,
+      "slug": "321_config_skip_comments",
+      "path": "tests/corpus/cs104/321_config_skip_comments.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Filter Out Comment Lines in Config",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Active config directives: 2",
+      "feature_tags": [
+        "config",
+        "filter",
+        "comments",
+        "list"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 322,
+      "slug": "322_config_parse_key",
+      "path": "tests/corpus/cs104/322_config_parse_key.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Extract Key Name from Key-Value Pair",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Config key name: max_connections",
+      "feature_tags": [
+        "config",
+        "parser",
+        "function",
+        "string_slice"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 323,
+      "slug": "323_config_parse_value",
+      "path": "tests/corpus/cs104/323_config_parse_value.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Extract Value from Key-Value Pair",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Config value string: db.internal.net",
+      "feature_tags": [
+        "config",
+        "parser",
+        "function",
+        "string"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 324,
+      "slug": "324_config_detect_section_header",
+      "path": "tests/corpus/cs104/324_config_detect_section_header.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Detect INI Section Header",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Is header 1: true",
+      "feature_tags": [
+        "config",
+        "ini",
+        "section",
+        "bool"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 325,
+      "slug": "325_config_parse_boolean_flag",
+      "path": "tests/corpus/cs104/325_config_parse_boolean_flag.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Parse Boolean Configuration Value",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Parsed flag 1: true",
+      "feature_tags": [
+        "config",
+        "boolean",
+        "flags",
+        "branching"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 326,
+      "slug": "326_config_fallback_default",
+      "path": "tests/corpus/cs104/326_config_fallback_default.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Provide Default Value for Missing Config",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Resolved endpoint: https://api.domain.com",
+      "feature_tags": [
+        "config",
+        "fallback",
+        "default",
+        "function"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 327,
+      "slug": "327_config_parse_int_timeout",
+      "path": "tests/corpus/cs104/327_config_parse_int_timeout.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Convert Digit String to Integer Timeout",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Timeout in seconds: 35",
+      "feature_tags": [
+        "config",
+        "conversion",
+        "numeric",
+        "timeout"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 328,
+      "slug": "328_config_check_key_exists",
+      "path": "tests/corpus/cs104/328_config_check_key_exists.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Search for Required Configuration Key",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "API token configured: true",
+      "feature_tags": [
+        "config",
+        "search",
+        "presence",
+        "list"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 329,
+      "slug": "329_config_strip_inline_comment",
+      "path": "tests/corpus/cs104/329_config_strip_inline_comment.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Strip Inline Comment from Config Directive",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Cleaned directive: cache_size=1024 ",
+      "feature_tags": [
+        "config",
+        "strip",
+        "comment",
+        "string_slice"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 330,
+      "slug": "330_config_summarize_directives",
+      "path": "tests/corpus/cs104/330_config_summarize_directives.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Summarize Total Directives by Scope",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Production directive count: 3",
+      "feature_tags": [
+        "config",
+        "aggregation",
+        "scope",
+        "counter"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 331,
+      "slug": "331_string_trim_leading_spaces",
+      "path": "tests/corpus/cs104/331_string_trim_leading_spaces.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Trim Leading Spaces from Text",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Left trimmed text: payload content",
+      "feature_tags": [
+        "string",
+        "trim",
+        "ltrim",
+        "loop"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 332,
+      "slug": "332_string_trim_trailing_spaces",
+      "path": "tests/corpus/cs104/332_string_trim_trailing_spaces.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Trim Trailing Spaces from Text",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Right trimmed text: server_output",
+      "feature_tags": [
+        "string",
+        "trim",
+        "rtrim",
+        "slice"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 333,
+      "slug": "333_string_pad_left_zeros",
+      "path": "tests/corpus/cs104/333_string_pad_left_zeros.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Pad String Left with Leading Zeroes",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Padded zero serial: 000742",
+      "feature_tags": [
+        "string",
+        "padding",
+        "formatting",
+        "loop"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 334,
+      "slug": "334_string_pad_right_spaces",
+      "path": "tests/corpus/cs104/334_string_pad_right_spaces.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Pad String Right with Spaces to Fixed Width",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Formatted label width: 10",
+      "feature_tags": [
+        "string",
+        "padding",
+        "alignment",
+        "table"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 335,
+      "slug": "335_string_replace_char",
+      "path": "tests/corpus/cs104/335_string_replace_char.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Replace Target Character with Replacement Character",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Transformed slug: my-bad-file-name",
+      "feature_tags": [
+        "string",
+        "replace",
+        "slug",
+        "loop"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 336,
+      "slug": "336_string_count_char_occurrences",
+      "path": "tests/corpus/cs104/336_string_count_char_occurrences.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Count Occurrences of Character in String",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Directory depth count: 4",
+      "feature_tags": [
+        "string",
+        "count",
+        "frequency",
+        "path"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 337,
+      "slug": "337_string_truncate_ellipsis",
+      "path": "tests/corpus/cs104/337_string_truncate_ellipsis.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Truncate String with Ellipsis if Overlength",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Truncated overview: Comprehensive Arc...",
+      "feature_tags": [
+        "string",
+        "truncate",
+        "ellipsis",
+        "formatting"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 338,
+      "slug": "338_string_remove_character",
+      "path": "tests/corpus/cs104/338_string_remove_character.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Filter Out Specific Character from String",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Stripped phone digits: 5550192834",
+      "feature_tags": [
+        "string",
+        "filter",
+        "strip",
+        "sanitize"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 339,
+      "slug": "339_string_repeat_char",
+      "path": "tests/corpus/cs104/339_string_repeat_char.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Generate String of Repeated Character",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Divider banner: ============",
+      "feature_tags": [
+        "string",
+        "repeat",
+        "banner",
+        "generator"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 340,
+      "slug": "340_string_find_char_position",
+      "path": "tests/corpus/cs104/340_string_find_char_position.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Find First 0-Based Position of Character",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "At symbol index: 7",
+      "feature_tags": [
+        "string",
+        "search",
+        "index",
+        "first"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 341,
+      "slug": "341_word_extract_initials",
+      "path": "tests/corpus/cs104/341_word_extract_initials.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Extract Initials from Full Name",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Extracted person initials: GBH",
+      "feature_tags": [
+        "text",
+        "initials",
+        "name",
+        "words"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 342,
+      "slug": "342_word_count_words_in_sentence",
+      "path": "tests/corpus/cs104/342_word_count_words_in_sentence.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Count Total Words in Single-Spaced Sentence",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Total sentence words: 7",
+      "feature_tags": [
+        "text",
+        "word_count",
+        "sentence",
+        "spaces"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 343,
+      "slug": "343_word_count_vowels",
+      "path": "tests/corpus/cs104/343_word_count_vowels.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Count English Vowels in String",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Total lowercase vowels: 6",
+      "feature_tags": [
+        "text",
+        "vowels",
+        "counter",
+        "frequency"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 344,
+      "slug": "344_word_count_consonants",
+      "path": "tests/corpus/cs104/344_word_count_consonants.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Count Letters Excluding Vowels and Spaces",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Total consonants found: 5",
+      "feature_tags": [
+        "text",
+        "consonants",
+        "filter",
+        "counter"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 345,
+      "slug": "345_word_acronym_generator",
+      "path": "tests/corpus/cs104/345_word_acronym_generator.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Build Acronym with Trailing Dot Format",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Constructed acronym: A.J.A.X.",
+      "feature_tags": [
+        "text",
+        "acronym",
+        "formatting",
+        "list"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 346,
+      "slug": "346_word_find_longest_length",
+      "path": "tests/corpus/cs104/346_word_find_longest_length.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Determine Maximum Word Length in List",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Longest word length: 12",
+      "feature_tags": [
+        "text",
+        "max",
+        "length",
+        "loop"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 347,
+      "slug": "347_word_find_first_vowel_pos",
+      "path": "tests/corpus/cs104/347_word_find_first_vowel_pos.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Locate Index of First Vowel",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Vowel in rhythm: -1",
+      "feature_tags": [
+        "text",
+        "vowels",
+        "search",
+        "index"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 348,
+      "slug": "348_word_pluralize_s",
+      "path": "tests/corpus/cs104/348_word_pluralize_s.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Basic Regular English Pluralization Rule",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Single item: item",
+      "feature_tags": [
+        "text",
+        "pluralize",
+        "grammar",
+        "rules"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 349,
+      "slug": "349_word_reverse_character_order",
+      "path": "tests/corpus/cs104/349_word_reverse_character_order.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Reverse String Characters",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Backwards word: desserts",
+      "feature_tags": [
+        "text",
+        "reverse",
+        "palindrome",
+        "loop"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 350,
+      "slug": "350_word_check_is_palindrome",
+      "path": "tests/corpus/cs104/350_word_check_is_palindrome.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Verify if Word is Exact Palindrome",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Radar palindrome check: true",
+      "feature_tags": [
+        "text",
+        "palindrome",
+        "bool",
+        "verification"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 351,
+      "slug": "351_list_dedupe_adjacent",
+      "path": "tests/corpus/cs104/351_list_dedupe_adjacent.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Deduplicate Adjacent Identical Elements",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Deduped list length: 5",
+      "feature_tags": [
+        "list",
+        "dedup",
+        "adjacent",
+        "loop"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 352,
+      "slug": "352_list_chunk_into_pairs",
+      "path": "tests/corpus/cs104/352_list_chunk_into_pairs.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Count Pair Chunks in Even Length List",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Total coordinate pairs: 3",
+      "feature_tags": [
+        "list",
+        "chunks",
+        "pairs",
+        "math"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 353,
+      "slug": "353_list_flatten_two_lists",
+      "path": "tests/corpus/cs104/353_list_flatten_two_lists.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Concatenate Two Lists into Single List",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Merged list count: 5",
+      "feature_tags": [
+        "list",
+        "flatten",
+        "concat",
+        "append"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 354,
+      "slug": "354_list_reverse_in_place",
+      "path": "tests/corpus/cs104/354_list_reverse_in_place.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Reverse Elements into New List",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Reversed first element: 5",
+      "feature_tags": [
+        "list",
+        "reverse",
+        "indexing",
+        "loop"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 355,
+      "slug": "355_list_alternate_merge",
+      "path": "tests/corpus/cs104/355_list_alternate_merge.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Alternately Interleave Two Equal Length Lists",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Interleaved count: 6",
+      "feature_tags": [
+        "list",
+        "interleave",
+        "zip",
+        "alternate"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 356,
+      "slug": "356_list_rotate_left_by_one",
+      "path": "tests/corpus/cs104/356_list_rotate_left_by_one.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Rotate List Left by One Position",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Head after rotation: 200",
+      "feature_tags": [
+        "list",
+        "rotation",
+        "queue",
+        "loop"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 357,
+      "slug": "357_list_element_frequency",
+      "path": "tests/corpus/cs104/357_list_element_frequency.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Count Frequency of Target Element in List",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Frequency of target 20: 3",
+      "feature_tags": [
+        "list",
+        "frequency",
+        "search",
+        "counter"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 358,
+      "slug": "358_list_prefix_running_sum",
+      "path": "tests/corpus/cs104/358_list_prefix_running_sum.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Calculate Running Prefix Sums of List",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Running sum final total: 50",
+      "feature_tags": [
+        "list",
+        "prefix_sum",
+        "math",
+        "accumulator"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 359,
+      "slug": "359_list_drop_first_n",
+      "path": "tests/corpus/cs104/359_list_drop_first_n.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Drop First N Elements from List",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Remaining items count: 2",
+      "feature_tags": [
+        "list",
+        "drop",
+        "slice",
+        "function"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 360,
+      "slug": "360_list_check_all_positive",
+      "path": "tests/corpus/cs104/360_list_check_all_positive.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Check if All Integer List Elements are Strictly Positive",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Dataset 1 all positive: true",
+      "feature_tags": [
+        "list",
+        "predicate",
+        "all",
+        "validation"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 361,
+      "slug": "361_report_select_top_n",
+      "path": "tests/corpus/cs104/361_report_select_top_n.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Select Top N Sorted Elements for Summary",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Top score 1: 99",
+      "feature_tags": [
+        "report",
+        "sort",
+        "top_n",
+        "summary"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 362,
+      "slug": "362_report_format_table_pipe_row",
+      "path": "tests/corpus/cs104/362_report_format_table_pipe_row.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Format Row with Markdown Table Pipes",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Markdown table row: | CPU | 85% | NORMAL |",
+      "feature_tags": [
+        "report",
+        "markdown",
+        "table",
+        "pipes"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 363,
+      "slug": "363_report_progress_bar",
+      "path": "tests/corpus/cs104/363_report_progress_bar.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Render ASCII Progress Bar String",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Rendered progress bar: [#######---]",
+      "feature_tags": [
+        "report",
+        "progress",
+        "ascii",
+        "meter"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 364,
+      "slug": "364_report_key_value_line",
+      "path": "tests/corpus/cs104/364_report_key_value_line.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Format Key Value Summary Line with Colon",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Generated summary line: Service Status: OPERATIONAL",
+      "feature_tags": [
+        "report",
+        "key_value",
+        "formatting",
+        "summary"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 365,
+      "slug": "365_report_underline_header",
+      "path": "tests/corpus/cs104/365_report_underline_header.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Generate Dashed Underline for Table Header",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Header underline line: ---------------",
+      "feature_tags": [
+        "report",
+        "underline",
+        "header",
+        "table"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 366,
+      "slug": "366_report_pagination_offset",
+      "path": "tests/corpus/cs104/366_report_pagination_offset.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Calculate Page Start and End Index",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Page 1 start offset: 0",
+      "feature_tags": [
+        "report",
+        "pagination",
+        "offset",
+        "math"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 367,
+      "slug": "367_report_histogram_bar",
+      "path": "tests/corpus/cs104/367_report_histogram_bar.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Render Histogram Character Bar for Value",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Histogram chart row: HTTP 200 | ********",
+      "feature_tags": [
+        "report",
+        "histogram",
+        "chart",
+        "ascii"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 368,
+      "slug": "368_report_status_badge",
+      "path": "tests/corpus/cs104/368_report_status_badge.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Construct Bracketed Status Badge",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Test badge 1: [PASS]",
+      "feature_tags": [
+        "report",
+        "badge",
+        "status",
+        "string"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 369,
+      "slug": "369_report_aggregate_min_max_span",
+      "path": "tests/corpus/cs104/369_report_aggregate_min_max_span.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Compute Span Between Minimum and Maximum",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Total span range: 77",
+      "feature_tags": [
+        "report",
+        "span",
+        "range",
+        "min_max"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 370,
+      "slug": "370_report_box_enclosure",
+      "path": "tests/corpus/cs104/370_report_box_enclosure.meme",
+      "course": "cs104",
+      "topic": "text_and_data_tasks",
+      "title": "Wrap Alert Text in ASCII Box Header and Footer",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "| CRITICAL_ALERT |",
+      "feature_tags": [
+        "report",
+        "ascii_art",
+        "box",
+        "alert"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 371,
+      "slug": "371_card_luhn_double_digit",
+      "path": "tests/corpus/cs105/371_card_luhn_double_digit.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Luhn Algorithm Single Digit Doubler",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Doubled 4: 8",
+      "feature_tags": [
+        "luhn",
+        "checksum",
+        "card",
+        "math"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 372,
+      "slug": "372_card_luhn_checksum_sum",
+      "path": "tests/corpus/cs105/372_card_luhn_checksum_sum.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Calculate Luhn Checksum of Digit List",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Luhn valid check: true",
+      "feature_tags": [
+        "luhn",
+        "checksum",
+        "validation",
+        "card"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 373,
+      "slug": "373_card_prefix_visa",
+      "path": "tests/corpus/cs105/373_card_prefix_visa.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Visa Starting Prefix Digit 4",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Visa card match 1: true",
+      "feature_tags": [
+        "card",
+        "prefix",
+        "visa",
+        "validation"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 374,
+      "slug": "374_card_prefix_mastercard",
+      "path": "tests/corpus/cs105/374_card_prefix_mastercard.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Mastercard Prefix 51 Through 55",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Mastercard match 1: true",
+      "feature_tags": [
+        "card",
+        "prefix",
+        "mastercard",
+        "iin"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 375,
+      "slug": "375_card_prefix_amex",
+      "path": "tests/corpus/cs105/375_card_prefix_amex.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify American Express 15-Digit Prefix 34 or 37",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Amex card check 1: true",
+      "feature_tags": [
+        "card",
+        "prefix",
+        "amex",
+        "iin"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 376,
+      "slug": "376_card_prefix_discover",
+      "path": "tests/corpus/cs105/376_card_prefix_discover.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Discover Card Prefix 6011",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Discover card check 1: true",
+      "feature_tags": [
+        "card",
+        "prefix",
+        "discover",
+        "iin"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 377,
+      "slug": "377_card_validate_pan_length",
+      "path": "tests/corpus/cs105/377_card_validate_pan_length.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Validate General Payment Card Length Range",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Length 16 valid: true",
+      "feature_tags": [
+        "card",
+        "length",
+        "pan",
+        "bounds"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 378,
+      "slug": "378_card_expiry_month_check",
+      "path": "tests/corpus/cs105/378_card_expiry_month_check.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Validate Expiration Month Between 1 and 12",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Month 09 valid: true",
+      "feature_tags": [
+        "card",
+        "expiry",
+        "month",
+        "validation"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 379,
+      "slug": "379_card_expiry_not_expired",
+      "path": "tests/corpus/cs105/379_card_expiry_not_expired.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Check If Expiration Year is Current or Future",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Card not expired 1: true",
+      "feature_tags": [
+        "card",
+        "expiry",
+        "year",
+        "comparison"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 380,
+      "slug": "380_card_cvv_length_check",
+      "path": "tests/corpus/cs105/380_card_cvv_length_check.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Validate Security Code CVV Length",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Standard CVV 3 digits: true",
+      "feature_tags": [
+        "card",
+        "cvv",
+        "security",
+        "length"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 381,
+      "slug": "381_isbn10_checksum_calculate",
+      "path": "tests/corpus/cs105/381_isbn10_checksum_calculate.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Calculate ISBN-10 Weighted Checksum",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "ISBN-10 weighted total: 130",
+      "feature_tags": [
+        "isbn10",
+        "checksum",
+        "weight",
+        "math"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 382,
+      "slug": "382_isbn10_check_digit_verify",
+      "path": "tests/corpus/cs105/382_isbn10_check_digit_verify.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify ISBN-10 Check Digit Mod 11",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "ISBN-10 valid check digit: true",
+      "feature_tags": [
+        "isbn10",
+        "check_digit",
+        "mod11",
+        "validation"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 383,
+      "slug": "383_isbn13_calculate_check_digit",
+      "path": "tests/corpus/cs105/383_isbn13_calculate_check_digit.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Compute ISBN-13 Check Digit Alternating 1 and 3",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Calculated ISBN-13 check digit: 7",
+      "feature_tags": [
+        "isbn13",
+        "check_digit",
+        "barcode",
+        "math"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 384,
+      "slug": "384_isbn13_validate_full_code",
+      "path": "tests/corpus/cs105/384_isbn13_validate_full_code.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Complete 13-Digit ISBN Code",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "ISBN-13 verification: true",
+      "feature_tags": [
+        "isbn13",
+        "validation",
+        "full_code",
+        "math"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 385,
+      "slug": "385_ean8_check_digit_calc",
+      "path": "tests/corpus/cs105/385_ean8_check_digit_calc.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Calculate EAN-8 Barcode Check Digit",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "EAN-8 check digit: 7",
+      "feature_tags": [
+        "ean8",
+        "barcode",
+        "check_digit",
+        "retail"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 386,
+      "slug": "386_upc_a_check_digit",
+      "path": "tests/corpus/cs105/386_upc_a_check_digit.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Calculate UPC-A 12-Digit Product Check Digit",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Calculated UPC-A check digit: 7",
+      "feature_tags": [
+        "upc",
+        "barcode",
+        "retail",
+        "check_digit"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 387,
+      "slug": "387_parity_even_bit_compute",
+      "path": "tests/corpus/cs105/387_parity_even_bit_compute.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Compute Even Parity Bit for Byte",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Computed parity bit: 0",
+      "feature_tags": [
+        "parity",
+        "bitwise",
+        "checksum",
+        "data_link"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 388,
+      "slug": "388_mod11_tax_id_check",
+      "path": "tests/corpus/cs105/388_mod11_tax_id_check.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Modulus 11 Checksum Verification",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Mod 11 valid check: true",
+      "feature_tags": [
+        "mod11",
+        "checksum",
+        "tax_id",
+        "math"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 389,
+      "slug": "389_fletcher_simple_checksum",
+      "path": "tests/corpus/cs105/389_fletcher_simple_checksum.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Calculate 8-Bit Fletcher-Style Cumulative Checksum",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Fletcher checksum result: 300",
+      "feature_tags": [
+        "fletcher",
+        "checksum",
+        "integrity",
+        "accumulator"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 390,
+      "slug": "390_xor_byte_block_checksum",
+      "path": "tests/corpus/cs105/390_xor_byte_block_checksum.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Longitudinal Redundancy Parity Sum",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Longitudinal sum result: 208",
+      "feature_tags": [
+        "checksum",
+        "lrc",
+        "packet",
+        "networking"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 391,
+      "slug": "391_email_single_at_symbol",
+      "path": "tests/corpus/cs105/391_email_single_at_symbol.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Exactly One At Sign in Email",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Valid single at: true",
+      "feature_tags": [
+        "email",
+        "validation",
+        "at_symbol",
+        "syntax"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 392,
+      "slug": "392_email_non_empty_parts",
+      "path": "tests/corpus/cs105/392_email_non_empty_parts.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Non-Empty User and Domain Parts",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Standard address valid: true",
+      "feature_tags": [
+        "email",
+        "validation",
+        "user_part",
+        "domain"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 393,
+      "slug": "393_email_domain_has_dot",
+      "path": "tests/corpus/cs105/393_email_domain_has_dot.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Check If Email Domain Part Contains Dot",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Domain with dot: true",
+      "feature_tags": [
+        "email",
+        "domain",
+        "dot",
+        "dns"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 394,
+      "slug": "394_email_no_spaces",
+      "path": "tests/corpus/cs105/394_email_no_spaces.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Disallow Whitespace in Email Address",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "No whitespace check 1: true",
+      "feature_tags": [
+        "email",
+        "whitespace",
+        "sanitization",
+        "rfc"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 395,
+      "slug": "395_email_no_consecutive_dots",
+      "path": "tests/corpus/cs105/395_email_no_consecutive_dots.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Reject Consecutive Dots in Email",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Has double dot 1: true",
+      "feature_tags": [
+        "email",
+        "dots",
+        "format",
+        "consecutive"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 396,
+      "slug": "396_email_tld_minimum_length",
+      "path": "tests/corpus/cs105/396_email_tld_minimum_length.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Validate Top Level Domain Minimum Length",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "TLD org valid: true",
+      "feature_tags": [
+        "email",
+        "tld",
+        "dns",
+        "bounds"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 397,
+      "slug": "397_email_no_leading_trailing_dots",
+      "path": "tests/corpus/cs105/397_email_no_leading_trailing_dots.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Disallow Leading or Trailing Dots in Username",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Safe user dots 1: true",
+      "feature_tags": [
+        "email",
+        "username",
+        "dots",
+        "validation"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 398,
+      "slug": "398_email_disallow_special_characters",
+      "path": "tests/corpus/cs105/398_email_disallow_special_characters.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Disallow Forbidden Characters in Simple Email",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Forbidden in clean: false",
+      "feature_tags": [
+        "email",
+        "special_characters",
+        "security",
+        "sanitization"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 399,
+      "slug": "399_email_extract_domain_name",
+      "path": "tests/corpus/cs105/399_email_extract_domain_name.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Extract Domain Substring Following At Sign",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Extracted domain: infra.company.com",
+      "feature_tags": [
+        "email",
+        "domain",
+        "extraction",
+        "string"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 400,
+      "slug": "400_email_composite_validator",
+      "path": "tests/corpus/cs105/400_email_composite_validator.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Combined Multi-Check Simple Email Validator",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Valid email composite: true",
+      "feature_tags": [
+        "email",
+        "composite",
+        "validator",
+        "pipeline"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 401,
+      "slug": "401_pwd_minimum_length_check",
+      "path": "tests/corpus/cs105/401_pwd_minimum_length_check.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Enforce Minimum Password Length",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Length check 8 char: true",
+      "feature_tags": [
+        "password",
+        "length",
+        "policy",
+        "security"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 402,
+      "slug": "402_pwd_contains_numeric_digit",
+      "path": "tests/corpus/cs105/402_pwd_contains_numeric_digit.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Password Contains at Least One Digit",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Has digit in secret9: true",
+      "feature_tags": [
+        "password",
+        "digit",
+        "policy",
+        "verification"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 403,
+      "slug": "403_pwd_contains_uppercase_letter",
+      "path": "tests/corpus/cs105/403_pwd_contains_uppercase_letter.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Password Contains Uppercase Letter",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Has upper in Alpha1: true",
+      "feature_tags": [
+        "password",
+        "uppercase",
+        "policy",
+        "security"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 404,
+      "slug": "404_pwd_contains_special_symbol",
+      "path": "tests/corpus/cs105/404_pwd_contains_special_symbol.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Password Contains Special Character",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Symbol check safe#: true",
+      "feature_tags": [
+        "password",
+        "symbols",
+        "policy",
+        "security"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 405,
+      "slug": "405_pwd_disallow_spaces",
+      "path": "tests/corpus/cs105/405_pwd_disallow_spaces.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Reject Passwords Containing Space Characters",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "No spaces in clean_pass: true",
+      "feature_tags": [
+        "password",
+        "spaces",
+        "policy",
+        "sanitization"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 406,
+      "slug": "406_pwd_disallow_common_blacklist",
+      "path": "tests/corpus/cs105/406_pwd_disallow_common_blacklist.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Check Password Against Blacklist of Common Passwords",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Blacklist check 123456: true",
+      "feature_tags": [
+        "password",
+        "blacklist",
+        "dictionary",
+        "security"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 407,
+      "slug": "407_pwd_calculate_strength_score",
+      "path": "tests/corpus/cs105/407_pwd_calculate_strength_score.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Calculate Multi-Factor Password Strength Score",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Password score result: 4",
+      "feature_tags": [
+        "password",
+        "score",
+        "strength",
+        "metrics"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 408,
+      "slug": "408_pwd_maximum_length_bounds",
+      "path": "tests/corpus/cs105/408_pwd_maximum_length_bounds.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Enforce Upper Limit on Password Length",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Max limit 32 check 1: true",
+      "feature_tags": [
+        "password",
+        "max_length",
+        "bounds",
+        "dos_prevention"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 409,
+      "slug": "409_pwd_disallow_username_match",
+      "path": "tests/corpus/cs105/409_pwd_disallow_username_match.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Reject Password Identical to Username",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Differs test 1: true",
+      "feature_tags": [
+        "password",
+        "username",
+        "policy",
+        "security"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 410,
+      "slug": "410_pwd_composite_policy_gate",
+      "path": "tests/corpus/cs105/410_pwd_composite_policy_gate.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Combined Password Meets All Baseline Policies",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Policy gate pass: true",
+      "feature_tags": [
+        "password",
+        "composite",
+        "policy",
+        "gate"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 411,
+      "slug": "411_phone_e164_leading_plus",
+      "path": "tests/corpus/cs105/411_phone_e164_leading_plus.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify International E.164 Leading Plus Sign",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "E.164 plus check 1: true",
+      "feature_tags": [
+        "phone",
+        "e164",
+        "international",
+        "prefix"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 412,
+      "slug": "412_phone_us_10_digit_length",
+      "path": "tests/corpus/cs105/412_phone_us_10_digit_length.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Validate US 10-Digit Standard Phone Length",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "US 10 digit check 1: true",
+      "feature_tags": [
+        "phone",
+        "us_format",
+        "nanp",
+        "length"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 413,
+      "slug": "413_phone_area_code_not_zero_or_one",
+      "path": "tests/corpus/cs105/413_phone_area_code_not_zero_or_one.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Enforce NANP Area Code Leading Digit Not 0 or 1",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Area code 415 valid: true",
+      "feature_tags": [
+        "phone",
+        "area_code",
+        "nanp",
+        "telephony"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 414,
+      "slug": "414_uuid_total_length_check",
+      "path": "tests/corpus/cs105/414_uuid_total_length_check.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Standard UUID String Length Exactly 36",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "UUID length 36 check: true",
+      "feature_tags": [
+        "uuid",
+        "length",
+        "identifier",
+        "validation"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 415,
+      "slug": "415_uuid_hyphen_positions",
+      "path": "tests/corpus/cs105/415_uuid_hyphen_positions.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Standard UUID Hyphen Positions",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "UUID hyphen layout check: true",
+      "feature_tags": [
+        "uuid",
+        "hyphens",
+        "layout",
+        "rfc4122"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 416,
+      "slug": "416_uuid_version_four_marker",
+      "path": "tests/corpus/cs105/416_uuid_version_four_marker.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify UUID Version 4 Nibble Marker",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "UUID v4 marker check: true",
+      "feature_tags": [
+        "uuid",
+        "version4",
+        "rfc4122",
+        "inspection"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 417,
+      "slug": "417_hex_string_validate_chars",
+      "path": "tests/corpus/cs105/417_hex_string_validate_chars.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Hexadecimal Character Representation",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Hex char f valid: true",
+      "feature_tags": [
+        "hex",
+        "validation",
+        "digits",
+        "char"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 418,
+      "slug": "418_slug_format_validator",
+      "path": "tests/corpus/cs105/418_slug_format_validator.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Validate URL Slug Format No Upper or Space",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Clean slug 1: true",
+      "feature_tags": [
+        "slug",
+        "url",
+        "formatting",
+        "clean"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 419,
+      "slug": "419_mac_address_colon_count",
+      "path": "tests/corpus/cs105/419_mac_address_colon_count.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Colon Separators in Hardware MAC Address",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "MAC address format valid: true",
+      "feature_tags": [
+        "mac",
+        "hardware",
+        "networking",
+        "colons"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 420,
+      "slug": "420_ipv4_dot_segment_count",
+      "path": "tests/corpus/cs105/420_ipv4_dot_segment_count.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify IPv4 Address Exactly Three Dot Delimiters",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "IPv4 dot count check: true",
+      "feature_tags": [
+        "ipv4",
+        "ip_address",
+        "networking",
+        "delimiters"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 421,
+      "slug": "421_date_leap_year_rules",
+      "path": "tests/corpus/cs105/421_date_leap_year_rules.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Determine Gregorian Calendar Leap Year",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Leap year 2024: true",
+      "feature_tags": [
+        "date",
+        "leap_year",
+        "calendar",
+        "math"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 422,
+      "slug": "422_date_month_range_check",
+      "path": "tests/corpus/cs105/422_date_month_range_check.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Validate Month Integer in 1 to 12 Range",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Month 7 valid: true",
+      "feature_tags": [
+        "date",
+        "month",
+        "bounds",
+        "calendar"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 423,
+      "slug": "423_date_days_in_month_lookup",
+      "path": "tests/corpus/cs105/423_date_days_in_month_lookup.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Determine Days in Month in Non-Leap Year",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Days in February: 28",
+      "feature_tags": [
+        "date",
+        "days",
+        "calendar",
+        "lookup"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 424,
+      "slug": "424_time_24hr_hour_bounds",
+      "path": "tests/corpus/cs105/424_time_24hr_hour_bounds.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify 24-Hour Time Hour Range 0 to 23",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Hour 14 valid: true",
+      "feature_tags": [
+        "time",
+        "hours",
+        "24hour",
+        "bounds"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 425,
+      "slug": "425_time_minute_range_check",
+      "path": "tests/corpus/cs105/425_time_minute_range_check.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Clock Minute in Range 0 to 59",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Minute 45 valid: true",
+      "feature_tags": [
+        "time",
+        "minutes",
+        "bounds",
+        "clock"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 426,
+      "slug": "426_time_second_range_check",
+      "path": "tests/corpus/cs105/426_time_second_range_check.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify Clock Second in Range 0 to 59",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Second 30 valid: true",
+      "feature_tags": [
+        "time",
+        "seconds",
+        "bounds",
+        "clock"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 427,
+      "slug": "427_date_iso8601_length_check",
+      "path": "tests/corpus/cs105/427_date_iso8601_length_check.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify YYYY-MM-DD Date String Length Exactly 10",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "ISO date length check: true",
+      "feature_tags": [
+        "date",
+        "iso8601",
+        "length",
+        "string"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 428,
+      "slug": "428_date_iso8601_dash_separators",
+      "path": "tests/corpus/cs105/428_date_iso8601_dash_separators.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Verify ISO 8601 Dash Delimiters at Index 4 and 7",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "ISO date dash separators valid: true",
+      "feature_tags": [
+        "date",
+        "iso8601",
+        "delimiters",
+        "formatting"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 429,
+      "slug": "429_range_start_precedes_end",
+      "path": "tests/corpus/cs105/429_range_start_precedes_end.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Ensure Start Index Does Not Exceed End Index",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Interval 10..20 valid: true",
+      "feature_tags": [
+        "range",
+        "interval",
+        "ordering",
+        "bounds"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 430,
+      "slug": "430_range_clamp_inside_limits",
+      "path": "tests/corpus/cs105/430_range_clamp_inside_limits.meme",
+      "course": "cs105",
+      "topic": "validation_and_checksums",
+      "title": "Clamp Integer Between Lower and Upper Limits",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Clamped high val: 100",
+      "feature_tags": [
+        "range",
+        "clamp",
+        "bounds",
+        "utility"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 431,
+      "slug": "431_stat_calculate_mean",
+      "path": "tests/corpus/cs106/431_stat_calculate_mean.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Compute Arithmetic Mean of Integer Dataset",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Calculated dataset mean: 30",
+      "feature_tags": [
+        "stats",
+        "mean",
+        "math",
+        "average"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 432,
+      "slug": "432_stat_median_odd_length",
+      "path": "tests/corpus/cs106/432_stat_median_odd_length.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Determine Median Value for Odd Sized List",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Calculated odd median: 12",
+      "feature_tags": [
+        "stats",
+        "median",
+        "sort",
+        "odd"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 433,
+      "slug": "433_stat_median_even_length",
+      "path": "tests/corpus/cs106/433_stat_median_even_length.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Determine Average of Middle Two for Even Sized List",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Calculated even median: 25",
+      "feature_tags": [
+        "stats",
+        "median",
+        "even",
+        "sort"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 434,
+      "slug": "434_stat_population_variance",
+      "path": "tests/corpus/cs106/434_stat_population_variance.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Compute Integer Approximation of Population Variance",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Population variance approx: 66",
+      "feature_tags": [
+        "stats",
+        "variance",
+        "dispersion",
+        "math"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 435,
+      "slug": "435_stat_integer_square_root",
+      "path": "tests/corpus/cs106/435_stat_integer_square_root.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Approximate Integer Square Root for StdDev",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Int sqrt 64: 8",
+      "feature_tags": [
+        "stats",
+        "sqrt",
+        "math",
+        "approximation"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 436,
+      "slug": "436_stat_data_range_spread",
+      "path": "tests/corpus/cs106/436_stat_data_range_spread.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Compute Range Spread Between High and Low",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Dataset range spread: 19",
+      "feature_tags": [
+        "stats",
+        "range",
+        "spread",
+        "dispersion"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 437,
+      "slug": "437_stat_interquartile_range",
+      "path": "tests/corpus/cs106/437_stat_interquartile_range.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Compute Interquartile Range from Q1 and Q3",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Interquartile range: 50",
+      "feature_tags": [
+        "stats",
+        "iqr",
+        "quartiles",
+        "summary"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 438,
+      "slug": "438_stat_percentile_rank_count",
+      "path": "tests/corpus/cs106/438_stat_percentile_rank_count.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Percentage of Elements Below Threshold",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Percentile rank of 80: 60",
+      "feature_tags": [
+        "stats",
+        "percentile",
+        "rank",
+        "counting"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 439,
+      "slug": "439_stat_moving_average_three_point",
+      "path": "tests/corpus/cs106/439_stat_moving_average_three_point.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Compute 3-Point Moving Average",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Moving average of 30 40 50: 40",
+      "feature_tags": [
+        "stats",
+        "moving_average",
+        "smoothing",
+        "time_series"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 440,
+      "slug": "440_stat_find_peak_frequency_bin",
+      "path": "tests/corpus/cs106/440_stat_find_peak_frequency_bin.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Identify Index of Histogram Bin with Highest Frequency",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Peak frequency bin index: 2",
+      "feature_tags": [
+        "stats",
+        "mode",
+        "histogram",
+        "peak"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 441,
+      "slug": "441_fin_simple_interest_yield",
+      "path": "tests/corpus/cs106/441_fin_simple_interest_yield.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Simple Interest Yield",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Simple interest yield: 1500",
+      "feature_tags": [
+        "finance",
+        "interest",
+        "simple",
+        "math"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 442,
+      "slug": "442_fin_compound_interest_annual",
+      "path": "tests/corpus/cs106/442_fin_compound_interest_annual.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Annual Compound Balance Growth",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Compounded final balance: 1331",
+      "feature_tags": [
+        "finance",
+        "compound",
+        "investment",
+        "growth"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 443,
+      "slug": "443_fin_future_value_monthly_deposit",
+      "path": "tests/corpus/cs106/443_fin_future_value_monthly_deposit.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Compute Savings Accumulation with Monthly Deposits",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Annual savings accumulation: 3000",
+      "feature_tags": [
+        "finance",
+        "savings",
+        "annuity",
+        "deposit"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 444,
+      "slug": "444_fin_estimated_monthly_payment",
+      "path": "tests/corpus/cs106/444_fin_estimated_monthly_payment.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Estimate Monthly Principal Payment with Fee",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Estimated monthly installment: 515",
+      "feature_tags": [
+        "finance",
+        "loan",
+        "amortization",
+        "payment"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 445,
+      "slug": "445_fin_net_profit_margin_pct",
+      "path": "tests/corpus/cs106/445_fin_net_profit_margin_pct.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Net Profit Margin Percentage",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Net profit margin percentage: 30",
+      "feature_tags": [
+        "finance",
+        "margin",
+        "profit",
+        "accounting"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 446,
+      "slug": "446_fin_break_even_unit_volume",
+      "path": "tests/corpus/cs106/446_fin_break_even_unit_volume.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Break-Even Unit Volume",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Break-even unit volume: 1000",
+      "feature_tags": [
+        "finance",
+        "break_even",
+        "cost",
+        "unit"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 447,
+      "slug": "447_fin_apply_discount_percentage",
+      "path": "tests/corpus/cs106/447_fin_apply_discount_percentage.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Apply Percentage Discount to Price",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Discounted purchase price: 60",
+      "feature_tags": [
+        "finance",
+        "discount",
+        "retail",
+        "price"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 448,
+      "slug": "448_fin_calc_sales_tax_amount",
+      "path": "tests/corpus/cs106/448_fin_calc_sales_tax_amount.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Regional Sales Tax Amount",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Calculated sales tax: 16",
+      "feature_tags": [
+        "finance",
+        "tax",
+        "sales",
+        "percentage"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 449,
+      "slug": "449_fin_calculate_tip_share",
+      "path": "tests/corpus/cs106/449_fin_calculate_tip_share.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Gratuity Amount on Bill",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Calculated gratuity tip: 27",
+      "feature_tags": [
+        "finance",
+        "tip",
+        "gratuity",
+        "restaurant"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 450,
+      "slug": "450_fin_rule_of_72_doubling_years",
+      "path": "tests/corpus/cs106/450_fin_rule_of_72_doubling_years.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Estimate Investment Doubling Time Using Rule of 72",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Years to double investment: 12",
+      "feature_tags": [
+        "finance",
+        "rule_of_72",
+        "doubling",
+        "compound"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 451,
+      "slug": "451_time_seconds_between_moments",
+      "path": "tests/corpus/cs106/451_time_seconds_between_moments.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Elapsed Seconds Between Two Clock Times",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Elapsed duration in seconds: 4545",
+      "feature_tags": [
+        "time",
+        "elapsed",
+        "seconds",
+        "math"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 452,
+      "slug": "452_time_format_seconds_to_hms",
+      "path": "tests/corpus/cs106/452_time_format_seconds_to_hms.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Decompose Total Seconds into Hours Minutes and Seconds",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Hours component: 1",
+      "feature_tags": [
+        "time",
+        "hms",
+        "decomposition",
+        "clock"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 453,
+      "slug": "453_time_add_minutes_to_clock",
+      "path": "tests/corpus/cs106/453_time_add_minutes_to_clock.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Add Minutes to 24-Hour Clock Time",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Later hour result: 0",
+      "feature_tags": [
+        "time",
+        "addition",
+        "clock",
+        "modulo"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 454,
+      "slug": "454_date_days_between_same_month",
+      "path": "tests/corpus/cs106/454_date_days_between_same_month.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Days Between Calendar Dates in Same Month",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Days in interval span: 17",
+      "feature_tags": [
+        "date",
+        "interval",
+        "days",
+        "calendar"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 455,
+      "slug": "455_date_estimate_day_of_year",
+      "path": "tests/corpus/cs106/455_date_estimate_day_of_year.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Estimate Day of Year from Month and Day",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Approximate day of year: 105",
+      "feature_tags": [
+        "date",
+        "day_of_year",
+        "calendar",
+        "math"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 456,
+      "slug": "456_date_business_days_in_weeks",
+      "path": "tests/corpus/cs106/456_date_business_days_in_weeks.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Total Business Days in Multi-Week Span",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Total business days: 30",
+      "feature_tags": [
+        "date",
+        "business_days",
+        "workweek",
+        "schedule"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 457,
+      "slug": "457_time_countdown_remaining",
+      "path": "tests/corpus/cs106/457_time_countdown_remaining.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Remaining Minutes in Countdown Timer",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Minutes remaining on timer: 18",
+      "feature_tags": [
+        "time",
+        "countdown",
+        "timer",
+        "bounds"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 458,
+      "slug": "458_time_minutes_to_hour_fraction",
+      "path": "tests/corpus/cs106/458_time_minutes_to_hour_fraction.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Split Minutes into Hours and Leftover Minutes",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Leftover minutes: 15",
+      "feature_tags": [
+        "time",
+        "minutes",
+        "modulo",
+        "breakdown"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 459,
+      "slug": "459_time_round_to_nearest_quarter_hour",
+      "path": "tests/corpus/cs106/459_time_round_to_nearest_quarter_hour.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Round Minutes to Nearest 15-Minute Block",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Round 22 min: 15",
+      "feature_tags": [
+        "time",
+        "rounding",
+        "quarter_hour",
+        "billing"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 460,
+      "slug": "460_time_epoch_to_hour_of_day",
+      "path": "tests/corpus/cs106/460_time_epoch_to_hour_of_day.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Extract Hour of Day from Unix Epoch Timestamp",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Extracted hour of day: 10",
+      "feature_tags": [
+        "time",
+        "epoch",
+        "timestamp",
+        "clock"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 461,
+      "slug": "461_unit_km_to_miles_approx",
+      "path": "tests/corpus/cs106/461_unit_km_to_miles_approx.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Convert Kilometers to Miles Using Ratio 62/100",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "100 km in miles: 62",
+      "feature_tags": [
+        "units",
+        "distance",
+        "metric",
+        "imperial"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 462,
+      "slug": "462_unit_miles_to_km_approx",
+      "path": "tests/corpus/cs106/462_unit_miles_to_km_approx.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Convert Miles to Kilometers Using Ratio 161/100",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "50 miles in km: 80",
+      "feature_tags": [
+        "units",
+        "distance",
+        "imperial",
+        "metric"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 463,
+      "slug": "463_unit_celsius_to_fahrenheit",
+      "path": "tests/corpus/cs106/463_unit_celsius_to_fahrenheit.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Convert Celsius Temperature to Fahrenheit",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "25 C in Fahrenheit: 77",
+      "feature_tags": [
+        "units",
+        "temperature",
+        "celsius",
+        "fahrenheit"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 464,
+      "slug": "464_unit_fahrenheit_to_celsius",
+      "path": "tests/corpus/cs106/464_unit_fahrenheit_to_celsius.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Convert Fahrenheit Temperature to Celsius",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "77 F in Celsius: 25",
+      "feature_tags": [
+        "units",
+        "temperature",
+        "fahrenheit",
+        "celsius"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 465,
+      "slug": "465_unit_kg_to_pounds_approx",
+      "path": "tests/corpus/cs106/465_unit_kg_to_pounds_approx.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Convert Kilograms to Pounds Using Factor 22/10",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "70 kg in pounds: 154",
+      "feature_tags": [
+        "units",
+        "weight",
+        "mass",
+        "conversion"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 466,
+      "slug": "466_unit_pounds_to_kg_approx",
+      "path": "tests/corpus/cs106/466_unit_pounds_to_kg_approx.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Convert Pounds to Kilograms Using Factor 10/22",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "154 lbs in kg: 70",
+      "feature_tags": [
+        "units",
+        "weight",
+        "imperial",
+        "metric"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 467,
+      "slug": "467_unit_liters_to_gallons_approx",
+      "path": "tests/corpus/cs106/467_unit_liters_to_gallons_approx.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Convert Liters to US Gallons Using Ratio 264/1000",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "100 liters in gallons: 26",
+      "feature_tags": [
+        "units",
+        "volume",
+        "liquid",
+        "conversion"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 468,
+      "slug": "468_unit_gallons_to_liters_approx",
+      "path": "tests/corpus/cs106/468_unit_gallons_to_liters_approx.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Convert Gallons to Liters Using Ratio 3785/1000",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "10 gallons in liters: 37",
+      "feature_tags": [
+        "units",
+        "volume",
+        "gallons",
+        "liters"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 469,
+      "slug": "469_unit_meters_to_feet_approx",
+      "path": "tests/corpus/cs106/469_unit_meters_to_feet_approx.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Convert Meters to Feet Using Ratio 328/100",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "10 meters in feet: 32",
+      "feature_tags": [
+        "units",
+        "length",
+        "meters",
+        "feet"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 470,
+      "slug": "470_unit_feet_to_inches",
+      "path": "tests/corpus/cs106/470_unit_feet_to_inches.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Convert Feet to Total Inches",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "6 feet in inches: 72",
+      "feature_tags": [
+        "units",
+        "length",
+        "inches",
+        "feet"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 471,
+      "slug": "471_cart_line_item_total",
+      "path": "tests/corpus/cs106/471_cart_line_item_total.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Compute Line Item Price Multiplied by Quantity",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Line item subtotal in cents: 1350",
+      "feature_tags": [
+        "commerce",
+        "cart",
+        "pricing",
+        "calculation"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 472,
+      "slug": "472_cart_sum_line_items",
+      "path": "tests/corpus/cs106/472_cart_sum_line_items.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Sum Multiple Line Item Totals in Shopping Cart",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Total shopping cart subtotal: 4840",
+      "feature_tags": [
+        "commerce",
+        "cart",
+        "subtotal",
+        "sum"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 473,
+      "slug": "473_cart_tier_discount_calc",
+      "path": "tests/corpus/cs106/473_cart_tier_discount_calc.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Apply Tiered Volume Discount by Cart Amount",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Tier discount 250: 20",
+      "feature_tags": [
+        "commerce",
+        "discount",
+        "tiers",
+        "pricing"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 474,
+      "slug": "474_cart_apply_coupon_code",
+      "path": "tests/corpus/cs106/474_cart_apply_coupon_code.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Evaluate Promotional Coupon Code Deduction",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Promotional coupon deduction: 25",
+      "feature_tags": [
+        "commerce",
+        "coupon",
+        "promotion",
+        "discount"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 475,
+      "slug": "475_cart_shipping_rate_by_weight",
+      "path": "tests/corpus/cs106/475_cart_shipping_rate_by_weight.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Determine Shipping Fee Tier by Package Weight",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Shipping 12kg: 25",
+      "feature_tags": [
+        "commerce",
+        "shipping",
+        "logistics",
+        "tiers"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 476,
+      "slug": "476_cart_grand_total_assembly",
+      "path": "tests/corpus/cs106/476_cart_grand_total_assembly.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Assemble Order Grand Total with Tax and Shipping",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Order final grand total: 105",
+      "feature_tags": [
+        "commerce",
+        "order",
+        "total",
+        "billing"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 477,
+      "slug": "477_cart_decrement_inventory_stock",
+      "path": "tests/corpus/cs106/477_cart_decrement_inventory_stock.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Decrement Warehouse Inventory Level on Fulfillment",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Remaining inventory stock: 38",
+      "feature_tags": [
+        "commerce",
+        "inventory",
+        "stock",
+        "fulfillment"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 478,
+      "slug": "478_cart_low_stock_warning",
+      "path": "tests/corpus/cs106/478_cart_low_stock_warning.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Trigger Reorder Warning for Low Stock Items",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Stock 4 alert: true",
+      "feature_tags": [
+        "commerce",
+        "inventory",
+        "reorder",
+        "alert"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 479,
+      "slug": "479_cart_deduct_store_credit",
+      "path": "tests/corpus/cs106/479_cart_deduct_store_credit.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Apply Store Credit Balance Against Invoice Due",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Remaining due after credit 1: 60",
+      "feature_tags": [
+        "commerce",
+        "store_credit",
+        "balance",
+        "invoice"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 480,
+      "slug": "480_cart_reward_points_accrual",
+      "path": "tests/corpus/cs106/480_cart_reward_points_accrual.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Loyalty Reward Points on Qualified Spend",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Accrued loyalty points: 24",
+      "feature_tags": [
+        "commerce",
+        "loyalty",
+        "points",
+        "rewards"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 481,
+      "slug": "481_queue_enqueue_job",
+      "path": "tests/corpus/cs106/481_queue_enqueue_job.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Enqueue Work Job ID to Back of Task Queue",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Queue size after enqueue: 4",
+      "feature_tags": [
+        "queue",
+        "fifo",
+        "enqueue",
+        "append"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 482,
+      "slug": "482_queue_advance_head_pointer",
+      "path": "tests/corpus/cs106/482_queue_advance_head_pointer.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Advance Queue Head Pointer on Dequeue",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Advanced queue head: 3",
+      "feature_tags": [
+        "queue",
+        "head",
+        "dequeue",
+        "pointer"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 483,
+      "slug": "483_buffer_ring_write_slot",
+      "path": "tests/corpus/cs106/483_buffer_ring_write_slot.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Next Ring Buffer Circular Write Index",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Next slot from 3: 4",
+      "feature_tags": [
+        "ring_buffer",
+        "circular",
+        "modulo",
+        "index"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 484,
+      "slug": "484_buffer_ring_read_slot",
+      "path": "tests/corpus/cs106/484_buffer_ring_read_slot.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Next Ring Buffer Circular Read Index",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Read next slot 1: 1",
+      "feature_tags": [
+        "ring_buffer",
+        "circular",
+        "read",
+        "tail"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 485,
+      "slug": "485_stack_push_operation",
+      "path": "tests/corpus/cs106/485_stack_push_operation.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Push Element to Top of Execution Stack",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Pushed top value: 99",
+      "feature_tags": [
+        "stack",
+        "lifo",
+        "push",
+        "operations"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 486,
+      "slug": "486_stack_peek_top_element",
+      "path": "tests/corpus/cs106/486_stack_peek_top_element.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Inspect Top Value of Non-Empty Stack",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Peeked stack top: 750",
+      "feature_tags": [
+        "stack",
+        "peek",
+        "inspection",
+        "lifo"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 487,
+      "slug": "487_workflow_triage_priority_score",
+      "path": "tests/corpus/cs106/487_workflow_triage_priority_score.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Compute Incident Triage Priority Score",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Calculated incident triage score: 20",
+      "feature_tags": [
+        "workflow",
+        "triage",
+        "priority",
+        "incident"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 488,
+      "slug": "488_workflow_round_robin_worker",
+      "path": "tests/corpus/cs106/488_workflow_round_robin_worker.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Assign Next Task in Round Robin Dispatch",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Next round robin worker id: 0",
+      "feature_tags": [
+        "workflow",
+        "round_robin",
+        "scheduler",
+        "dispatch"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 489,
+      "slug": "489_workflow_status_transition",
+      "path": "tests/corpus/cs106/489_workflow_status_transition.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Transition Pipeline Job to Next Valid State",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "State transition 1: RUNNING",
+      "feature_tags": [
+        "workflow",
+        "state_machine",
+        "transition",
+        "status"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 490,
+      "slug": "490_workflow_exponential_backoff_delay",
+      "path": "tests/corpus/cs106/490_workflow_exponential_backoff_delay.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Exponential Backoff Delay Interval",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Backoff attempt 3 ms: 400",
+      "feature_tags": [
+        "workflow",
+        "backoff",
+        "retry",
+        "network"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
+        "language": []
+      }
+    },
+    {
+      "id": 491,
+      "slug": "491_workflow_stopwatch_split_delta",
+      "path": "tests/corpus/cs106/491_workflow_stopwatch_split_delta.meme",
+      "course": "cs106",
+      "topic": "small_reusable_libraries",
+      "title": "Calculate Split Lap Delta from Stopwatch Marks",
+      "style": "clean",
+      "stdin": "",
+      "expected_status": "ok",
+      "expected_stdout_contains": "Recorded lap split time ms: 3450",
+      "feature_tags": [
+        "workflow",
+        "stopwatch",
+        "timer",
+        "lap"
+      ],
+      "extensibility_gaps": {
+        "examples": [],
         "language": []
       }
     }

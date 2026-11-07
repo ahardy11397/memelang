@@ -1,0 +1,9 @@
+function is_valid_cvv(cvv: String, is_amex: Bool) -> Bool:
+    define n as length of string cvv
+    if is_amex
+        return n == 4
+    return n == 3
+
+print "Standard CVV 3 digits:", is_valid_cvv("842", false)
+print "Amex 4 digits:", is_valid_cvv("1234", true)
+print "Standard bad CVV:", is_valid_cvv("12", false)

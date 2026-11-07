@@ -1,0 +1,370 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/355_list_alternate_merge.meme": {
+      "source_sha256": "1fe586e1e364a2ca6c425a8d5baee858e8942ebb16fe0f3c2458ef9dac7faf36",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "list_x",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "a",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "b",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "c",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "list_y",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "1",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "2",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "3",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "interleaved",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "String"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "var_decl",
+          "name": "cnt",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "list_length",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "list_x"
+            }
+          },
+          "source_line": 4
+        },
+        {
+          "op": "for_range",
+          "loop_var": "idx",
+          "start": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "binary_op",
+            "op": "-",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "cnt"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            }
+          },
+          "body": [
+            {
+              "op": "list_append",
+              "target": "interleaved",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "list_x"
+                },
+                "index": {
+                  "expr_type": "var_ref",
+                  "name": "idx"
+                }
+              },
+              "source_line": 6
+            },
+            {
+              "op": "list_append",
+              "target": "interleaved",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "list_y"
+                },
+                "index": {
+                  "expr_type": "var_ref",
+                  "name": "idx"
+                }
+              },
+              "source_line": 7
+            }
+          ],
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Interleaved count:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "interleaved"
+              }
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Item at index 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "interleaved"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "define list list_x as [\"a\", \"b\", \"c\"]\ndefine list list_y as [\"1\", \"2\", \"3\"]\ndefine list interleaved as empty List<String>\ndefine cnt: Int as length of list_x\nfor idx from 0 to cnt - 1:\n    append list_x[idx] to interleaved\n    append list_y[idx] to interleaved\nprint \"Interleaved count:\", length of interleaved\nprint \"Item at index 1:\", interleaved[1]",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "list_x",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "a",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "b",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "c",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "list_y",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "1",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "2",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "3",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "interleaved",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "String"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "var_decl",
+            "name": "cnt",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "list_x"
+              }
+            },
+            "source_line": 4
+          },
+          {
+            "op": "for_range",
+            "loop_var": "idx",
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "binary_op",
+              "op": "-",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "cnt"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            },
+            "body": [
+              {
+                "op": "list_append",
+                "target": "interleaved",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "list_x"
+                  },
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "idx"
+                  }
+                },
+                "source_line": 6
+              },
+              {
+                "op": "list_append",
+                "target": "interleaved",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "list_y"
+                  },
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "idx"
+                  }
+                },
+                "source_line": 7
+              }
+            ],
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Interleaved count:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "interleaved"
+                }
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Item at index 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "interleaved"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

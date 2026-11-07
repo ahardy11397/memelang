@@ -1,0 +1,7 @@
+function stack_peek(st: List<Int>) -> Int:
+    define n as length of st
+    return st[n - 1]
+
+define list call_stack: List<Int> as [500, 600, 750]
+define top_val as stack_peek(call_stack)
+print "Peeked stack top:", top_val

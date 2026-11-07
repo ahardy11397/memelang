@@ -1,0 +1,8 @@
+define list original_queue: List<Int> as [100, 200, 300, 400]
+define list rotated_queue: List<Int> as empty List<Int>
+define q_len as length of original_queue
+for i from 1 to (q_len - 1)
+    append original_queue[i] to rotated_queue
+append original_queue[0] to rotated_queue
+print "Head after rotation:", rotated_queue[0]
+print "Tail after rotation:", rotated_queue[3]

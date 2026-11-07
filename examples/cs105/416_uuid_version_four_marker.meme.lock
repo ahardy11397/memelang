@@ -1,0 +1,274 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/416_uuid_version_four_marker.meme": {
+      "source_sha256": "da55f1cbe37e79014ba487b13f81ef0bb2b7596be6a7d64521f24612d5c6bfe1",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_uuid_v4",
+          "params": [
+            {
+              "name": "uuid",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "uuid"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 36,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "ver_char",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "uuid"
+                    },
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 14,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "literal",
+                      "value": 15,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ver_char"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "4",
+                      "data_type": "String"
+                    }
+                  },
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "u4",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "c9a646d3-9c61-4cc9-bc19-4786f4cc40f4",
+            "data_type": "String"
+          },
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "UUID v4 marker check:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_uuid_v4",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "u4"
+                }
+              ]
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "function is_uuid_v4(uuid: String) -> Bool:\n    define n: Int as length of string uuid\n    if n == 36:\n        define ver_char: String as slice uuid from 14 to 15\n        return ver_char == \"4\"\n    return false\ndefine u4: String as \"c9a646d3-9c61-4cc9-bc19-4786f4cc40f4\"\nprint \"UUID v4 marker check:\", is_uuid_v4(u4)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_uuid_v4",
+            "params": [
+              {
+                "name": "uuid",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "uuid"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 36,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "ver_char",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "uuid"
+                      },
+                      "start": {
+                        "expr_type": "literal",
+                        "value": 14,
+                        "data_type": "Int"
+                      },
+                      "end": {
+                        "expr_type": "literal",
+                        "value": 15,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ver_char"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "4",
+                        "data_type": "String"
+                      }
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "u4",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "c9a646d3-9c61-4cc9-bc19-4786f4cc40f4",
+              "data_type": "String"
+            },
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "UUID v4 marker check:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_uuid_v4",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "u4"
+                  }
+                ]
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

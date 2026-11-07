@@ -1,0 +1,10 @@
+function reverse_string(orig: String) -> String:
+    define n as length of string orig
+    define rev as ""
+    for i from 0 to (n - 1)
+        define ch as slice orig from (n - 1 - i) to (n - i)
+        set rev to rev + ch
+    return rev
+
+define backwards as reverse_string("stressed")
+print "Backwards word:", backwards

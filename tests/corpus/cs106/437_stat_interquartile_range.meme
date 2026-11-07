@@ -1,0 +1,5 @@
+function compute_iqr(q1: Int, q3: Int) -> Int:
+    return q3 - q1
+
+define iqr_val as compute_iqr(25, 75)
+print "Interquartile range:", iqr_val

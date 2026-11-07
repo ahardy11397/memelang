@@ -1,0 +1,116 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/307_parse_query_parameter.meme": {
+      "source_sha256": "e3be06c0b8075da6616078e283a776158d8cd019bce472f1aa0213ec0e5f1594",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "query",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "user_id=1042&role=admin&active=true",
+            "data_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "user_param",
+          "var_type": "String",
+          "value": {
+            "expr_type": "string_slice",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "query"
+            },
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 12,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 2
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Param:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "user_param"
+            }
+          ],
+          "source_line": 3
+        }
+      ],
+      "canonical_meme": "define query: String as \"user_id=1042&role=admin&active=true\"\ndefine user_param: String as slice query from 0 to 12\nprint \"Param:\", user_param",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "query",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "user_id=1042&role=admin&active=true",
+              "data_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "user_param",
+            "var_type": "String",
+            "value": {
+              "expr_type": "string_slice",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "query"
+              },
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 2
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Param:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "user_param"
+              }
+            ],
+            "source_line": 3
+          }
+        ]
+      }
+    }
+  }
+}

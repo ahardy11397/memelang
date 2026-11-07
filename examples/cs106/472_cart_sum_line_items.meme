@@ -1,0 +1,5 @@
+define list item_totals: List<Int> as [1200, 450, 890, 2300]
+define cart_total: Int as 0
+for each itm in item_totals
+    set cart_total to cart_total + itm
+print "Total shopping cart subtotal:", cart_total

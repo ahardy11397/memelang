@@ -1,0 +1,11 @@
+define list stream: List<Int> as [1, 1, 2, 3, 3, 3, 4, 2, 2]
+define list deduped: List<Int> as empty List<Int>
+define total_items as length of stream
+for idx from 0 to (total_items - 1)
+    if idx == 0
+        append stream[idx] to deduped
+    else
+        if stream[idx] != stream[idx - 1]
+            append stream[idx] to deduped
+print "Deduped list length:", length of deduped
+print "First deduped item:", deduped[0]

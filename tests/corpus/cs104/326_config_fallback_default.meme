@@ -1,0 +1,7 @@
+function resolve_config_param(configured_val: String, default_val: String) -> String:
+    if length of string configured_val == 0
+        return default_val
+    return configured_val
+
+define setting as resolve_config_param("", "https://api.domain.com")
+print "Resolved endpoint:", setting

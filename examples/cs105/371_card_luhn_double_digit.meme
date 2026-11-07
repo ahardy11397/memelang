@@ -1,0 +1,10 @@
+function luhn_double(d: Int) -> Int:
+    define doubled as d * 2
+    if doubled > 9
+        return doubled - 9
+    return doubled
+
+define r1 as luhn_double(4)
+define r2 as luhn_double(7)
+print "Doubled 4:", r1
+print "Doubled 7:", r2

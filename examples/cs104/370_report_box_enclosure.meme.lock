@@ -1,0 +1,158 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/370_report_box_enclosure.meme": {
+      "source_sha256": "5cc38a62e467fc9c34956a7b50df73a68c94a1a412d6b8d4cf5844f86f7cacdc",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "alert_msg",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "CRITICAL_ALERT",
+            "data_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "border",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "+----------------+",
+            "data_type": "String"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "border"
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "binary_op",
+              "op": "+",
+              "left": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "literal",
+                  "value": "| ",
+                  "data_type": "String"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "alert_msg"
+                }
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": " |",
+                "data_type": "String"
+              }
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "border"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "define alert_msg: String as \"CRITICAL_ALERT\"\ndefine border: String as \"+----------------+\"\nprint border\nprint \"| \" + alert_msg + \" |\"\nprint border",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "alert_msg",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "CRITICAL_ALERT",
+              "data_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "border",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "+----------------+",
+              "data_type": "String"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "border"
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "literal",
+                    "value": "| ",
+                    "data_type": "String"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "alert_msg"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": " |",
+                  "data_type": "String"
+                }
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "border"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,304 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/316_csv_validate_field_count.meme": {
+      "source_sha256": "c37f9b376d791a73edd7f7b42955c02e4b28b5dedf3de2f31d1dc4ee21695427",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_row_valid",
+          "params": [
+            {
+              "name": "row",
+              "param_type": "List<String>"
+            },
+            {
+              "name": "required_cols",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "row"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "required_cols"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "valid_row",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "alpha",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "beta",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "gamma",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "delta",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "invalid_row",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "alpha",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "beta",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Row 1 valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_row_valid",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "valid_row"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Row 2 valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_row_valid",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "invalid_row"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "function is_row_valid(row: List<String>, required_cols: Int) -> Bool:\n    return length of row == required_cols\ndefine list valid_row as [\"alpha\", \"beta\", \"gamma\", \"delta\"]\ndefine list invalid_row as [\"alpha\", \"beta\"]\nprint \"Row 1 valid:\", is_row_valid(valid_row, 4)\nprint \"Row 2 valid:\", is_row_valid(invalid_row, 4)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_row_valid",
+            "params": [
+              {
+                "name": "row",
+                "param_type": "List<String>"
+              },
+              {
+                "name": "required_cols",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "list_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "row"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "required_cols"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "valid_row",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "alpha",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "beta",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "gamma",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "delta",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "invalid_row",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "alpha",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "beta",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Row 1 valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_row_valid",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "valid_row"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Row 2 valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_row_valid",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "invalid_row"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

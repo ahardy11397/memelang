@@ -1,0 +1,8 @@
+function countdown_remaining(total_mins: Int, elapsed_mins: Int) -> Int:
+    define rem as total_mins - elapsed_mins
+    if rem < 0
+        return 0
+    return rem
+
+define left as countdown_remaining(60, 42)
+print "Minutes remaining on timer:", left

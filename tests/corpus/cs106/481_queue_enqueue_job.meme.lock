@@ -1,0 +1,174 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/481_queue_enqueue_job.meme": {
+      "source_sha256": "7e33cc9b1d7904defd04405f53299a9a124fc66a9c612b8c52aef3d38efaee4c",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "task_queue",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 101,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 102,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 103,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "list_append",
+          "target": "task_queue",
+          "value": {
+            "expr_type": "literal",
+            "value": 104,
+            "data_type": "Int"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Queue size after enqueue:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "task_queue"
+              }
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Enqueued tail element:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "task_queue"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 4
+        }
+      ],
+      "canonical_meme": "define list task_queue as [101, 102, 103]\nappend 104 to task_queue\nprint \"Queue size after enqueue:\", length of task_queue\nprint \"Enqueued tail element:\", task_queue[3]",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "task_queue",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 101,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 102,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 103,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "list_append",
+            "target": "task_queue",
+            "value": {
+              "expr_type": "literal",
+              "value": 104,
+              "data_type": "Int"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Queue size after enqueue:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "task_queue"
+                }
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Enqueued tail element:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "task_queue"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 4
+          }
+        ]
+      }
+    }
+  }
+}

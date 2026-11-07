@@ -1,0 +1,324 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/310_aggregate_status_counts.meme": {
+      "source_sha256": "e05a9ed4ed455321e34ba75f8bcfe67a6cf872bfb5682947120d725b49989f4f",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "statuses",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 200,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 200,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 404,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 500,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 200,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 404,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "success_count",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "error_count",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "for_each",
+          "item_var": "s",
+          "collection": "statuses",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "s"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 200,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "success_count",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "success_count"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 6
+                }
+              ],
+              "else_body": [
+                {
+                  "op": "assign",
+                  "name": "error_count",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "error_count"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 8
+                }
+              ],
+              "source_line": 5
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Success:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "success_count"
+            },
+            {
+              "expr_type": "literal",
+              "value": "Errors:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "error_count"
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "define list statuses as [200, 200, 404, 500, 200, 404]\ndefine success_count: Int as 0\ndefine error_count: Int as 0\nfor each s in statuses:\n    if s == 200:\n        set success_count to success_count + 1\n    else:\n        set error_count to error_count + 1\nprint \"Success:\", success_count, \"Errors:\", error_count",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "statuses",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 200,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 200,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 404,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 500,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 200,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 404,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "success_count",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "error_count",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "for_each",
+            "item_var": "s",
+            "collection": "statuses",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "s"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 200,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "success_count",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "success_count"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 6
+                  }
+                ],
+                "else_body": [
+                  {
+                    "op": "assign",
+                    "name": "error_count",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "error_count"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 8
+                  }
+                ],
+                "source_line": 5
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Success:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "success_count"
+              },
+              {
+                "expr_type": "literal",
+                "value": "Errors:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "error_count"
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

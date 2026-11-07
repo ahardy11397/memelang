@@ -1,0 +1,10 @@
+function is_valid_nanp_area_code(area_code: String) -> Bool:
+    define first_ch as slice area_code from 0 to 1
+    if first_ch == "0"
+        return false
+    if first_ch == "1"
+        return false
+    return true
+
+print "Area code 415 valid:", is_valid_nanp_area_code("415")
+print "Area code 012 invalid:", is_valid_nanp_area_code("012")

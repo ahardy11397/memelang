@@ -1,0 +1,230 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/319_csv_find_max_metric.meme": {
+      "source_sha256": "fcc2465a8037c61ea8d5b423ba9bdf7d29d3cfbe31172bf13d9c6b7b3ce68a6a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "metric_column",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 420,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 890,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 150,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 930,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 610,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "highest_metric",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "list_index",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "metric_column"
+            },
+            "index": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 2
+        },
+        {
+          "op": "for_each",
+          "item_var": "metric",
+          "collection": "metric_column",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "metric"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "highest_metric"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "highest_metric",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "metric"
+                  },
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 4
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Highest metric found:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "highest_metric"
+            }
+          ],
+          "source_line": 6
+        }
+      ],
+      "canonical_meme": "define list metric_column as [420, 890, 150, 930, 610]\ndefine highest_metric: Int as metric_column[0]\nfor each metric in metric_column:\n    if metric > highest_metric:\n        set highest_metric to metric\nprint \"Highest metric found:\", highest_metric",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "metric_column",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 420,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 890,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 150,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 930,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 610,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "highest_metric",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "metric_column"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 2
+          },
+          {
+            "op": "for_each",
+            "item_var": "metric",
+            "collection": "metric_column",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "metric"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "highest_metric"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "highest_metric",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "metric"
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 4
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Highest metric found:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "highest_metric"
+              }
+            ],
+            "source_line": 6
+          }
+        ]
+      }
+    }
+  }
+}

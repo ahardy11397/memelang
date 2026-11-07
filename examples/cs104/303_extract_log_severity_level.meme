@@ -1,0 +1,3 @@
+define log_msg: String as "[ERROR] Database connection failed on port 5432"
+define level: String as slice log_msg from 1 to 6
+print "Severity:", level

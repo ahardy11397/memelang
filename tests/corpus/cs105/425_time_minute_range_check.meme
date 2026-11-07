@@ -1,0 +1,8 @@
+function is_valid_minute(min_val: Int) -> Bool:
+    if min_val >= 0
+        if min_val <= 59
+            return true
+    return false
+
+print "Minute 45 valid:", is_valid_minute(45)
+print "Minute 60 invalid:", is_valid_minute(60)

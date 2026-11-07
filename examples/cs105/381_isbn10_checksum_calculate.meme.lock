@@ -1,0 +1,396 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/381_isbn10_checksum_calculate.meme": {
+      "source_sha256": "71516a8ecac2a2db16351f202a5fe83069b33913c699a0260845ad7dcf69582b",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "isbn10_weight_sum",
+          "params": [
+            {
+              "name": "digits",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "total",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 8,
+                "data_type": "Int"
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "weight",
+                  "var_type": "Int",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "literal",
+                      "value": 10,
+                      "data_type": "Int"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "assign",
+                  "name": "total",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "total"
+                    },
+                    "right": {
+                      "expr_type": "binary_op",
+                      "op": "*",
+                      "left": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "digits"
+                        },
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "weight"
+                      }
+                    }
+                  },
+                  "source_line": 5
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "total"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "isbn_nine",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 6,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 6,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 5,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "sum_val",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "isbn10_weight_sum",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "isbn_nine"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "ISBN-10 weighted total:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "sum_val"
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "function isbn10_weight_sum(digits: List<Int>) -> Int:\n    define total: Int as 0\n    for i from 0 to 8:\n        define weight: Int as 10 - i\n        set total to total + digits[i] * weight\n    return total\ndefine list isbn_nine as [0, 3, 0, 6, 4, 0, 6, 1, 5]\ndefine sum_val: Int as isbn10_weight_sum(isbn_nine)\nprint \"ISBN-10 weighted total:\", sum_val",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "isbn10_weight_sum",
+            "params": [
+              {
+                "name": "digits",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "total",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "weight",
+                    "var_type": "Int",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "literal",
+                        "value": 10,
+                        "data_type": "Int"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "assign",
+                    "name": "total",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "total"
+                      },
+                      "right": {
+                        "expr_type": "binary_op",
+                        "op": "*",
+                        "left": {
+                          "expr_type": "list_index",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "digits"
+                          },
+                          "index": {
+                            "expr_type": "var_ref",
+                            "name": "i"
+                          }
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "weight"
+                        }
+                      }
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "total"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "isbn_nine",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "sum_val",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "isbn10_weight_sum",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "isbn_nine"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "ISBN-10 weighted total:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "sum_val"
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    }
+  }
+}

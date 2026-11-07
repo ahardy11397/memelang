@@ -1,0 +1,13 @@
+function clamp_int(val: Int, low_b: Int, high_b: Int) -> Int:
+    if val < low_b
+        return low_b
+    if val > high_b
+        return high_b
+    return val
+
+define c1 as clamp_int(150, 0, 100)
+define c2 as clamp_int(-5, 0, 100)
+define c3 as clamp_int(42, 0, 100)
+print "Clamped high val:", c1
+print "Clamped low val:", c2
+print "Clamped inside val:", c3

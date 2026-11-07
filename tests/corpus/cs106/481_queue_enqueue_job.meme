@@ -1,0 +1,4 @@
+define list task_queue: List<Int> as [101, 102, 103]
+append 104 to task_queue
+print "Queue size after enqueue:", length of task_queue
+print "Enqueued tail element:", task_queue[3]

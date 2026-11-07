@@ -1,0 +1,9 @@
+function apply_credit(due: Int, credit: Int) -> Int:
+    if credit >= due
+        return 0
+    return due - credit
+
+define out1 as apply_credit(100, 40)
+define out2 as apply_credit(50, 75)
+print "Remaining due after credit 1:", out1
+print "Remaining due after credit 2:", out2

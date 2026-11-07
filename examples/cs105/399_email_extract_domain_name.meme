@@ -1,0 +1,14 @@
+function extract_email_domain(addr: String) -> String:
+    define n as length of string addr
+    define found_at as false
+    define domain_buf as ""
+    for i from 0 to (n - 1)
+        define ch as slice addr from i to (i + 1)
+        if found_at
+            set domain_buf to domain_buf + ch
+        if ch == "@"
+            set found_at to true
+    return domain_buf
+
+define d as extract_email_domain("ops-alert@infra.company.com")
+print "Extracted domain:", d

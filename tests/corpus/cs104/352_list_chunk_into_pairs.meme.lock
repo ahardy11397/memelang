@@ -1,0 +1,176 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/352_list_chunk_into_pairs.meme": {
+      "source_sha256": "4bebb262d8f56095bc442c8402b0e8a2464d3654e950a2343c36e68217ade05e",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "raw_points",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 30,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 40,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 50,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 60,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "num_pairs",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "/",
+            "left": {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "raw_points"
+              }
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 2,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 2
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Total coordinate pairs:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "num_pairs"
+            }
+          ],
+          "source_line": 3
+        }
+      ],
+      "canonical_meme": "define list raw_points as [10, 20, 30, 40, 50, 60]\ndefine num_pairs: Int as length of raw_points / 2\nprint \"Total coordinate pairs:\", num_pairs",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "raw_points",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 40,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 60,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "num_pairs",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "/",
+              "left": {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "raw_points"
+                }
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 2
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Total coordinate pairs:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "num_pairs"
+              }
+            ],
+            "source_line": 3
+          }
+        ]
+      }
+    }
+  }
+}

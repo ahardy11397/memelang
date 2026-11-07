@@ -1,0 +1,422 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/399_email_extract_domain_name.meme": {
+      "source_sha256": "21b842fb4d54138d43e134f9529c959eb1e7b588456c7d4565b310975342370e",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "extract_email_domain",
+          "params": [
+            {
+              "name": "addr",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "addr"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "found_at",
+              "var_type": "Bool",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "var_decl",
+              "name": "domain_buf",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "",
+                "data_type": "String"
+              },
+              "source_line": 4
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "addr"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 6
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "var_ref",
+                    "name": "found_at"
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "domain_buf",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "domain_buf"
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "ch"
+                        }
+                      },
+                      "source_line": 8
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 7
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "@",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "found_at",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 10
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 9
+                }
+              ],
+              "source_line": 5
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "domain_buf"
+              },
+              "source_line": 11
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "d",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "extract_email_domain",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "ops-alert@infra.company.com",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 13
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Extracted domain:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "d"
+            }
+          ],
+          "source_line": 14
+        }
+      ],
+      "canonical_meme": "function extract_email_domain(addr: String) -> String:\n    define n: Int as length of string addr\n    define found_at: Bool as false\n    define domain_buf: String as \"\"\n    for i from 0 to n - 1:\n        define ch: String as slice addr from i to i + 1\n        if found_at:\n            set domain_buf to domain_buf + ch\n        if ch == \"@\":\n            set found_at to true\n    return domain_buf\ndefine d: String as extract_email_domain(\"ops-alert@infra.company.com\")\nprint \"Extracted domain:\", d",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "extract_email_domain",
+            "params": [
+              {
+                "name": "addr",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "addr"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "found_at",
+                "var_type": "Bool",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "var_decl",
+                "name": "domain_buf",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "",
+                  "data_type": "String"
+                },
+                "source_line": 4
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "addr"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 6
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "var_ref",
+                      "name": "found_at"
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "domain_buf",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "domain_buf"
+                          },
+                          "right": {
+                            "expr_type": "var_ref",
+                            "name": "ch"
+                          }
+                        },
+                        "source_line": 8
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 7
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "@",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "found_at",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 10
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 9
+                  }
+                ],
+                "source_line": 5
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "domain_buf"
+                },
+                "source_line": 11
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "d",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "extract_email_domain",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "ops-alert@infra.company.com",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 13
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Extracted domain:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "d"
+              }
+            ],
+            "source_line": 14
+          }
+        ]
+      }
+    }
+  }
+}

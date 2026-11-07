@@ -1,0 +1,5 @@
+function moving_avg_3(p1: Int, p2: Int, p3: Int) -> Int:
+    return (p1 + p2 + p3) / 3
+
+define ma as moving_avg_3(30, 40, 50)
+print "Moving average of 30 40 50:", ma

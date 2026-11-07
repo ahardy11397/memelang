@@ -1,0 +1,248 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/345_word_acronym_generator.meme": {
+      "source_sha256": "32946af62143f17dc0936daf704b49bf9253e7a88b16e4e43ab0b8618fcd3039",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "words_list",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "Asynchronous",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "Javascript",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "And",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "Xml",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "acronym",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "",
+            "data_type": "String"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "for_each",
+          "item_var": "w",
+          "collection": "words_list",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "first_letter",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_slice",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "w"
+                },
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 4
+            },
+            {
+              "op": "assign",
+              "name": "acronym",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "acronym"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "first_letter"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": ".",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Constructed acronym:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "acronym"
+            }
+          ],
+          "source_line": 6
+        }
+      ],
+      "canonical_meme": "define list words_list as [\"Asynchronous\", \"Javascript\", \"And\", \"Xml\"]\ndefine acronym: String as \"\"\nfor each w in words_list:\n    define first_letter: String as slice w from 0 to 1\n    set acronym to acronym + first_letter + \".\"\nprint \"Constructed acronym:\", acronym",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "words_list",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "Asynchronous",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "Javascript",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "And",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "Xml",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "acronym",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "",
+              "data_type": "String"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "for_each",
+            "item_var": "w",
+            "collection": "words_list",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "first_letter",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_slice",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "w"
+                  },
+                  "start": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "end": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 4
+              },
+              {
+                "op": "assign",
+                "name": "acronym",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "acronym"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "first_letter"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": ".",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Constructed acronym:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "acronym"
+              }
+            ],
+            "source_line": 6
+          }
+        ]
+      }
+    }
+  }
+}

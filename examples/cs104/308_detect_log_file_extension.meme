@@ -1,0 +1,3 @@
+define filename: String as "application_audit_2026.log"
+define is_log: Bool as filename ends with ".log"
+print "Is log file:", is_log

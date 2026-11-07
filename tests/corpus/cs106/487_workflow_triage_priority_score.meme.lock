@@ -1,0 +1,160 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/487_workflow_triage_priority_score.meme": {
+      "source_sha256": "d9d4b64fd18accda2769dd9d3933ad4705a46f5455b2e081fded69a917eecdf4",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "incident_score",
+          "params": [
+            {
+              "name": "severity",
+              "param_type": "Int"
+            },
+            {
+              "name": "urgency",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "severity"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "urgency"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "p_score",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "incident_score",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 5,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Calculated incident triage score:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "p_score"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function incident_score(severity: Int, urgency: Int) -> Int:\n    return severity * urgency\ndefine p_score: Int as incident_score(4, 5)\nprint \"Calculated incident triage score:\", p_score",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "incident_score",
+            "params": [
+              {
+                "name": "severity",
+                "param_type": "Int"
+              },
+              {
+                "name": "urgency",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "severity"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "urgency"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "p_score",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "incident_score",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Calculated incident triage score:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "p_score"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

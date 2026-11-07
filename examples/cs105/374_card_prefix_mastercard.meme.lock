@@ -1,0 +1,594 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/374_card_prefix_mastercard.meme": {
+      "source_sha256": "e4282088654a2faa0a22e1654f913b862f19bcde1c9f45885e6fb1dae2f4d672",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_mastercard_prefix",
+          "params": [
+            {
+              "name": "pan",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "pan"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 16,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "prefix",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "pan"
+                    },
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "prefix"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "51",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 6
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 5
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "prefix"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "52",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 8
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 7
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "prefix"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "53",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 10
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 9
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "prefix"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "54",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 12
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 11
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "prefix"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "55",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 14
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 13
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 15
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "mc1",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "is_mastercard_prefix",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "5300123456789012",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 17
+        },
+        {
+          "op": "var_decl",
+          "name": "mc2",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "is_mastercard_prefix",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "4000123456789012",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 18
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Mastercard match 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "mc1"
+            }
+          ],
+          "source_line": 19
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Mastercard match 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "mc2"
+            }
+          ],
+          "source_line": 20
+        }
+      ],
+      "canonical_meme": "function is_mastercard_prefix(pan: String) -> Bool:\n    define n: Int as length of string pan\n    if n == 16:\n        define prefix: String as slice pan from 0 to 2\n        if prefix == \"51\":\n            return true\n        if prefix == \"52\":\n            return true\n        if prefix == \"53\":\n            return true\n        if prefix == \"54\":\n            return true\n        if prefix == \"55\":\n            return true\n    return false\ndefine mc1: Bool as is_mastercard_prefix(\"5300123456789012\")\ndefine mc2: Bool as is_mastercard_prefix(\"4000123456789012\")\nprint \"Mastercard match 1:\", mc1\nprint \"Mastercard match 2:\", mc2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_mastercard_prefix",
+            "params": [
+              {
+                "name": "pan",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "pan"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 16,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "prefix",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "pan"
+                      },
+                      "start": {
+                        "expr_type": "literal",
+                        "value": 0,
+                        "data_type": "Int"
+                      },
+                      "end": {
+                        "expr_type": "literal",
+                        "value": 2,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "prefix"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "51",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 6
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 5
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "prefix"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "52",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 8
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 7
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "prefix"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "53",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 10
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 9
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "prefix"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "54",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 12
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 11
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "prefix"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "55",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 14
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 13
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 15
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "mc1",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "is_mastercard_prefix",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "5300123456789012",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 17
+          },
+          {
+            "op": "var_decl",
+            "name": "mc2",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "is_mastercard_prefix",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "4000123456789012",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 18
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Mastercard match 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "mc1"
+              }
+            ],
+            "source_line": 19
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Mastercard match 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "mc2"
+              }
+            ],
+            "source_line": 20
+          }
+        ]
+      }
+    }
+  }
+}

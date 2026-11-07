@@ -1,0 +1,174 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/412_phone_us_10_digit_length.meme": {
+      "source_sha256": "86e286d00f32ccc0f2d7186768b0837f51569597059193de5e77519b14bb277d",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_us_10_digit",
+          "params": [
+            {
+              "name": "num_str",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "num_str"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "US 10 digit check 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_us_10_digit",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "4155552671",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "US 10 digit check 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_us_10_digit",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "5552671",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function is_us_10_digit(num_str: String) -> Bool:\n    return length of string num_str == 10\nprint \"US 10 digit check 1:\", is_us_10_digit(\"4155552671\")\nprint \"US 10 digit check 2:\", is_us_10_digit(\"5552671\")",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_us_10_digit",
+            "params": [
+              {
+                "name": "num_str",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "string_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "num_str"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "US 10 digit check 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_us_10_digit",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "4155552671",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "US 10 digit check 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_us_10_digit",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "5552671",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,200 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/460_time_epoch_to_hour_of_day.meme": {
+      "source_sha256": "08c6160166631c8a4876382d0b17f2c61eb3ab7e6bbba04f7a6befd8633371e6",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "epoch_hour",
+          "params": [
+            {
+              "name": "epoch_seconds",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "total_hours",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "epoch_seconds"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 3600,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "%",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "total_hours"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 24,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 3
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "hour_val",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "epoch_hour",
+            "args": [
+              {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "literal",
+                  "value": 86400,
+                  "data_type": "Int"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 36000,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Extracted hour of day:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "hour_val"
+            }
+          ],
+          "source_line": 6
+        }
+      ],
+      "canonical_meme": "function epoch_hour(epoch_seconds: Int) -> Int:\n    define total_hours: Int as epoch_seconds / 3600\n    return total_hours % 24\ndefine hour_val: Int as epoch_hour(86400 + 36000)\nprint \"Extracted hour of day:\", hour_val",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "epoch_hour",
+            "params": [
+              {
+                "name": "epoch_seconds",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "total_hours",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "epoch_seconds"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 3600,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "%",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "total_hours"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 24,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 3
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "hour_val",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "epoch_hour",
+              "args": [
+                {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "literal",
+                    "value": 86400,
+                    "data_type": "Int"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 36000,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Extracted hour of day:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "hour_val"
+              }
+            ],
+            "source_line": 6
+          }
+        ]
+      }
+    }
+  }
+}

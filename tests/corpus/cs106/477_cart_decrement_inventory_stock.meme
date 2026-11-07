@@ -1,0 +1,7 @@
+function fulfill_stock(current_stock: Int, qty_ordered: Int) -> Int:
+    if current_stock >= qty_ordered
+        return current_stock - qty_ordered
+    return 0
+
+define rem_stock as fulfill_stock(50, 12)
+print "Remaining inventory stock:", rem_stock

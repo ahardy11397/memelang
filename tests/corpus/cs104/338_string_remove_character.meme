@@ -1,0 +1,12 @@
+function strip_char(src: String, bad_c: String) -> String:
+    define n as length of string src
+    define clean_buf as ""
+    for i from 0 to (n - 1)
+        define ch as slice src from i to (i + 1)
+        if ch != bad_c
+            set clean_buf to clean_buf + ch
+    return clean_buf
+
+define phone as "555-019-2834"
+define digits_only as strip_char(phone, "-")
+print "Stripped phone digits:", digits_only

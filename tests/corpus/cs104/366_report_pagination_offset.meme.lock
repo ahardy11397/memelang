@@ -1,0 +1,252 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/366_report_pagination_offset.meme": {
+      "source_sha256": "4237f9ae3c8e8b6b7ef1b7cb364d3dcce92c671b162b2b3ed3146fc47c39ac73",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "page_offset",
+          "params": [
+            {
+              "name": "page_num",
+              "param_type": "Int"
+            },
+            {
+              "name": "page_size",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "page_num"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "page_size"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "offset1",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "page_offset",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "offset2",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "page_offset",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Page 1 start offset:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "offset1"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Page 3 start offset:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "offset2"
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "function page_offset(page_num: Int, page_size: Int) -> Int:\n    return (page_num - 1) * page_size\ndefine offset1: Int as page_offset(1, 20)\ndefine offset2: Int as page_offset(3, 20)\nprint \"Page 1 start offset:\", offset1\nprint \"Page 3 start offset:\", offset2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "page_offset",
+            "params": [
+              {
+                "name": "page_num",
+                "param_type": "Int"
+              },
+              {
+                "name": "page_size",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "page_num"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "page_size"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "offset1",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "page_offset",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "offset2",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "page_offset",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Page 1 start offset:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "offset1"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Page 3 start offset:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "offset2"
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

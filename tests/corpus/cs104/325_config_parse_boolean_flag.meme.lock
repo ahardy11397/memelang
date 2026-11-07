@@ -1,0 +1,366 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/325_config_parse_boolean_flag.meme": {
+      "source_sha256": "dc2ed1b940245cabe98fe0a091ae8cdcfdca0a260d020c627e3089ac43b405da",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "parse_bool_flag",
+          "params": [
+            {
+              "name": "raw_val",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "raw_val"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "true",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  },
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "raw_val"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "yes",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  },
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 4
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "raw_val"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "1",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  },
+                  "source_line": 7
+                }
+              ],
+              "else_body": [],
+              "source_line": 6
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "opt1",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "parse_bool_flag",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "true",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 10
+        },
+        {
+          "op": "var_decl",
+          "name": "opt2",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "parse_bool_flag",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "0",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Parsed flag 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "opt1"
+            }
+          ],
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Parsed flag 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "opt2"
+            }
+          ],
+          "source_line": 13
+        }
+      ],
+      "canonical_meme": "function parse_bool_flag(raw_val: String) -> Bool:\n    if raw_val == \"true\":\n        return true\n    if raw_val == \"yes\":\n        return true\n    if raw_val == \"1\":\n        return true\n    return false\ndefine opt1: Bool as parse_bool_flag(\"true\")\ndefine opt2: Bool as parse_bool_flag(\"0\")\nprint \"Parsed flag 1:\", opt1\nprint \"Parsed flag 2:\", opt2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "parse_bool_flag",
+            "params": [
+              {
+                "name": "raw_val",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "raw_val"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "true",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": true,
+                      "data_type": "Bool"
+                    },
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "raw_val"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "yes",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": true,
+                      "data_type": "Bool"
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 4
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "raw_val"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "1",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": true,
+                      "data_type": "Bool"
+                    },
+                    "source_line": 7
+                  }
+                ],
+                "else_body": [],
+                "source_line": 6
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "opt1",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "parse_bool_flag",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "true",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 10
+          },
+          {
+            "op": "var_decl",
+            "name": "opt2",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "parse_bool_flag",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "0",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Parsed flag 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "opt1"
+              }
+            ],
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Parsed flag 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "opt2"
+              }
+            ],
+            "source_line": 13
+          }
+        ]
+      }
+    }
+  }
+}

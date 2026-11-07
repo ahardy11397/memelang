@@ -1,0 +1,5 @@
+function liters_to_gal(liters: Int) -> Int:
+    return (liters * 264) / 1000
+
+define gal as liters_to_gal(100)
+print "100 liters in gallons:", gal

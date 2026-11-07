@@ -1,0 +1,12 @@
+function is_discover_card(pan: String) -> Bool:
+    define n as length of string pan
+    if n == 16
+        define prefix as slice pan from 0 to 4
+        if prefix == "6011"
+            return true
+    return false
+
+define d1 as is_discover_card("6011000990139424")
+define d2 as is_discover_card("6500000990139424")
+print "Discover card check 1:", d1
+print "Discover card check 2:", d2

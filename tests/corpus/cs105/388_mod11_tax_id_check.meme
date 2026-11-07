@@ -1,0 +1,11 @@
+function verify_mod11(digits: List<Int>, weights: List<Int>, check_val: Int) -> Bool:
+    define n as length of digits
+    define total: Int as 0
+    for i from 0 to (n - 1)
+        set total to total + (digits[i] * weights[i])
+    define rem as total % 11
+    return rem == check_val
+
+define list id_nums: List<Int> as [2, 7, 1, 8, 2, 8]
+define list id_w: List<Int> as [7, 6, 5, 4, 3, 2]
+print "Mod 11 valid check:", verify_mod11(id_nums, id_w, 5)

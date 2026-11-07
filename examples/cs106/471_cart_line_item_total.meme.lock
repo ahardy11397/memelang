@@ -1,0 +1,160 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/471_cart_line_item_total.meme": {
+      "source_sha256": "ecc2bb8e5f94bf5f2c1ac4c05934803c40d1674604754b0b35c9520250740ad0",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "line_item_subtotal",
+          "params": [
+            {
+              "name": "unit_cents",
+              "param_type": "Int"
+            },
+            {
+              "name": "qty",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "unit_cents"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "qty"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "sub",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "line_item_subtotal",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 450,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Line item subtotal in cents:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "sub"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function line_item_subtotal(unit_cents: Int, qty: Int) -> Int:\n    return unit_cents * qty\ndefine sub: Int as line_item_subtotal(450, 3)\nprint \"Line item subtotal in cents:\", sub",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "line_item_subtotal",
+            "params": [
+              {
+                "name": "unit_cents",
+                "param_type": "Int"
+              },
+              {
+                "name": "qty",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "unit_cents"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "qty"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "sub",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "line_item_subtotal",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 450,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Line item subtotal in cents:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "sub"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

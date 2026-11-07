@@ -1,0 +1,232 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/339_string_repeat_char.meme": {
+      "source_sha256": "695852dfc86396654dee8b4de8a0ec825c504792e8e56fe0574a71930bb538ae",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "repeat_char",
+          "params": [
+            {
+              "name": "ch",
+              "param_type": "String"
+            },
+            {
+              "name": "times",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "buffer",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "",
+                "data_type": "String"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_range",
+              "loop_var": "step",
+              "start": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "var_ref",
+                "name": "times"
+              },
+              "body": [
+                {
+                  "op": "assign",
+                  "name": "buffer",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "buffer"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    }
+                  },
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "buffer"
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "divider",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "repeat_char",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "=",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Divider banner:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "divider"
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "function repeat_char(ch: String, times: Int) -> String:\n    define buffer: String as \"\"\n    for step from 1 to times:\n        set buffer to buffer + ch\n    return buffer\ndefine divider: String as repeat_char(\"=\", 12)\nprint \"Divider banner:\", divider",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "repeat_char",
+            "params": [
+              {
+                "name": "ch",
+                "param_type": "String"
+              },
+              {
+                "name": "times",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "buffer",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "",
+                  "data_type": "String"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_range",
+                "loop_var": "step",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "var_ref",
+                  "name": "times"
+                },
+                "body": [
+                  {
+                    "op": "assign",
+                    "name": "buffer",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "buffer"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      }
+                    },
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "buffer"
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "divider",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "repeat_char",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "=",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Divider banner:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "divider"
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

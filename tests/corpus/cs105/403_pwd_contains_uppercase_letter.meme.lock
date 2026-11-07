@@ -1,0 +1,644 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/403_pwd_contains_uppercase_letter.meme": {
+      "source_sha256": "948a6356714eccb5eac46790bf0b0e9a6e985763c473829be2f54416b0bc3d51",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "has_uppercase",
+          "params": [
+            {
+              "name": "pwd",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "uppers",
+              "var_type": "List<String>",
+              "value": {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": "A",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "B",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "C",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "D",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "E",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "F",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "G",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "H",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "I",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "J",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "K",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "L",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "M",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "N",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "O",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "P",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "Q",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "R",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "S",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "T",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "U",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "V",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "W",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "X",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "Y",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "Z",
+                    "data_type": "String"
+                  }
+                ],
+                "element_type": "String"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "pwd"
+                }
+              },
+              "source_line": 3
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "pwd"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 5
+                },
+                {
+                  "op": "for_each",
+                  "item_var": "u",
+                  "collection": "uppers",
+                  "body": [
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "binary_op",
+                        "op": "==",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "ch"
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "u"
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "op": "return_stmt",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": true,
+                            "data_type": "Bool"
+                          },
+                          "source_line": 8
+                        }
+                      ],
+                      "else_body": [],
+                      "source_line": 7
+                    }
+                  ],
+                  "source_line": 6
+                }
+              ],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 9
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Has upper in Alpha1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "has_uppercase",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "Alpha1",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Has upper in lower1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "has_uppercase",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "lower1",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 12
+        }
+      ],
+      "canonical_meme": "function has_uppercase(pwd: String) -> Bool:\n    define list uppers as [\"A\", \"B\", \"C\", \"D\", \"E\", \"F\", \"G\", \"H\", \"I\", \"J\", \"K\", \"L\", \"M\", \"N\", \"O\", \"P\", \"Q\", \"R\", \"S\", \"T\", \"U\", \"V\", \"W\", \"X\", \"Y\", \"Z\"]\n    define n: Int as length of string pwd\n    for i from 0 to n - 1:\n        define ch: String as slice pwd from i to i + 1\n        for each u in uppers:\n            if ch == u:\n                return true\n    return false\nprint \"Has upper in Alpha1:\", has_uppercase(\"Alpha1\")\nprint \"Has upper in lower1:\", has_uppercase(\"lower1\")",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "has_uppercase",
+            "params": [
+              {
+                "name": "pwd",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "uppers",
+                "var_type": "List<String>",
+                "value": {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": "A",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "B",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "C",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "D",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "E",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "F",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "G",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "H",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "I",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "J",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "K",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "L",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "M",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "N",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "O",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "P",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "Q",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "R",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "S",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "T",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "U",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "V",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "W",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "X",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "Y",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "Z",
+                      "data_type": "String"
+                    }
+                  ],
+                  "element_type": "String"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "pwd"
+                  }
+                },
+                "source_line": 3
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "pwd"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 5
+                  },
+                  {
+                    "op": "for_each",
+                    "item_var": "u",
+                    "collection": "uppers",
+                    "body": [
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "binary_op",
+                          "op": "==",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "ch"
+                          },
+                          "right": {
+                            "expr_type": "var_ref",
+                            "name": "u"
+                          }
+                        },
+                        "then_body": [
+                          {
+                            "op": "return_stmt",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": true,
+                              "data_type": "Bool"
+                            },
+                            "source_line": 8
+                          }
+                        ],
+                        "else_body": [],
+                        "source_line": 7
+                      }
+                    ],
+                    "source_line": 6
+                  }
+                ],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 9
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Has upper in Alpha1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "has_uppercase",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "Alpha1",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Has upper in lower1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "has_uppercase",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "lower1",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 12
+          }
+        ]
+      }
+    }
+  }
+}

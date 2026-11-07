@@ -1,0 +1,7 @@
+function page_offset(page_num: Int, page_size: Int) -> Int:
+    return (page_num - 1) * page_size
+
+define offset1 as page_offset(1, 20)
+define offset2 as page_offset(3, 20)
+print "Page 1 start offset:", offset1
+print "Page 3 start offset:", offset2

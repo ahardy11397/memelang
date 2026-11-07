@@ -1,0 +1,8 @@
+define total_sec as 3665
+define hours as total_sec / 3600
+define rem as total_sec % 3600
+define minutes as rem / 60
+define seconds as rem % 60
+print "Hours component:", hours
+print "Minutes component:", minutes
+print "Seconds component:", seconds

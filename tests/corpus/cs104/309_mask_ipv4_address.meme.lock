@@ -1,0 +1,154 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/309_mask_ipv4_address.meme": {
+      "source_sha256": "d608f736a71ed43da515d77f66d57e863cb0129f81ae28df3422eb245a3ee1cf",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "ip",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "192.168.001.105",
+            "data_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "prefix",
+          "var_type": "String",
+          "value": {
+            "expr_type": "string_slice",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "ip"
+            },
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 12,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "masked",
+          "var_type": "String",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "+",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "prefix"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": "xxx",
+              "data_type": "String"
+            }
+          },
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Masked IP:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "masked"
+            }
+          ],
+          "source_line": 4
+        }
+      ],
+      "canonical_meme": "define ip: String as \"192.168.001.105\"\ndefine prefix: String as slice ip from 0 to 12\ndefine masked: String as prefix + \"xxx\"\nprint \"Masked IP:\", masked",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "ip",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "192.168.001.105",
+              "data_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "prefix",
+            "var_type": "String",
+            "value": {
+              "expr_type": "string_slice",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "ip"
+              },
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "masked",
+            "var_type": "String",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "+",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "prefix"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": "xxx",
+                "data_type": "String"
+              }
+            },
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Masked IP:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "masked"
+              }
+            ],
+            "source_line": 4
+          }
+        ]
+      }
+    }
+  }
+}

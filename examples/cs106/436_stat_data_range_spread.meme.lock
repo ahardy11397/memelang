@@ -1,0 +1,340 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/436_stat_data_range_spread.meme": {
+      "source_sha256": "7820b0cebf178e33a99abdb6fc28aef9c0527ecd3bddc7c6e4e330d5a872253c",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "data_spread",
+          "params": [
+            {
+              "name": "arr",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "sort_collection",
+              "target": "arr",
+              "direction": "ascending",
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "arr"
+                }
+              },
+              "source_line": 3
+            },
+            {
+              "op": "var_decl",
+              "name": "min_v",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "arr"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 4
+            },
+            {
+              "op": "var_decl",
+              "name": "max_v",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "arr"
+                },
+                "index": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                }
+              },
+              "source_line": 5
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "max_v"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "min_v"
+                }
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "measures",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 5,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 22,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 9,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "spread",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "data_spread",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "measures"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Dataset range spread:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "spread"
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "function data_spread(arr: List<Int>) -> Int:\n    sort arr ascending\n    define n: Int as length of arr\n    define min_v: Int as arr[0]\n    define max_v: Int as arr[n - 1]\n    return max_v - min_v\ndefine list measures as [5, 12, 3, 22, 9]\ndefine spread: Int as data_spread(measures)\nprint \"Dataset range spread:\", spread",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "data_spread",
+            "params": [
+              {
+                "name": "arr",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "sort_collection",
+                "target": "arr",
+                "direction": "ascending",
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "arr"
+                  }
+                },
+                "source_line": 3
+              },
+              {
+                "op": "var_decl",
+                "name": "min_v",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "arr"
+                  },
+                  "index": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 4
+              },
+              {
+                "op": "var_decl",
+                "name": "max_v",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "arr"
+                  },
+                  "index": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  }
+                },
+                "source_line": 5
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "max_v"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "min_v"
+                  }
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "measures",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 22,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 9,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "spread",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "data_spread",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "measures"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Dataset range spread:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "spread"
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    }
+  }
+}

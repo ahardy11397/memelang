@@ -1,0 +1,12 @@
+function pad_right(label: String, width: Int) -> String:
+    define cur_len as length of string label
+    define padded as label
+    define diff as width - cur_len
+    if diff > 0
+        for s from 1 to diff
+            set padded to padded + " "
+    return padded
+
+define formatted as pad_right("TOTAL", 10)
+print "Formatted label width:", length of string formatted
+print "Padded output tag:", formatted + "<END>"

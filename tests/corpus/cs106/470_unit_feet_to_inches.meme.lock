@@ -1,0 +1,144 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/470_unit_feet_to_inches.meme": {
+      "source_sha256": "539551166dc220e7d1bf20460e9dc71e5725e9b3c72a437f8b1e5009a798681f",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "feet_to_inches",
+          "params": [
+            {
+              "name": "ft",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "ft"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "in_val",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "feet_to_inches",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 6,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "6 feet in inches:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "in_val"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function feet_to_inches(ft: Int) -> Int:\n    return ft * 12\ndefine in_val: Int as feet_to_inches(6)\nprint \"6 feet in inches:\", in_val",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "feet_to_inches",
+            "params": [
+              {
+                "name": "ft",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "ft"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 12,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "in_val",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "feet_to_inches",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "6 feet in inches:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "in_val"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

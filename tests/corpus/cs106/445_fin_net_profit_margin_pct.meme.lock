@@ -1,0 +1,214 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/445_fin_net_profit_margin_pct.meme": {
+      "source_sha256": "c6678e473fd37373dcbe2441c8b656d5690b853d6a54f9b25243e6a9199ffb8a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "profit_margin_percent",
+          "params": [
+            {
+              "name": "revenue",
+              "param_type": "Int"
+            },
+            {
+              "name": "cost",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "profit",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "revenue"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "cost"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "profit"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 100,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "revenue"
+                }
+              },
+              "source_line": 3
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "margin",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "profit_margin_percent",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 50000,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 35000,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Net profit margin percentage:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "margin"
+            }
+          ],
+          "source_line": 6
+        }
+      ],
+      "canonical_meme": "function profit_margin_percent(revenue: Int, cost: Int) -> Int:\n    define profit: Int as revenue - cost\n    return profit * 100 / revenue\ndefine margin: Int as profit_margin_percent(50000, 35000)\nprint \"Net profit margin percentage:\", margin",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "profit_margin_percent",
+            "params": [
+              {
+                "name": "revenue",
+                "param_type": "Int"
+              },
+              {
+                "name": "cost",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "profit",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "revenue"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "cost"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "profit"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 100,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "revenue"
+                  }
+                },
+                "source_line": 3
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "margin",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "profit_margin_percent",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 50000,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 35000,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Net profit margin percentage:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "margin"
+              }
+            ],
+            "source_line": 6
+          }
+        ]
+      }
+    }
+  }
+}

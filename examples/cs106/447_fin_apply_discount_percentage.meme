@@ -1,0 +1,6 @@
+function discount_price(original: Int, pct_off: Int) -> Int:
+    define deduction as (original * pct_off) / 100
+    return original - deduction
+
+define discounted as discount_price(80, 25)
+print "Discounted purchase price:", discounted

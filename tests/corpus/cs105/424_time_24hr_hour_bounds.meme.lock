@@ -1,0 +1,250 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/424_time_24hr_hour_bounds.meme": {
+      "source_sha256": "1e85cddc0f3d13ac2837c027adbe456d8fe1339bc0b2fbee6a1424c34b7ee34b",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_valid_24hr_hour",
+          "params": [
+            {
+              "name": "h",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "h"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "<=",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "h"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 23,
+                      "data_type": "Int"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 4
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Hour 14 valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_24hr_hour",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 14,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Hour 24 invalid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_24hr_hour",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 24,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "function is_valid_24hr_hour(h: Int) -> Bool:\n    if h >= 0:\n        if h <= 23:\n            return true\n    return false\nprint \"Hour 14 valid:\", is_valid_24hr_hour(14)\nprint \"Hour 24 invalid:\", is_valid_24hr_hour(24)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_valid_24hr_hour",
+            "params": [
+              {
+                "name": "h",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "h"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "<=",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "h"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 23,
+                        "data_type": "Int"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 4
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Hour 14 valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_24hr_hour",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 14,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Hour 24 invalid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_24hr_hour",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 24,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

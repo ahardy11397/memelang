@@ -1,0 +1,11 @@
+function underline_text(hdr: String) -> String:
+    define n as length of string hdr
+    define line as ""
+    for i from 1 to n
+        set line to line + "-"
+    return line
+
+define title_text as "Account Summary"
+define underline as underline_text(title_text)
+print "Header title text:", title_text
+print "Header underline line:", underline

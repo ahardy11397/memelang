@@ -1,0 +1,368 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/438_stat_percentile_rank_count.meme": {
+      "source_sha256": "cb5e13b59dad8e1cd76c5a50af28134e15d182a823259e0c8a6253ff2448a09a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "percentile_rank_int",
+          "params": [
+            {
+              "name": "scores",
+              "param_type": "List<Int>"
+            },
+            {
+              "name": "threshold",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "below_count",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_each",
+              "item_var": "s",
+              "collection": "scores",
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "<",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "s"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "threshold"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "below_count",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "below_count"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "source_line": 5
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "below_count"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 100,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "scores"
+                  }
+                }
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "exam_scores",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 50,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 60,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 70,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 80,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 90,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "rank",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "percentile_rank_int",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "exam_scores"
+              },
+              {
+                "expr_type": "literal",
+                "value": 80,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Percentile rank of 80:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "rank"
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "function percentile_rank_int(scores: List<Int>, threshold: Int) -> Int:\n    define below_count: Int as 0\n    for each s in scores:\n        if s < threshold:\n            set below_count to below_count + 1\n    return below_count * 100 / length of scores\ndefine list exam_scores as [50, 60, 70, 80, 90]\ndefine rank: Int as percentile_rank_int(exam_scores, 80)\nprint \"Percentile rank of 80:\", rank",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "percentile_rank_int",
+            "params": [
+              {
+                "name": "scores",
+                "param_type": "List<Int>"
+              },
+              {
+                "name": "threshold",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "below_count",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_each",
+                "item_var": "s",
+                "collection": "scores",
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "<",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "s"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "threshold"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "below_count",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "below_count"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "source_line": 5
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "below_count"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 100,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "list_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "scores"
+                    }
+                  }
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "exam_scores",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 60,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 70,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 80,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 90,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "rank",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "percentile_rank_int",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "exam_scores"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 80,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Percentile rank of 80:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "rank"
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    }
+  }
+}

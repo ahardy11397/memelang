@@ -1,0 +1,230 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/328_config_check_key_exists.meme": {
+      "source_sha256": "2c366a24236d19d3aaaeeb6fd031cf0aa36be9b3a24814743ca4ae54edac9fd1",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "known_keys",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "app_name",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "environment",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "log_level",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "api_token",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "target_key",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "api_token",
+            "data_type": "String"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "found_key",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "literal",
+            "value": false,
+            "data_type": "Bool"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "for_each",
+          "item_var": "k",
+          "collection": "known_keys",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "k"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "target_key"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "found_key",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  },
+                  "source_line": 6
+                }
+              ],
+              "else_body": [],
+              "source_line": 5
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "API token configured:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "found_key"
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "define list known_keys as [\"app_name\", \"environment\", \"log_level\", \"api_token\"]\ndefine target_key: String as \"api_token\"\ndefine found_key: Bool as false\nfor each k in known_keys:\n    if k == target_key:\n        set found_key to true\nprint \"API token configured:\", found_key",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "known_keys",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "app_name",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "environment",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "log_level",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "api_token",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "target_key",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "api_token",
+              "data_type": "String"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "found_key",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "literal",
+              "value": false,
+              "data_type": "Bool"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "for_each",
+            "item_var": "k",
+            "collection": "known_keys",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "k"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "target_key"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "found_key",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": true,
+                      "data_type": "Bool"
+                    },
+                    "source_line": 6
+                  }
+                ],
+                "else_body": [],
+                "source_line": 5
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "API token configured:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "found_key"
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

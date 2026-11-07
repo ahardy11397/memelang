@@ -1,0 +1,5 @@
+function km_to_miles(km: Int) -> Int:
+    return (km * 62) / 100
+
+define mi as km_to_miles(100)
+print "100 km in miles:", mi

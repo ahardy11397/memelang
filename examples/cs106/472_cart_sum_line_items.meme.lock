@@ -1,0 +1,184 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/472_cart_sum_line_items.meme": {
+      "source_sha256": "07341cfd5ea74ce61a3076ff0a023014662a7095599c55df8355baf83f15f3a4",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "item_totals",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 1200,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 450,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 890,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2300,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "cart_total",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "for_each",
+          "item_var": "itm",
+          "collection": "item_totals",
+          "body": [
+            {
+              "op": "assign",
+              "name": "cart_total",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "cart_total"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "itm"
+                }
+              },
+              "source_line": 4
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Total shopping cart subtotal:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "cart_total"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "define list item_totals as [1200, 450, 890, 2300]\ndefine cart_total: Int as 0\nfor each itm in item_totals:\n    set cart_total to cart_total + itm\nprint \"Total shopping cart subtotal:\", cart_total",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "item_totals",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 1200,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 450,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 890,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2300,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "cart_total",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "for_each",
+            "item_var": "itm",
+            "collection": "item_totals",
+            "body": [
+              {
+                "op": "assign",
+                "name": "cart_total",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "cart_total"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "itm"
+                  }
+                },
+                "source_line": 4
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Total shopping cart subtotal:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "cart_total"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

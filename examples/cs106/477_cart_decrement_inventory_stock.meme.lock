@@ -1,0 +1,216 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/477_cart_decrement_inventory_stock.meme": {
+      "source_sha256": "b4baea59aca9faea550102d8e203fe86be1b2f70bb0bc9dadd9ce549dc3ba631",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "fulfill_stock",
+          "params": [
+            {
+              "name": "current_stock",
+              "param_type": "Int"
+            },
+            {
+              "name": "qty_ordered",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "current_stock"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "qty_ordered"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "current_stock"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "qty_ordered"
+                    }
+                  },
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 4
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "rem_stock",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "fulfill_stock",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 50,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Remaining inventory stock:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "rem_stock"
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "function fulfill_stock(current_stock: Int, qty_ordered: Int) -> Int:\n    if current_stock >= qty_ordered:\n        return current_stock - qty_ordered\n    return 0\ndefine rem_stock: Int as fulfill_stock(50, 12)\nprint \"Remaining inventory stock:\", rem_stock",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "fulfill_stock",
+            "params": [
+              {
+                "name": "current_stock",
+                "param_type": "Int"
+              },
+              {
+                "name": "qty_ordered",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "current_stock"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "qty_ordered"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "current_stock"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "qty_ordered"
+                      }
+                    },
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 4
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "rem_stock",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "fulfill_stock",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Remaining inventory stock:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "rem_stock"
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,160 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/491_workflow_stopwatch_split_delta.meme": {
+      "source_sha256": "8420ba405b70e06010fe2c0c9c5d8d23beb2c6f1a06ab1b7713ca32d81da662c",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "split_delta",
+          "params": [
+            {
+              "name": "mark_a",
+              "param_type": "Int"
+            },
+            {
+              "name": "mark_b",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "mark_b"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "mark_a"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "lap_time",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "split_delta",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 12400,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 15850,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Recorded lap split time ms:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "lap_time"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function split_delta(mark_a: Int, mark_b: Int) -> Int:\n    return mark_b - mark_a\ndefine lap_time: Int as split_delta(12400, 15850)\nprint \"Recorded lap split time ms:\", lap_time",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "split_delta",
+            "params": [
+              {
+                "name": "mark_a",
+                "param_type": "Int"
+              },
+              {
+                "name": "mark_b",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "mark_b"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "mark_a"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "lap_time",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "split_delta",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 12400,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 15850,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Recorded lap split time ms:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "lap_time"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

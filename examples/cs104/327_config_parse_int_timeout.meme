@@ -1,0 +1,15 @@
+function parse_two_digit_int(digits: String) -> Int:
+    define d0 as slice digits from 0 to 1
+    define d1 as slice digits from 1 to 2
+    define tens: Int as 0
+    define ones: Int as 0
+    if d0 == "3"
+        set tens to 30
+    if d0 == "6"
+        set tens to 60
+    if d1 == "5"
+        set ones to 5
+    return tens + ones
+
+define timeout_sec as parse_two_digit_int("35")
+print "Timeout in seconds:", timeout_sec

@@ -1,0 +1,17 @@
+function passes_all_policies(pwd: String) -> Bool:
+    define n as length of string pwd
+    if n < 8
+        return false
+    if n > 64
+        return false
+    define has_num as false
+    for i from 0 to (n - 1)
+        define ch as slice pwd from i to (i + 1)
+        if ch == " "
+            return false
+        if ch == "9"
+            set has_num to true
+    return has_num
+
+print "Policy gate pass:", passes_all_policies("Str0ngVault9")
+print "Policy gate fail:", passes_all_policies("short")

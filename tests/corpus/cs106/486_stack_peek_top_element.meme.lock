@@ -1,0 +1,236 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/486_stack_peek_top_element.meme": {
+      "source_sha256": "fce432c5d31dd152da85e2a3bbf75b1943abdaf5d1394df6d64fb282fd6bbfc8",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "stack_peek",
+          "params": [
+            {
+              "name": "st",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "st"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "st"
+                },
+                "index": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                }
+              },
+              "source_line": 3
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "call_stack",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 500,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 600,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 750,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 5
+        },
+        {
+          "op": "var_decl",
+          "name": "top_val",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "stack_peek",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "call_stack"
+              }
+            ]
+          },
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Peeked stack top:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "top_val"
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "function stack_peek(st: List<Int>) -> Int:\n    define n: Int as length of st\n    return st[n - 1]\ndefine list call_stack as [500, 600, 750]\ndefine top_val: Int as stack_peek(call_stack)\nprint \"Peeked stack top:\", top_val",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "stack_peek",
+            "params": [
+              {
+                "name": "st",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "st"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "st"
+                  },
+                  "index": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  }
+                },
+                "source_line": 3
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "call_stack",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 500,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 600,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 750,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 5
+          },
+          {
+            "op": "var_decl",
+            "name": "top_val",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "stack_peek",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "call_stack"
+                }
+              ]
+            },
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Peeked stack top:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "top_val"
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

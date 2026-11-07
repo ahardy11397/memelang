@@ -1,0 +1,9 @@
+function compute_mean(data: List<Int>) -> Int:
+    define total: Int as 0
+    for each x in data
+        set total to total + x
+    return total / (length of data)
+
+define list samples: List<Int> as [10, 20, 30, 40, 50]
+define avg as compute_mean(samples)
+print "Calculated dataset mean:", avg

@@ -1,0 +1,660 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/386_upc_a_check_digit.meme": {
+      "source_sha256": "8384a985399581bc158c0283d76fd9fbcc393179a74de29634d344e1a82e4898",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "upc_check_digit",
+          "params": [
+            {
+              "name": "d11",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "odd_sum",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "even_sum",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "%",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 2,
+                        "data_type": "Int"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "odd_sum",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "odd_sum"
+                        },
+                        "right": {
+                          "expr_type": "list_index",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "d11"
+                          },
+                          "index": {
+                            "expr_type": "var_ref",
+                            "name": "i"
+                          }
+                        }
+                      },
+                      "source_line": 6
+                    }
+                  ],
+                  "else_body": [
+                    {
+                      "op": "assign",
+                      "name": "even_sum",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "even_sum"
+                        },
+                        "right": {
+                          "expr_type": "list_index",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "d11"
+                          },
+                          "index": {
+                            "expr_type": "var_ref",
+                            "name": "i"
+                          }
+                        }
+                      },
+                      "source_line": 8
+                    }
+                  ],
+                  "source_line": 5
+                }
+              ],
+              "source_line": 4
+            },
+            {
+              "op": "var_decl",
+              "name": "total",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "odd_sum"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "even_sum"
+                }
+              },
+              "source_line": 9
+            },
+            {
+              "op": "var_decl",
+              "name": "rem",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "%",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "total"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 10
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "rem"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "source_line": 12
+                }
+              ],
+              "else_body": [],
+              "source_line": 11
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "rem"
+                }
+              },
+              "source_line": 13
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "upc11",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 6,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 5,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 15
+        },
+        {
+          "op": "var_decl",
+          "name": "upc_cd",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "upc_check_digit",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "upc11"
+              }
+            ]
+          },
+          "source_line": 16
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Calculated UPC-A check digit:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "upc_cd"
+            }
+          ],
+          "source_line": 17
+        }
+      ],
+      "canonical_meme": "function upc_check_digit(d11: List<Int>) -> Int:\n    define odd_sum: Int as 0\n    define even_sum: Int as 0\n    for i from 0 to 10:\n        if i % 2 == 0:\n            set odd_sum to odd_sum + d11[i]\n        else:\n            set even_sum to even_sum + d11[i]\n    define total: Int as odd_sum * 3 + even_sum\n    define rem: Int as total % 10\n    if rem == 0:\n        return 0\n    return 10 - rem\ndefine list upc11 as [0, 3, 6, 0, 0, 0, 2, 4, 1, 4, 5]\ndefine upc_cd: Int as upc_check_digit(upc11)\nprint \"Calculated UPC-A check digit:\", upc_cd",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "upc_check_digit",
+            "params": [
+              {
+                "name": "d11",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "odd_sum",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "even_sum",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "%",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 2,
+                          "data_type": "Int"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 0,
+                        "data_type": "Int"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "odd_sum",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "odd_sum"
+                          },
+                          "right": {
+                            "expr_type": "list_index",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "d11"
+                            },
+                            "index": {
+                              "expr_type": "var_ref",
+                              "name": "i"
+                            }
+                          }
+                        },
+                        "source_line": 6
+                      }
+                    ],
+                    "else_body": [
+                      {
+                        "op": "assign",
+                        "name": "even_sum",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "even_sum"
+                          },
+                          "right": {
+                            "expr_type": "list_index",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "d11"
+                            },
+                            "index": {
+                              "expr_type": "var_ref",
+                              "name": "i"
+                            }
+                          }
+                        },
+                        "source_line": 8
+                      }
+                    ],
+                    "source_line": 5
+                  }
+                ],
+                "source_line": 4
+              },
+              {
+                "op": "var_decl",
+                "name": "total",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "odd_sum"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "even_sum"
+                  }
+                },
+                "source_line": 9
+              },
+              {
+                "op": "var_decl",
+                "name": "rem",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "%",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "total"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 10
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "rem"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "source_line": 12
+                  }
+                ],
+                "else_body": [],
+                "source_line": 11
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "rem"
+                  }
+                },
+                "source_line": 13
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "upc11",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 15
+          },
+          {
+            "op": "var_decl",
+            "name": "upc_cd",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "upc_check_digit",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "upc11"
+                }
+              ]
+            },
+            "source_line": 16
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Calculated UPC-A check digit:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "upc_cd"
+              }
+            ],
+            "source_line": 17
+          }
+        ]
+      }
+    }
+  }
+}

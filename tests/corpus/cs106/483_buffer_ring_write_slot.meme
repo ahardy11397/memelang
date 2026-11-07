@@ -1,0 +1,7 @@
+function next_write_slot(head: Int, ring_size: Int) -> Int:
+    return (head + 1) % ring_size
+
+define w1 as next_write_slot(3, 8)
+define w2 as next_write_slot(7, 8)
+print "Next slot from 3:", w1
+print "Wrap slot from 7:", w2

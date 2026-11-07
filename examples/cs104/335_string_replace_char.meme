@@ -1,0 +1,13 @@
+function replace_char(source: String, old_c: String, new_c: String) -> String:
+    define len_s as length of string source
+    define result as ""
+    for idx from 0 to (len_s - 1)
+        define cur_c as slice source from idx to (idx + 1)
+        if cur_c == old_c
+            set result to result + new_c
+        else
+            set result to result + cur_c
+    return result
+
+define slug as replace_char("my bad file name", " ", "-")
+print "Transformed slug:", slug

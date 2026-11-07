@@ -1,0 +1,410 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/387_parity_even_bit_compute.meme": {
+      "source_sha256": "b432b840b890b39f3e82a343ca9ed3bb51e1a7ca0e54f03bdcd0514a35a31374",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "compute_even_parity",
+          "params": [
+            {
+              "name": "bits",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "count_ones",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_each",
+              "item_var": "b",
+              "collection": "bits",
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "b"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "count_ones",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "count_ones"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "source_line": 5
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "%",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "count_ones"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  },
+                  "source_line": 7
+                }
+              ],
+              "else_body": [],
+              "source_line": 6
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "byte_data",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 10
+        },
+        {
+          "op": "var_decl",
+          "name": "p_bit",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "compute_even_parity",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "byte_data"
+              }
+            ]
+          },
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Computed parity bit:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "p_bit"
+            }
+          ],
+          "source_line": 12
+        }
+      ],
+      "canonical_meme": "function compute_even_parity(bits: List<Int>) -> Int:\n    define count_ones: Int as 0\n    for each b in bits:\n        if b == 1:\n            set count_ones to count_ones + 1\n    if count_ones % 2 == 1:\n        return 1\n    return 0\ndefine list byte_data as [1, 0, 1, 1, 0, 0, 1]\ndefine p_bit: Int as compute_even_parity(byte_data)\nprint \"Computed parity bit:\", p_bit",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "compute_even_parity",
+            "params": [
+              {
+                "name": "bits",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "count_ones",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_each",
+                "item_var": "b",
+                "collection": "bits",
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "b"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "count_ones",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "count_ones"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "source_line": 5
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "%",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "count_ones"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    },
+                    "source_line": 7
+                  }
+                ],
+                "else_body": [],
+                "source_line": 6
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "byte_data",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 10
+          },
+          {
+            "op": "var_decl",
+            "name": "p_bit",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "compute_even_parity",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "byte_data"
+                }
+              ]
+            },
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Computed parity bit:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "p_bit"
+              }
+            ],
+            "source_line": 12
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,226 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/368_report_status_badge.meme": {
+      "source_sha256": "053d0bada449862821505db88c9c5a379f50227fa6e985d72899e5a3faad3673",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "make_badge",
+          "params": [
+            {
+              "name": "status_text",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "literal",
+                    "value": "[",
+                    "data_type": "String"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "status_text"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "]",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "b1",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "make_badge",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "PASS",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "b2",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "make_badge",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "FAIL",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Test badge 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "b1"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Test badge 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "b2"
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "function make_badge(status_text: String) -> String:\n    return \"[\" + status_text + \"]\"\ndefine b1: String as make_badge(\"PASS\")\ndefine b2: String as make_badge(\"FAIL\")\nprint \"Test badge 1:\", b1\nprint \"Test badge 2:\", b2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "make_badge",
+            "params": [
+              {
+                "name": "status_text",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "literal",
+                      "value": "[",
+                      "data_type": "String"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "status_text"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "]",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "b1",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "make_badge",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "PASS",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "b2",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "make_badge",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "FAIL",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Test badge 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "b1"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Test badge 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "b2"
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

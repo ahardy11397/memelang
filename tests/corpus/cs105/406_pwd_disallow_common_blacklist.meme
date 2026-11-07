@@ -1,0 +1,9 @@
+function is_blacklisted(pwd: String) -> Bool:
+    define list common: List<String> as ["password", "123456", "admin123", "qwerty", "welcome1"]
+    for each bad in common
+        if bad == pwd
+            return true
+    return false
+
+print "Blacklist check 123456:", is_blacklisted("123456")
+print "Blacklist check custom_pass:", is_blacklisted("custom_pass")

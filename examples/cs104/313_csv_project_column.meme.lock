@@ -1,0 +1,282 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/313_csv_project_column.meme": {
+      "source_sha256": "2c71be3fbb1b79b6ad5321a8dc7b5722d541eb09100f0b0b0b1683f06ea39fc2",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "get_column",
+          "params": [
+            {
+              "name": "row",
+              "param_type": "List<String>"
+            },
+            {
+              "name": "col_index",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "<",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "col_index"
+                },
+                "right": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "row"
+                  }
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "row"
+                    },
+                    "index": {
+                      "expr_type": "var_ref",
+                      "name": "col_index"
+                    }
+                  },
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": "NOT_FOUND",
+                "data_type": "String"
+              },
+              "source_line": 4
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "record",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "1042",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "Widget",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "99",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "Warehouse A",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 6
+        },
+        {
+          "op": "var_decl",
+          "name": "projected",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "get_column",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "record"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Projected column:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "projected"
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "function get_column(row: List<String>, col_index: Int) -> String:\n    if col_index < length of row:\n        return row[col_index]\n    return \"NOT_FOUND\"\ndefine list record as [\"1042\", \"Widget\", \"99\", \"Warehouse A\"]\ndefine projected: String as get_column(record, 1)\nprint \"Projected column:\", projected",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "get_column",
+            "params": [
+              {
+                "name": "row",
+                "param_type": "List<String>"
+              },
+              {
+                "name": "col_index",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "<",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "col_index"
+                  },
+                  "right": {
+                    "expr_type": "list_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "row"
+                    }
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "list_index",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "row"
+                      },
+                      "index": {
+                        "expr_type": "var_ref",
+                        "name": "col_index"
+                      }
+                    },
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "NOT_FOUND",
+                  "data_type": "String"
+                },
+                "source_line": 4
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "record",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "1042",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "Widget",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "99",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "Warehouse A",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 6
+          },
+          {
+            "op": "var_decl",
+            "name": "projected",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "get_column",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "record"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Projected column:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "projected"
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

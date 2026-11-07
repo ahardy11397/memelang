@@ -1,0 +1,6 @@
+function day_of_year_approx(month: Int, day: Int) -> Int:
+    define days_before as (month - 1) * 30
+    return days_before + day
+
+define doy as day_of_year_approx(4, 15)
+print "Approximate day of year:", doy

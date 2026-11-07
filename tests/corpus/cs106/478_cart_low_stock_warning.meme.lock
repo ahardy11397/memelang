@@ -1,0 +1,194 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/478_cart_low_stock_warning.meme": {
+      "source_sha256": "19cfe808836e67f99c306558a920f04cba3d07b4e91172749d8afa304d4de84e",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_stock_low",
+          "params": [
+            {
+              "name": "count",
+              "param_type": "Int"
+            },
+            {
+              "name": "threshold",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "<=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "count"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "threshold"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Stock 4 alert:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_stock_low",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Stock 15 alert:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_stock_low",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 15,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function is_stock_low(count: Int, threshold: Int) -> Bool:\n    return count <= threshold\nprint \"Stock 4 alert:\", is_stock_low(4, 5)\nprint \"Stock 15 alert:\", is_stock_low(15, 5)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_stock_low",
+            "params": [
+              {
+                "name": "count",
+                "param_type": "Int"
+              },
+              {
+                "name": "threshold",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "<=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "count"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "threshold"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Stock 4 alert:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_stock_low",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 5,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Stock 15 alert:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_stock_low",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 15,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 5,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

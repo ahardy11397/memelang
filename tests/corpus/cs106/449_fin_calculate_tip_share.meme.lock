@@ -1,0 +1,178 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/449_fin_calculate_tip_share.meme": {
+      "source_sha256": "72b28e0dc6160f46820806f758b5fa913c9c3fc52bc11edbcbdf01cfc359d3d8",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "calculate_tip",
+          "params": [
+            {
+              "name": "bill_subtotal",
+              "param_type": "Int"
+            },
+            {
+              "name": "tip_pct",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "bill_subtotal"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "tip_pct"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "tip",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "calculate_tip",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 150,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 18,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Calculated gratuity tip:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "tip"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function calculate_tip(bill_subtotal: Int, tip_pct: Int) -> Int:\n    return bill_subtotal * tip_pct / 100\ndefine tip: Int as calculate_tip(150, 18)\nprint \"Calculated gratuity tip:\", tip",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "calculate_tip",
+            "params": [
+              {
+                "name": "bill_subtotal",
+                "param_type": "Int"
+              },
+              {
+                "name": "tip_pct",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "bill_subtotal"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "tip_pct"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 100,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "tip",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "calculate_tip",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 150,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 18,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Calculated gratuity tip:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "tip"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

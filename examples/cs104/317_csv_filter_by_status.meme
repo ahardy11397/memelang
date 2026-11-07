@@ -1,0 +1,6 @@
+define list statuses: List<String> as ["active", "suspended", "active", "pending", "active"]
+define active_count: Int as 0
+for each st in statuses
+    if st == "active"
+        set active_count to active_count + 1
+print "Active records:", active_count

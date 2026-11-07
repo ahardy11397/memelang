@@ -1,0 +1,404 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/332_string_trim_trailing_spaces.meme": {
+      "source_sha256": "964b21215fb769caf5d647947e73b7a85dae7dbf6b66a1c3b81028c3d8558401",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "rtrim",
+          "params": [
+            {
+              "name": "text",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "text"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "last_non_space",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "text"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 5
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "!=",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": " ",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "last_non_space",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "source_line": 7
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 6
+                }
+              ],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "string_slice",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "text"
+                },
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "var_ref",
+                  "name": "last_non_space"
+                }
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "raw",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "server_output   ",
+            "data_type": "String"
+          },
+          "source_line": 10
+        },
+        {
+          "op": "var_decl",
+          "name": "trimmed",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "rtrim",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "raw"
+              }
+            ]
+          },
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Right trimmed text:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "trimmed"
+            }
+          ],
+          "source_line": 12
+        }
+      ],
+      "canonical_meme": "function rtrim(text: String) -> String:\n    define n: Int as length of string text\n    define last_non_space: Int as 0\n    for i from 0 to n - 1:\n        define ch: String as slice text from i to i + 1\n        if ch != \" \":\n            set last_non_space to i + 1\n    return slice text from 0 to last_non_space\ndefine raw: String as \"server_output   \"\ndefine trimmed: String as rtrim(raw)\nprint \"Right trimmed text:\", trimmed",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "rtrim",
+            "params": [
+              {
+                "name": "text",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "text"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "last_non_space",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "text"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 5
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "!=",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": " ",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "last_non_space",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "i"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "source_line": 7
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 6
+                  }
+                ],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "string_slice",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "text"
+                  },
+                  "start": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "end": {
+                    "expr_type": "var_ref",
+                    "name": "last_non_space"
+                  }
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "raw",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "server_output   ",
+              "data_type": "String"
+            },
+            "source_line": 10
+          },
+          {
+            "op": "var_decl",
+            "name": "trimmed",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "rtrim",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "raw"
+                }
+              ]
+            },
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Right trimmed text:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "trimmed"
+              }
+            ],
+            "source_line": 12
+          }
+        ]
+      }
+    }
+  }
+}

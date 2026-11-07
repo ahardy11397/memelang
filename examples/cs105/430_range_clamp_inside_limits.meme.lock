@@ -1,0 +1,438 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/430_range_clamp_inside_limits.meme": {
+      "source_sha256": "7b41e27f99c2482a3c2f0067b3b7a70e29d580e475fb0d454b53358a5589585b",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "clamp_int",
+          "params": [
+            {
+              "name": "val",
+              "param_type": "Int"
+            },
+            {
+              "name": "low_b",
+              "param_type": "Int"
+            },
+            {
+              "name": "high_b",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "<",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "val"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "low_b"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "low_b"
+                  },
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "val"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "high_b"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "high_b"
+                  },
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "val"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "c1",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "clamp_int",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 150,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 100,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "c2",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "clamp_int",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": -5,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 100,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "var_decl",
+          "name": "c3",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "clamp_int",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 42,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 100,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Clamped high val:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "c1"
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Clamped low val:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "c2"
+            }
+          ],
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Clamped inside val:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "c3"
+            }
+          ],
+          "source_line": 13
+        }
+      ],
+      "canonical_meme": "function clamp_int(val: Int, low_b: Int, high_b: Int) -> Int:\n    if val < low_b:\n        return low_b\n    if val > high_b:\n        return high_b\n    return val\ndefine c1: Int as clamp_int(150, 0, 100)\ndefine c2: Int as clamp_int(-5, 0, 100)\ndefine c3: Int as clamp_int(42, 0, 100)\nprint \"Clamped high val:\", c1\nprint \"Clamped low val:\", c2\nprint \"Clamped inside val:\", c3",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "clamp_int",
+            "params": [
+              {
+                "name": "val",
+                "param_type": "Int"
+              },
+              {
+                "name": "low_b",
+                "param_type": "Int"
+              },
+              {
+                "name": "high_b",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "<",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "val"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "low_b"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "low_b"
+                    },
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "val"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "high_b"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "high_b"
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "val"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "c1",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "clamp_int",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 150,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "c2",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "clamp_int",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": -5,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "var_decl",
+            "name": "c3",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "clamp_int",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 42,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Clamped high val:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "c1"
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Clamped low val:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "c2"
+              }
+            ],
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Clamped inside val:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "c3"
+              }
+            ],
+            "source_line": 13
+          }
+        ]
+      }
+    }
+  }
+}

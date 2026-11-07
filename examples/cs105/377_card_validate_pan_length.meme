@@ -1,0 +1,9 @@
+function is_valid_pan_length(pan: String) -> Bool:
+    define n as length of string pan
+    if n >= 13
+        if n <= 19
+            return true
+    return false
+
+print "Length 16 valid:", is_valid_pan_length("1234567890123456")
+print "Length 8 valid:", is_valid_pan_length("12345678")

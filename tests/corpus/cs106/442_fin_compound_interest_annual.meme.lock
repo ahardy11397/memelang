@@ -1,0 +1,302 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/442_fin_compound_interest_annual.meme": {
+      "source_sha256": "5aa590251fa40d73d808f88237d4c4c39349ca3b453c552b1d37f8af0297bc96",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "compound_annual",
+          "params": [
+            {
+              "name": "principal",
+              "param_type": "Int"
+            },
+            {
+              "name": "rate_pct",
+              "param_type": "Int"
+            },
+            {
+              "name": "years",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "balance",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "principal"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_range",
+              "loop_var": "y",
+              "start": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "var_ref",
+                "name": "years"
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "earned",
+                  "var_type": "Int",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "/",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "*",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "balance"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "rate_pct"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 100,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "assign",
+                  "name": "balance",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "balance"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "earned"
+                    }
+                  },
+                  "source_line": 5
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "balance"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "final_bal",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "compound_annual",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 1000,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Compounded final balance:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "final_bal"
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "function compound_annual(principal: Int, rate_pct: Int, years: Int) -> Int:\n    define balance: Int as principal\n    for y from 1 to years:\n        define earned: Int as balance * rate_pct / 100\n        set balance to balance + earned\n    return balance\ndefine final_bal: Int as compound_annual(1000, 10, 3)\nprint \"Compounded final balance:\", final_bal",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "compound_annual",
+            "params": [
+              {
+                "name": "principal",
+                "param_type": "Int"
+              },
+              {
+                "name": "rate_pct",
+                "param_type": "Int"
+              },
+              {
+                "name": "years",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "balance",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "principal"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_range",
+                "loop_var": "y",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "var_ref",
+                  "name": "years"
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "earned",
+                    "var_type": "Int",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "/",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "*",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "balance"
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "rate_pct"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 100,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "assign",
+                    "name": "balance",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "balance"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "earned"
+                      }
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "balance"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "final_bal",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "compound_annual",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 1000,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Compounded final balance:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "final_bal"
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

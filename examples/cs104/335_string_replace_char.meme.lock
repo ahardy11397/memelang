@@ -1,0 +1,428 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/335_string_replace_char.meme": {
+      "source_sha256": "650e26768cf5a6b7da83cb3ba704b75c132b6e97eb799d4471646ad2d710dc2a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "replace_char",
+          "params": [
+            {
+              "name": "source",
+              "param_type": "String"
+            },
+            {
+              "name": "old_c",
+              "param_type": "String"
+            },
+            {
+              "name": "new_c",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "len_s",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "source"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "result",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "",
+                "data_type": "String"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "for_range",
+              "loop_var": "idx",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "len_s"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "cur_c",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "source"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "idx"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "idx"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 5
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "cur_c"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "old_c"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "result",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "result"
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "new_c"
+                        }
+                      },
+                      "source_line": 7
+                    }
+                  ],
+                  "else_body": [
+                    {
+                      "op": "assign",
+                      "name": "result",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "result"
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "cur_c"
+                        }
+                      },
+                      "source_line": 9
+                    }
+                  ],
+                  "source_line": 6
+                }
+              ],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "result"
+              },
+              "source_line": 10
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "slug",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "replace_char",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "my bad file name",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": " ",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "-",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Transformed slug:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "slug"
+            }
+          ],
+          "source_line": 13
+        }
+      ],
+      "canonical_meme": "function replace_char(source: String, old_c: String, new_c: String) -> String:\n    define len_s: Int as length of string source\n    define result: String as \"\"\n    for idx from 0 to len_s - 1:\n        define cur_c: String as slice source from idx to idx + 1\n        if cur_c == old_c:\n            set result to result + new_c\n        else:\n            set result to result + cur_c\n    return result\ndefine slug: String as replace_char(\"my bad file name\", \" \", \"-\")\nprint \"Transformed slug:\", slug",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "replace_char",
+            "params": [
+              {
+                "name": "source",
+                "param_type": "String"
+              },
+              {
+                "name": "old_c",
+                "param_type": "String"
+              },
+              {
+                "name": "new_c",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "len_s",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "source"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "result",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "",
+                  "data_type": "String"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "for_range",
+                "loop_var": "idx",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "len_s"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "cur_c",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "source"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "idx"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "idx"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 5
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "cur_c"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "old_c"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "result",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "result"
+                          },
+                          "right": {
+                            "expr_type": "var_ref",
+                            "name": "new_c"
+                          }
+                        },
+                        "source_line": 7
+                      }
+                    ],
+                    "else_body": [
+                      {
+                        "op": "assign",
+                        "name": "result",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "result"
+                          },
+                          "right": {
+                            "expr_type": "var_ref",
+                            "name": "cur_c"
+                          }
+                        },
+                        "source_line": 9
+                      }
+                    ],
+                    "source_line": 6
+                  }
+                ],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "result"
+                },
+                "source_line": 10
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "slug",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "replace_char",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "my bad file name",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": " ",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "-",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Transformed slug:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "slug"
+              }
+            ],
+            "source_line": 13
+          }
+        ]
+      }
+    }
+  }
+}

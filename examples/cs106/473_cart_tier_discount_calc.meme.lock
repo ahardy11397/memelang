@@ -1,0 +1,370 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/473_cart_tier_discount_calc.meme": {
+      "source_sha256": "c1d147c503b4da52030761340274747d0dcc3e0d56b6e784cdb259e3d038bfd5",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "tier_discount_pct",
+          "params": [
+            {
+              "name": "cart_amt",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "cart_amt"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 200,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 20,
+                    "data_type": "Int"
+                  },
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "cart_amt"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  },
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 4
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "cart_amt"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 5,
+                    "data_type": "Int"
+                  },
+                  "source_line": 7
+                }
+              ],
+              "else_body": [],
+              "source_line": 6
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Tier discount 250:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "tier_discount_pct",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 250,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Tier discount 120:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "tier_discount_pct",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 120,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Tier discount 30:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "tier_discount_pct",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 12
+        }
+      ],
+      "canonical_meme": "function tier_discount_pct(cart_amt: Int) -> Int:\n    if cart_amt >= 200:\n        return 20\n    if cart_amt >= 100:\n        return 10\n    if cart_amt >= 50:\n        return 5\n    return 0\nprint \"Tier discount 250:\", tier_discount_pct(250)\nprint \"Tier discount 120:\", tier_discount_pct(120)\nprint \"Tier discount 30:\", tier_discount_pct(30)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "tier_discount_pct",
+            "params": [
+              {
+                "name": "cart_amt",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "cart_amt"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 200,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 20,
+                      "data_type": "Int"
+                    },
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "cart_amt"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 100,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 10,
+                      "data_type": "Int"
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 4
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "cart_amt"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 50,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 5,
+                      "data_type": "Int"
+                    },
+                    "source_line": 7
+                  }
+                ],
+                "else_body": [],
+                "source_line": 6
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Tier discount 250:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "tier_discount_pct",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 250,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Tier discount 120:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "tier_discount_pct",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 120,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Tier discount 30:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "tier_discount_pct",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 30,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 12
+          }
+        ]
+      }
+    }
+  }
+}

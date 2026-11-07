@@ -1,0 +1,13 @@
+function get_config_key(line: String) -> String:
+    define line_len as length of string line
+    define key_buf as ""
+    for idx from 0 to (line_len - 1)
+        define ch as slice line from idx to (idx + 1)
+        if ch == "="
+            return key_buf
+        set key_buf to key_buf + ch
+    return key_buf
+
+define directive as "max_connections=500"
+define key_name as get_config_key(directive)
+print "Config key name:", key_name

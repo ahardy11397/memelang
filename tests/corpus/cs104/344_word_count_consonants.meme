@@ -1,0 +1,24 @@
+function count_consonants(phrase: String) -> Int:
+    define n as length of string phrase
+    define consonants: Int as 0
+    for i from 0 to (n - 1)
+        define ch as slice phrase from i to (i + 1)
+        define is_vowel as false
+        if ch == "a"
+            set is_vowel to true
+        if ch == "e"
+            set is_vowel to true
+        if ch == "i"
+            set is_vowel to true
+        if ch == "o"
+            set is_vowel to true
+        if ch == "u"
+            set is_vowel to true
+        if ch == " "
+            set is_vowel to true
+        if not is_vowel
+            set consonants to consonants + 1
+    return consonants
+
+define total_c as count_consonants("safe lock")
+print "Total consonants found:", total_c

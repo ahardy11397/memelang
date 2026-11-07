@@ -1,0 +1,458 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/327_config_parse_int_timeout.meme": {
+      "source_sha256": "82417dee541a576919b62099fb1980dec5be6b2bd61f7ab6fc285723ef5eae47",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "parse_two_digit_int",
+          "params": [
+            {
+              "name": "digits",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "d0",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_slice",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "digits"
+                },
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "d1",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_slice",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "digits"
+                },
+                "start": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 3
+            },
+            {
+              "op": "var_decl",
+              "name": "tens",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 4
+            },
+            {
+              "op": "var_decl",
+              "name": "ones",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 5
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "d0"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "3",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "tens",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 30,
+                    "data_type": "Int"
+                  },
+                  "source_line": 7
+                }
+              ],
+              "else_body": [],
+              "source_line": 6
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "d0"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "6",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "tens",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 60,
+                    "data_type": "Int"
+                  },
+                  "source_line": 9
+                }
+              ],
+              "else_body": [],
+              "source_line": 8
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "d1"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "5",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "ones",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 5,
+                    "data_type": "Int"
+                  },
+                  "source_line": 11
+                }
+              ],
+              "else_body": [],
+              "source_line": 10
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "tens"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "ones"
+                }
+              },
+              "source_line": 12
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "timeout_sec",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "parse_two_digit_int",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "35",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 14
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Timeout in seconds:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "timeout_sec"
+            }
+          ],
+          "source_line": 15
+        }
+      ],
+      "canonical_meme": "function parse_two_digit_int(digits: String) -> Int:\n    define d0: String as slice digits from 0 to 1\n    define d1: String as slice digits from 1 to 2\n    define tens: Int as 0\n    define ones: Int as 0\n    if d0 == \"3\":\n        set tens to 30\n    if d0 == \"6\":\n        set tens to 60\n    if d1 == \"5\":\n        set ones to 5\n    return tens + ones\ndefine timeout_sec: Int as parse_two_digit_int(\"35\")\nprint \"Timeout in seconds:\", timeout_sec",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "parse_two_digit_int",
+            "params": [
+              {
+                "name": "digits",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "d0",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_slice",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "digits"
+                  },
+                  "start": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "end": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "d1",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_slice",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "digits"
+                  },
+                  "start": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  },
+                  "end": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 3
+              },
+              {
+                "op": "var_decl",
+                "name": "tens",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 4
+              },
+              {
+                "op": "var_decl",
+                "name": "ones",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 5
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "d0"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "3",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "tens",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 30,
+                      "data_type": "Int"
+                    },
+                    "source_line": 7
+                  }
+                ],
+                "else_body": [],
+                "source_line": 6
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "d0"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "6",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "tens",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 60,
+                      "data_type": "Int"
+                    },
+                    "source_line": 9
+                  }
+                ],
+                "else_body": [],
+                "source_line": 8
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "d1"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "5",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "ones",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 5,
+                      "data_type": "Int"
+                    },
+                    "source_line": 11
+                  }
+                ],
+                "else_body": [],
+                "source_line": 10
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "tens"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "ones"
+                  }
+                },
+                "source_line": 12
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "timeout_sec",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "parse_two_digit_int",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "35",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 14
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Timeout in seconds:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "timeout_sec"
+              }
+            ],
+            "source_line": 15
+          }
+        ]
+      }
+    }
+  }
+}

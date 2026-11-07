@@ -1,0 +1,12 @@
+function count_char(blob: String, target_c: String) -> Int:
+    define n as length of string blob
+    define occurrences: Int as 0
+    for i from 0 to (n - 1)
+        define ch as slice blob from i to (i + 1)
+        if ch == target_c
+            set occurrences to occurrences + 1
+    return occurrences
+
+define path_str as "/usr/local/bin/python3"
+define slash_count as count_char(path_str, "/")
+print "Directory depth count:", slash_count

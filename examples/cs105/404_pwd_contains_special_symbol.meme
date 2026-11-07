@@ -1,0 +1,22 @@
+function has_special_symbol(pwd: String) -> Bool:
+    define n as length of string pwd
+    for i from 0 to (n - 1)
+        define ch as slice pwd from i to (i + 1)
+        if ch == "!"
+            return true
+        if ch == "@"
+            return true
+        if ch == "#"
+            return true
+        if ch == "$"
+            return true
+        if ch == "%"
+            return true
+        if ch == "&"
+            return true
+        if ch == "*"
+            return true
+    return false
+
+print "Symbol check safe#:", has_special_symbol("safe#pass")
+print "Symbol check safepass:", has_special_symbol("safepass")

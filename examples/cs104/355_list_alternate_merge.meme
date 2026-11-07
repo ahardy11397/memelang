@@ -1,0 +1,9 @@
+define list list_x: List<String> as ["a", "b", "c"]
+define list list_y: List<String> as ["1", "2", "3"]
+define list interleaved: List<String> as empty List<String>
+define cnt as length of list_x
+for idx from 0 to (cnt - 1)
+    append list_x[idx] to interleaved
+    append list_y[idx] to interleaved
+print "Interleaved count:", length of interleaved
+print "Item at index 1:", interleaved[1]

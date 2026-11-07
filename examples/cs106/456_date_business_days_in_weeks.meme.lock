@@ -1,0 +1,144 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/456_date_business_days_in_weeks.meme": {
+      "source_sha256": "18512c598d1cd61286fa877b228ee3e16ddb41428963f22db6fe83b2c34467cf",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "business_days",
+          "params": [
+            {
+              "name": "weeks",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "weeks"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "b_days",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "business_days",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 6,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Total business days:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "b_days"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function business_days(weeks: Int) -> Int:\n    return weeks * 5\ndefine b_days: Int as business_days(6)\nprint \"Total business days:\", b_days",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "business_days",
+            "params": [
+              {
+                "name": "weeks",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "weeks"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 5,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "b_days",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "business_days",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Total business days:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "b_days"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

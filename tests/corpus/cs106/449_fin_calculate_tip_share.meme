@@ -1,0 +1,5 @@
+function calculate_tip(bill_subtotal: Int, tip_pct: Int) -> Int:
+    return (bill_subtotal * tip_pct) / 100
+
+define tip as calculate_tip(150, 18)
+print "Calculated gratuity tip:", tip

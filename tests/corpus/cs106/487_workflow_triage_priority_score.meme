@@ -1,0 +1,5 @@
+function incident_score(severity: Int, urgency: Int) -> Int:
+    return severity * urgency
+
+define p_score as incident_score(4, 5)
+print "Calculated incident triage score:", p_score

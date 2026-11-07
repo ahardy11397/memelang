@@ -1,0 +1,10 @@
+function all_strictly_positive(nums: List<Int>) -> Bool:
+    for each x in nums
+        if x <= 0
+            return false
+    return true
+
+define list dataset1: List<Int> as [12, 45, 9, 3]
+define list dataset2: List<Int> as [12, 0, 9, 3]
+print "Dataset 1 all positive:", all_strictly_positive(dataset1)
+print "Dataset 2 all positive:", all_strictly_positive(dataset2)

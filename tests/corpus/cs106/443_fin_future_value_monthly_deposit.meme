@@ -1,0 +1,8 @@
+function savings_with_deposit(monthly_dep: Int, months: Int) -> Int:
+    define accumulated: Int as 0
+    for m from 1 to months
+        set accumulated to accumulated + monthly_dep
+    return accumulated
+
+define saved as savings_with_deposit(250, 12)
+print "Annual savings accumulation:", saved

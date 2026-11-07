@@ -1,0 +1,116 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/301_parse_apache_log_ip.meme": {
+      "source_sha256": "a3eff26c62ec74a2ccae52d9488c5abc6e85516b68ae2affb8528d0fec11ad93",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "log_line",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "192.168.1.42 - - [10/Oct/2000:13:55:36] GET /index.html 200",
+            "data_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "client_ip",
+          "var_type": "String",
+          "value": {
+            "expr_type": "string_slice",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "log_line"
+            },
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 12,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 2
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "IP:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "client_ip"
+            }
+          ],
+          "source_line": 3
+        }
+      ],
+      "canonical_meme": "define log_line: String as \"192.168.1.42 - - [10/Oct/2000:13:55:36] GET /index.html 200\"\ndefine client_ip: String as slice log_line from 0 to 12\nprint \"IP:\", client_ip",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "log_line",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "192.168.1.42 - - [10/Oct/2000:13:55:36] GET /index.html 200",
+              "data_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "client_ip",
+            "var_type": "String",
+            "value": {
+              "expr_type": "string_slice",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "log_line"
+              },
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 2
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "IP:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "client_ip"
+              }
+            ],
+            "source_line": 3
+          }
+        ]
+      }
+    }
+  }
+}

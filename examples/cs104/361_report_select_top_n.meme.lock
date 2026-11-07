@@ -1,0 +1,340 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/361_report_select_top_n.meme": {
+      "source_sha256": "fc351667a823fd1b0d821190f0475b8032b164e4033cb4a374bf09e6bbafc86b",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "scores",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 95,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 42,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 88,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 73,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 99,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "sort_collection",
+          "target": "scores",
+          "direction": "descending",
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "top3",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "Int"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "for_range",
+          "loop_var": "i",
+          "start": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "literal",
+            "value": 2,
+            "data_type": "Int"
+          },
+          "body": [
+            {
+              "op": "list_append",
+              "target": "top3",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "scores"
+                },
+                "index": {
+                  "expr_type": "var_ref",
+                  "name": "i"
+                }
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Top score 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "top3"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Top score 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "top3"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Top score 3:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "top3"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "define list scores as [95, 42, 88, 12, 73, 99]\nsort scores descending\ndefine list top3 as empty List<Int>\nfor i from 0 to 2:\n    append scores[i] to top3\nprint \"Top score 1:\", top3[0]\nprint \"Top score 2:\", top3[1]\nprint \"Top score 3:\", top3[2]",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "scores",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 95,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 42,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 88,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 73,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 99,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "sort_collection",
+            "target": "scores",
+            "direction": "descending",
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "top3",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "Int"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "for_range",
+            "loop_var": "i",
+            "start": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 2,
+              "data_type": "Int"
+            },
+            "body": [
+              {
+                "op": "list_append",
+                "target": "top3",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "scores"
+                  },
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  }
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Top score 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "top3"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Top score 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "top3"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Top score 3:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "top3"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

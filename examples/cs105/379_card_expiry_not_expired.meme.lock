@@ -1,0 +1,234 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/379_card_expiry_not_expired.meme": {
+      "source_sha256": "700992990f507e0edb4f1a330a2ebf628d4cc0bf3776942cbb9458bb5f2f1312",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_future_year",
+          "params": [
+            {
+              "name": "exp_year",
+              "param_type": "Int"
+            },
+            {
+              "name": "current_year",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "exp_year"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "current_year"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "valid_future",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "is_future_year",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 2028,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2026,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "expired_past",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "is_future_year",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 2024,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2026,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Card not expired 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "valid_future"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Card not expired 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "expired_past"
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "function is_future_year(exp_year: Int, current_year: Int) -> Bool:\n    return exp_year >= current_year\ndefine valid_future: Bool as is_future_year(2028, 2026)\ndefine expired_past: Bool as is_future_year(2024, 2026)\nprint \"Card not expired 1:\", valid_future\nprint \"Card not expired 2:\", expired_past",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_future_year",
+            "params": [
+              {
+                "name": "exp_year",
+                "param_type": "Int"
+              },
+              {
+                "name": "current_year",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "exp_year"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "current_year"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "valid_future",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "is_future_year",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 2028,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2026,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "expired_past",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "is_future_year",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 2024,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2026,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Card not expired 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "valid_future"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Card not expired 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "expired_past"
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

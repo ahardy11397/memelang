@@ -1,0 +1,292 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/431_stat_calculate_mean.meme": {
+      "source_sha256": "a35c76be2abfcc81058c775ed93f1cc6844320fdff09f3bc1ddd8c6b931b60f4",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "compute_mean",
+          "params": [
+            {
+              "name": "data",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "total",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_each",
+              "item_var": "x",
+              "collection": "data",
+              "body": [
+                {
+                  "op": "assign",
+                  "name": "total",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "total"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "x"
+                    }
+                  },
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "total"
+                },
+                "right": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "data"
+                  }
+                }
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "samples",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 30,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 40,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 50,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 7
+        },
+        {
+          "op": "var_decl",
+          "name": "avg",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "compute_mean",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "samples"
+              }
+            ]
+          },
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Calculated dataset mean:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "avg"
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "function compute_mean(data: List<Int>) -> Int:\n    define total: Int as 0\n    for each x in data:\n        set total to total + x\n    return total / length of data\ndefine list samples as [10, 20, 30, 40, 50]\ndefine avg: Int as compute_mean(samples)\nprint \"Calculated dataset mean:\", avg",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "compute_mean",
+            "params": [
+              {
+                "name": "data",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "total",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_each",
+                "item_var": "x",
+                "collection": "data",
+                "body": [
+                  {
+                    "op": "assign",
+                    "name": "total",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "total"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "x"
+                      }
+                    },
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "total"
+                  },
+                  "right": {
+                    "expr_type": "list_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "data"
+                    }
+                  }
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "samples",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 40,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 7
+          },
+          {
+            "op": "var_decl",
+            "name": "avg",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "compute_mean",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "samples"
+                }
+              ]
+            },
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Calculated dataset mean:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "avg"
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

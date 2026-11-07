@@ -1,0 +1,7 @@
+define list raw_table: List<String> as ["name,role,team", "bob,qa,core", "carol,dev,ops", "dave,pm,growth"]
+define list data_rows: List<String> as empty List<String>
+define total_rows as length of raw_table
+for row_idx from 1 to (total_rows - 1)
+    append raw_table[row_idx] to data_rows
+print "Data row count:", length of data_rows
+print "First data row:", data_rows[0]

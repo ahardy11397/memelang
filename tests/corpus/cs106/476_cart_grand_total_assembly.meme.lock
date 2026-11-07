@@ -1,0 +1,228 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/476_cart_grand_total_assembly.meme": {
+      "source_sha256": "2aa21ff32021008e0b5b0b363fb9e3fbc94b7d7170d73e87238dce74b108e26e",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "order_grand_total",
+          "params": [
+            {
+              "name": "subtotal",
+              "param_type": "Int"
+            },
+            {
+              "name": "discount",
+              "param_type": "Int"
+            },
+            {
+              "name": "tax",
+              "param_type": "Int"
+            },
+            {
+              "name": "shipping",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "subtotal"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "discount"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "tax"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "shipping"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "total",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "order_grand_total",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 100,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 15,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 8,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Order final grand total:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "total"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function order_grand_total(subtotal: Int, discount: Int, tax: Int, shipping: Int) -> Int:\n    return subtotal - discount + tax + shipping\ndefine total: Int as order_grand_total(100, 15, 8, 12)\nprint \"Order final grand total:\", total",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "order_grand_total",
+            "params": [
+              {
+                "name": "subtotal",
+                "param_type": "Int"
+              },
+              {
+                "name": "discount",
+                "param_type": "Int"
+              },
+              {
+                "name": "tax",
+                "param_type": "Int"
+              },
+              {
+                "name": "shipping",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "subtotal"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "discount"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "tax"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "shipping"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "total",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "order_grand_total",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 15,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Order final grand total:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "total"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,144 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/450_fin_rule_of_72_doubling_years.meme": {
+      "source_sha256": "b422c521f09f8b687d6109278d41ca3cebc1e5ed775b892f28cf9af8d47d37d6",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "doubling_years",
+          "params": [
+            {
+              "name": "interest_rate",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "literal",
+                  "value": 72,
+                  "data_type": "Int"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "interest_rate"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "years_needed",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "doubling_years",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 6,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Years to double investment:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "years_needed"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function doubling_years(interest_rate: Int) -> Int:\n    return 72 / interest_rate\ndefine years_needed: Int as doubling_years(6)\nprint \"Years to double investment:\", years_needed",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "doubling_years",
+            "params": [
+              {
+                "name": "interest_rate",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "literal",
+                    "value": 72,
+                    "data_type": "Int"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "interest_rate"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "years_needed",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "doubling_years",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Years to double investment:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "years_needed"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

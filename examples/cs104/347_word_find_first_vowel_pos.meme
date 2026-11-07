@@ -1,0 +1,20 @@
+function first_vowel_index(w: String) -> Int:
+    define n as length of string w
+    for i from 0 to (n - 1)
+        define ch as slice w from i to (i + 1)
+        if ch == "a"
+            return i
+        if ch == "e"
+            return i
+        if ch == "i"
+            return i
+        if ch == "o"
+            return i
+        if ch == "u"
+            return i
+    return -1
+
+define idx as first_vowel_index("rhythm")
+define idx2 as first_vowel_index("spring")
+print "Vowel in rhythm:", idx
+print "Vowel in spring:", idx2

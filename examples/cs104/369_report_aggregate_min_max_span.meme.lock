@@ -1,0 +1,302 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/369_report_aggregate_min_max_span.meme": {
+      "source_sha256": "2c2416480f464b5591b0ff37202e40a00135b5316c6bc23b8b743468e7a1fa1f",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "readings",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 45,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 89,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 34,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 67,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "sort_collection",
+          "target": "readings",
+          "direction": "ascending",
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "min_val",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "list_index",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "readings"
+            },
+            "index": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 3
+        },
+        {
+          "op": "var_decl",
+          "name": "max_val",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "list_index",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "readings"
+            },
+            "index": {
+              "expr_type": "literal",
+              "value": 4,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "reading_span",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "-",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "max_val"
+            },
+            "right": {
+              "expr_type": "var_ref",
+              "name": "min_val"
+            }
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Minimum reading:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "min_val"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Maximum reading:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "max_val"
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Total span range:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "reading_span"
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "define list readings as [45, 12, 89, 34, 67]\nsort readings ascending\ndefine min_val: Int as readings[0]\ndefine max_val: Int as readings[4]\ndefine reading_span: Int as max_val - min_val\nprint \"Minimum reading:\", min_val\nprint \"Maximum reading:\", max_val\nprint \"Total span range:\", reading_span",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "readings",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 45,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 89,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 34,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 67,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "sort_collection",
+            "target": "readings",
+            "direction": "ascending",
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "min_val",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "readings"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 3
+          },
+          {
+            "op": "var_decl",
+            "name": "max_val",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "readings"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "reading_span",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "-",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "max_val"
+              },
+              "right": {
+                "expr_type": "var_ref",
+                "name": "min_val"
+              }
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Minimum reading:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "min_val"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Maximum reading:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "max_val"
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Total span range:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "reading_span"
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

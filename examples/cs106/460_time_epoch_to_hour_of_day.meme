@@ -1,0 +1,6 @@
+function epoch_hour(epoch_seconds: Int) -> Int:
+    define total_hours as epoch_seconds / 3600
+    return total_hours % 24
+
+define hour_val as epoch_hour(86400 + 36000)
+print "Extracted hour of day:", hour_val

@@ -1,0 +1,212 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/439_stat_moving_average_three_point.meme": {
+      "source_sha256": "da8dd3356d02dd07da66bdecd8ea6e2c691b7a6aadcdefcbf3b05833929bbfa7",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "moving_avg_3",
+          "params": [
+            {
+              "name": "p1",
+              "param_type": "Int"
+            },
+            {
+              "name": "p2",
+              "param_type": "Int"
+            },
+            {
+              "name": "p3",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "p1"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "p2"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "p3"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "ma",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "moving_avg_3",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 30,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 40,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 50,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Moving average of 30 40 50:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "ma"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function moving_avg_3(p1: Int, p2: Int, p3: Int) -> Int:\n    return (p1 + p2 + p3) / 3\ndefine ma: Int as moving_avg_3(30, 40, 50)\nprint \"Moving average of 30 40 50:\", ma",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "moving_avg_3",
+            "params": [
+              {
+                "name": "p1",
+                "param_type": "Int"
+              },
+              {
+                "name": "p2",
+                "param_type": "Int"
+              },
+              {
+                "name": "p3",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "p1"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "p2"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "p3"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "ma",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "moving_avg_3",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 40,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Moving average of 30 40 50:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "ma"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

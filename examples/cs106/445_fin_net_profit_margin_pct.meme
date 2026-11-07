@@ -1,0 +1,6 @@
+function profit_margin_percent(revenue: Int, cost: Int) -> Int:
+    define profit as revenue - cost
+    return (profit * 100) / revenue
+
+define margin as profit_margin_percent(50000, 35000)
+print "Net profit margin percentage:", margin

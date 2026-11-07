@@ -1,0 +1,178 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/364_report_key_value_line.meme": {
+      "source_sha256": "620bc8e7b7c740cae7045fe9f85dc678ebd940de38c1f5ac8131452ce8b54016",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "format_kv",
+          "params": [
+            {
+              "name": "k",
+              "param_type": "String"
+            },
+            {
+              "name": "v",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "k"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": ": ",
+                    "data_type": "String"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "v"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "line",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "format_kv",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "Service Status",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "OPERATIONAL",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Generated summary line:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "line"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function format_kv(k: String, v: String) -> String:\n    return k + \": \" + v\ndefine line: String as format_kv(\"Service Status\", \"OPERATIONAL\")\nprint \"Generated summary line:\", line",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "format_kv",
+            "params": [
+              {
+                "name": "k",
+                "param_type": "String"
+              },
+              {
+                "name": "v",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "k"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": ": ",
+                      "data_type": "String"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "v"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "line",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "format_kv",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "Service Status",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "OPERATIONAL",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Generated summary line:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "line"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

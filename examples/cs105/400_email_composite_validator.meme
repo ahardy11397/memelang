@@ -1,0 +1,22 @@
+function is_email_valid_simple(email: String) -> Bool:
+    define n as length of string email
+    if n < 6
+        return false
+    define at_count: Int as 0
+    define has_dot: Bool as false
+    for i from 0 to (n - 1)
+        define ch as slice email from i to (i + 1)
+        if ch == " "
+            return false
+        if ch == "@"
+            set at_count to at_count + 1
+        if ch == "."
+            set has_dot to true
+    if at_count != 1
+        return false
+    if not has_dot
+        return false
+    return true
+
+print "Valid email composite:", is_email_valid_simple("dev@test.io")
+print "Invalid email composite:", is_email_valid_simple("dev test.io")

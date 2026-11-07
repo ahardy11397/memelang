@@ -1,0 +1,362 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/411_phone_e164_leading_plus.meme": {
+      "source_sha256": "362d620ff33b38fad33d802204aa1b132ea0d37136736a4100dc0a22cc0c301b",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_e164_format",
+          "params": [
+            {
+              "name": "phone",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "phone"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "<=",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 16,
+                      "data_type": "Int"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "var_decl",
+                      "name": "first_ch",
+                      "var_type": "String",
+                      "value": {
+                        "expr_type": "string_slice",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "phone"
+                        },
+                        "start": {
+                          "expr_type": "literal",
+                          "value": 0,
+                          "data_type": "Int"
+                        },
+                        "end": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "source_line": 5
+                    },
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "binary_op",
+                        "op": "==",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "first_ch"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": "+",
+                          "data_type": "String"
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "op": "return_stmt",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": true,
+                            "data_type": "Bool"
+                          },
+                          "source_line": 7
+                        }
+                      ],
+                      "else_body": [],
+                      "source_line": 6
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 4
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "E.164 plus check 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_e164_format",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "+14155552671",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "E.164 plus check 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_e164_format",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "14155552671",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 11
+        }
+      ],
+      "canonical_meme": "function is_e164_format(phone: String) -> Bool:\n    define n: Int as length of string phone\n    if n >= 8:\n        if n <= 16:\n            define first_ch: String as slice phone from 0 to 1\n            if first_ch == \"+\":\n                return true\n    return false\nprint \"E.164 plus check 1:\", is_e164_format(\"+14155552671\")\nprint \"E.164 plus check 2:\", is_e164_format(\"14155552671\")",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_e164_format",
+            "params": [
+              {
+                "name": "phone",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "phone"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 8,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "<=",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 16,
+                        "data_type": "Int"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "var_decl",
+                        "name": "first_ch",
+                        "var_type": "String",
+                        "value": {
+                          "expr_type": "string_slice",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "phone"
+                          },
+                          "start": {
+                            "expr_type": "literal",
+                            "value": 0,
+                            "data_type": "Int"
+                          },
+                          "end": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "source_line": 5
+                      },
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "binary_op",
+                          "op": "==",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "first_ch"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": "+",
+                            "data_type": "String"
+                          }
+                        },
+                        "then_body": [
+                          {
+                            "op": "return_stmt",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": true,
+                              "data_type": "Bool"
+                            },
+                            "source_line": 7
+                          }
+                        ],
+                        "else_body": [],
+                        "source_line": 6
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 4
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "E.164 plus check 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_e164_format",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "+14155552671",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "E.164 plus check 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_e164_format",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "14155552671",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 11
+          }
+        ]
+      }
+    }
+  }
+}

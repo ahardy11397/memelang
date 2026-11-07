@@ -1,0 +1,178 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/488_workflow_round_robin_worker.meme": {
+      "source_sha256": "ccbb64d93348f081ebb5c8339c8121bf25c5605e0dfc2f01b251c0e41908940a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "next_worker_id",
+          "params": [
+            {
+              "name": "current_w",
+              "param_type": "Int"
+            },
+            {
+              "name": "total_w",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "%",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "current_w"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "total_w"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "w_next",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "next_worker_id",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Next round robin worker id:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "w_next"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function next_worker_id(current_w: Int, total_w: Int) -> Int:\n    return (current_w + 1) % total_w\ndefine w_next: Int as next_worker_id(2, 3)\nprint \"Next round robin worker id:\", w_next",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "next_worker_id",
+            "params": [
+              {
+                "name": "current_w",
+                "param_type": "Int"
+              },
+              {
+                "name": "total_w",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "%",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "current_w"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "total_w"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "w_next",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "next_worker_id",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Next round robin worker id:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "w_next"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

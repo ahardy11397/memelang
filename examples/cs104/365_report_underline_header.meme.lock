@@ -1,0 +1,292 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/365_report_underline_header.meme": {
+      "source_sha256": "920b24d4066f8cab262433c12fa09e5fafa05aae208f014ea93f429733f35684",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "underline_text",
+          "params": [
+            {
+              "name": "hdr",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "hdr"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "line",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "",
+                "data_type": "String"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "var_ref",
+                "name": "n"
+              },
+              "body": [
+                {
+                  "op": "assign",
+                  "name": "line",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "line"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "-",
+                      "data_type": "String"
+                    }
+                  },
+                  "source_line": 5
+                }
+              ],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "line"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "title_text",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "Account Summary",
+            "data_type": "String"
+          },
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "underline",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "underline_text",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "title_text"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Header title text:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "title_text"
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Header underline line:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "underline"
+            }
+          ],
+          "source_line": 11
+        }
+      ],
+      "canonical_meme": "function underline_text(hdr: String) -> String:\n    define n: Int as length of string hdr\n    define line: String as \"\"\n    for i from 1 to n:\n        set line to line + \"-\"\n    return line\ndefine title_text: String as \"Account Summary\"\ndefine underline: String as underline_text(title_text)\nprint \"Header title text:\", title_text\nprint \"Header underline line:\", underline",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "underline_text",
+            "params": [
+              {
+                "name": "hdr",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "hdr"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "line",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "",
+                  "data_type": "String"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "body": [
+                  {
+                    "op": "assign",
+                    "name": "line",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "line"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "-",
+                        "data_type": "String"
+                      }
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "line"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "title_text",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "Account Summary",
+              "data_type": "String"
+            },
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "underline",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "underline_text",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "title_text"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Header title text:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "title_text"
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Header underline line:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "underline"
+              }
+            ],
+            "source_line": 11
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+function check_email_parts(email: String) -> Bool:
+    define n as length of string email
+    define at_idx: Int as -1
+    for i from 0 to (n - 1)
+        define ch as slice email from i to (i + 1)
+        if ch == "@"
+            set at_idx to i
+    if at_idx <= 0
+        return false
+    if at_idx >= (n - 1)
+        return false
+    return true
+
+print "Standard address valid:", check_email_parts("admin@server.org")
+print "Empty user invalid:", check_email_parts("@server.org")
+print "Empty domain invalid:", check_email_parts("admin@")

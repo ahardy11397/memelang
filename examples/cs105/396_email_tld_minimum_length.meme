@@ -1,0 +1,7 @@
+function is_valid_tld_len(tld: String) -> Bool:
+    define sz as length of string tld
+    return sz >= 2
+
+print "TLD org valid:", is_valid_tld_len("org")
+print "TLD io valid:", is_valid_tld_len("io")
+print "TLD single x invalid:", is_valid_tld_len("x")

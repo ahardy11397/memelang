@@ -1,0 +1,260 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/321_config_skip_comments.meme": {
+      "source_sha256": "679a9b0f6140716003822dc22722da9fbee208d1d328b97612216d022c85cbc3",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "config_lines",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "# server settings",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "port=8080",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "# database",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "timeout=30",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "active_lines",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "String"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "for_each",
+          "item_var": "line",
+          "collection": "config_lines",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "first_ch",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_slice",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "line"
+                },
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 4
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "!=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "first_ch"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "#",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "list_append",
+                  "target": "active_lines",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "line"
+                  },
+                  "source_line": 6
+                }
+              ],
+              "else_body": [],
+              "source_line": 5
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Active config directives:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "active_lines"
+              }
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "define list config_lines as [\"# server settings\", \"port=8080\", \"# database\", \"timeout=30\"]\ndefine list active_lines as empty List<String>\nfor each line in config_lines:\n    define first_ch: String as slice line from 0 to 1\n    if first_ch != \"#\":\n        append line to active_lines\nprint \"Active config directives:\", length of active_lines",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "config_lines",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "# server settings",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "port=8080",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "# database",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "timeout=30",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "active_lines",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "String"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "for_each",
+            "item_var": "line",
+            "collection": "config_lines",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "first_ch",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_slice",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "line"
+                  },
+                  "start": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "end": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 4
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "!=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "first_ch"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "#",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "list_append",
+                    "target": "active_lines",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "line"
+                    },
+                    "source_line": 6
+                  }
+                ],
+                "else_body": [],
+                "source_line": 5
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Active config directives:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "active_lines"
+                }
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

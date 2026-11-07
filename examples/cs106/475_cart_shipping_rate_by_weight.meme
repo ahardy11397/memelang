@@ -1,0 +1,9 @@
+function shipping_cost(weight_kg: Int) -> Int:
+    if weight_kg > 10
+        return 25
+    if weight_kg > 5
+        return 15
+    return 8
+
+print "Shipping 12kg:", shipping_cost(12)
+print "Shipping 3kg:", shipping_cost(3)

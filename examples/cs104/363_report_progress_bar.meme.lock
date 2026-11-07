@@ -1,0 +1,328 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/363_report_progress_bar.meme": {
+      "source_sha256": "4b43793d8bb7318af62e79aff34e5b525f3c533f232175ddc519daefee735459",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "render_progress_bar",
+          "params": [
+            {
+              "name": "completed",
+              "param_type": "Int"
+            },
+            {
+              "name": "total_steps",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "bar",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "[",
+                "data_type": "String"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_range",
+              "loop_var": "s",
+              "start": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "var_ref",
+                "name": "total_steps"
+              },
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "<=",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "s"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "completed"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "bar",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "bar"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": "#",
+                          "data_type": "String"
+                        }
+                      },
+                      "source_line": 5
+                    }
+                  ],
+                  "else_body": [
+                    {
+                      "op": "assign",
+                      "name": "bar",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "bar"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": "-",
+                          "data_type": "String"
+                        }
+                      },
+                      "source_line": 7
+                    }
+                  ],
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "bar"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "]",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "meter",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "render_progress_bar",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 7,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Rendered progress bar:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "meter"
+            }
+          ],
+          "source_line": 11
+        }
+      ],
+      "canonical_meme": "function render_progress_bar(completed: Int, total_steps: Int) -> String:\n    define bar: String as \"[\"\n    for s from 1 to total_steps:\n        if s <= completed:\n            set bar to bar + \"#\"\n        else:\n            set bar to bar + \"-\"\n    return bar + \"]\"\ndefine meter: String as render_progress_bar(7, 10)\nprint \"Rendered progress bar:\", meter",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "render_progress_bar",
+            "params": [
+              {
+                "name": "completed",
+                "param_type": "Int"
+              },
+              {
+                "name": "total_steps",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "bar",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "[",
+                  "data_type": "String"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_range",
+                "loop_var": "s",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "var_ref",
+                  "name": "total_steps"
+                },
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "<=",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "s"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "completed"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "bar",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "bar"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": "#",
+                            "data_type": "String"
+                          }
+                        },
+                        "source_line": 5
+                      }
+                    ],
+                    "else_body": [
+                      {
+                        "op": "assign",
+                        "name": "bar",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "bar"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": "-",
+                            "data_type": "String"
+                          }
+                        },
+                        "source_line": 7
+                      }
+                    ],
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "bar"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "]",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "meter",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "render_progress_bar",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 7,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Rendered progress bar:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "meter"
+              }
+            ],
+            "source_line": 11
+          }
+        ]
+      }
+    }
+  }
+}

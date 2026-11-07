@@ -1,0 +1,150 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/414_uuid_total_length_check.meme": {
+      "source_sha256": "0c3dd6b444d7feeb2c1d9a042ffb53520c1738df8f928a3d9ddec9b3b3f2f088",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_uuid_length",
+          "params": [
+            {
+              "name": "id_str",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "id_str"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 36,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "sample_uuid",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "123e4567-e89b-12d3-a456-426614174000",
+            "data_type": "String"
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "UUID length 36 check:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_uuid_length",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "sample_uuid"
+                }
+              ]
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function is_uuid_length(id_str: String) -> Bool:\n    return length of string id_str == 36\ndefine sample_uuid: String as \"123e4567-e89b-12d3-a456-426614174000\"\nprint \"UUID length 36 check:\", is_uuid_length(sample_uuid)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_uuid_length",
+            "params": [
+              {
+                "name": "id_str",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "string_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "id_str"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 36,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "sample_uuid",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "123e4567-e89b-12d3-a456-426614174000",
+              "data_type": "String"
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "UUID length 36 check:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_uuid_length",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "sample_uuid"
+                  }
+                ]
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

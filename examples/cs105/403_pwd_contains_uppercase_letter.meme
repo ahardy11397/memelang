@@ -1,0 +1,12 @@
+function has_uppercase(pwd: String) -> Bool:
+    define list uppers: List<String> as ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+    define n as length of string pwd
+    for i from 0 to (n - 1)
+        define ch as slice pwd from i to (i + 1)
+        for each u in uppers
+            if ch == u
+                return true
+    return false
+
+print "Has upper in Alpha1:", has_uppercase("Alpha1")
+print "Has upper in lower1:", has_uppercase("lower1")

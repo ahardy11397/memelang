@@ -1,0 +1,5 @@
+function meets_min_length(pwd: String, min_len: Int) -> Bool:
+    return length of string pwd >= min_len
+
+print "Length check 8 char:", meets_min_length("S3cret!A", 8)
+print "Length check 5 char:", meets_min_length("short", 8)

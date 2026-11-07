@@ -1,0 +1,20 @@
+function is_mastercard_prefix(pan: String) -> Bool:
+    define n as length of string pan
+    if n == 16
+        define prefix as slice pan from 0 to 2
+        if prefix == "51"
+            return true
+        if prefix == "52"
+            return true
+        if prefix == "53"
+            return true
+        if prefix == "54"
+            return true
+        if prefix == "55"
+            return true
+    return false
+
+define mc1 as is_mastercard_prefix("5300123456789012")
+define mc2 as is_mastercard_prefix("4000123456789012")
+print "Mastercard match 1:", mc1
+print "Mastercard match 2:", mc2

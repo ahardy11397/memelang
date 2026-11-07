@@ -1,0 +1,388 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/334_string_pad_right_spaces.meme": {
+      "source_sha256": "a5d3ff96afef861b0f0de8ad3ff6c8ff7e2cd3bfcda48051dffdeb2d73892182",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "pad_right",
+          "params": [
+            {
+              "name": "label",
+              "param_type": "String"
+            },
+            {
+              "name": "width",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "cur_len",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "label"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "padded",
+              "var_type": "String",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "label"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "var_decl",
+              "name": "diff",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "width"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "cur_len"
+                }
+              },
+              "source_line": 4
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "diff"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "for_range",
+                  "loop_var": "s",
+                  "start": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  },
+                  "end": {
+                    "expr_type": "var_ref",
+                    "name": "diff"
+                  },
+                  "body": [
+                    {
+                      "op": "assign",
+                      "name": "padded",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "padded"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": " ",
+                          "data_type": "String"
+                        }
+                      },
+                      "source_line": 7
+                    }
+                  ],
+                  "source_line": 6
+                }
+              ],
+              "else_body": [],
+              "source_line": 5
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "padded"
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "formatted",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "pad_right",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "TOTAL",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Formatted label width:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "string_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "formatted"
+              }
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Padded output tag:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "binary_op",
+              "op": "+",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "formatted"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": "<END>",
+                "data_type": "String"
+              }
+            }
+          ],
+          "source_line": 12
+        }
+      ],
+      "canonical_meme": "function pad_right(label: String, width: Int) -> String:\n    define cur_len: Int as length of string label\n    define padded: String as label\n    define diff: Int as width - cur_len\n    if diff > 0:\n        for s from 1 to diff:\n            set padded to padded + \" \"\n    return padded\ndefine formatted: String as pad_right(\"TOTAL\", 10)\nprint \"Formatted label width:\", length of string formatted\nprint \"Padded output tag:\", formatted + \"<END>\"",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "pad_right",
+            "params": [
+              {
+                "name": "label",
+                "param_type": "String"
+              },
+              {
+                "name": "width",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "cur_len",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "label"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "padded",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "label"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "var_decl",
+                "name": "diff",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "width"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "cur_len"
+                  }
+                },
+                "source_line": 4
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "diff"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "for_range",
+                    "loop_var": "s",
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "var_ref",
+                      "name": "diff"
+                    },
+                    "body": [
+                      {
+                        "op": "assign",
+                        "name": "padded",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "padded"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": " ",
+                            "data_type": "String"
+                          }
+                        },
+                        "source_line": 7
+                      }
+                    ],
+                    "source_line": 6
+                  }
+                ],
+                "else_body": [],
+                "source_line": 5
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "padded"
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "formatted",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "pad_right",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "TOTAL",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Formatted label width:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "formatted"
+                }
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Padded output tag:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "formatted"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "<END>",
+                  "data_type": "String"
+                }
+              }
+            ],
+            "source_line": 12
+          }
+        ]
+      }
+    }
+  }
+}

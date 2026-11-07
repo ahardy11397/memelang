@@ -1,0 +1,10 @@
+function count_freq(data: List<Int>, query: Int) -> Int:
+    define freq: Int as 0
+    for each v in data
+        if v == query
+            set freq to freq + 1
+    return freq
+
+define list scores: List<Int> as [10, 20, 20, 10, 20, 30]
+define f20 as count_freq(scores, 20)
+print "Frequency of target 20:", f20

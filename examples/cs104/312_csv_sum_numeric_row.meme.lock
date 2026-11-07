@@ -1,0 +1,184 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/312_csv_sum_numeric_row.meme": {
+      "source_sha256": "842e441242a9f8ce90efc7b0c764640f80248e902737b6cae9250e87f6f0c169",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "row_values",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 120,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 45,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 80,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 210,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "total_sum",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "for_each",
+          "item_var": "val",
+          "collection": "row_values",
+          "body": [
+            {
+              "op": "assign",
+              "name": "total_sum",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "total_sum"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "val"
+                }
+              },
+              "source_line": 4
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Row total sum:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "total_sum"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "define list row_values as [120, 45, 80, 210]\ndefine total_sum: Int as 0\nfor each val in row_values:\n    set total_sum to total_sum + val\nprint \"Row total sum:\", total_sum",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "row_values",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 120,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 45,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 80,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 210,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "total_sum",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "for_each",
+            "item_var": "val",
+            "collection": "row_values",
+            "body": [
+              {
+                "op": "assign",
+                "name": "total_sum",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "total_sum"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "val"
+                  }
+                },
+                "source_line": 4
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Row total sum:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "total_sum"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+function is_uuid_length(id_str: String) -> Bool:
+    return length of string id_str == 36
+
+define sample_uuid as "123e4567-e89b-12d3-a456-426614174000"
+print "UUID length 36 check:", is_uuid_length(sample_uuid)

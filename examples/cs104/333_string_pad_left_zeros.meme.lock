@@ -1,0 +1,352 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/333_string_pad_left_zeros.meme": {
+      "source_sha256": "d73d3296fe12e7c478645aeed740badc72ec44e8aefb8fb87bd0b087672a4f8d",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "pad_zeroes",
+          "params": [
+            {
+              "name": "input_str",
+              "param_type": "String"
+            },
+            {
+              "name": "target_len",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "cur_len",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "input_str"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "padding",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "",
+                "data_type": "String"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "var_decl",
+              "name": "needed",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "target_len"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "cur_len"
+                }
+              },
+              "source_line": 4
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "needed"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "for_range",
+                  "loop_var": "step",
+                  "start": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  },
+                  "end": {
+                    "expr_type": "var_ref",
+                    "name": "needed"
+                  },
+                  "body": [
+                    {
+                      "op": "assign",
+                      "name": "padding",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "padding"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": "0",
+                          "data_type": "String"
+                        }
+                      },
+                      "source_line": 7
+                    }
+                  ],
+                  "source_line": 6
+                }
+              ],
+              "else_body": [],
+              "source_line": 5
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "padding"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "input_str"
+                }
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "code",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "pad_zeroes",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "742",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": 6,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Padded zero serial:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "code"
+            }
+          ],
+          "source_line": 11
+        }
+      ],
+      "canonical_meme": "function pad_zeroes(input_str: String, target_len: Int) -> String:\n    define cur_len: Int as length of string input_str\n    define padding: String as \"\"\n    define needed: Int as target_len - cur_len\n    if needed > 0:\n        for step from 1 to needed:\n            set padding to padding + \"0\"\n    return padding + input_str\ndefine code: String as pad_zeroes(\"742\", 6)\nprint \"Padded zero serial:\", code",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "pad_zeroes",
+            "params": [
+              {
+                "name": "input_str",
+                "param_type": "String"
+              },
+              {
+                "name": "target_len",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "cur_len",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "input_str"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "padding",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "",
+                  "data_type": "String"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "var_decl",
+                "name": "needed",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "target_len"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "cur_len"
+                  }
+                },
+                "source_line": 4
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "needed"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "for_range",
+                    "loop_var": "step",
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "var_ref",
+                      "name": "needed"
+                    },
+                    "body": [
+                      {
+                        "op": "assign",
+                        "name": "padding",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "padding"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": "0",
+                            "data_type": "String"
+                          }
+                        },
+                        "source_line": 7
+                      }
+                    ],
+                    "source_line": 6
+                  }
+                ],
+                "else_body": [],
+                "source_line": 5
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "padding"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "input_str"
+                  }
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "code",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "pad_zeroes",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "742",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Padded zero serial:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "code"
+              }
+            ],
+            "source_line": 11
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+function estimate_monthly_loan(amount: Int, months: Int, service_fee: Int) -> Int:
+    define base_monthly as amount / months
+    return base_monthly + service_fee
+
+define monthly as estimate_monthly_loan(12000, 24, 15)
+print "Estimated monthly installment:", monthly

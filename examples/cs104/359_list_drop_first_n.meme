@@ -1,0 +1,12 @@
+function drop_prefix(items: List<String>, count: Int) -> List<String>:
+    define list remaining: List<String> as empty List<String>
+    define sz as length of items
+    if count < sz
+        for i from count to (sz - 1)
+            append items[i] to remaining
+    return remaining
+
+define list logs: List<String> as ["skip1", "skip2", "data_a", "data_b"]
+define tail_logs as drop_prefix(logs, 2)
+print "Remaining items count:", length of tail_logs
+print "First retained log:", tail_logs[0]

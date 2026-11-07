@@ -1,0 +1,446 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/391_email_single_at_symbol.meme": {
+      "source_sha256": "f66da3912ba410903e48c4f01d67ac1646a78147fa86223b2b34e2ccd7ff1f2e",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "has_single_at",
+          "params": [
+            {
+              "name": "email",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "email"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "at_count",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "email"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 5
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "@",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "at_count",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "at_count"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      },
+                      "source_line": 7
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 6
+                }
+              ],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "at_count"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Valid single at:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "has_single_at",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "user@domain.com",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Invalid multiple at:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "has_single_at",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "user@@domain.com",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Missing at:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "has_single_at",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "userdomain.com",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 12
+        }
+      ],
+      "canonical_meme": "function has_single_at(email: String) -> Bool:\n    define n: Int as length of string email\n    define at_count: Int as 0\n    for i from 0 to n - 1:\n        define ch: String as slice email from i to i + 1\n        if ch == \"@\":\n            set at_count to at_count + 1\n    return at_count == 1\nprint \"Valid single at:\", has_single_at(\"user@domain.com\")\nprint \"Invalid multiple at:\", has_single_at(\"user@@domain.com\")\nprint \"Missing at:\", has_single_at(\"userdomain.com\")",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "has_single_at",
+            "params": [
+              {
+                "name": "email",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "email"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "at_count",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "email"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 5
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "@",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "at_count",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "at_count"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        },
+                        "source_line": 7
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 6
+                  }
+                ],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "at_count"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Valid single at:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "has_single_at",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "user@domain.com",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Invalid multiple at:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "has_single_at",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "user@@domain.com",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Missing at:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "has_single_at",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "userdomain.com",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 12
+          }
+        ]
+      }
+    }
+  }
+}

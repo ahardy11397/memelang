@@ -1,0 +1,5 @@
+function line_item_subtotal(unit_cents: Int, qty: Int) -> Int:
+    return unit_cents * qty
+
+define sub as line_item_subtotal(450, 3)
+print "Line item subtotal in cents:", sub

@@ -1,0 +1,13 @@
+function is_palindrome(text: String) -> Bool:
+    define n as length of string text
+    for i from 0 to (n - 1)
+        define front_c as slice text from i to (i + 1)
+        define back_c as slice text from (n - 1 - i) to (n - i)
+        if front_c != back_c
+            return false
+    return true
+
+define is_pal1 as is_palindrome("radar")
+define is_pal2 as is_palindrome("rocket")
+print "Radar palindrome check:", is_pal1
+print "Rocket palindrome check:", is_pal2

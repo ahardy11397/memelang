@@ -1,0 +1,5 @@
+function business_days(weeks: Int) -> Int:
+    return weeks * 5
+
+define b_days as business_days(6)
+print "Total business days:", b_days

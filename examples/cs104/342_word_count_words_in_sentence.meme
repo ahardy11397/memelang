@@ -1,0 +1,14 @@
+function count_words(sentence: String) -> Int:
+    define n as length of string sentence
+    if n == 0
+        return 0
+    define spaces: Int as 0
+    for i from 0 to (n - 1)
+        define ch as slice sentence from i to (i + 1)
+        if ch == " "
+            set spaces to spaces + 1
+    return spaces + 1
+
+define text_sample as "quick brown fox jumps over lazy dog"
+define total_words as count_words(text_sample)
+print "Total sentence words:", total_words

@@ -1,0 +1,14 @@
+function is_clean_slug(slug_str: String) -> Bool:
+    define n as length of string slug_str
+    if n == 0
+        return false
+    for i from 0 to (n - 1)
+        define ch as slice slug_str from i to (i + 1)
+        if ch == " "
+            return false
+        if ch == "_"
+            return false
+    return true
+
+print "Clean slug 1:", is_clean_slug("article-slug-format")
+print "Clean slug 2:", is_clean_slug("article slug format")

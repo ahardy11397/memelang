@@ -1,0 +1,5 @@
+define alert_msg as "CRITICAL_ALERT"
+define border as "+----------------+"
+print border
+print "| " + alert_msg + " |"
+print border

@@ -1,0 +1,5 @@
+function is_valid_interval(start_val: Int, end_val: Int) -> Bool:
+    return start_val <= end_val
+
+print "Interval 10..20 valid:", is_valid_interval(10, 20)
+print "Interval 50..30 invalid:", is_valid_interval(50, 30)

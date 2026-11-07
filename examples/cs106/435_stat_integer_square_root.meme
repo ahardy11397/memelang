@@ -1,0 +1,12 @@
+function int_sqrt(n: Int) -> Int:
+    if n <= 0
+        return 0
+    define root: Int as 1
+    while ((root + 1) * (root + 1)) <= n
+        set root to root + 1
+    return root
+
+define s1 as int_sqrt(64)
+define s2 as int_sqrt(66)
+print "Int sqrt 64:", s1
+print "Int sqrt 66:", s2

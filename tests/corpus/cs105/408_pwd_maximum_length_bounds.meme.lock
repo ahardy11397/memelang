@@ -1,0 +1,200 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/408_pwd_maximum_length_bounds.meme": {
+      "source_sha256": "02b5ff5be60a0ea304079b6270570cd944e2c3e59efd7df935ae7f59e736a7b8",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "within_max_length",
+          "params": [
+            {
+              "name": "pwd",
+              "param_type": "String"
+            },
+            {
+              "name": "max_limit",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "<=",
+                "left": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "pwd"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "max_limit"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Max limit 32 check 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "within_max_length",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "normal_password",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 32,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Max limit 10 check 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "within_max_length",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "this_password_is_way_too_long",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function within_max_length(pwd: String, max_limit: Int) -> Bool:\n    return length of string pwd <= max_limit\nprint \"Max limit 32 check 1:\", within_max_length(\"normal_password\", 32)\nprint \"Max limit 10 check 2:\", within_max_length(\"this_password_is_way_too_long\", 10)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "within_max_length",
+            "params": [
+              {
+                "name": "pwd",
+                "param_type": "String"
+              },
+              {
+                "name": "max_limit",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "<=",
+                  "left": {
+                    "expr_type": "string_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "pwd"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "max_limit"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Max limit 32 check 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "within_max_length",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "normal_password",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 32,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Max limit 10 check 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "within_max_length",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "this_password_is_way_too_long",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

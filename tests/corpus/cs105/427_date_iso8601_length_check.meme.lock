@@ -1,0 +1,150 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/427_date_iso8601_length_check.meme": {
+      "source_sha256": "a85f9a043feafd901f92726027e91ea644f66ed59714899f78346bd7ddc136f9",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_iso_date_length",
+          "params": [
+            {
+              "name": "d_str",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "d_str"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "iso_today",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "2026-11-07",
+            "data_type": "String"
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "ISO date length check:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_iso_date_length",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "iso_today"
+                }
+              ]
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function is_iso_date_length(d_str: String) -> Bool:\n    return length of string d_str == 10\ndefine iso_today: String as \"2026-11-07\"\nprint \"ISO date length check:\", is_iso_date_length(iso_today)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_iso_date_length",
+            "params": [
+              {
+                "name": "d_str",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "string_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "d_str"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "iso_today",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "2026-11-07",
+              "data_type": "String"
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "ISO date length check:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_iso_date_length",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "iso_today"
+                  }
+                ]
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

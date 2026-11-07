@@ -1,0 +1,308 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/489_workflow_status_transition.meme": {
+      "source_sha256": "6099a0fee7aae1c2f9dad0266041326f4af171e1eb0b93fb6ce6c1167dfc8236",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "advance_state",
+          "params": [
+            {
+              "name": "state",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "state"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "QUEUED",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "RUNNING",
+                    "data_type": "String"
+                  },
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "state"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "RUNNING",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "SUCCESS",
+                    "data_type": "String"
+                  },
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": "UNKNOWN",
+                "data_type": "String"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "s1",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "advance_state",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "QUEUED",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "s2",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "advance_state",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "RUNNING",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "State transition 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "s1"
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "State transition 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "s2"
+            }
+          ],
+          "source_line": 11
+        }
+      ],
+      "canonical_meme": "function advance_state(state: String) -> String:\n    if state == \"QUEUED\":\n        return \"RUNNING\"\n    if state == \"RUNNING\":\n        return \"SUCCESS\"\n    return \"UNKNOWN\"\ndefine s1: String as advance_state(\"QUEUED\")\ndefine s2: String as advance_state(\"RUNNING\")\nprint \"State transition 1:\", s1\nprint \"State transition 2:\", s2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "advance_state",
+            "params": [
+              {
+                "name": "state",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "state"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "QUEUED",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "RUNNING",
+                      "data_type": "String"
+                    },
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "state"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "RUNNING",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "SUCCESS",
+                      "data_type": "String"
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "UNKNOWN",
+                  "data_type": "String"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "s1",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "advance_state",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "QUEUED",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "s2",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "advance_state",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "RUNNING",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "State transition 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "s1"
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "State transition 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "s2"
+              }
+            ],
+            "source_line": 11
+          }
+        ]
+      }
+    }
+  }
+}

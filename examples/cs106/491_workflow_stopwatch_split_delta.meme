@@ -1,0 +1,5 @@
+function split_delta(mark_a: Int, mark_b: Int) -> Int:
+    return mark_b - mark_a
+
+define lap_time as split_delta(12400, 15850)
+print "Recorded lap split time ms:", lap_time

@@ -1,0 +1,386 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/395_email_no_consecutive_dots.meme": {
+      "source_sha256": "4c53ca3deb95939832b0f5701577164e84be4ce753b29ff74224bcdeb2eceb8a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "has_consecutive_dots",
+          "params": [
+            {
+              "name": "s",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "s"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "for_range",
+                  "loop_var": "i",
+                  "start": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "end": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    }
+                  },
+                  "body": [
+                    {
+                      "op": "var_decl",
+                      "name": "pair",
+                      "var_type": "String",
+                      "value": {
+                        "expr_type": "string_slice",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "s"
+                        },
+                        "start": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "end": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "i"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 2,
+                            "data_type": "Int"
+                          }
+                        }
+                      },
+                      "source_line": 5
+                    },
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "binary_op",
+                        "op": "==",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "pair"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": "..",
+                          "data_type": "String"
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "op": "return_stmt",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": true,
+                            "data_type": "Bool"
+                          },
+                          "source_line": 7
+                        }
+                      ],
+                      "else_body": [],
+                      "source_line": 6
+                    }
+                  ],
+                  "source_line": 4
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Has double dot 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "has_consecutive_dots",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "john..doe@domain.com",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Has double dot 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "has_consecutive_dots",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "john.doe@domain.com",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 11
+        }
+      ],
+      "canonical_meme": "function has_consecutive_dots(s: String) -> Bool:\n    define n: Int as length of string s\n    if n >= 2:\n        for i from 0 to n - 2:\n            define pair: String as slice s from i to i + 2\n            if pair == \"..\":\n                return true\n    return false\nprint \"Has double dot 1:\", has_consecutive_dots(\"john..doe@domain.com\")\nprint \"Has double dot 2:\", has_consecutive_dots(\"john.doe@domain.com\")",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "has_consecutive_dots",
+            "params": [
+              {
+                "name": "s",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "s"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "for_range",
+                    "loop_var": "i",
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 2,
+                        "data_type": "Int"
+                      }
+                    },
+                    "body": [
+                      {
+                        "op": "var_decl",
+                        "name": "pair",
+                        "var_type": "String",
+                        "value": {
+                          "expr_type": "string_slice",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "s"
+                          },
+                          "start": {
+                            "expr_type": "var_ref",
+                            "name": "i"
+                          },
+                          "end": {
+                            "expr_type": "binary_op",
+                            "op": "+",
+                            "left": {
+                              "expr_type": "var_ref",
+                              "name": "i"
+                            },
+                            "right": {
+                              "expr_type": "literal",
+                              "value": 2,
+                              "data_type": "Int"
+                            }
+                          }
+                        },
+                        "source_line": 5
+                      },
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "binary_op",
+                          "op": "==",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "pair"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": "..",
+                            "data_type": "String"
+                          }
+                        },
+                        "then_body": [
+                          {
+                            "op": "return_stmt",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": true,
+                              "data_type": "Bool"
+                            },
+                            "source_line": 7
+                          }
+                        ],
+                        "else_body": [],
+                        "source_line": 6
+                      }
+                    ],
+                    "source_line": 4
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Has double dot 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "has_consecutive_dots",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "john..doe@domain.com",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Has double dot 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "has_consecutive_dots",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "john.doe@domain.com",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 11
+          }
+        ]
+      }
+    }
+  }
+}

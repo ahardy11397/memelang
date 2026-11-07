@@ -1,0 +1,362 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/376_card_prefix_discover.meme": {
+      "source_sha256": "5106e6ab0da0d5d0334cedfbb1674404a84acb90d9c8f95e9e4bd506d6c3775d",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_discover_card",
+          "params": [
+            {
+              "name": "pan",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "pan"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 16,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "prefix",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "pan"
+                    },
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "literal",
+                      "value": 4,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "prefix"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "6011",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 6
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 7
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "d1",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "is_discover_card",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "6011000990139424",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "var_decl",
+          "name": "d2",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "call",
+            "func_name": "is_discover_card",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "6500000990139424",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Discover card check 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "d1"
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Discover card check 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "d2"
+            }
+          ],
+          "source_line": 12
+        }
+      ],
+      "canonical_meme": "function is_discover_card(pan: String) -> Bool:\n    define n: Int as length of string pan\n    if n == 16:\n        define prefix: String as slice pan from 0 to 4\n        if prefix == \"6011\":\n            return true\n    return false\ndefine d1: Bool as is_discover_card(\"6011000990139424\")\ndefine d2: Bool as is_discover_card(\"6500000990139424\")\nprint \"Discover card check 1:\", d1\nprint \"Discover card check 2:\", d2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_discover_card",
+            "params": [
+              {
+                "name": "pan",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "pan"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 16,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "prefix",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "pan"
+                      },
+                      "start": {
+                        "expr_type": "literal",
+                        "value": 0,
+                        "data_type": "Int"
+                      },
+                      "end": {
+                        "expr_type": "literal",
+                        "value": 4,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "prefix"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "6011",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 6
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 7
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "d1",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "is_discover_card",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "6011000990139424",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "var_decl",
+            "name": "d2",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "call",
+              "func_name": "is_discover_card",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "6500000990139424",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Discover card check 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "d1"
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Discover card check 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "d2"
+              }
+            ],
+            "source_line": 12
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+define list words_list: List<String> as ["Asynchronous", "Javascript", "And", "Xml"]
+define acronym as ""
+for each w in words_list
+    define first_letter as slice w from 0 to 1
+    set acronym to acronym + first_letter + "."
+print "Constructed acronym:", acronym

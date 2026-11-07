@@ -1,0 +1,224 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/305_count_error_occurrences.meme": {
+      "source_sha256": "f2d9754b44f8040921e97b9adcfb0bf0a69e462248b83cabdd6ff1abddeb1c6e",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "messages",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "job 1 success",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "job 2 failed",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "job 3 timeout",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "job 4 failed",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "err_count",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "for_each",
+          "item_var": "msg",
+          "collection": "messages",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "str_ends_with",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "msg"
+                },
+                "suffix": {
+                  "expr_type": "literal",
+                  "value": "failed",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "err_count",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "err_count"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 4
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Total failures:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "err_count"
+            }
+          ],
+          "source_line": 6
+        }
+      ],
+      "canonical_meme": "define list messages as [\"job 1 success\", \"job 2 failed\", \"job 3 timeout\", \"job 4 failed\"]\ndefine err_count: Int as 0\nfor each msg in messages:\n    if msg ends with \"failed\":\n        set err_count to err_count + 1\nprint \"Total failures:\", err_count",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "messages",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "job 1 success",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "job 2 failed",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "job 3 timeout",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "job 4 failed",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "err_count",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "for_each",
+            "item_var": "msg",
+            "collection": "messages",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "str_ends_with",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "msg"
+                  },
+                  "suffix": {
+                    "expr_type": "literal",
+                    "value": "failed",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "err_count",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "err_count"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 4
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Total failures:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "err_count"
+              }
+            ],
+            "source_line": 6
+          }
+        ]
+      }
+    }
+  }
+}

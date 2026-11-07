@@ -1,0 +1,394 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/329_config_strip_inline_comment.meme": {
+      "source_sha256": "69bec2c38e23ab8b0205496bc539fecfa6ba857fbdbe8f022c91e62be8d3219f",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "trim_inline_comment",
+          "params": [
+            {
+              "name": "directive_text",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "total_len",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "directive_text"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "clean_part",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "",
+                "data_type": "String"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "for_range",
+              "loop_var": "idx",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "total_len"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "sym",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "directive_text"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "idx"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "idx"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 5
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "sym"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "#",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "clean_part"
+                      },
+                      "source_line": 7
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 6
+                },
+                {
+                  "op": "assign",
+                  "name": "clean_part",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "clean_part"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "sym"
+                    }
+                  },
+                  "source_line": 8
+                }
+              ],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "clean_part"
+              },
+              "source_line": 9
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "raw_directive",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "cache_size=1024 # megabytes",
+            "data_type": "String"
+          },
+          "source_line": 11
+        },
+        {
+          "op": "var_decl",
+          "name": "cleaned_directive",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "trim_inline_comment",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "raw_directive"
+              }
+            ]
+          },
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Cleaned directive:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "cleaned_directive"
+            }
+          ],
+          "source_line": 13
+        }
+      ],
+      "canonical_meme": "function trim_inline_comment(directive_text: String) -> String:\n    define total_len: Int as length of string directive_text\n    define clean_part: String as \"\"\n    for idx from 0 to total_len - 1:\n        define sym: String as slice directive_text from idx to idx + 1\n        if sym == \"#\":\n            return clean_part\n        set clean_part to clean_part + sym\n    return clean_part\ndefine raw_directive: String as \"cache_size=1024 # megabytes\"\ndefine cleaned_directive: String as trim_inline_comment(raw_directive)\nprint \"Cleaned directive:\", cleaned_directive",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "trim_inline_comment",
+            "params": [
+              {
+                "name": "directive_text",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "total_len",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "directive_text"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "clean_part",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "",
+                  "data_type": "String"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "for_range",
+                "loop_var": "idx",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "total_len"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "sym",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "directive_text"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "idx"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "idx"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 5
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "sym"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "#",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "clean_part"
+                        },
+                        "source_line": 7
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 6
+                  },
+                  {
+                    "op": "assign",
+                    "name": "clean_part",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "clean_part"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "sym"
+                      }
+                    },
+                    "source_line": 8
+                  }
+                ],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "clean_part"
+                },
+                "source_line": 9
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "raw_directive",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "cache_size=1024 # megabytes",
+              "data_type": "String"
+            },
+            "source_line": 11
+          },
+          {
+            "op": "var_decl",
+            "name": "cleaned_directive",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "trim_inline_comment",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "raw_directive"
+                }
+              ]
+            },
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Cleaned directive:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "cleaned_directive"
+              }
+            ],
+            "source_line": 13
+          }
+        ]
+      }
+    }
+  }
+}

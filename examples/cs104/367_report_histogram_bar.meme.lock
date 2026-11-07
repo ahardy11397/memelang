@@ -1,0 +1,250 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/367_report_histogram_bar.meme": {
+      "source_sha256": "5a263f203170c83b6dd6a5c60c60d2d156dd57c6c745d6b9a1337e9a7d88dc89",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "make_bar",
+          "params": [
+            {
+              "name": "label",
+              "param_type": "String"
+            },
+            {
+              "name": "magnitude",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "bar_str",
+              "var_type": "String",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "label"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": " | ",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_range",
+              "loop_var": "step",
+              "start": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "var_ref",
+                "name": "magnitude"
+              },
+              "body": [
+                {
+                  "op": "assign",
+                  "name": "bar_str",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "bar_str"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "*",
+                      "data_type": "String"
+                    }
+                  },
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "bar_str"
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "chart_row",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "make_bar",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "HTTP 200",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": 8,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Histogram chart row:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "chart_row"
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "function make_bar(label: String, magnitude: Int) -> String:\n    define bar_str: String as label + \" | \"\n    for step from 1 to magnitude:\n        set bar_str to bar_str + \"*\"\n    return bar_str\ndefine chart_row: String as make_bar(\"HTTP 200\", 8)\nprint \"Histogram chart row:\", chart_row",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "make_bar",
+            "params": [
+              {
+                "name": "label",
+                "param_type": "String"
+              },
+              {
+                "name": "magnitude",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "bar_str",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "label"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": " | ",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_range",
+                "loop_var": "step",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "var_ref",
+                  "name": "magnitude"
+                },
+                "body": [
+                  {
+                    "op": "assign",
+                    "name": "bar_str",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "bar_str"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "*",
+                        "data_type": "String"
+                      }
+                    },
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "bar_str"
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "chart_row",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "make_bar",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "HTTP 200",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Histogram chart row:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "chart_row"
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

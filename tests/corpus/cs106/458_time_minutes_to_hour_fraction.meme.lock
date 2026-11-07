@@ -1,0 +1,144 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/458_time_minutes_to_hour_fraction.meme": {
+      "source_sha256": "f948267e6c6af5855a19e8be35be642cd56fdbf3f96d5311222bad262deedfe1",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "split_minutes",
+          "params": [
+            {
+              "name": "total_m",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "%",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "total_m"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 60,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "leftover_m",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "split_minutes",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 135,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Leftover minutes:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "leftover_m"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function split_minutes(total_m: Int) -> Int:\n    return total_m % 60\ndefine leftover_m: Int as split_minutes(135)\nprint \"Leftover minutes:\", leftover_m",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "split_minutes",
+            "params": [
+              {
+                "name": "total_m",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "%",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "total_m"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 60,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "leftover_m",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "split_minutes",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 135,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Leftover minutes:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "leftover_m"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

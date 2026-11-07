@@ -1,0 +1,10 @@
+function percentile_rank_int(scores: List<Int>, threshold: Int) -> Int:
+    define below_count: Int as 0
+    for each s in scores
+        if s < threshold
+            set below_count to below_count + 1
+    return (below_count * 100) / (length of scores)
+
+define list exam_scores: List<Int> as [50, 60, 70, 80, 90]
+define rank as percentile_rank_int(exam_scores, 80)
+print "Percentile rank of 80:", rank

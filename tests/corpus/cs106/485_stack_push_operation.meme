@@ -1,0 +1,5 @@
+define list exec_stack: List<Int> as [10, 20]
+append 99 to exec_stack
+define top_idx as (length of exec_stack) - 1
+print "Stack depth:", length of exec_stack
+print "Pushed top value:", exec_stack[top_idx]

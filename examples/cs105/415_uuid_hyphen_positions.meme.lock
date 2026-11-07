@@ -1,0 +1,556 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/415_uuid_hyphen_positions.meme": {
+      "source_sha256": "655888fc3adf669487da9cecf3d96439b7a4e4645eae6126dd23aeae81d5e804",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "has_correct_uuid_hyphens",
+          "params": [
+            {
+              "name": "uuid",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "uuid"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 36,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "h1",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "uuid"
+                    },
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 8,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "literal",
+                      "value": 9,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "var_decl",
+                  "name": "h2",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "uuid"
+                    },
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 13,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "literal",
+                      "value": 14,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 5
+                },
+                {
+                  "op": "var_decl",
+                  "name": "h3",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "uuid"
+                    },
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 18,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "literal",
+                      "value": 19,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 6
+                },
+                {
+                  "op": "var_decl",
+                  "name": "h4",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "uuid"
+                    },
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 23,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "literal",
+                      "value": 24,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 7
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "h1"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "-",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "binary_op",
+                        "op": "==",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "h2"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": "-",
+                          "data_type": "String"
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "op": "if_stmt",
+                          "condition": {
+                            "expr_type": "binary_op",
+                            "op": "==",
+                            "left": {
+                              "expr_type": "var_ref",
+                              "name": "h3"
+                            },
+                            "right": {
+                              "expr_type": "literal",
+                              "value": "-",
+                              "data_type": "String"
+                            }
+                          },
+                          "then_body": [
+                            {
+                              "op": "if_stmt",
+                              "condition": {
+                                "expr_type": "binary_op",
+                                "op": "==",
+                                "left": {
+                                  "expr_type": "var_ref",
+                                  "name": "h4"
+                                },
+                                "right": {
+                                  "expr_type": "literal",
+                                  "value": "-",
+                                  "data_type": "String"
+                                }
+                              },
+                              "then_body": [
+                                {
+                                  "op": "return_stmt",
+                                  "value": {
+                                    "expr_type": "literal",
+                                    "value": true,
+                                    "data_type": "Bool"
+                                  },
+                                  "source_line": 12
+                                }
+                              ],
+                              "else_body": [],
+                              "source_line": 11
+                            }
+                          ],
+                          "else_body": [],
+                          "source_line": 10
+                        }
+                      ],
+                      "else_body": [],
+                      "source_line": 9
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 8
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 13
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "valid_u",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+            "data_type": "String"
+          },
+          "source_line": 15
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "UUID hyphen layout check:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "has_correct_uuid_hyphens",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "valid_u"
+                }
+              ]
+            }
+          ],
+          "source_line": 16
+        }
+      ],
+      "canonical_meme": "function has_correct_uuid_hyphens(uuid: String) -> Bool:\n    define n: Int as length of string uuid\n    if n == 36:\n        define h1: String as slice uuid from 8 to 9\n        define h2: String as slice uuid from 13 to 14\n        define h3: String as slice uuid from 18 to 19\n        define h4: String as slice uuid from 23 to 24\n        if h1 == \"-\":\n            if h2 == \"-\":\n                if h3 == \"-\":\n                    if h4 == \"-\":\n                        return true\n    return false\ndefine valid_u: String as \"f47ac10b-58cc-4372-a567-0e02b2c3d479\"\nprint \"UUID hyphen layout check:\", has_correct_uuid_hyphens(valid_u)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "has_correct_uuid_hyphens",
+            "params": [
+              {
+                "name": "uuid",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "uuid"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 36,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "h1",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "uuid"
+                      },
+                      "start": {
+                        "expr_type": "literal",
+                        "value": 8,
+                        "data_type": "Int"
+                      },
+                      "end": {
+                        "expr_type": "literal",
+                        "value": 9,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "h2",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "uuid"
+                      },
+                      "start": {
+                        "expr_type": "literal",
+                        "value": 13,
+                        "data_type": "Int"
+                      },
+                      "end": {
+                        "expr_type": "literal",
+                        "value": 14,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 5
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "h3",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "uuid"
+                      },
+                      "start": {
+                        "expr_type": "literal",
+                        "value": 18,
+                        "data_type": "Int"
+                      },
+                      "end": {
+                        "expr_type": "literal",
+                        "value": 19,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 6
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "h4",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "uuid"
+                      },
+                      "start": {
+                        "expr_type": "literal",
+                        "value": 23,
+                        "data_type": "Int"
+                      },
+                      "end": {
+                        "expr_type": "literal",
+                        "value": 24,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 7
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "h1"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "-",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "binary_op",
+                          "op": "==",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "h2"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": "-",
+                            "data_type": "String"
+                          }
+                        },
+                        "then_body": [
+                          {
+                            "op": "if_stmt",
+                            "condition": {
+                              "expr_type": "binary_op",
+                              "op": "==",
+                              "left": {
+                                "expr_type": "var_ref",
+                                "name": "h3"
+                              },
+                              "right": {
+                                "expr_type": "literal",
+                                "value": "-",
+                                "data_type": "String"
+                              }
+                            },
+                            "then_body": [
+                              {
+                                "op": "if_stmt",
+                                "condition": {
+                                  "expr_type": "binary_op",
+                                  "op": "==",
+                                  "left": {
+                                    "expr_type": "var_ref",
+                                    "name": "h4"
+                                  },
+                                  "right": {
+                                    "expr_type": "literal",
+                                    "value": "-",
+                                    "data_type": "String"
+                                  }
+                                },
+                                "then_body": [
+                                  {
+                                    "op": "return_stmt",
+                                    "value": {
+                                      "expr_type": "literal",
+                                      "value": true,
+                                      "data_type": "Bool"
+                                    },
+                                    "source_line": 12
+                                  }
+                                ],
+                                "else_body": [],
+                                "source_line": 11
+                              }
+                            ],
+                            "else_body": [],
+                            "source_line": 10
+                          }
+                        ],
+                        "else_body": [],
+                        "source_line": 9
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 8
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 13
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "valid_u",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+              "data_type": "String"
+            },
+            "source_line": 15
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "UUID hyphen layout check:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "has_correct_uuid_hyphens",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "valid_u"
+                  }
+                ]
+              }
+            ],
+            "source_line": 16
+          }
+        ]
+      }
+    }
+  }
+}

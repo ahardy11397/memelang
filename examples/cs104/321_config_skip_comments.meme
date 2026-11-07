@@ -1,0 +1,7 @@
+define list config_lines: List<String> as ["# server settings", "port=8080", "# database", "timeout=30"]
+define list active_lines: List<String> as empty List<String>
+for each line in config_lines
+    define first_ch as slice line from 0 to 1
+    if first_ch != "#"
+        append line to active_lines
+print "Active config directives:", length of active_lines

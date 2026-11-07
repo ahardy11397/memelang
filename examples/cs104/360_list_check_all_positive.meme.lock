@@ -1,0 +1,350 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/360_list_check_all_positive.meme": {
+      "source_sha256": "f9bbfeadba3d7ffb98ec31155dadc7e4dad7a7dbf7c5ab429b592586f291449d",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "all_strictly_positive",
+          "params": [
+            {
+              "name": "nums",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "for_each",
+              "item_var": "x",
+              "collection": "nums",
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "<=",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "x"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": false,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 4
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 3
+                }
+              ],
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": true,
+                "data_type": "Bool"
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "dataset1",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 45,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 9,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 7
+        },
+        {
+          "op": "var_decl",
+          "name": "dataset2",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 9,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Dataset 1 all positive:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "all_strictly_positive",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "dataset1"
+                }
+              ]
+            }
+          ],
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Dataset 2 all positive:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "all_strictly_positive",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "dataset2"
+                }
+              ]
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "function all_strictly_positive(nums: List<Int>) -> Bool:\n    for each x in nums:\n        if x <= 0:\n            return false\n    return true\ndefine list dataset1 as [12, 45, 9, 3]\ndefine list dataset2 as [12, 0, 9, 3]\nprint \"Dataset 1 all positive:\", all_strictly_positive(dataset1)\nprint \"Dataset 2 all positive:\", all_strictly_positive(dataset2)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "all_strictly_positive",
+            "params": [
+              {
+                "name": "nums",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "for_each",
+                "item_var": "x",
+                "collection": "nums",
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "<=",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "x"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 0,
+                        "data_type": "Int"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": false,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 4
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 3
+                  }
+                ],
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "dataset1",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 45,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 9,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 7
+          },
+          {
+            "op": "var_decl",
+            "name": "dataset2",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 9,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Dataset 1 all positive:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "all_strictly_positive",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "dataset1"
+                  }
+                ]
+              }
+            ],
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Dataset 2 all positive:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "all_strictly_positive",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "dataset2"
+                  }
+                ]
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    }
+  }
+}

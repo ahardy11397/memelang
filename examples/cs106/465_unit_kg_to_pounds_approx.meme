@@ -1,0 +1,5 @@
+function kg_to_lbs(kg: Int) -> Int:
+    return (kg * 22) / 10
+
+define lbs as kg_to_lbs(70)
+print "70 kg in pounds:", lbs

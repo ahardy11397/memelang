@@ -1,0 +1,5 @@
+function sales_tax(base_amt: Int, tax_pct: Int) -> Int:
+    return (base_amt * tax_pct) / 100
+
+define tax as sales_tax(200, 8)
+print "Calculated sales tax:", tax

@@ -1,0 +1,206 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/326_config_fallback_default.meme": {
+      "source_sha256": "6a3d96467eebe045d4df5b8e5104438bb7f24a7c464b33101a5595c785cde321",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "resolve_config_param",
+          "params": [
+            {
+              "name": "configured_val",
+              "param_type": "String"
+            },
+            {
+              "name": "default_val",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "configured_val"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "default_val"
+                  },
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "configured_val"
+              },
+              "source_line": 4
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "setting",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "resolve_config_param",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "https://api.domain.com",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Resolved endpoint:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "setting"
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "function resolve_config_param(configured_val: String, default_val: String) -> String:\n    if length of string configured_val == 0:\n        return default_val\n    return configured_val\ndefine setting: String as resolve_config_param(\"\", \"https://api.domain.com\")\nprint \"Resolved endpoint:\", setting",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "resolve_config_param",
+            "params": [
+              {
+                "name": "configured_val",
+                "param_type": "String"
+              },
+              {
+                "name": "default_val",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "string_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "configured_val"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "default_val"
+                    },
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "configured_val"
+                },
+                "source_line": 4
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "setting",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "resolve_config_param",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "https://api.domain.com",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Resolved endpoint:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "setting"
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

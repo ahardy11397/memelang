@@ -1,0 +1,17 @@
+function get_initials(full_name: String) -> String:
+    define n as length of string full_name
+    define initials as ""
+    define take_next as true
+    for i from 0 to (n - 1)
+        define ch as slice full_name from i to (i + 1)
+        if take_next
+            if ch != " "
+                set initials to initials + ch
+                set take_next to false
+        if ch == " "
+            set take_next to true
+    return initials
+
+define person as "Grace Brewster Hopper"
+define init as get_initials(person)
+print "Extracted person initials:", init

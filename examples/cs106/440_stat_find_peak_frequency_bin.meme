@@ -1,0 +1,13 @@
+function highest_frequency_bin(bins: List<Int>) -> Int:
+    define best_idx: Int as 0
+    define max_count: Int as bins[0]
+    define n as length of bins
+    for i from 1 to (n - 1)
+        if bins[i] > max_count
+            set max_count to bins[i]
+            set best_idx to i
+    return best_idx
+
+define list bin_counts: List<Int> as [12, 45, 98, 23, 10]
+define peak_bin as highest_frequency_bin(bin_counts)
+print "Peak frequency bin index:", peak_bin

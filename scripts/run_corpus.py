@@ -76,7 +76,7 @@ class CorpusScriptSpec(BaseModel):
     id: int
     slug: str
     path: str
-    course: Literal["cs101", "cs102", "cs103"]
+    course: Literal["cs101", "cs102", "cs103", "cs104", "cs105", "cs106"]
     topic: str
     title: str
     style: Literal["clean", "typo", "ambiguous"]
@@ -116,10 +116,10 @@ class CorpusRunSummary(BaseModel):
     results: list[ScriptEvalResult] = Field(default_factory=list)
 
 
-def parse_id_filter(spec: str) -> set[int]:
+def parse_id_filter(spec: str, max_id: int = 500) -> set[int]:
     """Parses a comma-separated ID range string like '1-3,7,10-11' into a set of integers.
 
-    Enforces 1 <= id <= 300 and valid ascending ranges. Raises ValueError on any invalid spec.
+    Enforces 1 <= id <= max_id and valid ascending ranges. Raises ValueError on any invalid spec.
     """
     if not spec or not spec.strip():
         raise ValueError("ID filter specification cannot be empty.")
@@ -139,16 +139,16 @@ def parse_id_filter(spec: str) -> set[int]:
                 raise ValueError(f"Invalid range in ID filter: {part!r}") from exc
             if lo > hi:
                 raise ValueError(f"Range start cannot exceed end: {part!r}")
-            if lo < 1 or hi > 300:
-                raise ValueError(f"IDs must be in 1..300, got range {lo}-{hi}")
+            if lo < 1 or hi > max_id:
+                raise ValueError(f"IDs must be in 1..{max_id}, got range {lo}-{hi}")
             result.update(range(lo, hi + 1))
         else:
             try:
                 val = int(part)
             except ValueError as exc:
                 raise ValueError(f"Invalid integer in ID filter: {part!r}") from exc
-            if val < 1 or val > 300:
-                raise ValueError(f"IDs must be in 1..300, got {val}")
+            if val < 1 or val > max_id:
+                raise ValueError(f"IDs must be in 1..{max_id}, got {val}")
             result.add(val)
     return result
 
@@ -519,7 +519,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--course",
-        choices=["all", "cs101", "cs102", "cs103"],
+        choices=["all", "cs101", "cs102", "cs103", "cs104", "cs105", "cs106"],
         default="all",
         help="Filter by curriculum course (default: all)",
     )

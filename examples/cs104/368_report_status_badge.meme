@@ -1,0 +1,7 @@
+function make_badge(status_text: String) -> String:
+    return "[" + status_text + "]"
+
+define b1 as make_badge("PASS")
+define b2 as make_badge("FAIL")
+print "Test badge 1:", b1
+print "Test badge 2:", b2

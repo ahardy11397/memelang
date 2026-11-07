@@ -1,0 +1,8 @@
+define list increments: List<Int> as [5, 10, 15, 20]
+define list running_sums: List<Int> as empty List<Int>
+define total: Int as 0
+for each inc in increments
+    set total to total + inc
+    append total to running_sums
+print "Running sum final total:", running_sums[3]
+print "Running sum count:", length of running_sums

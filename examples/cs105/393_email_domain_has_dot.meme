@@ -1,0 +1,10 @@
+function domain_has_dot(domain: String) -> Bool:
+    define n as length of string domain
+    for i from 0 to (n - 1)
+        define ch as slice domain from i to (i + 1)
+        if ch == "."
+            return true
+    return false
+
+print "Domain with dot:", domain_has_dot("example.com")
+print "Domain without dot:", domain_has_dot("localhost")

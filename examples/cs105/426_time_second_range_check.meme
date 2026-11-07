@@ -1,0 +1,8 @@
+function is_valid_second(sec: Int) -> Bool:
+    if sec >= 0
+        if sec <= 59
+            return true
+    return false
+
+print "Second 30 valid:", is_valid_second(30)
+print "Second -1 invalid:", is_valid_second(-1)

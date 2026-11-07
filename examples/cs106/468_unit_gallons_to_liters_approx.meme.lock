@@ -1,0 +1,162 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/468_unit_gallons_to_liters_approx.meme": {
+      "source_sha256": "c2ebaf672ca96fdfc1e5d60fc3276b42c50aeee2e019882966c4088c25dd9b5a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "gal_to_liters",
+          "params": [
+            {
+              "name": "gal",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "gal"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 3785,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1000,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "lit",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "gal_to_liters",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "10 gallons in liters:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "lit"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function gal_to_liters(gal: Int) -> Int:\n    return gal * 3785 / 1000\ndefine lit: Int as gal_to_liters(10)\nprint \"10 gallons in liters:\", lit",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "gal_to_liters",
+            "params": [
+              {
+                "name": "gal",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "gal"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 3785,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1000,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "lit",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "gal_to_liters",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "10 gallons in liters:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "lit"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

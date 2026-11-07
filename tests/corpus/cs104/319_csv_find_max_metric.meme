@@ -1,0 +1,6 @@
+define metric_column: List<Int> as [420, 890, 150, 930, 610]
+define highest_metric: Int as metric_column[0]
+for each metric in metric_column
+    if metric > highest_metric
+        set highest_metric to metric
+print "Highest metric found:", highest_metric

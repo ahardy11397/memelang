@@ -1,0 +1,288 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/353_list_flatten_two_lists.meme": {
+      "source_sha256": "02248242c5f64f065fb9deddbda05b173c74d358d47527e9ea4ae82b6164a53b",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "sub1",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 30,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "sub2",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 40,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 50,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "merged",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "Int"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "for_each",
+          "item_var": "a",
+          "collection": "sub1",
+          "body": [
+            {
+              "op": "list_append",
+              "target": "merged",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "a"
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "for_each",
+          "item_var": "b",
+          "collection": "sub2",
+          "body": [
+            {
+              "op": "list_append",
+              "target": "merged",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "b"
+              },
+              "source_line": 7
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Merged list count:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "merged"
+              }
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Last merged element:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "merged"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "define list sub1 as [10, 20, 30]\ndefine list sub2 as [40, 50]\ndefine list merged as empty List<Int>\nfor each a in sub1:\n    append a to merged\nfor each b in sub2:\n    append b to merged\nprint \"Merged list count:\", length of merged\nprint \"Last merged element:\", merged[4]",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "sub1",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "sub2",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 40,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "merged",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "Int"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "for_each",
+            "item_var": "a",
+            "collection": "sub1",
+            "body": [
+              {
+                "op": "list_append",
+                "target": "merged",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "a"
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "for_each",
+            "item_var": "b",
+            "collection": "sub2",
+            "body": [
+              {
+                "op": "list_append",
+                "target": "merged",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "b"
+                },
+                "source_line": 7
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Merged list count:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "merged"
+                }
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Last merged element:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "merged"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

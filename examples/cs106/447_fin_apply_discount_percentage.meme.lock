@@ -1,0 +1,214 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/447_fin_apply_discount_percentage.meme": {
+      "source_sha256": "5233bb5b793b4efe2d1212572a04777284ddc9d6a1880978aecb535655d99744",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "discount_price",
+          "params": [
+            {
+              "name": "original",
+              "param_type": "Int"
+            },
+            {
+              "name": "pct_off",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "deduction",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "original"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "pct_off"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "original"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "deduction"
+                }
+              },
+              "source_line": 3
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "discounted",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "discount_price",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 80,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 25,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Discounted purchase price:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "discounted"
+            }
+          ],
+          "source_line": 6
+        }
+      ],
+      "canonical_meme": "function discount_price(original: Int, pct_off: Int) -> Int:\n    define deduction: Int as original * pct_off / 100\n    return original - deduction\ndefine discounted: Int as discount_price(80, 25)\nprint \"Discounted purchase price:\", discounted",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "discount_price",
+            "params": [
+              {
+                "name": "original",
+                "param_type": "Int"
+              },
+              {
+                "name": "pct_off",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "deduction",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "original"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "pct_off"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 100,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "original"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "deduction"
+                  }
+                },
+                "source_line": 3
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "discounted",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "discount_price",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 80,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 25,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Discounted purchase price:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "discounted"
+              }
+            ],
+            "source_line": 6
+          }
+        ]
+      }
+    }
+  }
+}

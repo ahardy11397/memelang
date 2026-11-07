@@ -1,0 +1,5 @@
+function is_iso_date_length(d_str: String) -> Bool:
+    return length of string d_str == 10
+
+define iso_today as "2026-11-07"
+print "ISO date length check:", is_iso_date_length(iso_today)

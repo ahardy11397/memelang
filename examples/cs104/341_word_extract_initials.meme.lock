@@ -1,0 +1,502 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/341_word_extract_initials.meme": {
+      "source_sha256": "d598ad2a44fe8740e7f99cde6df07d478d721708cc26c9713406118b4140a7c7",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "get_initials",
+          "params": [
+            {
+              "name": "full_name",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "full_name"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "initials",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "",
+                "data_type": "String"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "var_decl",
+              "name": "take_next",
+              "var_type": "Bool",
+              "value": {
+                "expr_type": "literal",
+                "value": true,
+                "data_type": "Bool"
+              },
+              "source_line": 4
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "full_name"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 6
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "var_ref",
+                    "name": "take_next"
+                  },
+                  "then_body": [
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "binary_op",
+                        "op": "!=",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "ch"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": " ",
+                          "data_type": "String"
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "op": "assign",
+                          "name": "initials",
+                          "value": {
+                            "expr_type": "binary_op",
+                            "op": "+",
+                            "left": {
+                              "expr_type": "var_ref",
+                              "name": "initials"
+                            },
+                            "right": {
+                              "expr_type": "var_ref",
+                              "name": "ch"
+                            }
+                          },
+                          "source_line": 9
+                        },
+                        {
+                          "op": "assign",
+                          "name": "take_next",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": false,
+                            "data_type": "Bool"
+                          },
+                          "source_line": 10
+                        }
+                      ],
+                      "else_body": [],
+                      "source_line": 8
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 7
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": " ",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "take_next",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 12
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 11
+                }
+              ],
+              "source_line": 5
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "initials"
+              },
+              "source_line": 13
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "person",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "Grace Brewster Hopper",
+            "data_type": "String"
+          },
+          "source_line": 15
+        },
+        {
+          "op": "var_decl",
+          "name": "init",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "get_initials",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "person"
+              }
+            ]
+          },
+          "source_line": 16
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Extracted person initials:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "init"
+            }
+          ],
+          "source_line": 17
+        }
+      ],
+      "canonical_meme": "function get_initials(full_name: String) -> String:\n    define n: Int as length of string full_name\n    define initials: String as \"\"\n    define take_next: Bool as true\n    for i from 0 to n - 1:\n        define ch: String as slice full_name from i to i + 1\n        if take_next:\n            if ch != \" \":\n                set initials to initials + ch\n                set take_next to false\n        if ch == \" \":\n            set take_next to true\n    return initials\ndefine person: String as \"Grace Brewster Hopper\"\ndefine init: String as get_initials(person)\nprint \"Extracted person initials:\", init",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "get_initials",
+            "params": [
+              {
+                "name": "full_name",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "full_name"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "initials",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "",
+                  "data_type": "String"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "var_decl",
+                "name": "take_next",
+                "var_type": "Bool",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                },
+                "source_line": 4
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "full_name"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 6
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "var_ref",
+                      "name": "take_next"
+                    },
+                    "then_body": [
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "binary_op",
+                          "op": "!=",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "ch"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": " ",
+                            "data_type": "String"
+                          }
+                        },
+                        "then_body": [
+                          {
+                            "op": "assign",
+                            "name": "initials",
+                            "value": {
+                              "expr_type": "binary_op",
+                              "op": "+",
+                              "left": {
+                                "expr_type": "var_ref",
+                                "name": "initials"
+                              },
+                              "right": {
+                                "expr_type": "var_ref",
+                                "name": "ch"
+                              }
+                            },
+                            "source_line": 9
+                          },
+                          {
+                            "op": "assign",
+                            "name": "take_next",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": false,
+                              "data_type": "Bool"
+                            },
+                            "source_line": 10
+                          }
+                        ],
+                        "else_body": [],
+                        "source_line": 8
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 7
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": " ",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "take_next",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 12
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 11
+                  }
+                ],
+                "source_line": 5
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "initials"
+                },
+                "source_line": 13
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "person",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "Grace Brewster Hopper",
+              "data_type": "String"
+            },
+            "source_line": 15
+          },
+          {
+            "op": "var_decl",
+            "name": "init",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "get_initials",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "person"
+                }
+              ]
+            },
+            "source_line": 16
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Extracted person initials:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "init"
+              }
+            ],
+            "source_line": 17
+          }
+        ]
+      }
+    }
+  }
+}

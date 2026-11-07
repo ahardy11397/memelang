@@ -1,0 +1,9 @@
+function is_uuid_v4(uuid: String) -> Bool:
+    define n as length of string uuid
+    if n == 36
+        define ver_char as slice uuid from 14 to 15
+        return ver_char == "4"
+    return false
+
+define u4 as "c9a646d3-9c61-4cc9-bc19-4786f4cc40f4"
+print "UUID v4 marker check:", is_uuid_v4(u4)

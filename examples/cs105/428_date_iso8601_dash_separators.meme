@@ -1,0 +1,12 @@
+function has_iso_date_separators(d: String) -> Bool:
+    define n as length of string d
+    if n == 10
+        define sep1 as slice d from 4 to 5
+        define sep2 as slice d from 7 to 8
+        if sep1 == "-"
+            if sep2 == "-"
+                return true
+    return false
+
+define test_d as "2026-05-15"
+print "ISO date dash separators valid:", has_iso_date_separators(test_d)

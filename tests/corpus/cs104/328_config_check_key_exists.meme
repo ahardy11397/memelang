@@ -1,0 +1,7 @@
+define list known_keys: List<String> as ["app_name", "environment", "log_level", "api_token"]
+define target_key as "api_token"
+define found_key as false
+for each k in known_keys
+    if k == target_key
+        set found_key to true
+print "API token configured:", found_key

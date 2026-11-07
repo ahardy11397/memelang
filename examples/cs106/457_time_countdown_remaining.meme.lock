@@ -1,0 +1,238 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/457_time_countdown_remaining.meme": {
+      "source_sha256": "42efd84ad193a65cdfd02c4b54ffaf42a64a2c425175f6adb3f3aeef677d4ab1",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "countdown_remaining",
+          "params": [
+            {
+              "name": "total_mins",
+              "param_type": "Int"
+            },
+            {
+              "name": "elapsed_mins",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "rem",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "total_mins"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "elapsed_mins"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "<",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "rem"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "source_line": 4
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "rem"
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "left",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "countdown_remaining",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 60,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 42,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Minutes remaining on timer:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "left"
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "function countdown_remaining(total_mins: Int, elapsed_mins: Int) -> Int:\n    define rem: Int as total_mins - elapsed_mins\n    if rem < 0:\n        return 0\n    return rem\ndefine left: Int as countdown_remaining(60, 42)\nprint \"Minutes remaining on timer:\", left",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "countdown_remaining",
+            "params": [
+              {
+                "name": "total_mins",
+                "param_type": "Int"
+              },
+              {
+                "name": "elapsed_mins",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "rem",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "total_mins"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "elapsed_mins"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "<",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "rem"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "source_line": 4
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "rem"
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "left",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "countdown_remaining",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 60,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 42,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Minutes remaining on timer:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "left"
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

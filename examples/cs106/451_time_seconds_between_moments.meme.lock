@@ -1,0 +1,456 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/451_time_seconds_between_moments.meme": {
+      "source_sha256": "fbf1b6f7323a3dc3a6e52013be2943729c1a0f8831b8de5cf285b3e9aa7cc5fe",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "to_seconds",
+          "params": [
+            {
+              "name": "h",
+              "param_type": "Int"
+            },
+            {
+              "name": "m",
+              "param_type": "Int"
+            },
+            {
+              "name": "s",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "h"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 3600,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "m"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 60,
+                      "data_type": "Int"
+                    }
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "s"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "func_def",
+          "name": "elapsed_seconds",
+          "params": [
+            {
+              "name": "h1",
+              "param_type": "Int"
+            },
+            {
+              "name": "m1",
+              "param_type": "Int"
+            },
+            {
+              "name": "s1",
+              "param_type": "Int"
+            },
+            {
+              "name": "h2",
+              "param_type": "Int"
+            },
+            {
+              "name": "m2",
+              "param_type": "Int"
+            },
+            {
+              "name": "s2",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "t1",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "call",
+                "func_name": "to_seconds",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "h1"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "m1"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "s1"
+                  }
+                ]
+              },
+              "source_line": 5
+            },
+            {
+              "op": "var_decl",
+              "name": "t2",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "call",
+                "func_name": "to_seconds",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "h2"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "m2"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "s2"
+                  }
+                ]
+              },
+              "source_line": 6
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "t2"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "t1"
+                }
+              },
+              "source_line": 7
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "diff_sec",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "elapsed_seconds",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 9,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 15,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 30,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 45,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Elapsed duration in seconds:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "diff_sec"
+            }
+          ],
+          "source_line": 10
+        }
+      ],
+      "canonical_meme": "function to_seconds(h: Int, m: Int, s: Int) -> Int:\n    return h * 3600 + m * 60 + s\nfunction elapsed_seconds(h1: Int, m1: Int, s1: Int, h2: Int, m2: Int, s2: Int) -> Int:\n    define t1: Int as to_seconds(h1, m1, s1)\n    define t2: Int as to_seconds(h2, m2, s2)\n    return t2 - t1\ndefine diff_sec: Int as elapsed_seconds(9, 15, 0, 10, 30, 45)\nprint \"Elapsed duration in seconds:\", diff_sec",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "to_seconds",
+            "params": [
+              {
+                "name": "h",
+                "param_type": "Int"
+              },
+              {
+                "name": "m",
+                "param_type": "Int"
+              },
+              {
+                "name": "s",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "*",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "h"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 3600,
+                        "data_type": "Int"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "binary_op",
+                      "op": "*",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "m"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 60,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "s"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "elapsed_seconds",
+            "params": [
+              {
+                "name": "h1",
+                "param_type": "Int"
+              },
+              {
+                "name": "m1",
+                "param_type": "Int"
+              },
+              {
+                "name": "s1",
+                "param_type": "Int"
+              },
+              {
+                "name": "h2",
+                "param_type": "Int"
+              },
+              {
+                "name": "m2",
+                "param_type": "Int"
+              },
+              {
+                "name": "s2",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "t1",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "call",
+                  "func_name": "to_seconds",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "h1"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "m1"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "s1"
+                    }
+                  ]
+                },
+                "source_line": 5
+              },
+              {
+                "op": "var_decl",
+                "name": "t2",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "call",
+                  "func_name": "to_seconds",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "h2"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "m2"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "s2"
+                    }
+                  ]
+                },
+                "source_line": 6
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "t2"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "t1"
+                  }
+                },
+                "source_line": 7
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "diff_sec",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "elapsed_seconds",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 9,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 15,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 45,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Elapsed duration in seconds:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "diff_sec"
+              }
+            ],
+            "source_line": 10
+          }
+        ]
+      }
+    }
+  }
+}

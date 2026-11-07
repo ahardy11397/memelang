@@ -1,0 +1,394 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/338_string_remove_character.meme": {
+      "source_sha256": "f7e9229dcf6da90d069a231333cd5d1ea83e6e2b6d4eeed21740987e37e0dead",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "strip_char",
+          "params": [
+            {
+              "name": "src",
+              "param_type": "String"
+            },
+            {
+              "name": "bad_c",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "src"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "clean_buf",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "",
+                "data_type": "String"
+              },
+              "source_line": 3
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "body": [
+                {
+                  "op": "var_decl",
+                  "name": "ch",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "src"
+                    },
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 5
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "!=",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "ch"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "bad_c"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "clean_buf",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "clean_buf"
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "ch"
+                        }
+                      },
+                      "source_line": 7
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 6
+                }
+              ],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "clean_buf"
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "phone",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "555-019-2834",
+            "data_type": "String"
+          },
+          "source_line": 10
+        },
+        {
+          "op": "var_decl",
+          "name": "digits_only",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "strip_char",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "phone"
+              },
+              {
+                "expr_type": "literal",
+                "value": "-",
+                "data_type": "String"
+              }
+            ]
+          },
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Stripped phone digits:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "digits_only"
+            }
+          ],
+          "source_line": 12
+        }
+      ],
+      "canonical_meme": "function strip_char(src: String, bad_c: String) -> String:\n    define n: Int as length of string src\n    define clean_buf: String as \"\"\n    for i from 0 to n - 1:\n        define ch: String as slice src from i to i + 1\n        if ch != bad_c:\n            set clean_buf to clean_buf + ch\n    return clean_buf\ndefine phone: String as \"555-019-2834\"\ndefine digits_only: String as strip_char(phone, \"-\")\nprint \"Stripped phone digits:\", digits_only",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "strip_char",
+            "params": [
+              {
+                "name": "src",
+                "param_type": "String"
+              },
+              {
+                "name": "bad_c",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "src"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "clean_buf",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "",
+                  "data_type": "String"
+                },
+                "source_line": 3
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "var_decl",
+                    "name": "ch",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "src"
+                      },
+                      "start": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "end": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 5
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "!=",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "ch"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "bad_c"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "clean_buf",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "clean_buf"
+                          },
+                          "right": {
+                            "expr_type": "var_ref",
+                            "name": "ch"
+                          }
+                        },
+                        "source_line": 7
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 6
+                  }
+                ],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "clean_buf"
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "phone",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "555-019-2834",
+              "data_type": "String"
+            },
+            "source_line": 10
+          },
+          {
+            "op": "var_decl",
+            "name": "digits_only",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "strip_char",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "phone"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "-",
+                  "data_type": "String"
+                }
+              ]
+            },
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Stripped phone digits:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "digits_only"
+              }
+            ],
+            "source_line": 12
+          }
+        ]
+      }
+    }
+  }
+}

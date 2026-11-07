@@ -1,0 +1,7 @@
+define list dictionary: List<String> as ["data", "algorithm", "tree", "verification", "node"]
+define max_len: Int as 0
+for each word in dictionary
+    define wl as length of string word
+    if wl > max_len
+        set max_len to wl
+print "Longest word length:", max_len

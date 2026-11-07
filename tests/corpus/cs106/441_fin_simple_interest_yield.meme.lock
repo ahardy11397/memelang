@@ -1,0 +1,212 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/441_fin_simple_interest_yield.meme": {
+      "source_sha256": "60d38d96419542ba7f1a75183006cb25a382d84967e5b7a387cf0dffbae8448e",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "calc_simple_interest",
+          "params": [
+            {
+              "name": "principal",
+              "param_type": "Int"
+            },
+            {
+              "name": "rate_pct",
+              "param_type": "Int"
+            },
+            {
+              "name": "years",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "principal"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "rate_pct"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "years"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "yield_amt",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "calc_simple_interest",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 10000,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 5,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Simple interest yield:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "yield_amt"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function calc_simple_interest(principal: Int, rate_pct: Int, years: Int) -> Int:\n    return principal * rate_pct * years / 100\ndefine yield_amt: Int as calc_simple_interest(10000, 5, 3)\nprint \"Simple interest yield:\", yield_amt",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "calc_simple_interest",
+            "params": [
+              {
+                "name": "principal",
+                "param_type": "Int"
+              },
+              {
+                "name": "rate_pct",
+                "param_type": "Int"
+              },
+              {
+                "name": "years",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "*",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "principal"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "rate_pct"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "years"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 100,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "yield_amt",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "calc_simple_interest",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 10000,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Simple interest yield:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "yield_amt"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

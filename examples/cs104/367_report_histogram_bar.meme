@@ -1,0 +1,8 @@
+function make_bar(label: String, magnitude: Int) -> String:
+    define bar_str as label + " | "
+    for step from 1 to magnitude
+        set bar_str to bar_str + "*"
+    return bar_str
+
+define chart_row as make_bar("HTTP 200", 8)
+print "Histogram chart row:", chart_row

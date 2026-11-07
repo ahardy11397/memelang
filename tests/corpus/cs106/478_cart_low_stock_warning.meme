@@ -1,0 +1,5 @@
+function is_stock_low(count: Int, threshold: Int) -> Bool:
+    return count <= threshold
+
+print "Stock 4 alert:", is_stock_low(4, 5)
+print "Stock 15 alert:", is_stock_low(15, 5)

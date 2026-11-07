@@ -1,0 +1,15 @@
+function ltrim(text: String) -> String:
+    define n as length of string text
+    define start_idx: Int as 0
+    define skipping as true
+    for i from 0 to (n - 1)
+        define ch as slice text from i to (i + 1)
+        if skipping
+            if ch != " "
+                set start_idx to i
+                set skipping to false
+    return slice text from start_idx to n
+
+define raw as "   payload content"
+define trimmed as ltrim(raw)
+print "Left trimmed text:", trimmed

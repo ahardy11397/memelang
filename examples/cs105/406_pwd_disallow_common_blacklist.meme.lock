@@ -1,0 +1,298 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs105/406_pwd_disallow_common_blacklist.meme": {
+      "source_sha256": "c251ac135a1495e5ad428e7295ef2e06e7a240a07e6b8918d9909c261c858989",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_blacklisted",
+          "params": [
+            {
+              "name": "pwd",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "common",
+              "var_type": "List<String>",
+              "value": {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": "password",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "123456",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "admin123",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "qwerty",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "welcome1",
+                    "data_type": "String"
+                  }
+                ],
+                "element_type": "String"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_each",
+              "item_var": "bad",
+              "collection": "common",
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "bad"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "pwd"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": true,
+                        "data_type": "Bool"
+                      },
+                      "source_line": 5
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Blacklist check 123456:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_blacklisted",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "123456",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Blacklist check custom_pass:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_blacklisted",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "custom_pass",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "function is_blacklisted(pwd: String) -> Bool:\n    define list common as [\"password\", \"123456\", \"admin123\", \"qwerty\", \"welcome1\"]\n    for each bad in common:\n        if bad == pwd:\n            return true\n    return false\nprint \"Blacklist check 123456:\", is_blacklisted(\"123456\")\nprint \"Blacklist check custom_pass:\", is_blacklisted(\"custom_pass\")",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_blacklisted",
+            "params": [
+              {
+                "name": "pwd",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "common",
+                "var_type": "List<String>",
+                "value": {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": "password",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "123456",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "admin123",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "qwerty",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "welcome1",
+                      "data_type": "String"
+                    }
+                  ],
+                  "element_type": "String"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_each",
+                "item_var": "bad",
+                "collection": "common",
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "bad"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "pwd"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": true,
+                          "data_type": "Bool"
+                        },
+                        "source_line": 5
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Blacklist check 123456:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_blacklisted",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "123456",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Blacklist check custom_pass:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_blacklisted",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "custom_pass",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

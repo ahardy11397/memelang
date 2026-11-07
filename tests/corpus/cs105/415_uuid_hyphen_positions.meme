@@ -1,0 +1,16 @@
+function has_correct_uuid_hyphens(uuid: String) -> Bool:
+    define n as length of string uuid
+    if n == 36
+        define h1 as slice uuid from 8 to 9
+        define h2 as slice uuid from 13 to 14
+        define h3 as slice uuid from 18 to 19
+        define h4 as slice uuid from 23 to 24
+        if h1 == "-"
+            if h2 == "-"
+                if h3 == "-"
+                    if h4 == "-"
+                        return true
+    return false
+
+define valid_u as "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+print "UUID hyphen layout check:", has_correct_uuid_hyphens(valid_u)

@@ -1,0 +1,5 @@
+function calc_simple_interest(principal: Int, rate_pct: Int, years: Int) -> Int:
+    return (principal * rate_pct * years) / 100
+
+define yield_amt as calc_simple_interest(10000, 5, 3)
+print "Simple interest yield:", yield_amt

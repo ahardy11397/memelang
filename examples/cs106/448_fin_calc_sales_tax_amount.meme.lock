@@ -1,0 +1,178 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/448_fin_calc_sales_tax_amount.meme": {
+      "source_sha256": "d9298ac7d2e898680422cef756ea8c51be97999be3f2b301ea3c12ef5173daec",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "sales_tax",
+          "params": [
+            {
+              "name": "base_amt",
+              "param_type": "Int"
+            },
+            {
+              "name": "tax_pct",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "base_amt"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "tax_pct"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "tax",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "sales_tax",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 200,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 8,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Calculated sales tax:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "tax"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function sales_tax(base_amt: Int, tax_pct: Int) -> Int:\n    return base_amt * tax_pct / 100\ndefine tax: Int as sales_tax(200, 8)\nprint \"Calculated sales tax:\", tax",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "sales_tax",
+            "params": [
+              {
+                "name": "base_amt",
+                "param_type": "Int"
+              },
+              {
+                "name": "tax_pct",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "base_amt"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "tax_pct"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 100,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "tax",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "sales_tax",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 200,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Calculated sales tax:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "tax"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

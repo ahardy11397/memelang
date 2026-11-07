@@ -1,0 +1,12 @@
+function compute_even_parity(bits: List<Int>) -> Int:
+    define count_ones: Int as 0
+    for each b in bits
+        if b == 1
+            set count_ones to count_ones + 1
+    if count_ones % 2 == 1
+        return 1
+    return 0
+
+define list byte_data: List<Int> as [1, 0, 1, 1, 0, 0, 1]
+define p_bit as compute_even_parity(byte_data)
+print "Computed parity bit:", p_bit

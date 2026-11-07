@@ -1,0 +1,7 @@
+function add_mins(h: Int, m: Int, delta_m: Int) -> Int:
+    define total_m as (h * 60) + m + delta_m
+    define new_h as (total_m / 60) % 24
+    return new_h
+
+define later_hour as add_mins(22, 30, 120)
+print "Later hour result:", later_hour

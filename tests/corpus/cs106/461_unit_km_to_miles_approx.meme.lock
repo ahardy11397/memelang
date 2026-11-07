@@ -1,0 +1,162 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/461_unit_km_to_miles_approx.meme": {
+      "source_sha256": "e4866f8c6f11c8799d865e0fb830845e74c9e6f3bceea37a4d7fee9e7f8bf294",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "km_to_miles",
+          "params": [
+            {
+              "name": "km",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "km"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 62,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "mi",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "km_to_miles",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 100,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "100 km in miles:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "mi"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "function km_to_miles(km: Int) -> Int:\n    return km * 62 / 100\ndefine mi: Int as km_to_miles(100)\nprint \"100 km in miles:\", mi",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "km_to_miles",
+            "params": [
+              {
+                "name": "km",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "*",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "km"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 62,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 100,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "mi",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "km_to_miles",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "100 km in miles:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "mi"
+              }
+            ],
+            "source_line": 5
+          }
+        ]
+      }
+    }
+  }
+}

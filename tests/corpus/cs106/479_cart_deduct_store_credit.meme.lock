@@ -1,0 +1,290 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs106/479_cart_deduct_store_credit.meme": {
+      "source_sha256": "8bcfc0405bfb606b4bfeaf5cd1335a0749bf90faf1a2b80e24ced01ddd0d21fc",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "apply_credit",
+          "params": [
+            {
+              "name": "due",
+              "param_type": "Int"
+            },
+            {
+              "name": "credit",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "credit"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "due"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "due"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "credit"
+                }
+              },
+              "source_line": 4
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "out1",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "apply_credit",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 100,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 40,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 6
+        },
+        {
+          "op": "var_decl",
+          "name": "out2",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "apply_credit",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 50,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 75,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Remaining due after credit 1:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "out1"
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Remaining due after credit 2:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "out2"
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "function apply_credit(due: Int, credit: Int) -> Int:\n    if credit >= due:\n        return 0\n    return due - credit\ndefine out1: Int as apply_credit(100, 40)\ndefine out2: Int as apply_credit(50, 75)\nprint \"Remaining due after credit 1:\", out1\nprint \"Remaining due after credit 2:\", out2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "apply_credit",
+            "params": [
+              {
+                "name": "due",
+                "param_type": "Int"
+              },
+              {
+                "name": "credit",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "credit"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "due"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "due"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "credit"
+                  }
+                },
+                "source_line": 4
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "out1",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "apply_credit",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 40,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 6
+          },
+          {
+            "op": "var_decl",
+            "name": "out2",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "apply_credit",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 75,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Remaining due after credit 1:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "out1"
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Remaining due after credit 2:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "out2"
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+define list readings: List<Int> as [45, 12, 89, 34, 67]
+sort readings ascending
+define min_val as readings[0]
+define max_val as readings[4]
+define reading_span as max_val - min_val
+print "Minimum reading:", min_val
+print "Maximum reading:", max_val
+print "Total span range:", reading_span

@@ -1,0 +1,268 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/432_stat_median_odd_length.meme": {
+      "source_sha256": "f275cfadaf99d399b8a9a1ebaf30b50a001cf5a2dc00587d266785777d5e2926",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "median_odd",
+          "params": [
+            {
+              "name": "items",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "sort_collection",
+              "target": "items",
+              "direction": "ascending",
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "mid_idx",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "/",
+                "left": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "items"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "items"
+                },
+                "index": {
+                  "expr_type": "var_ref",
+                  "name": "mid_idx"
+                }
+              },
+              "source_line": 4
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "nums",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 45,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 18,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 9,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 6
+        },
+        {
+          "op": "var_decl",
+          "name": "med",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "median_odd",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "nums"
+              }
+            ]
+          },
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Calculated odd median:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "med"
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "function median_odd(items: List<Int>) -> Int:\n    sort items ascending\n    define mid_idx: Int as length of items / 2\n    return items[mid_idx]\ndefine list nums as [12, 3, 45, 18, 9]\ndefine med: Int as median_odd(nums)\nprint \"Calculated odd median:\", med",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "median_odd",
+            "params": [
+              {
+                "name": "items",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "sort_collection",
+                "target": "items",
+                "direction": "ascending",
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "mid_idx",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "/",
+                  "left": {
+                    "expr_type": "list_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "items"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "items"
+                  },
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "mid_idx"
+                  }
+                },
+                "source_line": 4
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "nums",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 45,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 18,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 9,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 6
+          },
+          {
+            "op": "var_decl",
+            "name": "med",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "median_odd",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "nums"
+                }
+              ]
+            },
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Calculated odd median:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "med"
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

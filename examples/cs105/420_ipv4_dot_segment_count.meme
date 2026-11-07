@@ -1,0 +1,10 @@
+function is_ipv4_dot_count(ip: String) -> Bool:
+    define n as length of string ip
+    define dots: Int as 0
+    for i from 0 to (n - 1)
+        define ch as slice ip from i to (i + 1)
+        if ch == "."
+            set dots to dots + 1
+    return dots == 3
+
+print "IPv4 dot count check:", is_ipv4_dot_count("192.168.1.1")

@@ -1,0 +1,526 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/348_word_pluralize_s.meme": {
+      "source_sha256": "95bf62a124435ca179a61f2dbe164b4b71a5a88f873518e3e4484c05b72cfe34",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "pluralize_word",
+          "params": [
+            {
+              "name": "noun",
+              "param_type": "String"
+            },
+            {
+              "name": "count",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "count"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "noun"
+                  },
+                  "source_line": 3
+                }
+              ],
+              "else_body": [],
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "sz",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "noun"
+                }
+              },
+              "source_line": 4
+            },
+            {
+              "op": "var_decl",
+              "name": "last_ch",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_slice",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "noun"
+                },
+                "start": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "sz"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "end": {
+                  "expr_type": "var_ref",
+                  "name": "sz"
+                }
+              },
+              "source_line": 5
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "last_ch"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "s",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "noun"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "es",
+                      "data_type": "String"
+                    }
+                  },
+                  "source_line": 7
+                }
+              ],
+              "else_body": [],
+              "source_line": 6
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "noun"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "s",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "p1",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "pluralize_word",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "item",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 10
+        },
+        {
+          "op": "var_decl",
+          "name": "p2",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "pluralize_word",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "item",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": 5,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 11
+        },
+        {
+          "op": "var_decl",
+          "name": "p3",
+          "var_type": "String",
+          "value": {
+            "expr_type": "call",
+            "func_name": "pluralize_word",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": "bus",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Single item:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "p1"
+            }
+          ],
+          "source_line": 13
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Multiple items:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "p2"
+            }
+          ],
+          "source_line": 14
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Plural bus:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "p3"
+            }
+          ],
+          "source_line": 15
+        }
+      ],
+      "canonical_meme": "function pluralize_word(noun: String, count: Int) -> String:\n    if count == 1:\n        return noun\n    define sz: Int as length of string noun\n    define last_ch: String as slice noun from sz - 1 to sz\n    if last_ch == \"s\":\n        return noun + \"es\"\n    return noun + \"s\"\ndefine p1: String as pluralize_word(\"item\", 1)\ndefine p2: String as pluralize_word(\"item\", 5)\ndefine p3: String as pluralize_word(\"bus\", 2)\nprint \"Single item:\", p1\nprint \"Multiple items:\", p2\nprint \"Plural bus:\", p3",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "pluralize_word",
+            "params": [
+              {
+                "name": "noun",
+                "param_type": "String"
+              },
+              {
+                "name": "count",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "count"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "noun"
+                    },
+                    "source_line": 3
+                  }
+                ],
+                "else_body": [],
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "sz",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "noun"
+                  }
+                },
+                "source_line": 4
+              },
+              {
+                "op": "var_decl",
+                "name": "last_ch",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_slice",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "noun"
+                  },
+                  "start": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "sz"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "end": {
+                    "expr_type": "var_ref",
+                    "name": "sz"
+                  }
+                },
+                "source_line": 5
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "last_ch"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "s",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "noun"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "es",
+                        "data_type": "String"
+                      }
+                    },
+                    "source_line": 7
+                  }
+                ],
+                "else_body": [],
+                "source_line": 6
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "noun"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "s",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "p1",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "pluralize_word",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "item",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 10
+          },
+          {
+            "op": "var_decl",
+            "name": "p2",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "pluralize_word",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "item",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 11
+          },
+          {
+            "op": "var_decl",
+            "name": "p3",
+            "var_type": "String",
+            "value": {
+              "expr_type": "call",
+              "func_name": "pluralize_word",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "bus",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Single item:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "p1"
+              }
+            ],
+            "source_line": 13
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Multiple items:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "p2"
+              }
+            ],
+            "source_line": 14
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Plural bus:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "p3"
+              }
+            ],
+            "source_line": 15
+          }
+        ]
+      }
+    }
+  }
+}

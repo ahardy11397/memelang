@@ -1,0 +1,116 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs104/303_extract_log_severity_level.meme": {
+      "source_sha256": "4e5dea6f89cc5c76642ff0c0f5c918ead08b28725f3357c278ab0e128c34847a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "log_msg",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "[ERROR] Database connection failed on port 5432",
+            "data_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "level",
+          "var_type": "String",
+          "value": {
+            "expr_type": "string_slice",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "log_msg"
+            },
+            "start": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 6,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 2
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Severity:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "level"
+            }
+          ],
+          "source_line": 3
+        }
+      ],
+      "canonical_meme": "define log_msg: String as \"[ERROR] Database connection failed on port 5432\"\ndefine level: String as slice log_msg from 1 to 6\nprint \"Severity:\", level",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "log_msg",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "[ERROR] Database connection failed on port 5432",
+              "data_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "level",
+            "var_type": "String",
+            "value": {
+              "expr_type": "string_slice",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "log_msg"
+              },
+              "start": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 6,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 2
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Severity:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "level"
+              }
+            ],
+            "source_line": 3
+          }
+        ]
+      }
+    }
+  }
+}

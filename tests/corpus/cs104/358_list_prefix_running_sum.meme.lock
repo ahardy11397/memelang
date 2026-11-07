@@ -1,0 +1,276 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/358_list_prefix_running_sum.meme": {
+      "source_sha256": "9fc7a5a3a9393a5e895fd45a231b0b2f9dc0819ed9b8697fe439246b6bbf1fe5",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "increments",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 5,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 15,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 20,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "running_sums",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "Int"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "total",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "for_each",
+          "item_var": "inc",
+          "collection": "increments",
+          "body": [
+            {
+              "op": "assign",
+              "name": "total",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "total"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "inc"
+                }
+              },
+              "source_line": 5
+            },
+            {
+              "op": "list_append",
+              "target": "running_sums",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "total"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Running sum final total:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "running_sums"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Running sum count:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "running_sums"
+              }
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "define list increments as [5, 10, 15, 20]\ndefine list running_sums as empty List<Int>\ndefine total: Int as 0\nfor each inc in increments:\n    set total to total + inc\n    append total to running_sums\nprint \"Running sum final total:\", running_sums[3]\nprint \"Running sum count:\", length of running_sums",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "increments",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 15,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "running_sums",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "Int"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "total",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "for_each",
+            "item_var": "inc",
+            "collection": "increments",
+            "body": [
+              {
+                "op": "assign",
+                "name": "total",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "total"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "inc"
+                  }
+                },
+                "source_line": 5
+              },
+              {
+                "op": "list_append",
+                "target": "running_sums",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "total"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Running sum final total:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "running_sums"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Running sum count:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "running_sums"
+                }
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

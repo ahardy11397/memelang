@@ -1,0 +1,5 @@
+function loyalty_points(spend_dollars: Int) -> Int:
+    return spend_dollars / 10
+
+define points as loyalty_points(245)
+print "Accrued loyalty points:", points

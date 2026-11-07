@@ -1,0 +1,8 @@
+function median_odd(items: List<Int>) -> Int:
+    sort items ascending
+    define mid_idx as (length of items) / 2
+    return items[mid_idx]
+
+define list nums: List<Int> as [12, 3, 45, 18, 9]
+define med as median_odd(nums)
+print "Calculated odd median:", med

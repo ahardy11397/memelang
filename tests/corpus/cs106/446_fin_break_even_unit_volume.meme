@@ -1,0 +1,6 @@
+function break_even_volume(fixed_costs: Int, unit_price: Int, unit_cost: Int) -> Int:
+    define margin_per_unit as unit_price - unit_cost
+    return fixed_costs / margin_per_unit
+
+define be_units as break_even_volume(20000, 50, 30)
+print "Break-even unit volume:", be_units

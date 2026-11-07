@@ -1,0 +1,612 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/383_isbn13_calculate_check_digit.meme": {
+      "source_sha256": "126b39618d9aa65db6c1e518389eabd84f8ca2db7f3c719c1839ac2c8b1ac721",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "isbn13_check_digit",
+          "params": [
+            {
+              "name": "d",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "total",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_range",
+              "loop_var": "i",
+              "start": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "literal",
+                "value": 11,
+                "data_type": "Int"
+              },
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "%",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "i"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 2,
+                        "data_type": "Int"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "total",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "total"
+                        },
+                        "right": {
+                          "expr_type": "list_index",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "d"
+                          },
+                          "index": {
+                            "expr_type": "var_ref",
+                            "name": "i"
+                          }
+                        }
+                      },
+                      "source_line": 5
+                    }
+                  ],
+                  "else_body": [
+                    {
+                      "op": "assign",
+                      "name": "total",
+                      "value": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "total"
+                        },
+                        "right": {
+                          "expr_type": "binary_op",
+                          "op": "*",
+                          "left": {
+                            "expr_type": "list_index",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "d"
+                            },
+                            "index": {
+                              "expr_type": "var_ref",
+                              "name": "i"
+                            }
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": 3,
+                            "data_type": "Int"
+                          }
+                        }
+                      },
+                      "source_line": 7
+                    }
+                  ],
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "var_decl",
+              "name": "remainder",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "%",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "total"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 8
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "remainder"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  },
+                  "source_line": 10
+                }
+              ],
+              "else_body": [],
+              "source_line": 9
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "-",
+                "left": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "remainder"
+                }
+              },
+              "source_line": 11
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "prefix12",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 9,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 7,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 8,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 6,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 6,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 5,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 13
+        },
+        {
+          "op": "var_decl",
+          "name": "cd",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "isbn13_check_digit",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "prefix12"
+              }
+            ]
+          },
+          "source_line": 14
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Calculated ISBN-13 check digit:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "cd"
+            }
+          ],
+          "source_line": 15
+        }
+      ],
+      "canonical_meme": "function isbn13_check_digit(d: List<Int>) -> Int:\n    define total: Int as 0\n    for i from 0 to 11:\n        if i % 2 == 0:\n            set total to total + d[i]\n        else:\n            set total to total + d[i] * 3\n    define remainder: Int as total % 10\n    if remainder == 0:\n        return 0\n    return 10 - remainder\ndefine list prefix12 as [9, 7, 8, 0, 3, 0, 6, 4, 0, 6, 1, 5]\ndefine cd: Int as isbn13_check_digit(prefix12)\nprint \"Calculated ISBN-13 check digit:\", cd",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "isbn13_check_digit",
+            "params": [
+              {
+                "name": "d",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "total",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_range",
+                "loop_var": "i",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "literal",
+                  "value": 11,
+                  "data_type": "Int"
+                },
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "%",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 2,
+                          "data_type": "Int"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 0,
+                        "data_type": "Int"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "total",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "total"
+                          },
+                          "right": {
+                            "expr_type": "list_index",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "d"
+                            },
+                            "index": {
+                              "expr_type": "var_ref",
+                              "name": "i"
+                            }
+                          }
+                        },
+                        "source_line": 5
+                      }
+                    ],
+                    "else_body": [
+                      {
+                        "op": "assign",
+                        "name": "total",
+                        "value": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "total"
+                          },
+                          "right": {
+                            "expr_type": "binary_op",
+                            "op": "*",
+                            "left": {
+                              "expr_type": "list_index",
+                              "target": {
+                                "expr_type": "var_ref",
+                                "name": "d"
+                              },
+                              "index": {
+                                "expr_type": "var_ref",
+                                "name": "i"
+                              }
+                            },
+                            "right": {
+                              "expr_type": "literal",
+                              "value": 3,
+                              "data_type": "Int"
+                            }
+                          }
+                        },
+                        "source_line": 7
+                      }
+                    ],
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "var_decl",
+                "name": "remainder",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "%",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "total"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 8
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "remainder"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    },
+                    "source_line": 10
+                  }
+                ],
+                "else_body": [],
+                "source_line": 9
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "-",
+                  "left": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "remainder"
+                  }
+                },
+                "source_line": 11
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "prefix12",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 9,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 7,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 13
+          },
+          {
+            "op": "var_decl",
+            "name": "cd",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "isbn13_check_digit",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "prefix12"
+                }
+              ]
+            },
+            "source_line": 14
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Calculated ISBN-13 check digit:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "cd"
+              }
+            ],
+            "source_line": 15
+          }
+        ]
+      }
+    }
+  }
+}

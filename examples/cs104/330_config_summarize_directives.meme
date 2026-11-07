@@ -1,0 +1,6 @@
+define list scopes: List<String> as ["prod", "dev", "prod", "prod", "test"]
+define prod_count: Int as 0
+for each sc in scopes
+    if sc == "prod"
+        set prod_count to prod_count + 1
+print "Production directive count:", prod_count

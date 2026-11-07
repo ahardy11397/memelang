@@ -1,0 +1,10 @@
+function find_first(haystack: String, needle: String) -> Int:
+    define n as length of string haystack
+    for i from 0 to (n - 1)
+        define ch as slice haystack from i to (i + 1)
+        if ch == needle
+            return i
+    return -1
+
+define at_pos as find_first("support@company.org", "@")
+print "At symbol index:", at_pos

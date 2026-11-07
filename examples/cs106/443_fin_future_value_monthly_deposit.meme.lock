@@ -1,0 +1,232 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/443_fin_future_value_monthly_deposit.meme": {
+      "source_sha256": "7cd35bab3a8a2423907c30e3cfede572807cf848ad683307ed324d75e2f65539",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "savings_with_deposit",
+          "params": [
+            {
+              "name": "monthly_dep",
+              "param_type": "Int"
+            },
+            {
+              "name": "months",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "accumulated",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_range",
+              "loop_var": "m",
+              "start": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "end": {
+                "expr_type": "var_ref",
+                "name": "months"
+              },
+              "body": [
+                {
+                  "op": "assign",
+                  "name": "accumulated",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "accumulated"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "monthly_dep"
+                    }
+                  },
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "accumulated"
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "saved",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "savings_with_deposit",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 250,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Annual savings accumulation:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "saved"
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "function savings_with_deposit(monthly_dep: Int, months: Int) -> Int:\n    define accumulated: Int as 0\n    for m from 1 to months:\n        set accumulated to accumulated + monthly_dep\n    return accumulated\ndefine saved: Int as savings_with_deposit(250, 12)\nprint \"Annual savings accumulation:\", saved",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "savings_with_deposit",
+            "params": [
+              {
+                "name": "monthly_dep",
+                "param_type": "Int"
+              },
+              {
+                "name": "months",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "accumulated",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_range",
+                "loop_var": "m",
+                "start": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "end": {
+                  "expr_type": "var_ref",
+                  "name": "months"
+                },
+                "body": [
+                  {
+                    "op": "assign",
+                    "name": "accumulated",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "accumulated"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "monthly_dep"
+                      }
+                    },
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "accumulated"
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "saved",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "savings_with_deposit",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 250,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Annual savings accumulation:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "saved"
+              }
+            ],
+            "source_line": 8
+          }
+        ]
+      }
+    }
+  }
+}

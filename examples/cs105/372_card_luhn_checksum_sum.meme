@@ -1,0 +1,18 @@
+function is_luhn_valid(digits: List<Int>) -> Bool:
+    define n as length of digits
+    define total: Int as 0
+    for i from 0 to (n - 1)
+        define pos_from_right as n - 1 - i
+        define d as digits[i]
+        if pos_from_right % 2 == 1
+            define doubled as d * 2
+            if doubled > 9
+                set total to total + doubled - 9
+            else
+                set total to total + doubled
+        else
+            set total to total + d
+    return total % 10 == 0
+
+define list sample_card: List<Int> as [4, 5, 3, 9, 1, 4, 8, 8, 0, 3, 4, 3, 6, 4, 6, 7]
+print "Luhn valid check:", is_luhn_valid(sample_card)

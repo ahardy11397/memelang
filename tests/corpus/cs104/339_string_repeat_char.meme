@@ -1,0 +1,8 @@
+function repeat_char(ch: String, times: Int) -> String:
+    define buffer as ""
+    for step from 1 to times
+        set buffer to buffer + ch
+    return buffer
+
+define divider as repeat_char("=", 12)
+print "Divider banner:", divider

@@ -1,0 +1,12 @@
+function tier_discount_pct(cart_amt: Int) -> Int:
+    if cart_amt >= 200
+        return 20
+    if cart_amt >= 100
+        return 10
+    if cart_amt >= 50
+        return 5
+    return 0
+
+print "Tier discount 250:", tier_discount_pct(250)
+print "Tier discount 120:", tier_discount_pct(120)
+print "Tier discount 30:", tier_discount_pct(30)

@@ -1,0 +1,236 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/317_csv_filter_by_status.meme": {
+      "source_sha256": "71421299d96a6373b632c66fb9b858428266a53dd9af366be48e0ed27edd0161",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "statuses",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "active",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "suspended",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "active",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "pending",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "active",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "active_count",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "for_each",
+          "item_var": "st",
+          "collection": "statuses",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "st"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "active",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "active_count",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "active_count"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 4
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Active records:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "active_count"
+            }
+          ],
+          "source_line": 6
+        }
+      ],
+      "canonical_meme": "define list statuses as [\"active\", \"suspended\", \"active\", \"pending\", \"active\"]\ndefine active_count: Int as 0\nfor each st in statuses:\n    if st == \"active\":\n        set active_count to active_count + 1\nprint \"Active records:\", active_count",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "statuses",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "active",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "suspended",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "active",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "pending",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "active",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "active_count",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "for_each",
+            "item_var": "st",
+            "collection": "statuses",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "st"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "active",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "active_count",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "active_count"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 4
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Active records:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "active_count"
+              }
+            ],
+            "source_line": 6
+          }
+        ]
+      }
+    }
+  }
+}

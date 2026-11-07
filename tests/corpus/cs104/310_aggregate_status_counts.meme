@@ -1,0 +1,9 @@
+define list statuses: List<Int> as [200, 200, 404, 500, 200, 404]
+define success_count: Int as 0
+define error_count: Int as 0
+for each s in statuses:
+    if s == 200:
+        set success_count to success_count + 1
+    else:
+        set error_count to error_count + 1
+print "Success:", success_count, "Errors:", error_count

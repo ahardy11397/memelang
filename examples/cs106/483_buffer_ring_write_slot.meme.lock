@@ -1,0 +1,252 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/cs106/483_buffer_ring_write_slot.meme": {
+      "source_sha256": "c958a1b24962945268b9cba5ed499c10a23d3f6ca5a5ae6018d6047aaf114cc8",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "next_write_slot",
+          "params": [
+            {
+              "name": "head",
+              "param_type": "Int"
+            },
+            {
+              "name": "ring_size",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "%",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "head"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "ring_size"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "w1",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "next_write_slot",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 8,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "w2",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "next_write_slot",
+            "args": [
+              {
+                "expr_type": "literal",
+                "value": 7,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 8,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Next slot from 3:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "w1"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Wrap slot from 7:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "w2"
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "function next_write_slot(head: Int, ring_size: Int) -> Int:\n    return (head + 1) % ring_size\ndefine w1: Int as next_write_slot(3, 8)\ndefine w2: Int as next_write_slot(7, 8)\nprint \"Next slot from 3:\", w1\nprint \"Wrap slot from 7:\", w2",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "next_write_slot",
+            "params": [
+              {
+                "name": "head",
+                "param_type": "Int"
+              },
+              {
+                "name": "ring_size",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "%",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "head"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "ring_size"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "w1",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "next_write_slot",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "w2",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "next_write_slot",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 7,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 8,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Next slot from 3:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "w1"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Wrap slot from 7:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "w2"
+              }
+            ],
+            "source_line": 7
+          }
+        ]
+      }
+    }
+  }
+}

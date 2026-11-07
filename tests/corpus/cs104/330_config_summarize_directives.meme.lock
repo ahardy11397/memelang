@@ -1,0 +1,236 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/330_config_summarize_directives.meme": {
+      "source_sha256": "ed7838227d21048b350fc846e33d80e4130a4db1dfbf8d4f68c156b7bc8f9e13",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "scopes",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "prod",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "dev",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "prod",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "prod",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "test",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "prod_count",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "for_each",
+          "item_var": "sc",
+          "collection": "scopes",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "sc"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "prod",
+                  "data_type": "String"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "prod_count",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "prod_count"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 4
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Production directive count:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "prod_count"
+            }
+          ],
+          "source_line": 6
+        }
+      ],
+      "canonical_meme": "define list scopes as [\"prod\", \"dev\", \"prod\", \"prod\", \"test\"]\ndefine prod_count: Int as 0\nfor each sc in scopes:\n    if sc == \"prod\":\n        set prod_count to prod_count + 1\nprint \"Production directive count:\", prod_count",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "scopes",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "prod",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "dev",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "prod",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "prod",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "test",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "prod_count",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "for_each",
+            "item_var": "sc",
+            "collection": "scopes",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "sc"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "prod",
+                    "data_type": "String"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "prod_count",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "prod_count"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 4
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Production directive count:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "prod_count"
+              }
+            ],
+            "source_line": 6
+          }
+        ]
+      }
+    }
+  }
+}

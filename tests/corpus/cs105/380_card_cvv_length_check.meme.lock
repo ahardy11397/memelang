@@ -1,0 +1,332 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/380_card_cvv_length_check.meme": {
+      "source_sha256": "81fca9bd8b2a60c23d277f1d3b93a63b387788450e202dc556229024a7dfeccc",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_valid_cvv",
+          "params": [
+            {
+              "name": "cvv",
+              "param_type": "String"
+            },
+            {
+              "name": "is_amex",
+              "param_type": "Bool"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "cvv"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "var_ref",
+                "name": "is_amex"
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 4,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 4
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Standard CVV 3 digits:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_cvv",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "842",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                }
+              ]
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Amex 4 digits:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_cvv",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "1234",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              ]
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Standard bad CVV:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_valid_cvv",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "12",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                }
+              ]
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "function is_valid_cvv(cvv: String, is_amex: Bool) -> Bool:\n    define n: Int as length of string cvv\n    if is_amex:\n        return n == 4\n    return n == 3\nprint \"Standard CVV 3 digits:\", is_valid_cvv(\"842\", false)\nprint \"Amex 4 digits:\", is_valid_cvv(\"1234\", true)\nprint \"Standard bad CVV:\", is_valid_cvv(\"12\", false)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_valid_cvv",
+            "params": [
+              {
+                "name": "cvv",
+                "param_type": "String"
+              },
+              {
+                "name": "is_amex",
+                "param_type": "Bool"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "cvv"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "var_ref",
+                  "name": "is_amex"
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 4,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 4
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Standard CVV 3 digits:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_cvv",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "842",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": false,
+                    "data_type": "Bool"
+                  }
+                ]
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Amex 4 digits:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_cvv",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "1234",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                ]
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Standard bad CVV:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_valid_cvv",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "12",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": false,
+                    "data_type": "Bool"
+                  }
+                ]
+              }
+            ],
+            "source_line": 9
+          }
+        ]
+      }
+    }
+  }
+}

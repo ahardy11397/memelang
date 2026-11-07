@@ -1,0 +1,384 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs105/428_date_iso8601_dash_separators.meme": {
+      "source_sha256": "9017243e5c3ae57ea798fee77da1c930be8db1a254f07364ae131caef00ca0a0",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "has_iso_date_separators",
+          "params": [
+            {
+              "name": "d",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "n",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "d"
+                }
+              },
+              "source_line": 2
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "var_decl",
+                  "name": "sep1",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "d"
+                    },
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 4,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "literal",
+                      "value": 5,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 4
+                },
+                {
+                  "op": "var_decl",
+                  "name": "sep2",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "string_slice",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "d"
+                    },
+                    "start": {
+                      "expr_type": "literal",
+                      "value": 7,
+                      "data_type": "Int"
+                    },
+                    "end": {
+                      "expr_type": "literal",
+                      "value": 8,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 5
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "sep1"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "-",
+                      "data_type": "String"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "if_stmt",
+                      "condition": {
+                        "expr_type": "binary_op",
+                        "op": "==",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "sep2"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": "-",
+                          "data_type": "String"
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "op": "return_stmt",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": true,
+                            "data_type": "Bool"
+                          },
+                          "source_line": 8
+                        }
+                      ],
+                      "else_body": [],
+                      "source_line": 7
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 6
+                }
+              ],
+              "else_body": [],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": false,
+                "data_type": "Bool"
+              },
+              "source_line": 9
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "test_d",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "2026-05-15",
+            "data_type": "String"
+          },
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "ISO date dash separators valid:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "has_iso_date_separators",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "test_d"
+                }
+              ]
+            }
+          ],
+          "source_line": 12
+        }
+      ],
+      "canonical_meme": "function has_iso_date_separators(d: String) -> Bool:\n    define n: Int as length of string d\n    if n == 10:\n        define sep1: String as slice d from 4 to 5\n        define sep2: String as slice d from 7 to 8\n        if sep1 == \"-\":\n            if sep2 == \"-\":\n                return true\n    return false\ndefine test_d: String as \"2026-05-15\"\nprint \"ISO date dash separators valid:\", has_iso_date_separators(test_d)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "has_iso_date_separators",
+            "params": [
+              {
+                "name": "d",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "n",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "d"
+                  }
+                },
+                "source_line": 2
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "var_decl",
+                    "name": "sep1",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "d"
+                      },
+                      "start": {
+                        "expr_type": "literal",
+                        "value": 4,
+                        "data_type": "Int"
+                      },
+                      "end": {
+                        "expr_type": "literal",
+                        "value": 5,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 4
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "sep2",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "string_slice",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "d"
+                      },
+                      "start": {
+                        "expr_type": "literal",
+                        "value": 7,
+                        "data_type": "Int"
+                      },
+                      "end": {
+                        "expr_type": "literal",
+                        "value": 8,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 5
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "sep1"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "-",
+                        "data_type": "String"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "if_stmt",
+                        "condition": {
+                          "expr_type": "binary_op",
+                          "op": "==",
+                          "left": {
+                            "expr_type": "var_ref",
+                            "name": "sep2"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": "-",
+                            "data_type": "String"
+                          }
+                        },
+                        "then_body": [
+                          {
+                            "op": "return_stmt",
+                            "value": {
+                              "expr_type": "literal",
+                              "value": true,
+                              "data_type": "Bool"
+                            },
+                            "source_line": 8
+                          }
+                        ],
+                        "else_body": [],
+                        "source_line": 7
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 6
+                  }
+                ],
+                "else_body": [],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                },
+                "source_line": 9
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "test_d",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "2026-05-15",
+              "data_type": "String"
+            },
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "ISO date dash separators valid:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "has_iso_date_separators",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "test_d"
+                  }
+                ]
+              }
+            ],
+            "source_line": 12
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+function is_valid_month(m: Int) -> Bool:
+    if m >= 1
+        if m <= 12
+            return true
+    return false
+
+print "Month 7 valid:", is_valid_month(7)
+print "Month 0 invalid:", is_valid_month(0)
+print "Month 13 invalid:", is_valid_month(13)

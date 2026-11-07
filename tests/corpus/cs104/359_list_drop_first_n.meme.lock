@@ -1,0 +1,424 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "tests/corpus/cs104/359_list_drop_first_n.meme": {
+      "source_sha256": "e872ee7abf1e5ee9039468916780a6de737f11eea8059615232931fb1f5d2777",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "drop_prefix",
+          "params": [
+            {
+              "name": "items",
+              "param_type": "List<String>"
+            },
+            {
+              "name": "count",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "List<String>",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "remaining",
+              "var_type": "List<String>",
+              "value": {
+                "expr_type": "list_literal",
+                "elements": [],
+                "element_type": "String"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "var_decl",
+              "name": "sz",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "items"
+                }
+              },
+              "source_line": 3
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "<",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "count"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "sz"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "for_range",
+                  "loop_var": "i",
+                  "start": {
+                    "expr_type": "var_ref",
+                    "name": "count"
+                  },
+                  "end": {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "sz"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "body": [
+                    {
+                      "op": "list_append",
+                      "target": "remaining",
+                      "value": {
+                        "expr_type": "list_index",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "items"
+                        },
+                        "index": {
+                          "expr_type": "var_ref",
+                          "name": "i"
+                        }
+                      },
+                      "source_line": 6
+                    }
+                  ],
+                  "source_line": 5
+                }
+              ],
+              "else_body": [],
+              "source_line": 4
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "remaining"
+              },
+              "source_line": 7
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "logs",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "skip1",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "skip2",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "data_a",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "data_b",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 9
+        },
+        {
+          "op": "var_decl",
+          "name": "tail_logs",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "call",
+            "func_name": "drop_prefix",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "logs"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 10
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Remaining items count:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "tail_logs"
+              }
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "First retained log:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "tail_logs"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 12
+        }
+      ],
+      "canonical_meme": "function drop_prefix(items: List<String>, count: Int) -> List<String>:\n    define list remaining as empty List<String>\n    define sz: Int as length of items\n    if count < sz:\n        for i from count to sz - 1:\n            append items[i] to remaining\n    return remaining\ndefine list logs as [\"skip1\", \"skip2\", \"data_a\", \"data_b\"]\ndefine list tail_logs as drop_prefix(logs, 2)\nprint \"Remaining items count:\", length of tail_logs\nprint \"First retained log:\", tail_logs[0]",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "drop_prefix",
+            "params": [
+              {
+                "name": "items",
+                "param_type": "List<String>"
+              },
+              {
+                "name": "count",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "List<String>",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "remaining",
+                "var_type": "List<String>",
+                "value": {
+                  "expr_type": "list_literal",
+                  "elements": [],
+                  "element_type": "String"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "var_decl",
+                "name": "sz",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "items"
+                  }
+                },
+                "source_line": 3
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "<",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "count"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "sz"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "for_range",
+                    "loop_var": "i",
+                    "start": {
+                      "expr_type": "var_ref",
+                      "name": "count"
+                    },
+                    "end": {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "sz"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "body": [
+                      {
+                        "op": "list_append",
+                        "target": "remaining",
+                        "value": {
+                          "expr_type": "list_index",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "items"
+                          },
+                          "index": {
+                            "expr_type": "var_ref",
+                            "name": "i"
+                          }
+                        },
+                        "source_line": 6
+                      }
+                    ],
+                    "source_line": 5
+                  }
+                ],
+                "else_body": [],
+                "source_line": 4
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "remaining"
+                },
+                "source_line": 7
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "logs",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "skip1",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "skip2",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "data_a",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "data_b",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 9
+          },
+          {
+            "op": "var_decl",
+            "name": "tail_logs",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "call",
+              "func_name": "drop_prefix",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "logs"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 10
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Remaining items count:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "tail_logs"
+                }
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "First retained log:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "tail_logs"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 12
+          }
+        ]
+      }
+    }
+  }
+}
