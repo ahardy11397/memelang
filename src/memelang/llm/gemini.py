@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from pydantic import ValidationError
 
 from memelang.ir.schema import SynthesisResult
@@ -26,7 +27,9 @@ class GeminiProvider:
         self.retriever = retriever
         self.name = f"gemini:{model}"
 
-    def synthesize(self, source_text: str) -> SynthesisResult:
+    def synthesize(
+        self, source_text: str, source_path: Path | None = None
+    ) -> SynthesisResult:
         resolved_key = (
             self.api_key
             or os.environ.get("GEMINI_API_KEY")
@@ -48,7 +51,9 @@ class GeminiProvider:
                 "google-genai SDK is not installed. Install with: `uv sync --extra gemini`"
             ) from exc
 
-        msgs = build_compiler_messages(source_text, retriever=self.retriever)
+        msgs = build_compiler_messages(
+            source_text, source_path=source_path, retriever=self.retriever
+        )
         try:
             client = genai.Client(api_key=resolved_key)
             resp = client.models.generate_content(

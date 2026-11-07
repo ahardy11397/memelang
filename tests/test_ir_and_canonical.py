@@ -263,3 +263,158 @@ def test_file_json_list_insert_and_fail_canonical():
     assert "insert 1.5 into nums at 0" in canonical
     assert 'fail with "Wrong File Type"' in canonical
 
+
+def test_exhaustive_ir_synchronization_across_canonical_heuristic_verifier_gbnf_and_codegen():
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.codegen import generate_code
+    from memelang.ir.schema import (
+        FailStmt,
+        ListInsertStmt,
+        ListSetIndexStmt,
+        ReadJsonListExpr,
+        StrEndsWithExpr,
+        StringLengthExpr,
+        StringSliceExpr,
+    )
+    from memelang.llm.heuristic import HeuristicProvider
+    from memelang.llm.llama_cpp import MEMELANG_GBNF
+    from memelang.runner.executor import program_uses_input
+
+    prog = ProgramIR(
+        statements=[
+            FuncDefStmt(
+                name="load_or_fail",
+                params=[FuncParam(name="filepath", param_type="String")],
+                return_type="List<Float>",
+                body=[
+                    IfStmt(
+                        condition=StrEndsWithExpr(
+                            target=VarRefExpr(name="filepath"),
+                            suffix=LiteralExpr(value=".json", data_type="String"),
+                        ),
+                        then_body=[
+                            VarDeclStmt(
+                                name="nums",
+                                var_type="List<Float>",
+                                value=ReadJsonListExpr(filepath=VarRefExpr(name="filepath")),
+                            ),
+                            ListInsertStmt(
+                                target="nums",
+                                index=LiteralExpr(value=0, data_type="Int"),
+                                value=LiteralExpr(value=1.5, data_type="Float"),
+                            ),
+                            ReturnStmt(value=VarRefExpr(name="nums")),
+                        ],
+                        else_body=[
+                            FailStmt(message=LiteralExpr(value="Wrong File Type", data_type="String"))
+                        ],
+                    )
+                ],
+            ),
+            VarDeclStmt(
+                name="matrix",
+                var_type="List<List<Int>>",
+                value=ListLiteralExpr(
+                    elements=[
+                        ListLiteralExpr(
+                            elements=[
+                                LiteralExpr(value=1, data_type="Int"),
+                                LiteralExpr(value=2, data_type="Int"),
+                            ],
+                            element_type="Int",
+                        ),
+                        ListLiteralExpr(
+                            elements=[
+                                LiteralExpr(value=3, data_type="Int"),
+                                LiteralExpr(value=4, data_type="Int"),
+                            ],
+                            element_type="Int",
+                        ),
+                    ],
+                    element_type="List<Int>",
+                ),
+            ),
+            VarDeclStmt(
+                name="arr",
+                var_type="List<Int>",
+                value=ListLiteralExpr(
+                    elements=[
+                        LiteralExpr(value=10, data_type="Int"),
+                        LiteralExpr(value=20, data_type="Int"),
+                    ],
+                    element_type="Int",
+                ),
+            ),
+            ListSetIndexStmt(
+                target="arr",
+                index=LiteralExpr(value=0, data_type="Int"),
+                value=ReadInputExpr(prompt="Enter int: ", target_type="Int"),
+            ),
+            VarDeclStmt(
+                name="word",
+                var_type="String",
+                value=LiteralExpr(value="hello", data_type="String"),
+            ),
+            VarDeclStmt(
+                name="slen",
+                var_type="Int",
+                value=StringLengthExpr(target=VarRefExpr(name="word")),
+            ),
+            VarDeclStmt(
+                name="sub",
+                var_type="String",
+                value=StringSliceExpr(
+                    target=VarRefExpr(name="word"),
+                    start=LiteralExpr(value=1, data_type="Int"),
+                    end=VarRefExpr(name="slen"),
+                ),
+            ),
+            PrintStmt(
+                expressions=[
+                    ListIndexExpr(
+                        target=ListIndexExpr(
+                            target=VarRefExpr(name="matrix"),
+                            index=LiteralExpr(value=0, data_type="Int"),
+                        ),
+                        index=LiteralExpr(value=1, data_type="Int"),
+                    ),
+                    VarRefExpr(name="sub"),
+                ]
+            ),
+        ]
+    )
+
+    # 1. Verify synthesis succeeds
+    outcome = verify_synthesis(SynthesisResult(items=list(prog.statements)))
+    assert outcome.is_unambiguous and outcome.program is not None
+
+    # 2. Canonical formatting + HeuristicProvider round-trip
+    canonical = to_canonical_meme(outcome.program)
+    roundtrip_syn = HeuristicProvider().synthesize(canonical)
+    roundtrip_out = verify_synthesis(roundtrip_syn)
+    assert roundtrip_out.is_unambiguous and roundtrip_out.program is not None
+    assert to_canonical_meme(roundtrip_out.program) == canonical
+
+    # 3. program_uses_input detects ReadInputExpr inside ListSetIndexStmt
+    assert program_uses_input(outcome.program) is True
+
+    # 4. GBNF contains all discriminators and types used
+    for token in (
+        "var_decl",
+        "list_set_index",
+        "list_insert",
+        "fail_stmt",
+        "string_length",
+        "string_slice",
+        "str_ends_with",
+        "read_json_list",
+        "List<List<Int>>",
+    ):
+        assert token in MEMELANG_GBNF
+
+    # 5. Codegen succeeds across all 3 targets
+    for target in ("python", "rust", "cpp"):
+        code = generate_code(outcome.program, target)
+        assert code.strip() != ""
+
+

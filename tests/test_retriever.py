@@ -44,6 +44,11 @@ def test_retriever_excludes_self(tmp_path: Path):
     results = retriever.retrieve("print 42", top_k=2, exclude_path=meme_file)
     assert len(results) == 0
 
+    # Also excludes when exclude_path is in a parallel directory (e.g., tests/corpus/demo.meme)
+    corpus_file = tmp_path / "tests" / "corpus" / "demo.meme"
+    results_cross = retriever.retrieve("print 42", top_k=2, exclude_path=corpus_file)
+    assert len(results_cross) == 0
+
 
 def test_retriever_ignores_unlocked_examples(tmp_path: Path):
     ex_dir = tmp_path / "examples"

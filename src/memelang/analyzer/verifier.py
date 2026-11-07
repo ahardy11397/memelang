@@ -991,15 +991,17 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
 
 def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
     for s in stmts:
-        if isinstance(s, (VarDeclStmt, AssignStmt, ListAppendStmt)) and _expr_references_var(
-            s.value, name
+        if isinstance(s, VarDeclStmt) and _expr_references_var(s.value, name):
+            return True
+        if isinstance(s, AssignStmt) and (
+            s.name == name or _expr_references_var(s.value, name)
         ):
             return True
-        if isinstance(s, ListInsertStmt) and (
-            _expr_references_var(s.index, name) or _expr_references_var(s.value, name)
+        if isinstance(s, ListAppendStmt) and (
+            s.target == name or _expr_references_var(s.value, name)
         ):
             return True
-        if isinstance(s, ListSetIndexStmt) and (
+        if isinstance(s, (ListInsertStmt, ListSetIndexStmt)) and (
             s.target == name
             or _expr_references_var(s.index, name)
             or _expr_references_var(s.value, name)

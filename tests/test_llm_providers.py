@@ -236,7 +236,19 @@ def test_gbnf_and_system_prompt_include_file_json_insert_and_fail():
     from memelang.llm.base import SYSTEM_PROMPT
     from memelang.llm.llama_cpp import MEMELANG_FUNC_GBNF, MEMELANG_GBNF, build_llama_grammar
 
-    for token in ("str_ends_with", "read_json_list", "list_insert", "fail_stmt"):
+    for token in (
+        "str_ends_with",
+        "read_json_list",
+        "list_insert",
+        "list_set_index",
+        "string_length",
+        "string_slice",
+        "fail_stmt",
+        "List<List<Int>>",
+        "List<List<Float>>",
+        "List<List<Bool>>",
+        "List<List<String>>",
+    ):
         assert token in MEMELANG_GBNF, f"Missing {token} in MEMELANG_GBNF"
         assert token in SYSTEM_PROMPT, f"Missing {token} in SYSTEM_PROMPT"
     assert "\nint-expr ::=" in MEMELANG_GBNF

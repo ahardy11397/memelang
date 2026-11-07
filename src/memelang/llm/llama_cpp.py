@@ -20,8 +20,10 @@ DEFAULT_GGUF_FILENAME = "qwen2.5-coder-3b-instruct-q4_k_m.gguf"
 
 _GBNF_COMMON = r"""
 meme-type ::= non-void-type | "\"Void\""
-non-void-type ::= "\"Int\"" | "\"Float\"" | "\"Bool\"" | "\"String\"" | "\"List<Int>\"" | "\"List<Float>\"" | "\"List<Bool>\"" | "\"List<String>\""
+non-void-type ::= scalar-type | list-type | nested-list-type
 scalar-type ::= "\"Int\"" | "\"Float\"" | "\"Bool\"" | "\"String\""
+list-type ::= "\"List<Int>\"" | "\"List<Float>\"" | "\"List<Bool>\"" | "\"List<String>\""
+nested-list-type ::= "\"List<List<Int>>\"" | "\"List<List<Float>>\"" | "\"List<List<Bool>>\"" | "\"List<List<String>>\""
 bin-op ::= int-bin-op | bool-cmp-op
 int-bin-op ::= "\"+\"" | "\"-\"" | "\"*\"" | "\"/\"" | "\"%\""
 bool-cmp-op ::= "\"==\"" | "\"!=\"" | "\"<\"" | "\"<=\"" | "\">\"" | "\">=\"" | "\"and\"" | "\"or\""
@@ -29,13 +31,13 @@ un-op ::= "\"-\"" | "\"not\""
 sort-dir ::= "\"ascending\"" | "\"descending\""
 opt-source-line ::= (ws "," ws "\"source_line\"" ws ":" ws (pos-int | "null"))?
 
-ir-expr ::= literal-expr | list-literal-expr | var-ref-expr | random-int-expr | random-list-expr | binary-op-expr | unary-op-expr | list-length-expr | list-index-expr | call-expr | read-input-expr | str-ends-with-expr | read-json-list-expr
+ir-expr ::= literal-expr | list-literal-expr | var-ref-expr | random-int-expr | random-list-expr | binary-op-expr | unary-op-expr | list-length-expr | list-index-expr | string-length-expr | string-slice-expr | call-expr | read-input-expr | str-ends-with-expr | read-json-list-expr
 expr-list ::= "[" ws (ir-expr (ws "," ws ir-expr)*)? ws "]"
 
 int-lit-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws "\"value\"" ws ":" ws integer ws "," ws "\"data_type\"" ws ":" ws "\"Int\"" ws "}"
 int-bin-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"binary_op\"" ws "," ws "\"op\"" ws ":" ws int-bin-op ws "," ws "\"left\"" ws ":" ws int-expr ws "," ws "\"right\"" ws ":" ws int-expr ws "}"
 int-un-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"unary_op\"" ws "," ws "\"op\"" ws ":" ws "\"-\"" ws "," ws "\"operand\"" ws ":" ws int-expr ws "}"
-int-expr ::= int-lit-expr | var-ref-expr | random-int-expr | int-bin-expr | int-un-expr | list-length-expr | list-index-expr | call-expr | read-input-expr
+int-expr ::= int-lit-expr | var-ref-expr | random-int-expr | int-bin-expr | int-un-expr | list-length-expr | list-index-expr | string-length-expr | call-expr | read-input-expr
 
 bool-lit-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws "\"value\"" ws ":" ws boolean ws "," ws "\"data_type\"" ws ":" ws "\"Bool\"" ws "}"
 bool-bin-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"binary_op\"" ws "," ws "\"op\"" ws ":" ws bool-cmp-op ws "," ws "\"left\"" ws ":" ws ir-expr ws "," ws "\"right\"" ws ":" ws ir-expr ws "}"
@@ -48,7 +50,7 @@ literal-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws (
   | "\"value\"" ws ":" ws boolean ws "," ws "\"data_type\"" ws ":" ws "\"Bool\""
   | "\"value\"" ws ":" ws string ws "," ws "\"data_type\"" ws ":" ws "\"String\""
 ) ws "}"
-list-literal-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_literal\"" ws "," ws "\"elements\"" ws ":" ws expr-list ws "," ws "\"element_type\"" ws ":" ws scalar-type ws "}"
+list-literal-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_literal\"" ws "," ws "\"elements\"" ws ":" ws expr-list ws "," ws "\"element_type\"" ws ":" ws (scalar-type | list-type) ws "}"
 var-ref-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"var_ref\"" ws "," ws "\"name\"" ws ":" ws ident-str ws "}"
 random-int-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"random_int\"" ws "," ws "\"min_val\"" ws ":" ws int-expr ws "," ws "\"max_val\"" ws ":" ws int-expr ws "}"
 random-list-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"random_list\"" ws "," ws "\"count\"" ws ":" ws int-expr ws "," ws "\"min_val\"" ws ":" ws int-expr ws "," ws "\"max_val\"" ws ":" ws int-expr (ws "," ws "\"implicit_bounds\"" ws ":" ws boolean)? ws "}"
@@ -56,12 +58,14 @@ binary-op-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"binary_op\"" ws "," ws "\
 unary-op-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"unary_op\"" ws "," ws "\"op\"" ws ":" ws un-op ws "," ws "\"operand\"" ws ":" ws ir-expr ws "}"
 list-length-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_length\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
 list-index-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_index\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"index\"" ws ":" ws int-expr ws "}"
+string-length-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"string_length\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
+string-slice-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"string_slice\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"start\"" ws ":" ws int-expr ws "," ws "\"end\"" ws ":" ws int-expr ws "}"
 call-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"call\"" ws "," ws "\"func_name\"" ws ":" ws ident-str (ws "," ws "\"args\"" ws ":" ws expr-list)? ws "}"
 read-input-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"read_input\"" (ws "," ws "\"prompt\"" ws ":" ws string)? (ws "," ws "\"target_type\"" ws ":" ws scalar-type)? ws "}"
 str-ends-with-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"str_ends_with\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"suffix\"" ws ":" ws ir-expr ws "}"
 read-json-list-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"read_json_list\"" ws "," ws "\"filepath\"" ws ":" ws ir-expr ws "}"
 
-body-stmt ::= var-decl-stmt | assign-stmt | sort-stmt | clamp-stmt | filter-stmt | append-stmt | insert-stmt | fail-stmt | print-stmt | if-stmt | for-each-stmt | for-range-stmt | while-stmt | return-stmt
+body-stmt ::= var-decl-stmt | assign-stmt | sort-stmt | clamp-stmt | filter-stmt | append-stmt | insert-stmt | set-index-stmt | fail-stmt | print-stmt | if-stmt | for-each-stmt | for-range-stmt | while-stmt | return-stmt
 ir-stmt ::= body-stmt | func-def-stmt
 stmt-list ::= "[" ws (body-stmt (ws "," ws body-stmt)*)? ws "]"
 func-param ::= "{" ws "\"name\"" ws ":" ws ident-str ws "," ws "\"param_type\"" ws ":" ws non-void-type ws "}"
@@ -74,6 +78,7 @@ clamp-stmt ::= "{" ws "\"op\"" ws ":" ws "\"clamp_collection\"" ws "," ws "\"tar
 filter-stmt ::= "{" ws "\"op\"" ws ":" ws "\"filter_collection\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"item_var\"" ws ":" ws ident-str ws "," ws "\"predicate\"" ws ":" ws bool-expr opt-source-line ws "}"
 append-stmt ::= "{" ws "\"op\"" ws ":" ws "\"list_append\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
 insert-stmt ::= "{" ws "\"op\"" ws ":" ws "\"list_insert\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"index\"" ws ":" ws int-expr ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
+set-index-stmt ::= "{" ws "\"op\"" ws ":" ws "\"list_set_index\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"index\"" ws ":" ws int-expr ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
 fail-stmt ::= "{" ws "\"op\"" ws ":" ws "\"fail_stmt\"" ws "," ws "\"message\"" ws ":" ws ir-expr opt-source-line ws "}"
 print-stmt ::= "{" ws "\"op\"" ws ":" ws "\"print_stmt\"" ws "," ws "\"expressions\"" ws ":" ws "[" ws ir-expr (ws "," ws ir-expr)* ws "]" opt-source-line ws "}"
 if-stmt ::= "{" ws "\"op\"" ws ":" ws "\"if_stmt\"" ws "," ws "\"condition\"" ws ":" ws bool-expr ws "," ws "\"then_body\"" ws ":" ws stmt-list (ws "," ws "\"else_body\"" ws ":" ws stmt-list)? opt-source-line ws "}"
@@ -209,7 +214,9 @@ class LlamaCppProvider:
             )
         return self._llm
 
-    def synthesize(self, source_text: str) -> SynthesisResult:
+    def synthesize(
+        self, source_text: str, source_path: Path | None = None
+    ) -> SynthesisResult:
         if not has_executable_content(source_text):
             return SynthesisResult(items=[])
 
@@ -228,6 +235,7 @@ class LlamaCppProvider:
                     unit.text,
                     line_numbers=unit.line_numbers,
                     available_functions=defined_funcs if defined_funcs else None,
+                    source_path=source_path,
                     retriever=self.retriever,
                 )
                 resp = llm.create_chat_completion(

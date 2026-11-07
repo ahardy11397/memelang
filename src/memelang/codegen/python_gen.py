@@ -52,6 +52,7 @@ class _PyGen:
         self.uses_random = False
         self.uses_math = False
         self.uses_json_io = False
+        self.uses_input_helpers = False
         self.symbols: dict[str, MemeType] = {}
         self.func_returns: dict[str, MemeType] = {}
 
@@ -121,7 +122,11 @@ class _PyGen:
             right = self.gen_expr(expr.right, scope)
             left_t = self.infer_type(expr.left, scope)
             if expr.op == "/" and left_t == "Int":
-                return f"_meme_builtins.int({left} / {right})"
+                self.uses_math = True
+                return f"_meme_int_div({left}, {right})"
+            if expr.op == "%" and left_t == "Int":
+                self.uses_math = True
+                return f"_meme_int_mod({left}, {right})"
             if expr.op == "%" and left_t == "Float":
                 self.uses_math = True
                 return f"_meme_math.fmod({left}, {right})"
@@ -140,9 +145,11 @@ class _PyGen:
         if isinstance(expr, ReadInputExpr):
             raw = f"_meme_builtins.input({repr(expr.prompt)})"
             if expr.target_type == "Int":
-                return f"_meme_builtins.int({raw}.strip())"
+                self.uses_input_helpers = True
+                return f"_meme_parse_int({raw})"
             if expr.target_type == "Float":
-                return f"_meme_builtins.float({raw}.strip())"
+                self.uses_input_helpers = True
+                return f"_meme_parse_float({raw})"
             if expr.target_type == "Bool":
                 return f"({raw}.strip().lower() in ('true', '1', 'yes'))"
             return raw
@@ -350,6 +357,36 @@ def generate_python(ir: ProgramIR) -> str:
                 "    except _meme_builtins.Exception as _e:",
                 "        _meme_builtins.print(f'Error reading JSON file: {_e}', file=_meme_sys.stderr)",
                 "        raise _meme_builtins.SystemExit(1)",
+                "",
+            ]
+        )
+
+    if gen.uses_math:
+        header.extend(
+            [
+                "def _meme_int_div(a: int, b: int) -> int:",
+                "    return -((-a) // b) if (a < 0) ^ (b < 0) else a // b",
+                "",
+                "def _meme_int_mod(a: int, b: int) -> int:",
+                "    return a - _meme_int_div(a, b) * b",
+                "",
+            ]
+        )
+
+    if gen.uses_input_helpers:
+        header.extend(
+            [
+                "def _meme_parse_int(s: str) -> int:",
+                "    try:",
+                "        return _meme_builtins.int(s.strip())",
+                "    except _meme_builtins.ValueError:",
+                "        return 0",
+                "",
+                "def _meme_parse_float(s: str) -> float:",
+                "    try:",
+                "        return _meme_builtins.float(s.strip())",
+                "    except _meme_builtins.ValueError:",
+                "        return 0.0",
                 "",
             ]
         )

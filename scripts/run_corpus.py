@@ -33,6 +33,7 @@ from memelang.ir.schema import (
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListSetIndexStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -41,6 +42,8 @@ from memelang.ir.schema import (
     ReadJsonListExpr,
     ReturnStmt,
     StrEndsWithExpr,
+    StringLengthExpr,
+    StringSliceExpr,
     UnaryOpExpr,
     VarDeclStmt,
     WhileStmt,
@@ -183,6 +186,12 @@ def _collect_expr_prompts(expr: IRExpr) -> list[str]:
         prompts.extend(_collect_expr_prompts(expr.suffix))
     elif isinstance(expr, ReadJsonListExpr):
         prompts.extend(_collect_expr_prompts(expr.filepath))
+    elif isinstance(expr, StringLengthExpr):
+        prompts.extend(_collect_expr_prompts(expr.target))
+    elif isinstance(expr, StringSliceExpr):
+        prompts.extend(_collect_expr_prompts(expr.target))
+        prompts.extend(_collect_expr_prompts(expr.start))
+        prompts.extend(_collect_expr_prompts(expr.end))
     return prompts
 
 
@@ -190,7 +199,7 @@ def _collect_stmt_prompts(stmt: IRStatement) -> list[str]:
     prompts: list[str] = []
     if isinstance(stmt, (VarDeclStmt, AssignStmt, ListAppendStmt)):
         prompts.extend(_collect_expr_prompts(stmt.value))
-    elif isinstance(stmt, ListInsertStmt):
+    elif isinstance(stmt, (ListInsertStmt, ListSetIndexStmt)):
         prompts.extend(_collect_expr_prompts(stmt.index))
         prompts.extend(_collect_expr_prompts(stmt.value))
     elif isinstance(stmt, FailStmt):
@@ -283,7 +292,10 @@ def evaluate_script(
 
     # Step 1: Synthesis
     try:
-        synthesis = provider.synthesize(source_text)
+        try:
+            synthesis = provider.synthesize(source_text, source_path=script_path)  # type: ignore[call-arg]
+        except TypeError:
+            synthesis = provider.synthesize(source_text)
     except LLMProviderError as exc:
         return ScriptEvalResult(
             id=spec.id,

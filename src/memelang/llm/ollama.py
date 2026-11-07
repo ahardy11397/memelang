@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 import httpx
 from pydantic import ValidationError
 
-from memelang.ir.schema import SynthesisResult
+from memelang.ir.schema import FuncDefStmt, SynthesisItem, SynthesisResult
 from memelang.llm.base import (
     LLMProviderError,
     build_compiler_messages,
     has_executable_content,
+    split_compilation_units,
 )
 
 
@@ -29,27 +31,51 @@ class OllamaProvider:
         self.retriever = retriever
         self.name = f"ollama:{model}"
 
-    def synthesize(self, source_text: str) -> SynthesisResult:
+    def synthesize(
+        self, source_text: str, source_path: Path | None = None
+    ) -> SynthesisResult:
         if not has_executable_content(source_text):
             return SynthesisResult(items=[])
 
-        payload = {
-            "model": self.model,
-            "messages": build_compiler_messages(source_text, retriever=self.retriever),
-            "stream": False,
-            "format": SynthesisResult.model_json_schema(),
-            "options": {"temperature": 0.0, "seed": 42},
-        }
+        units = split_compilation_units(source_text)
+        if not units:
+            return SynthesisResult(items=[])
+
+        all_items: list[SynthesisItem] = []
+        defined_funcs: list[FuncDefStmt] = []
+        schema = SynthesisResult.model_json_schema()
+
         try:
-            if self._client is not None:
-                resp = self._client.post(f"{self.host}/api/chat", json=payload)
-            else:
-                with httpx.Client(timeout=self._timeout) as client:
-                    resp = client.post(f"{self.host}/api/chat", json=payload)
-            resp.raise_for_status()
-            data = resp.json()
-            content = data["message"]["content"]
-            return SynthesisResult.model_validate_json(content)
+            for unit in units:
+                payload = {
+                    "model": self.model,
+                    "messages": build_compiler_messages(
+                        unit.text,
+                        line_numbers=unit.line_numbers,
+                        available_functions=defined_funcs if defined_funcs else None,
+                        source_path=source_path,
+                        retriever=self.retriever,
+                    ),
+                    "stream": False,
+                    "format": schema,
+                    "options": {"temperature": 0.0, "seed": 42},
+                }
+                if self._client is not None:
+                    resp = self._client.post(f"{self.host}/api/chat", json=payload)
+                else:
+                    with httpx.Client(timeout=self._timeout) as client:
+                        resp = client.post(f"{self.host}/api/chat", json=payload)
+                resp.raise_for_status()
+                data = resp.json()
+                content = data["message"]["content"]
+                part = SynthesisResult.model_validate_json(content)
+                for it in part.items:
+                    if isinstance(it, FuncDefStmt):
+                        if it.source_line is None and unit.line_numbers:
+                            it.source_line = unit.line_numbers[0]
+                        defined_funcs.append(it)
+                    all_items.append(it)
+            return SynthesisResult(items=all_items)
         except (httpx.HTTPError, KeyError, ValueError, ValidationError) as exc:
             raise LLMProviderError(
                 f"Ollama provider (`{self.model}` at {self.host}) failed: {exc}"
@@ -74,38 +100,62 @@ class OpenAILocalProvider:
         self.retriever = retriever
         self.name = f"openai-local:{model}"
 
-    def synthesize(self, source_text: str) -> SynthesisResult:
+    def synthesize(
+        self, source_text: str, source_path: Path | None = None
+    ) -> SynthesisResult:
         if not has_executable_content(source_text):
             return SynthesisResult(items=[])
 
-        payload = {
-            "model": self.model,
-            "messages": build_compiler_messages(source_text, retriever=self.retriever),
-            "temperature": 0.0,
-            "seed": 42,
-            "response_format": {
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "SynthesisResult",
-                    "schema": SynthesisResult.model_json_schema(),
-                },
-            },
-        }
+        units = split_compilation_units(source_text)
+        if not units:
+            return SynthesisResult(items=[])
+
+        all_items: list[SynthesisItem] = []
+        defined_funcs: list[FuncDefStmt] = []
+        schema = SynthesisResult.model_json_schema()
         headers = {"Authorization": f"Bearer {self.api_key}"}
+
         try:
-            if self._client is not None:
-                resp = self._client.post(
-                    f"{self.base_url}/chat/completions", json=payload, headers=headers
-                )
-            else:
-                with httpx.Client(timeout=self._timeout) as client:
-                    resp = client.post(
+            for unit in units:
+                payload = {
+                    "model": self.model,
+                    "messages": build_compiler_messages(
+                        unit.text,
+                        line_numbers=unit.line_numbers,
+                        available_functions=defined_funcs if defined_funcs else None,
+                        source_path=source_path,
+                        retriever=self.retriever,
+                    ),
+                    "temperature": 0.0,
+                    "seed": 42,
+                    "response_format": {
+                        "type": "json_schema",
+                        "json_schema": {
+                            "name": "SynthesisResult",
+                            "schema": schema,
+                        },
+                    },
+                }
+                if self._client is not None:
+                    resp = self._client.post(
                         f"{self.base_url}/chat/completions", json=payload, headers=headers
                     )
-            resp.raise_for_status()
-            data = resp.json()
-            content = data["choices"][0]["message"]["content"]
-            return SynthesisResult.model_validate_json(content)
+                else:
+                    with httpx.Client(timeout=self._timeout) as client:
+                        resp = client.post(
+                            f"{self.base_url}/chat/completions", json=payload, headers=headers
+                        )
+                resp.raise_for_status()
+                data = resp.json()
+                content = data["choices"][0]["message"]["content"]
+                part = SynthesisResult.model_validate_json(content)
+                for it in part.items:
+                    if isinstance(it, FuncDefStmt):
+                        if it.source_line is None and unit.line_numbers:
+                            it.source_line = unit.line_numbers[0]
+                        defined_funcs.append(it)
+                    all_items.append(it)
+            return SynthesisResult(items=all_items)
         except (httpx.HTTPError, KeyError, IndexError, ValueError, ValidationError) as exc:
             raise LLMProviderError(
                 f"OpenAI-compatible local provider (`{self.model}` at {self.base_url}) failed: {exc}"

@@ -17,6 +17,7 @@ from memelang.ir.schema import (
     BinaryOperator,
     CallExpr,
     ClampCollectionStmt,
+    FailStmt,
     FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
@@ -27,8 +28,10 @@ from memelang.ir.schema import (
     IfStmt,
     ListAppendStmt,
     ListIndexExpr,
+    ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListSetIndexStmt,
     LiteralExpr,
     MemeType,
     PrintStmt,
@@ -36,9 +39,13 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadInputExpr,
+    ReadJsonListExpr,
     ReturnStmt,
     SortCollectionStmt,
     SortDirection,
+    StrEndsWithExpr,
+    StringLengthExpr,
+    StringSliceExpr,
     SynthesisItem,
     SynthesisResult,
     UnaryOpExpr,
@@ -57,6 +64,10 @@ _VALID_TYPES: set[str] = {
     "List<Float>",
     "List<Bool>",
     "List<String>",
+    "List<List<Int>>",
+    "List<List<Float>>",
+    "List<List<Bool>>",
+    "List<List<String>>",
     "Void",
 }
 
@@ -244,9 +255,12 @@ class _ExprParser:
                     self.consume("OP", ",")
                     elems.append(self.parse_or())
             self.consume("OP", "]")
-            el_type: Literal["Int", "Float", "Bool", "String"] = "Int"
-            if elems and isinstance(elems[0], LiteralExpr):
-                el_type = cast(Literal["Int", "Float", "Bool", "String"], elems[0].data_type)
+            el_type: MemeType = "Int"
+            if elems:
+                if isinstance(elems[0], LiteralExpr):
+                    el_type = elems[0].data_type
+                elif isinstance(elems[0], ListLiteralExpr):
+                    el_type = cast(MemeType, f"List<{elems[0].element_type}>")
             return ListLiteralExpr(elements=elems, element_type=el_type)
 
         if t.kind == "IDENT":
@@ -260,6 +274,19 @@ class _ExprParser:
                 self.consume()
                 if (nxt := self.peek()) and nxt.kind == "IDENT" and nxt.val == "of":
                     self.consume()
+                if (
+                    (nxt := self.peek())
+                    and nxt.kind == "IDENT"
+                    and nxt.val == "string"
+                    and self.pos + 1 < len(self.tokens)
+                    and self.tokens[self.pos + 1].kind in ("IDENT", "STRING", "OP")
+                    and self.tokens[self.pos + 1].val not in (
+                        "+", "-", "*", "/", "%", "==", "!=", "<", "<=", ">", ">=", ",", ")", "]"
+                    )
+                ):
+                    self.consume()
+                    target = self.parse_postfix()
+                    return StringLengthExpr(target=target)
                 target = self.parse_postfix()
                 return ListLengthExpr(target=target)
 
@@ -284,10 +311,43 @@ def _parse_expr(raw: str) -> IRExpr:
     s = raw.strip()
 
     # Special English phrase expressions
-    m_empty = re.fullmatch(r"empty\s+List<(Int|Float|Bool|String)>", s)
+    m_empty = re.fullmatch(
+        r"empty\s+List<(Int|Float|Bool|String|List<Int>|List<Float>|List<Bool>|List<String>)>", s
+    )
     if m_empty:
-        el_t = cast(Literal["Int", "Float", "Bool", "String"], m_empty.group(1))
+        el_t = cast(MemeType, m_empty.group(1))
         return ListLiteralExpr(elements=[], element_type=el_t)
+
+    m_slice = re.fullmatch(
+        r"slice\s+(.+?)\s+from\s+(.+?)\s+to\s+(.+)",
+        s,
+        flags=re.IGNORECASE,
+    )
+    if m_slice:
+        return StringSliceExpr(
+            target=_parse_expr(m_slice.group(1)),
+            start=_parse_expr(m_slice.group(2)),
+            end=_parse_expr(m_slice.group(3)),
+        )
+
+    m_read_json = re.fullmatch(
+        r"read\s+JSON\s+number\s+list\s+from\s+(.+)",
+        s,
+        flags=re.IGNORECASE,
+    )
+    if m_read_json:
+        return ReadJsonListExpr(filepath=_parse_expr(m_read_json.group(1)))
+
+    m_ends_with = re.fullmatch(
+        r"(.+?)\s+ends\s+with\s+(.+)",
+        s,
+        flags=re.IGNORECASE,
+    )
+    if m_ends_with:
+        return StrEndsWithExpr(
+            target=_parse_expr(m_ends_with.group(1)),
+            suffix=_parse_expr(m_ends_with.group(2)),
+        )
 
     m_rand_list = re.fullmatch(
         r"(.+?)\s+random\s+(?:integers?|numbers?)(?:\s+between\s+(.+?)\s+and\s+(.+))?",
@@ -386,7 +446,13 @@ def _guess_expr_type(
         return cast(MemeType, f"List<{expr.element_type}>")
     if isinstance(expr, RandomListExpr):
         return "List<Int>"
-    if isinstance(expr, (RandomIntExpr, ListLengthExpr)):
+    if isinstance(expr, ReadJsonListExpr):
+        return "List<Float>"
+    if isinstance(expr, StrEndsWithExpr):
+        return "Bool"
+    if isinstance(expr, StringSliceExpr):
+        return "String"
+    if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr)):
         return "Int"
     if isinstance(expr, ReadInputExpr):
         return expr.target_type
@@ -414,11 +480,21 @@ def _refine_list_literal_types(
     func_returns: dict[str, MemeType],
 ) -> IRExpr:
     if isinstance(expr, ListLiteralExpr) and expr.elements:
-        first_t = _guess_expr_type(expr.elements[0], symbols, func_returns)
-        if first_t in ("Int", "Float", "Bool", "String"):
+        refined_elems = [_refine_list_literal_types(e, symbols, func_returns) for e in expr.elements]
+        first_t = _guess_expr_type(refined_elems[0], symbols, func_returns)
+        if first_t in (
+            "Int",
+            "Float",
+            "Bool",
+            "String",
+            "List<Int>",
+            "List<Float>",
+            "List<Bool>",
+            "List<String>",
+        ):
             return ListLiteralExpr(
-                elements=[_refine_list_literal_types(e, symbols, func_returns) for e in expr.elements],
-                element_type=cast(Literal["Int", "Float", "Bool", "String"], first_t),
+                elements=refined_elems,
+                element_type=cast(MemeType, first_t),
             )
     return expr
 
@@ -431,7 +507,9 @@ class HeuristicProvider:
     def __init__(self, retriever: object = None) -> None:
         self.retriever = retriever
 
-    def synthesize(self, source_text: str) -> SynthesisResult:
+    def synthesize(
+        self, source_text: str, source_path: object = None
+    ) -> SynthesisResult:
         if not has_executable_content(source_text):
             return SynthesisResult(items=[])
 
@@ -721,7 +799,7 @@ class HeuristicProvider:
 
         # `define list <name> as <expr>`
         m_def_list = re.fullmatch(
-            r"define\s+list\s+([A-Za-z_]\w*)(?:\s*:\s*(List<\w+>))?\s+as\s+(.+)",
+            r"define\s+list\s+([A-Za-z_]\w*)(?:\s*:\s*(List<[A-Za-z<>]+>))?\s+as\s+(.+)",
             text,
             flags=re.IGNORECASE,
         )
@@ -756,6 +834,20 @@ class HeuristicProvider:
                 v_type = _guess_expr_type(val, symbols, fn_rets)
             symbols[name] = v_type
             return VarDeclStmt(name=name, var_type=v_type, value=val, source_line=line.lineno)
+
+        # `set <target>[<index>] to <expr>`
+        m_set_idx = re.fullmatch(
+            r"set\s+([A-Za-z_]\w*)\s*\[\s*(.+?)\s*\]\s+to\s+(.+)",
+            text,
+            flags=re.IGNORECASE,
+        )
+        if m_set_idx:
+            return ListSetIndexStmt(
+                target=m_set_idx.group(1),
+                index=_parse_expr(m_set_idx.group(2)),
+                value=_parse_expr(m_set_idx.group(3)),
+                source_line=line.lineno,
+            )
 
         # `set <name> to <expr>`
         m_set = re.fullmatch(r"set\s+([A-Za-z_]\w*)\s+to\s+(.+)", text, flags=re.IGNORECASE)
@@ -817,6 +909,28 @@ class HeuristicProvider:
                 source_line=line.lineno,
             )
 
+        # `insert <expr> into <target> at <index>`
+        m_insert = re.fullmatch(
+            r"insert\s+(.+?)\s+into\s+([A-Za-z_]\w*)\s+at\s+(.+)",
+            text,
+            flags=re.IGNORECASE,
+        )
+        if m_insert:
+            return ListInsertStmt(
+                target=m_insert.group(2),
+                index=_parse_expr(m_insert.group(3)),
+                value=_parse_expr(m_insert.group(1)),
+                source_line=line.lineno,
+            )
+
+        # `fail with <expr>`
+        m_fail = re.fullmatch(r"fail\s+with\s+(.+)", text, flags=re.IGNORECASE)
+        if m_fail:
+            return FailStmt(
+                message=_parse_expr(m_fail.group(1)),
+                source_line=line.lineno,
+            )
+
         # `print <expr1>, <expr2>, ...`
         m_print = re.fullmatch(r"print\s+(.+)", text, flags=re.IGNORECASE)
         if m_print:
@@ -865,6 +979,20 @@ class HeuristicProvider:
                     return found
         if isinstance(expr, ListLengthExpr):
             return HeuristicProvider._find_free_var(expr.target, symbols)
+        if isinstance(expr, StringLengthExpr):
+            return HeuristicProvider._find_free_var(expr.target, symbols)
+        if isinstance(expr, StringSliceExpr):
+            return (
+                HeuristicProvider._find_free_var(expr.target, symbols)
+                or HeuristicProvider._find_free_var(expr.start, symbols)
+                or HeuristicProvider._find_free_var(expr.end, symbols)
+            )
+        if isinstance(expr, StrEndsWithExpr):
+            return HeuristicProvider._find_free_var(
+                expr.target, symbols
+            ) or HeuristicProvider._find_free_var(expr.suffix, symbols)
+        if isinstance(expr, ReadJsonListExpr):
+            return HeuristicProvider._find_free_var(expr.filepath, symbols)
         if isinstance(expr, ListIndexExpr):
             return HeuristicProvider._find_free_var(
                 expr.target, symbols

@@ -144,7 +144,9 @@ class ExampleRetriever:
             return []
 
         resolved_exclude: Path | None = None
+        exclude_name: str | None = None
         if exclude_path is not None:
+            exclude_name = exclude_path.name
             try:
                 resolved_exclude = exclude_path.resolve()
             except Exception:
@@ -161,6 +163,8 @@ class ExampleRetriever:
                 except Exception:
                     if pair.source_path == resolved_exclude:
                         continue
+                if exclude_name and pair.source_path.name == exclude_name:
+                    continue
 
             doc_len = self._doc_lengths[i]
             doc_counts = self._doc_counts[i]

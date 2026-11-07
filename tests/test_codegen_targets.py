@@ -623,13 +623,28 @@ def test_codegen_string_slice_end_less_than_start_empty_parity(target: TargetLan
                         target=VarRefExpr(name="word"),
                         start=VarRefExpr(name="s"),
                         end=VarRefExpr(name="e"),
-                    )
+                    ),
+                    StringSliceExpr(
+                        target=VarRefExpr(name="word"),
+                        start=LiteralExpr(value=10, data_type="Int"),
+                        end=LiteralExpr(value=15, data_type="Int"),
+                    ),
+                    BinaryOpExpr(
+                        op="%",
+                        left=LiteralExpr(value=-7, data_type="Int"),
+                        right=LiteralExpr(value=2, data_type="Int"),
+                    ),
+                    BinaryOpExpr(
+                        op="/",
+                        left=LiteralExpr(value=-7, data_type="Int"),
+                        right=LiteralExpr(value=2, data_type="Int"),
+                    ),
                 ]
             ),
         ]
     )
     output = _run_target(program, target)
-    assert output.strip() == ""
+    assert output.strip() == "-1 -3"
 
 
 

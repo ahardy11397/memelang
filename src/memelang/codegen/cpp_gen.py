@@ -199,9 +199,9 @@ class _CppGen:
             self.uses_input = True
             raw = f"_meme_read_line({_escape_cpp_str(expr.prompt)})"
             if expr.target_type == "Int":
-                return f"std::stoll({raw})"
+                return f"_meme_parse_int({raw})"
             if expr.target_type == "Float":
-                return f"std::stod({raw})"
+                return f"_meme_parse_float({raw})"
             if expr.target_type == "Bool":
                 return f"_meme_parse_bool({raw})"
             return raw
@@ -211,14 +211,16 @@ class _CppGen:
             return f"_meme_ends_with_ci({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.suffix, scope)})"
 
         if isinstance(expr, StringLengthExpr):
+            self.uses_str_helpers = True
             tgt = self.gen_expr(expr.target, scope)
-            return f"static_cast<long long>(({tgt}).length())"
+            return f"_meme_str_len({tgt})"
 
         if isinstance(expr, StringSliceExpr):
+            self.uses_str_helpers = True
             tgt = self.gen_expr(expr.target, scope)
             start = self.gen_expr(expr.start, scope)
             end = self.gen_expr(expr.end, scope)
-            return f"({tgt}).substr(static_cast<std::size_t>({start}), static_cast<std::size_t>(std::max<long long>(0LL, static_cast<long long>(({end}) - ({start})))))"
+            return f"_meme_str_slice({tgt}, {start}, {end})"
 
         if isinstance(expr, ReadJsonListExpr):
             self.uses_str_helpers = True
@@ -474,8 +476,33 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    if (!line.empty() && line.back() == '\\r') line.pop_back();",
                 "    return line;",
                 "}",
+                "inline long long _meme_parse_int(const std::string& s) {",
+                "    try {",
+                "        std::size_t idx = 0;",
+                "        return std::stoll(s, &idx);",
+                "    } catch (...) {",
+                "        return 0LL;",
+                "    }",
+                "}",
+                "inline double _meme_parse_float(const std::string& s) {",
+                "    try {",
+                "        std::size_t idx = 0;",
+                "        return std::stod(s, &idx);",
+                "    } catch (...) {",
+                "        return 0.0;",
+                "    }",
+                "}",
                 "inline bool _meme_parse_bool(const std::string& s) {",
-                "    return s == \"true\" || s == \"True\" || s == \"1\" || s == \"yes\";",
+                "    std::size_t a = 0;",
+                "    while (a < s.size() && std::isspace(static_cast<unsigned char>(s[a]))) ++a;",
+                "    std::size_t b = s.size();",
+                "    while (b > a && std::isspace(static_cast<unsigned char>(s[b - 1]))) --b;",
+                "    std::string low;",
+                "    low.reserve(b - a);",
+                "    for (std::size_t i = a; i < b; ++i) {",
+                "        low.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(s[i]))));",
+                "    }",
+                "    return low == \"true\" || low == \"1\" || low == \"yes\";",
                 "}",
                 "",
             ]
@@ -490,6 +517,30 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    std::size_t b = s.size();",
                 "    while (b > a && std::isspace(static_cast<unsigned char>(s[b - 1]))) --b;",
                 "    return s.substr(a, b - a);",
+                "}",
+                "inline long long _meme_str_len(const std::string& s) {",
+                "    long long count = 0;",
+                "    for (unsigned char c : s) {",
+                "        if ((c & 0xC0) != 0x80) ++count;",
+                "    }",
+                "    return count;",
+                "}",
+                "inline std::string _meme_str_slice(const std::string& s, long long start, long long end) {",
+                "    if (start < 0) start = 0;",
+                "    if (end <= start) return std::string();",
+                "    std::size_t byte_start = s.size();",
+                "    std::size_t byte_end = s.size();",
+                "    long long cp_idx = 0;",
+                "    for (std::size_t i = 0; i < s.size(); ++i) {",
+                "        unsigned char c = static_cast<unsigned char>(s[i]);",
+                "        if ((c & 0xC0) != 0x80) {",
+                "            if (cp_idx == start) byte_start = i;",
+                "            if (cp_idx == end) { byte_end = i; break; }",
+                "            ++cp_idx;",
+                "        }",
+                "    }",
+                "    if (byte_start >= s.size() || byte_end <= byte_start) return std::string();",
+                "    return s.substr(byte_start, byte_end - byte_start);",
                 "}",
                 "inline bool _meme_ends_with_ci(const std::string& s, const std::string& suf) {",
                 "    std::string ts = _meme_trim(s);",

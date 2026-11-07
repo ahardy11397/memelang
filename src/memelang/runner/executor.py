@@ -28,6 +28,7 @@ from memelang.ir.schema import (
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListSetIndexStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -36,6 +37,8 @@ from memelang.ir.schema import (
     ReadJsonListExpr,
     ReturnStmt,
     StrEndsWithExpr,
+    StringLengthExpr,
+    StringSliceExpr,
     UnaryOpExpr,
     VarDeclStmt,
     WhileStmt,
@@ -77,6 +80,14 @@ def _expr_uses_input(expr: IRExpr) -> bool:
         return _expr_uses_input(expr.target) or _expr_uses_input(expr.suffix)
     if isinstance(expr, ReadJsonListExpr):
         return _expr_uses_input(expr.filepath)
+    if isinstance(expr, StringLengthExpr):
+        return _expr_uses_input(expr.target)
+    if isinstance(expr, StringSliceExpr):
+        return (
+            _expr_uses_input(expr.target)
+            or _expr_uses_input(expr.start)
+            or _expr_uses_input(expr.end)
+        )
     return False
 
 
@@ -84,7 +95,7 @@ def _stmts_use_input(stmts: list[IRStatement]) -> bool:
     for s in stmts:
         if isinstance(s, (VarDeclStmt, AssignStmt, ListAppendStmt)) and _expr_uses_input(s.value):
             return True
-        if isinstance(s, ListInsertStmt) and (
+        if isinstance(s, (ListInsertStmt, ListSetIndexStmt)) and (
             _expr_uses_input(s.index) or _expr_uses_input(s.value)
         ):
             return True
@@ -194,7 +205,7 @@ def execute_ir(
                 bin_path = tmp / "app"
                 src_path.write_text(code, encoding="utf-8")
                 comp = subprocess.run(
-                    ["rustc", "--edition=2021", "-O", str(src_path), "-o", str(bin_path)],
+                    ["rustc", "--edition=2021", str(src_path), "-o", str(bin_path)],
                     capture_output=True,
                     text=True,
                     timeout=timeout_sec,
@@ -220,7 +231,7 @@ def execute_ir(
                 bin_path = tmp / "app"
                 src_path.write_text(code, encoding="utf-8")
                 comp = subprocess.run(
-                    ["g++", "-std=c++20", "-O2", str(src_path), "-o", str(bin_path)],
+                    ["g++", "-std=c++20", str(src_path), "-o", str(bin_path)],
                     capture_output=True,
                     text=True,
                     timeout=timeout_sec,

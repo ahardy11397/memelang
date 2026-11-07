@@ -33,6 +33,8 @@ Memelang is the first "meme language": **modular English as a modern expression 
 
 ## Quick Start
 
+New to the language? Start with **[docs/WRITING_GUIDE.md](docs/WRITING_GUIDE.md)** — a practical guide to writing Memelang programs in both voices.
+
 Requires Python 3.13+ and [`uv`](https://docs.astral.sh/uv/) (plus `rustc` and `g++` if running Rust/C++ targets).
 
 ```bash
@@ -47,9 +49,9 @@ uv run meme run examples/hello.meme --target rust
 uv run meme run examples/calc.meme --target cpp
 uv run meme run examples/random_sort_structured.meme --target python
 
-# Compile & run multi-function JSON file processing (resolving partial-sort ambiguity):
+# Compile & run multi-function JSON file processing:
 uv run meme compile examples/find-largest.meme --target rust
-printf "examples/numbers.json\n" | uv run meme run examples/find-largest.meme --resolve 2=1 --target rust
+printf "examples/numbers.json\n" | uv run meme run examples/find-largest.meme --target rust
 
 # Run FizzBuzz compiled to native C++20:
 uv run meme run examples/fizzbuzz.meme --target cpp
@@ -136,7 +138,7 @@ Memelang is designed to evolve along **three distinct axes**:
 3. **Compiler LLM Axis (Frontend Extensibility):**
    The compiler's own intelligence is an extension point. Every frontend implements the same `LLMProvider` protocol (`auto`, `ollama`, `openai-local`, `llama-cpp`, `gemini`, `heuristic`), and because synthesis output is JSON-schema-constrained to `SynthesisResult`, a stronger or smarter model can be dropped in without touching the verifier, lockfile, or any codegen backend. Long-term (the golang model of a self-extending toolchain), the goal is a compiler that is extendable **at runtime** — the language growing its own capabilities through its LLM frontend.
 
-The `.meme` files under `tests/corpus/` are **not** part of this axis: they are the author's personal stress-testing corpus for trying to break the language and do **not** ship as standard `.meme` files — only `examples/` ships with the language.
+The `.meme` files under `tests/corpus/` are the benchmark harness's test suite (containing clean, typo-injected, and deliberately ambiguous stress scripts) and are mirrored into `examples/cs101..103/`, where verified `.meme.lock` files turn curated scripts into live few-shot demonstrations for the retriever.
 
 To benchmark compiler robustness across university Computer Science curricula, Memelang includes an unfiltered **300-script stress corpus** mirroring the curriculum (`tests/corpus/` and `examples/` covering CS 101, CS 102, and CS 103):
 
