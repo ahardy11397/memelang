@@ -389,7 +389,7 @@ class _RustGen:
         if isinstance(stmt, FailStmt):
             return [
                 f"{pad}println!(\"{{}}\", {self._fmt_expr_for_print(stmt.message, scope)});",
-                f"{pad}std::process::exit(0);",
+                f"{pad}std::process::exit(1);",
             ]
 
         if isinstance(stmt, PrintStmt):
@@ -600,7 +600,10 @@ def generate_rust(ir: ProgramIR) -> str:
             [
                 "fn _meme_read_line(prompt: &str) -> String {",
                 "    use std::io::{self, Write};",
-                "    if !prompt.is_empty() {",
+                "    let quiet = std::env::var(\"MEME_QUIET_PROMPTS\")",
+                "        .map(|v| matches!(v.trim().to_ascii_lowercase().as_str(), \"1\" | \"true\" | \"yes\"))",
+                "        .unwrap_or(false);",
+                "    if !prompt.is_empty() && !quiet {",
                 "        print!(\"{}\", prompt);",
                 "        let _ = io::stdout().flush();",
                 "    }",

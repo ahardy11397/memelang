@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import cast
 
-from memelang.ir.canonical import to_canonical_meme
+from memelang.ir.canonical import format_expr, to_canonical_meme
 from memelang.ir.schema import (
     AmbiguityCandidate,
     AmbiguityDiagnostic,
@@ -353,6 +353,7 @@ def _build_loop_collision_ambiguity(
         ClampCollectionStmt(target=target, min_val=min_bound, max_val=max_bound),
         SortCollectionStmt(target=target, direction=direction),
     ]
+    bounds_str = f"[{format_expr(min_bound)}, {format_expr(max_bound)}]"
 
     candidates: list[AmbiguityCandidate] = [
         AmbiguityCandidate(
@@ -364,7 +365,7 @@ def _build_loop_collision_ambiguity(
         ),
         AmbiguityCandidate(
             option=2,
-            description=f"Clamp each item in `{target}` to [1, 10], then sort {direction}",
+            description=f"Clamp each item in `{target}` to {bounds_str}, then sort {direction}",
             canonical_meme=to_canonical_meme(ProgramIR(statements=opt2_ir)),
             replacement_ir=opt2_ir,
             replaces_whole_program=False,
@@ -403,7 +404,7 @@ def _build_loop_collision_ambiguity(
         candidates.append(
             AmbiguityCandidate(
                 option=3,
-                description=f"Generate random integers restricted to [1, 10] for `{target}` and sort {direction}",
+                description=f"Generate random integers restricted to {bounds_str} for `{target}` and sort {direction}",
                 canonical_meme=to_canonical_meme(ProgramIR(statements=rebuilt_whole)),
                 replacement_ir=rebuilt_whole,
                 replaces_whole_program=True,
@@ -1348,6 +1349,15 @@ def _stmts_mutate_var(stmts: list[IRStatement], name: str) -> bool:
     return False
 
 
+# ---------------------------------------------------------------------------
+# Sort-Into-Empty Normalization Policy (Phase 0 Task 6)
+# ---------------------------------------------------------------------------
+# Design decision: KEEP `_normalize_sort_into_empty` as an explicit, deterministic
+# language-contract feature (documented in `docs/WRITING_GUIDE.md` Section 5).
+# When an LLM or user declares an empty destination list `B`, sorts `A`, and
+# subsequently reads only `B` (never mutating `B` or reading `A` again), the
+# verifier rewrites `sort A` into `set B to A` + `sort B` so `B` receives the
+# sorted elements.
 def _normalize_sort_into_empty(stmts: list[IRStatement]) -> list[IRStatement]:
     unmutated_empty: list[str] = [
         s.name

@@ -204,12 +204,16 @@ def execute_ir(
     stdin_text: str | None = None,
     interactive_io: bool = False,
     source_dir: Path | None = None,
+    quiet_prompts: bool = False,
 ) -> ExecutionResult:
     code = generate_code(ir, target)
     run_env: dict[str, str] | None = None
-    if source_dir is not None:
+    if source_dir is not None or quiet_prompts:
         run_env = dict(os.environ)
-        run_env["MEME_SOURCE_DIR"] = str(source_dir.resolve())
+        if source_dir is not None:
+            run_env["MEME_SOURCE_DIR"] = str(source_dir.resolve())
+        if quiet_prompts:
+            run_env["MEME_QUIET_PROMPTS"] = "1"
 
     try:
         with tempfile.TemporaryDirectory(prefix=f"meme_{target}_") as tmp_dir:

@@ -1009,7 +1009,41 @@ def test_verify_records_and_maps_negative_cases():
         )
 
 
+def test_loop_collision_ambiguity_renders_actual_clamp_bounds_in_descriptions():
+    from memelang.ir.schema import ClampCollectionStmt
 
-
-
+    syn = SynthesisResult(
+        items=[
+            VarDeclStmt(
+                name="nums",
+                var_type="List<Int>",
+                value=RandomListExpr(
+                    count=LiteralExpr(value=5, data_type="Int"),
+                    min_val=LiteralExpr(value=1, data_type="Int"),
+                    max_val=LiteralExpr(value=100, data_type="Int"),
+                    implicit_bounds=True,
+                ),
+            ),
+            ForEachStmt(
+                item_var="n",
+                collection="nums",
+                body=[
+                    ClampCollectionStmt(
+                        target="nums",
+                        min_val=LiteralExpr(value=5, data_type="Int"),
+                        max_val=LiteralExpr(value=50, data_type="Int"),
+                    ),
+                    SortCollectionStmt(target="nums", direction="ascending"),
+                ],
+            ),
+        ]
+    )
+    out = verify_synthesis(syn)
+    assert not out.is_unambiguous
+    assert len(out.ambiguities) == 1
+    cands = {c.option: c.description for c in out.ambiguities[0].candidates}
+    assert "[5, 50]" in cands[2]
+    assert "[1, 10]" not in cands[2]
+    assert "[5, 50]" in cands[3]
+    assert "[1, 10]" not in cands[3]
 

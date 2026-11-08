@@ -78,30 +78,35 @@ class bank-account
 
 ## 2. Anatomy of a Conversational Program
 
+> **Voice note:** The conversational wrapper (`this runs in the shell`, `class <kebab-name>`,
+> `define function ... with ...`) is **LLM-voice only** (requires `ollama`, `openai-local`,
+> `llama-cpp`, or `gemini`). The **offline** `heuristic` parser requires Canonical Structured
+> English (`function name(param: Type) -> RetType:`, `read <Type> with prompt "..."`, etc.).
+
 ```meme
-this runs in the shell          ← optional header: program reads stdin (user input)
+this runs in the shell          ← optional header (LLM-voice only): program reads stdin
 
-class my-program                ← optional class wrapper, kebab-case name
+class my-program                ← optional class wrapper (LLM-voice only), kebab-case name
 
-  define function helper with a, b    ← untyped params (types inferred)
+  define function helper with a, b    ← untyped params (LLM-voice only; types inferred)
     return a + b
 
-  define function main          ← entry point; runs last, after helpers
+  define function main          ← entry point (LLM-voice only); runs last, after helpers
     ...
 ```
 
-- `this runs in the shell` marks the program as interactive (reads from the user).
-- `class <kebab-name>` groups helper functions. It compiles to plain functions in the
+- `this runs in the shell` marks the program as interactive (reads from the user; **LLM-voice only**).
+- `class <kebab-name>` groups helper functions (**LLM-voice only**). It compiles to plain functions in the
   target language — it is an organizational device, not objects.
-- `define function main` is the entry point. Its body becomes the top-level program.
+- `define function main` is the entry point (**LLM-voice only**). Its body becomes the top-level program.
 - Indentation (2 spaces) defines block nesting. No colons or braces needed.
-- `# ...` lines are comments.
+- `# ...` lines and inline trailing `# ...` comments (outside string literals) are ignored in both **offline** and **LLM-voice** modes.
 
 ---
 
 ## 3. Variables and Types
 
-Declare with `define ... as` (expression) or `define ... from user` (input):
+Declare with `define ... as` (**offline** & **LLM-voice**), `define <name>: <Type> as` (**offline**), or `define ... from user` (**LLM-voice only**):
 
 ```meme
 define count as 10
@@ -109,7 +114,14 @@ define name as "Ada"
 define price as 9.99
 define flag as true
 define items as [1, 2, 3]
-define empty_list as empty
+define empty_list as empty                        # LLM-voice only
+define list typed_empty as empty List<Int>        # offline (heuristic)
+```
+
+Mutate an existing variable with `set <name> to <expr>` (**offline** & **LLM-voice** — always use `set ... to`, never `set ... as`):
+
+```meme
+set count to count + 1
 ```
 
 Every value resolves to one of these types:
@@ -122,11 +134,17 @@ Every value resolves to one of these types:
 | `String` | `"hello"` |
 | `List<Int>` / `List<Float>` / `List<String>` / `List<Bool>` | `[1, 2, 3]` |
 
-**Type inference defaults:** untyped numbers, untyped function parameters, empty lists,
-and user inputs become `Float` / `List<Float>`. Write the word *integer* / *integers* to
-get `Int` behavior (`10 random integers`, `count by integer steps`). Types are checked
-statically before anything runs — a type mismatch is a compile error, not a runtime
-surprise.
+**Type inference rules by voice:**
+- **LLM-voice only:** untyped numbers, untyped function parameters, bare `empty` lists,
+  and `from user` inputs default to `Float` / `List<Float>`. Write the word *integer* / *integers* to
+  get `Int` behavior (`10 random integers`, `count by integer steps`).
+- **Offline (`heuristic` parser):** silent type defaults are forbidden. Every expression's type
+  must be statically derivable from literals or declared symbols, function parameters require
+  explicit `: <Type>` annotations, empty collections require explicit type parameters
+  (`empty List<T>`, `empty Map<K, V>`), and user inputs require an explicit target type
+  (`read <Int|Float|Bool|String> with prompt "..."`).
+- Types are checked statically before anything runs — a type mismatch is a compile error, not a runtime
+  surprise.
 
 ---
 
@@ -139,7 +157,7 @@ define both as a > 0 and b > 0         # logic: and or
 define negated as not flag             # unary: - not
 ```
 
-Printing:
+Printing (**offline** & **LLM-voice**):
 
 ```meme
 print "Hello, World!"
@@ -147,19 +165,23 @@ print total
 print "Score: ", score                  # multiple values, space-separated
 ```
 
-Reading input (requires `this runs in the shell`):
+Reading input:
 
 ```meme
+# LLM-voice only (requires `this runs in the shell`):
 define answer from user "Pick a number? "
+
+# Offline (heuristic):
+define answer: Float as read Float with prompt "Pick a number? "
 ```
 
-The prompt string is shown to the user; the value comes back typed as needed.
+The prompt string is shown to the user by default (or suppressed when `MEME_QUIET_PROMPTS=1` is set in the environment); the value comes back typed as requested.
 
 ---
 
 ## 5. Control Flow
 
-**`if` / `else`** — indentation is the block:
+**`if` / `else`** — indentation is the block (**offline** & **LLM-voice**):
 
 ```meme
 if score >= 90
@@ -168,26 +190,26 @@ else
   print "keep trying"
 ```
 
-**Counted loop** — **both ends are inclusive**:
+**Counted loop** — **both ends are inclusive** (**offline** & **LLM-voice**):
 
 ```meme
 for i from 1 to 20          # i = 1, 2, ..., 20 (not 19!)
   print i
 ```
 
-**For-each loop:**
+**For-each loop** (**offline** & **LLM-voice** — must be two words `for each`; single-word `foreach` is **LLM-voice only**):
 
 ```meme
 for each n in numbers
   print n
 ```
 
-**While loop:**
+**While loop** (**offline** & **LLM-voice**):
 
 ```meme
 while digit_buffer > 0
   define extracted_digit as digit_buffer % 10
-  define digit_buffer as digit_buffer / 10
+  set digit_buffer to digit_buffer / 10
 ```
 
 ---
@@ -198,32 +220,43 @@ Memelang's list verbs are the heart of the language:
 
 ```meme
 define list numbers as 10 random integers between 1 and 100
-define sorted_copy as empty
-sort numbers into sorted_copy ascending      # copy-then-sort
-sort numbers descending                      # in-place
-filter numbers where item >= 50              # keep only elements passing the test
-add 100 to numbers                           # append
-clamp numbers between 1 and 10               # clamp every element
+define sorted_copy as empty                  # LLM-voice only (offline: empty List<Int>)
+sort numbers into sorted_copy ascending      # LLM-voice only (copy-then-sort)
+sort numbers descending                      # offline & LLM-voice (in-place)
+filter numbers where item >= 50              # offline & LLM-voice (in-place only!)
+add 100 to numbers                           # offline & LLM-voice (append)
+clamp numbers between 1 and 10               # offline & LLM-voice (clamp every element)
 ```
 
-**Indexing — the one rule to memorize:** when you *say* a position in English
-(`item 1`, `item 2`, `item last`), counting starts at **1**:
+> **Note on `filter`:** In the IR and **offline** parser, `filter <list> where <predicate>` is
+> **in-place only** — it mutates `<list>` directly. Conversational phrasings like
+> `define evens as each n in list where <cond>` are **LLM-voice only** (synthesized by copying
+> and filtering in place).
+
+**Indexing:**
+- **Offline (`heuristic`):** 0-based bracket indexing `numbers[0]`, `sorted[length of sorted - 1]`.
+- **LLM-voice only:** when you *say* a position in English (`item 1`, `item 2`, `item last`), counting starts at **1**:
 
 ```meme
-define first as numbers item 1        # first element
-define last as sorted item last       # last element
+define first as numbers item 1        # LLM-voice only (offline: numbers[0])
+define last as sorted item last       # LLM-voice only (offline: sorted[length of sorted - 1])
 ```
 
-When you *compute* a position with a loop counter, it is used as-is (0-based numeric):
+When you *compute* a position with a loop counter in **LLM-voice**, it is used as-is (0-based numeric):
 
 ```meme
 for r from 0 to 1                     # 2x2 matrix: rows 0 and 1
-  define row as transposed item r
+  define row as transposed item r     # LLM-voice only (offline: transposed[r])
 ```
 
-**In-place mutation** (sets an element at a computed index):
+**In-place element mutation** (always uses `set ... to`, never `set ... as`):
 
 ```meme
+# Offline (heuristic):
+set row[r] to val
+set numbers[i] to numbers[i] + 1
+
+# LLM-voice only:
 set row item r to val
 set numbers item i to numbers item i + 1
 ```
@@ -231,28 +264,37 @@ set numbers item i to numbers item i + 1
 **Length:**
 
 ```meme
-for k from 1 to length of identifier
+# For lists (offline & LLM-voice):
+for k from 1 to length of numbers
   ...
+
+# For strings in offline (heuristic) mode, include the word `string`:
+define n as length of string identifier
 ```
 
-**Copy-sorting into a new list:** `sort A into B ascending` expects `B` to be declared
-as `empty` first — the compiler copies `A` into `B`, then sorts `B` in place, leaving `A`
-untouched:
+**Copy-sorting into a new list:**
+- **Offline (`heuristic`):** copy the list first, then sort the copy in place:
+  ```meme
+  define list sorted as unsorted
+  sort sorted ascending
+  return sorted[length of sorted - 1]
+  ```
+- **LLM-voice only:** `sort A into B ascending` expects `B` to be declared as `empty` first — the compiler copies `A` into `B`, then sorts `B` in place, leaving `A` untouched:
+  ```meme
+  define sorted as empty
+  sort unsorted into sorted ascending
+  return largest from sorted
+  ```
+- **Verifier Contract Feature (`_normalize_sort_into_empty`):** Because the IR contains only an in-place `sort_collection(target)` node, an LLM synthesizing `define B as empty` followed by `sort A into B` may emit `define list B as empty List<T>`, `sort A <dir>`, and subsequent reads of `B` (with no further reads of `A` and no prior mutations of `B`). The static verifier (`verifier.py:_normalize_sort_into_empty`) explicitly normalizes this pattern into `set B to A` + `sort B <dir>` as a deterministic language-contract feature rather than raising an ambiguity diagnostic.
 
-```meme
-define sorted as empty
-sort unsorted into sorted ascending
-return largest from sorted
-```
-
-You can either sort in place or copy-sort and then index or use a selector (`largest from sorted`, `smallest from sorted`):
+You can either sort in place or copy-sort and then index or use a selector (`largest from sorted`, `smallest from sorted` — **LLM-voice only**):
 
 ```meme
 # Option A: sort in place, then index freely
 sort scores descending
-define top as scores item 1
+define top as scores item 1           # LLM-voice only (offline: scores[0])
 
-# Option B: copy-sort into an empty list, then select or index
+# Option B: copy-sort into an empty list, then select or index (LLM-voice only)
 define sorted as empty
 sort unsorted into sorted ascending
 return largest from sorted
@@ -263,17 +305,23 @@ return largest from sorted
 ## 7. Strings
 
 ```meme
+# LLM-voice only:
 define c as identifier char k           # k-th character (1-based)
 if c is uppercase
   ...
-length of identifier                    # string length
+length of identifier                    # string length (LLM-voice only without `string` keyword)
+
+# Offline (heuristic):
+define c as slice identifier from idx to idx + 1   # 0-based [idx, idx + 1)
+define n as length of string identifier            # `length of string <expr>` required offline
+define ok as filepath ends with ".json"            # case-insensitive suffix test (offline & LLM-voice)
 ```
 
 ---
 
 ## 8. Functions
 
-Define helpers, then call them with `... from <args>`:
+**Conversational syntax (LLM-voice only):** define helpers with `define function ... with ...`, then call them with `... from <args>`:
 
 ```meme
 define function withdraw with balance, amount
@@ -287,23 +335,32 @@ define function main
   print result
 ```
 
-- Untyped parameters infer their type from use (`Float` by default; write
+- In **LLM-voice only**, untyped parameters infer their type from use (`Float` by default; write
   `with balance as Int` style annotations or the word *integer* when you need `Int`).
+- In **offline (`heuristic`)** mode, every parameter must carry an explicit `: <Type>` annotation.
 - A function has **one static return type**. If one branch returns a number and another
   returns an error string, write the error branch as a failure:
 
 ```meme
+# LLM-voice only:
 define function loadFile with filepath
   if filepath is json
     define list as fromFile from filepath
     return list
   else return "Wrong File Type"
+
+# Offline (heuristic):
+function loadFile(filepath: String) -> List<Float>:
+    if filepath ends with ".json":
+        define list fromFile as read JSON number list from filepath
+        return fromFile
+    else:
+        fail with "Wrong File Type"
 ```
 
-The `else return "<message>"` form compiles to a fail statement: it prints the message
-and exits cleanly — it counts as returning on that branch, so the verifier stays happy.
+The `else return "<message>"` form (**LLM-voice only**) and `fail with "<message>"` (**offline**) compile to a `fail_stmt`: it prints the message to stdout and **exits with status code 1 (non-zero)** — it counts as diverging/returning on that branch, so the static verifier stays happy.
 
-**Structured English equivalent** (typed, with colons):
+**Structured English equivalent** (**offline** & **LLM-voice**, typed, with colons):
 
 ```meme
 function withdraw(balance: Float, amount: Float) -> Float:
@@ -542,34 +599,40 @@ widen `Int` to `Float` at call boundaries.
 
 ## Quick Rules Card
 
-| I want to... | Write |
-|---|---|
-| Declare a variable | `define x as <expr>` |
-| Read input | `define x from user "Prompt? "` |
-| Print | `print x` / `print "a, ", b` |
-| Branch | `if <cond>` / `else` (indentation) |
-| Count 1..N inclusive | `for i from 1 to N` |
-| Iterate a list | `for each n in list` |
-| Repeat while | `while <cond>` |
-| Sort in place | `sort list ascending` |
-| Sort into a copy | `define out as empty` + `sort list into out descending` |
-| Filter | `define evens as each n in list where <cond>` |
-| Append | `add x to list` |
-| First/last element | `list item 1` / `list item last` |
-| Mutate an element | `set list item i to v` |
-| Length | `length of list` |
-| Char at position | `s char k` (1-based) |
-| Define a function | `define function f with a, b` |
-| Call it | `define r as f from a, b` |
-| Define a record | `record User:\n    id: Int\n    name: String` |
-| Instantiate a record | `define u as User(id=1, name="Alice")` |
-| Access record field | `u.name` |
-| Mutate record field | `set u.name to "Bob"` |
-| Define a map | `define m as {"a": 1, "b": 2}` / `empty Map<K, V>` |
-| Map lookup / default | `m["a"]` / `m["c"] default 0` |
-| Map key test | `m has key "a"` |
-| Mutate map entry | `set m["a"] to 10` |
-| Fail cleanly | `else return "error message"` |
-| Comment | `# this is ignored` |
+Each construct is labeled **offline** (supported by the zero-dependency `heuristic` parser as well as LLM providers) or **LLM-voice only** (requires `ollama`, `openai-local`, `llama-cpp`, or `gemini`).
+
+| I want to... | Write | Voice |
+|---|---|---|
+| Interactive header | `this runs in the shell` | **LLM-voice only** |
+| Declare a variable | `define x as <expr>` / `define x: <Type> as <expr>` | **offline** |
+| Reassign a variable | `set x to <expr>` *(always `set ... to`, never `set ... as`)* | **offline** |
+| Declare an empty list | `define list out as empty List<Int>` (**offline**) / `define out as empty` (**LLM-voice only**) | **offline** / **LLM-voice only** |
+| Read input | `define x: <Type> as read <Int\|Float\|Bool\|String> with prompt "Prompt? "` (**offline**) / `define x from user "Prompt? "` (**LLM-voice only**) | **offline** / **LLM-voice only** |
+| Print | `print x` / `print "a, ", b` | **offline** |
+| Branch | `if <cond>[:]` / `else if <cond>[:]` / `else[:]` (indentation) | **offline** |
+| Count 1..N inclusive | `for i from 1 to N[:]` | **offline** |
+| Iterate a list | `for each n in list[:]` *(two words `for each`; `foreach` is **LLM-voice only**)* | **offline** |
+| Repeat while | `while <cond>[:]` | **offline** |
+| Sort in place | `sort list ascending` / `sort list descending` | **offline** |
+| Sort into a copy | `define list out as list` + `sort out descending` (**offline**) / `define out as empty` + `sort list into out descending` (**LLM-voice only**; verifier normalizes `empty` + `sort` via `_normalize_sort_into_empty`) | **offline** / **LLM-voice only** |
+| Filter (in-place) | `filter list where item >= 0` *(mutates `list` in place — **offline**)* / `define evens as each n in list where <cond>` (**LLM-voice only**) | **offline** / **LLM-voice only** |
+| Append | `add x to list` / `append x to list` | **offline** |
+| First/last element | `list[0]` / `list[length of list - 1]` (0-based, **offline**) / `list item 1` / `list item last` (1-based, **LLM-voice only**) | **offline** / **LLM-voice only** |
+| Mutate an element | `set list[i] to v` (**offline**) / `set list item i to v` (**LLM-voice only**) | **offline** / **LLM-voice only** |
+| List length | `length of list` | **offline** |
+| String length | `length of string s` (**offline**) / `length of s` (**LLM-voice only** on strings) | **offline** / **LLM-voice only** |
+| Char at position / slice | `slice s from idx to idx + 1` (0-based, **offline**) / `s char k` (1-based, **LLM-voice only**) | **offline** / **LLM-voice only** |
+| Define a function | `function f(a: Int, b: Int) -> Int:` (**offline**, explicit types required) / `define function f with a, b` (**LLM-voice only**, defaults params to `Float`) | **offline** / **LLM-voice only** |
+| Call a function | `define r: Int as f(a, b)` (**offline**) / `define r as f from a, b` (**LLM-voice only**) | **offline** / **LLM-voice only** |
+| Define a record | `record User:\n    id: Int\n    name: String` | **offline** |
+| Instantiate a record | `define u as User(id=1, name="Alice")` | **offline** |
+| Access record field | `u.name` | **offline** |
+| Mutate record field | `set u.name to "Bob"` | **offline** |
+| Define a map | `define m as {"a": 1, "b": 2}` / `empty Map<K, V>` | **offline** |
+| Map lookup / default | `m["a"]` / `m["c"] default 0` | **offline** |
+| Map key test | `m has key "a"` | **offline** |
+| Mutate map entry | `set m["a"] to 10` | **offline** |
+| Fail (exits code 1) | `fail with "error message"` (**offline**) / `else return "error message"` (**LLM-voice only**) | **offline** / **LLM-voice only** |
+| Comment (line or inline) | `# this is ignored` / `define x as 1 # inline comment` | **offline** |
 
 Happy memeing.

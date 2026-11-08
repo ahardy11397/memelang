@@ -395,7 +395,7 @@ class _CppGen:
         if isinstance(stmt, FailStmt):
             return [
                 f"{pad}std::cout << _meme_fmt({self.gen_expr(stmt.message, scope)}) << \"\\n\";",
-                f"{pad}std::exit(0);",
+                f"{pad}std::exit(1);",
             ]
 
         if isinstance(stmt, PrintStmt):
@@ -630,7 +630,14 @@ def generate_cpp(ir: ProgramIR) -> str:
         helpers.extend(
             [
                 "inline std::string _meme_read_line(const std::string& prompt) {",
-                "    if (!prompt.empty()) { std::cout << prompt << std::flush; }",
+                "    const char* q = std::getenv(\"MEME_QUIET_PROMPTS\");",
+                "    bool quiet = false;",
+                "    if (q) {",
+                "        std::string qs(q);",
+                "        for (char& c : qs) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));",
+                "        quiet = (qs == \"1\" || qs == \"true\" || qs == \"yes\");",
+                "    }",
+                "    if (!prompt.empty() && !quiet) { std::cout << prompt << std::flush; }",
                 "    std::string line;",
                 "    std::getline(std::cin, line);",
                 "    if (!line.empty() && line.back() == '\\r') line.pop_back();",

@@ -162,6 +162,26 @@ class _Tok:
     val: str
 
 
+def _strip_inline_comment(text: str) -> str:
+    """Strips trailing `# ...` comments outside single- or double-quoted string literals."""
+    in_str: str | None = None
+    escape = False
+    for idx, ch in enumerate(text):
+        if in_str is not None:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == in_str:
+                in_str = None
+            continue
+        if ch in ('"', "'"):
+            in_str = ch
+        elif ch == "#":
+            return text[:idx].rstrip()
+    return text
+
+
 def _tokenize_expr(text: str) -> list[_Tok]:
     pos = 0
     tokens: list[_Tok] = []
@@ -169,6 +189,8 @@ def _tokenize_expr(text: str) -> list[_Tok]:
         if text[pos].isspace():
             pos += 1
             continue
+        if text[pos] == "#":
+            break
         m = _TOKEN_RE.match(text, pos)
         if not m or m.group(0).strip() == "":
             raise LLMProviderError(f"Cannot parse expression near: {text[pos:]!r}")
@@ -350,14 +372,18 @@ class _ExprParser:
                     self.consume("OP", ",")
                     elems.append(self.parse_or())
             self.consume("OP", "]")
-            el_type: MemeType = "Int"
-            if elems:
-                guessed = _guess_expr_type(
-                    elems[0], self.symbols, self.func_returns, self.records
+            if not elems:
+                raise LLMProviderError(
+                    "Cannot infer element type of untyped empty list literal `[]`; use `empty List<Type>`"
                 )
-                if _is_valid_type(guessed, self.records):
-                    el_type = guessed
-            return ListLiteralExpr(elements=elems, element_type=el_type)
+            guessed = _guess_expr_type(
+                elems[0], self.symbols, self.func_returns, self.records
+            )
+            if not _is_valid_type(guessed, self.records):
+                raise LLMProviderError(
+                    f"Cannot infer valid list element type, got {guessed!r}"
+                )
+            return ListLiteralExpr(elements=elems, element_type=guessed)
 
         if t.kind == "OP" and t.val == "{":
             self.consume("OP", "{")
@@ -375,20 +401,23 @@ class _ExprParser:
                     else:
                         break
             self.consume("OP", "}")
-            k_type: MemeType = "String"
-            v_type: MemeType = "String"
-            if entries:
-                k_guessed = _guess_expr_type(
-                    entries[0].key, self.symbols, self.func_returns, self.records
+            if not entries:
+                raise LLMProviderError(
+                    "Cannot infer key/value types of untyped empty map literal `{}`; use `empty Map<KeyType, ValueType>`"
                 )
-                v_guessed = _guess_expr_type(
-                    entries[0].value, self.symbols, self.func_returns, self.records
+            k_guessed = _guess_expr_type(
+                entries[0].key, self.symbols, self.func_returns, self.records
+            )
+            v_guessed = _guess_expr_type(
+                entries[0].value, self.symbols, self.func_returns, self.records
+            )
+            if not _is_valid_type(k_guessed, self.records) or not _is_valid_type(
+                v_guessed, self.records
+            ):
+                raise LLMProviderError(
+                    f"Cannot infer valid map literal types, got Map<{k_guessed}, {v_guessed}>"
                 )
-                if _is_valid_type(k_guessed, self.records):
-                    k_type = k_guessed
-                if _is_valid_type(v_guessed, self.records):
-                    v_type = v_guessed
-            return MapLiteralExpr(key_type=k_type, value_type=v_type, entries=entries)
+            return MapLiteralExpr(key_type=k_guessed, value_type=v_guessed, entries=entries)
 
         if t.kind == "IDENT":
             if t.val in ("true", "True"):
@@ -462,27 +491,30 @@ def _parse_expr(
     func_returns: dict[str, MemeType] | None = None,
     records: dict[str, dict[str, MemeType]] | None = None,
 ) -> IRExpr:
-    s = raw.strip()
+    s = _strip_inline_comment(raw).strip()
 
     # Special English phrase expressions
     m_empty = re.fullmatch(
         r"empty\s+List<(.+)>", s
     )
     if m_empty:
-        el_t = cast(MemeType, _normalize_type(m_empty.group(1)))
-        return ListLiteralExpr(elements=[], element_type=el_t)
+        el_t = _normalize_type(m_empty.group(1))
+        if not _is_valid_type(el_t, records):
+            raise LLMProviderError(f"Unknown list element type {el_t!r} in {s!r}")
+        return ListLiteralExpr(elements=[], element_type=cast(MemeType, el_t))
 
     m_empty_map = re.fullmatch(
         r"empty\s+(Map<.+>)", s
     )
     if m_empty_map:
         mt = _map_types_of(_normalize_type(m_empty_map.group(1)))
-        if mt is not None:
-            return MapLiteralExpr(
-                key_type=mt[0],
-                value_type=mt[1],
-                entries=[],
-            )
+        if mt is None or not _is_valid_type(mt[0], records) or not _is_valid_type(mt[1], records):
+            raise LLMProviderError(f"Invalid map type in {s!r}")
+        return MapLiteralExpr(
+            key_type=mt[0],
+            value_type=mt[1],
+            entries=[],
+        )
 
     m_slice = re.fullmatch(
         r"slice\s+(.+?)\s+from\s+(.+?)\s+to\s+(.+)",
@@ -621,6 +653,16 @@ def _map_types_of(map_type: str) -> tuple[str, str] | None:
     return None
 
 
+# ---------------------------------------------------------------------------
+# Type-Inference Failure Policy (Phase 0 Task 2)
+# ---------------------------------------------------------------------------
+# Consistent policy across the heuristic parser: whenever an expression's type,
+# collection element type, or parameter type cannot be inferred deterministically,
+# raise a hard parse error (`LLMProviderError`) rather than silently defaulting
+# to `Int`, `List<Int>`, `String`, or `Map<String, String>`. This guarantees that
+# untyped empty literals (`[]`, `{}`), untyped function parameters, undeclared
+# symbols, or invalid index/field accesses fail fast at parse time instead of
+# producing bogus IR types that surface later as cryptic verifier errors.
 def _guess_expr_type(
     expr: IRExpr,
     symbols: dict[str, MemeType],
@@ -647,9 +689,11 @@ def _guess_expr_type(
         return expr.record_name
     if isinstance(expr, RecordFieldExpr):
         tgt_t = _guess_expr_type(expr.target, symbols, func_returns, records)
-        if records and tgt_t in records:
-            return records[tgt_t].get(expr.field_name, "String")
-        return "String"
+        if records and tgt_t in records and expr.field_name in records[tgt_t]:
+            return records[tgt_t][expr.field_name]
+        raise LLMProviderError(
+            f"Cannot infer type of field {expr.field_name!r} on expression of type {tgt_t!r}"
+        )
     if isinstance(expr, MapLiteralExpr):
         return cast(MemeType, f"Map<{expr.key_type}, {expr.value_type}>")
     if isinstance(expr, MapGetExpr):
@@ -657,13 +701,19 @@ def _guess_expr_type(
         mt = _map_types_of(tgt_t)
         if mt is not None:
             return mt[1]
-        if expr.default_val:
+        if expr.default_val is not None:
             return _guess_expr_type(expr.default_val, symbols, func_returns, records)
-        return "String"
+        raise LLMProviderError(
+            f"Cannot infer map value type from non-map target of type {tgt_t!r}"
+        )
     if isinstance(expr, MapHasKeyExpr):
         return "Bool"
-    if isinstance(expr, VarRefExpr) and expr.name in symbols:
-        return symbols[expr.name]
+    if isinstance(expr, VarRefExpr):
+        if expr.name in symbols:
+            return symbols[expr.name]
+        raise LLMProviderError(
+            f"Cannot infer type of undeclared variable {expr.name!r}"
+        )
     if isinstance(expr, ListIndexExpr):
         col_t = _guess_expr_type(expr.target, symbols, func_returns, records)
         if col_t.startswith("List<"):
@@ -671,16 +721,22 @@ def _guess_expr_type(
         mt = _map_types_of(col_t)
         if mt is not None:
             return mt[1]
-        return "Int"
-    if isinstance(expr, CallExpr) and func_returns and expr.func_name in func_returns:
-        return func_returns[expr.func_name]
+        raise LLMProviderError(
+            f"Cannot infer element type when indexing into non-collection type {col_t!r}"
+        )
+    if isinstance(expr, CallExpr):
+        if func_returns and expr.func_name in func_returns:
+            return func_returns[expr.func_name]
+        raise LLMProviderError(
+            f"Cannot infer return type of undeclared function {expr.func_name!r}"
+        )
     if isinstance(expr, BinaryOpExpr):
         if expr.op in ("==", "!=", "<", "<=", ">", ">=", "and", "or"):
             return "Bool"
         return _guess_expr_type(expr.left, symbols, func_returns, records)
     if isinstance(expr, UnaryOpExpr):
         return "Bool" if expr.op == "not" else _guess_expr_type(expr.operand, symbols, func_returns, records)
-    return "Int"
+    raise LLMProviderError(f"Cannot infer type of expression {expr!r}")
 
 
 def _refine_list_literal_types(
@@ -719,7 +775,7 @@ class HeuristicProvider:
         lines: list[_SourceLine] = []
         for idx, raw in enumerate(source_text.splitlines(), start=1):
             expanded = raw.expandtabs(4)
-            stripped = expanded.strip()
+            stripped = _strip_inline_comment(expanded).strip()
             if not stripped or stripped.startswith("#"):
                 continue
             indent = len(expanded) - len(expanded.lstrip(" "))
@@ -830,9 +886,17 @@ class HeuristicProvider:
                         i = next_i if inline_body_txt else (next_i + len(child_lines))
                         continue
 
+                if col_name not in symbols:
+                    raise LLMProviderError(
+                        f"Cannot iterate over undeclared collection {col_name!r} at line {line.lineno}"
+                    )
+                col_t = symbols[col_name]
+                if not col_t.startswith("List<"):
+                    raise LLMProviderError(
+                        f"Cannot iterate over non-list {col_name!r} of type {col_t!r} at line {line.lineno}"
+                    )
                 loop_syms = dict(symbols)
-                col_t = symbols.get(col_name, "List<Int>")
-                el_t = cast(MemeType, col_t[5:-1] if col_t.startswith("List<") else "Int")
+                el_t = cast(MemeType, col_t[5:-1])
                 loop_syms[item_var] = el_t
                 if inline_body_txt:
                     sub_items, _ = self._parse_block(child_lines, 0, base_indent + 4, loop_syms)
@@ -956,9 +1020,14 @@ class HeuristicProvider:
                 fn_syms: dict[str, MemeType] = {}
                 if raw_params:
                     for p_chunk in _split_top_level_commas(raw_params):
-                        p_name, _, p_type = p_chunk.partition(":")
+                        p_name, sep, p_type_raw = p_chunk.partition(":")
                         p_name = p_name.strip()
-                        p_type = _normalize_type(p_type.strip() or "Int")
+                        if not sep or not p_type_raw.strip():
+                            raise LLMProviderError(
+                                f"Parameter {p_name!r} in function {fn_name!r} at line {line.lineno} "
+                                "requires an explicit `: <Type>` annotation."
+                            )
+                        p_type = _normalize_type(p_type_raw.strip())
                         if not _is_valid_type(p_type, self._records):
                             raise LLMProviderError(
                                 f"Unknown parameter type {p_type!r} at line {line.lineno}"
@@ -1042,7 +1111,7 @@ class HeuristicProvider:
 
         # `define list <name> as <expr>`
         m_def_list = re.fullmatch(
-            r"define\s+list\s+([A-Za-z_]\w*)(?:\s*:\s*(List<[A-Za-z<>]+>))?\s+as\s+(.+)",
+            r"define\s+list\s+([A-Za-z_]\w*)(?:\s*:\s*([A-Za-z0-9_<>,\s]+))?\s+as\s+(.+)",
             text,
             flags=re.IGNORECASE,
         )
@@ -1052,13 +1121,19 @@ class HeuristicProvider:
                 _pe(m_def_list.group(3)), symbols, fn_rets, recs
             )
             explicit_t = m_def_list.group(2)
-            v_type = (
-                cast(MemeType, explicit_t)
-                if explicit_t and _is_valid_type(explicit_t, recs)
-                else _guess_expr_type(val, symbols, fn_rets, recs)
-            )
+            if explicit_t:
+                cleaned_t = _normalize_type(explicit_t)
+                if not _is_valid_type(cleaned_t, recs) or not cleaned_t.startswith("List<"):
+                    raise LLMProviderError(
+                        f"Invalid list type {explicit_t!r} at line {line.lineno}"
+                    )
+                v_type = cast(MemeType, cleaned_t)
+            else:
+                v_type = _guess_expr_type(val, symbols, fn_rets, recs)
             if not v_type.startswith("List<"):
-                v_type = "List<Int>"
+                raise LLMProviderError(
+                    f"Cannot infer list type for {name!r} from expression of type {v_type!r} at line {line.lineno}"
+                )
             symbols[name] = v_type
             return VarDeclStmt(name=name, var_type=v_type, value=val, source_line=line.lineno)
 
@@ -1165,7 +1240,13 @@ class HeuristicProvider:
         )
         if m_filter:
             target = m_filter.group(1)
-            pred = _pe(m_filter.group(2))
+            filter_syms = dict(symbols)
+            if target in symbols and symbols[target].startswith("List<"):
+                el_t = cast(MemeType, symbols[target][5:-1])
+                for tok in _tokenize_expr(m_filter.group(2)):
+                    if tok.kind == "IDENT" and tok.val not in filter_syms:
+                        filter_syms[tok.val] = el_t
+            pred = _parse_expr(m_filter.group(2), filter_syms, fn_rets, recs)
             item_var = self._find_free_var(pred, symbols) or "item"
             return FilterCollectionStmt(
                 target=target, item_var=item_var, predicate=pred, source_line=line.lineno

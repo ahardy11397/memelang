@@ -9,6 +9,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    FailStmt,
     FilterCollectionStmt,
     ForEachStmt,
     FuncDefStmt,
@@ -26,6 +27,7 @@ from memelang.ir.schema import (
     PrintStmt,
     ProgramIR,
     RandomListExpr,
+    ReadInputExpr,
     RecordDefStmt,
     RecordFieldDef,
     RecordFieldExpr,
@@ -516,9 +518,9 @@ def test_find_largest_json_file_and_partial_sort_resolutions(target: TargetLang,
     assert r1.returncode == 0, r1.stderr
     assert r1.stdout.strip().endswith("99")
 
-    # Wrong file type -> prints "Wrong File Type" cleanly and exits 0
+    # Wrong file type -> prints "Wrong File Type" cleanly and exits 1 (FailStmt contract)
     r_bad = execute_ir(prog_opt1, target, stdin_text="notes.txt\n")
-    assert r_bad.returncode == 0, r_bad.stderr
+    assert r_bad.returncode == 1, r_bad.stderr
     assert r_bad.stdout.strip().endswith("Wrong File Type")
 
     # Option 2: Literal partial front-insertion -> skips 50 and 99, sorted=[1, 3, 10] -> returns 10
@@ -945,8 +947,37 @@ def test_codegen_unsorted_map_keys_and_out_of_order_record_fields_parity(target:
     assert output.strip() == "Item(sku=SKU-9, qty=5, active=true) {apple: 2, mango: 3, zebra: 1}"
 
 
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_fail_stmt_exits_with_code_1_across_targets(target: TargetLang):
+    program = ProgramIR(
+        items=[
+            FailStmt(message=LiteralExpr(value="Guard failed", data_type="String")),
+            PrintStmt(expressions=[LiteralExpr(value="Unreachable", data_type="String")]),
+        ]
+    )
+    res = execute_ir(program, target)
+    assert res.returncode == 1
+    assert res.stdout.strip() == "Guard failed"
 
 
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_meme_quiet_prompts_suppresses_prompt_echo_across_targets(target: TargetLang):
+    program = ProgramIR(
+        items=[
+            VarDeclStmt(
+                name="val",
+                var_type="Int",
+                value=ReadInputExpr(prompt="Enter number: ", target_type="Int"),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="val")]),
+        ]
+    )
+    loud = execute_ir(program, target, stdin_text="42\n", quiet_prompts=False)
+    assert loud.returncode == 0, loud.stderr
+    assert "Enter number: " in loud.stdout
+    assert loud.stdout.strip().endswith("42")
 
-
-
+    quiet = execute_ir(program, target, stdin_text="42\n", quiet_prompts=True)
+    assert quiet.returncode == 0, quiet.stderr
+    assert "Enter number: " not in quiet.stdout
+    assert quiet.stdout.strip() == "42"

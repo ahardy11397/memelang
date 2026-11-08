@@ -329,4 +329,40 @@ def test_split_compilation_units_and_per_function_llama_cpp_synthesis(tmp_path):
     assert len(merged.items) == 3
 
 
+@pytest.mark.parametrize(
+    "bad_source",
+    [
+        "define nums as []",
+        "define m as {}",
+        "function add(x, y: Int) -> Int:\n    return x + y",
+        "for each x in undeclared_list:\n    print x",
+        "define n: Int as 5\nfor each x in n:\n    print x",
+        "define list bad as 42",
+        "define y as unknown_var + 1",
+    ],
+)
+def test_heuristic_raises_hard_parse_error_on_untyped_or_uninferable_constructs(bad_source: str):
+    prov = HeuristicProvider()
+    with pytest.raises(LLMProviderError):
+        prov.synthesize(bad_source)
+
+
+def test_heuristic_inline_comments_stripped_outside_strings():
+    from memelang.llm.heuristic import _tokenize_expr
+
+    toks = _tokenize_expr('1 + 2 # trailing comment with [brackets] and "quotes"')
+    assert [(t.kind, t.val) for t in toks] == [("INT", "1"), ("OP", "+"), ("INT", "2")]
+
+    str_toks = _tokenize_expr('"hello # not a comment" # real comment')
+    assert [(t.kind, t.val) for t in str_toks] == [("STRING", "hello # not a comment")]
+
+    prov = HeuristicProvider()
+    src = (
+        "define nums: List<Int> as empty List<Int> # empty list declaration\n"
+        "append 10 to nums # inline comment on statement\n"
+        'define tag: String as "#hashtag" # preserve hash inside string\n'
+        "print nums[0], tag # print statement comment\n"
+    )
+    res = prov.synthesize(src)
+    assert len(res.items) == 4
 

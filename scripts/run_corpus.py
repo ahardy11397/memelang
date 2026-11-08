@@ -16,43 +16,13 @@ from memelang.analyzer.verifier import (
 )
 from memelang.codegen import TargetLang
 from memelang.ir.schema import (
-    AssignStmt,
-    BinaryOpExpr,
-    CallExpr,
-    ClampCollectionStmt,
     FailStmt,
-    FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
     FuncDefStmt,
-    IRExpr,
     IRStatement,
     IfStmt,
-    ListAppendStmt,
-    ListIndexExpr,
-    ListInsertStmt,
-    ListLengthExpr,
-    ListLiteralExpr,
-    ListSetIndexStmt,
-    MapGetExpr,
-    MapHasKeyExpr,
-    MapLiteralExpr,
-    MapSetStmt,
-    PrintStmt,
     ProgramIR,
-    RandomIntExpr,
-    RandomListExpr,
-    ReadInputExpr,
-    ReadJsonListExpr,
-    RecordFieldExpr,
-    RecordLiteralExpr,
-    RecordSetFieldStmt,
-    ReturnStmt,
-    StrEndsWithExpr,
-    StringLengthExpr,
-    StringSliceExpr,
-    UnaryOpExpr,
-    VarDeclStmt,
     WhileStmt,
 )
 from memelang.llm import LLMProvider, LLMProviderError, get_provider
@@ -160,133 +130,19 @@ def parse_id_filter(spec: str, max_id: int = 500) -> set[int]:
     return result
 
 
-def _collect_expr_prompts(expr: IRExpr) -> list[str]:
-    prompts: list[str] = []
-    if isinstance(expr, ReadInputExpr):
-        if expr.prompt:
-            prompts.append(expr.prompt)
-    elif isinstance(expr, ListLiteralExpr):
-        for el in expr.elements:
-            prompts.extend(_collect_expr_prompts(el))
-    elif isinstance(expr, RandomIntExpr):
-        prompts.extend(_collect_expr_prompts(expr.min_val))
-        prompts.extend(_collect_expr_prompts(expr.max_val))
-    elif isinstance(expr, RandomListExpr):
-        prompts.extend(_collect_expr_prompts(expr.count))
-        prompts.extend(_collect_expr_prompts(expr.min_val))
-        prompts.extend(_collect_expr_prompts(expr.max_val))
-    elif isinstance(expr, BinaryOpExpr):
-        prompts.extend(_collect_expr_prompts(expr.left))
-        prompts.extend(_collect_expr_prompts(expr.right))
-    elif isinstance(expr, UnaryOpExpr):
-        prompts.extend(_collect_expr_prompts(expr.operand))
-    elif isinstance(expr, ListLengthExpr):
-        prompts.extend(_collect_expr_prompts(expr.target))
-    elif isinstance(expr, ListIndexExpr):
-        prompts.extend(_collect_expr_prompts(expr.target))
-        prompts.extend(_collect_expr_prompts(expr.index))
-    elif isinstance(expr, CallExpr):
-        for arg in expr.args:
-            prompts.extend(_collect_expr_prompts(arg))
-    elif isinstance(expr, StrEndsWithExpr):
-        prompts.extend(_collect_expr_prompts(expr.target))
-        prompts.extend(_collect_expr_prompts(expr.suffix))
-    elif isinstance(expr, ReadJsonListExpr):
-        prompts.extend(_collect_expr_prompts(expr.filepath))
-    elif isinstance(expr, StringLengthExpr):
-        prompts.extend(_collect_expr_prompts(expr.target))
-    elif isinstance(expr, StringSliceExpr):
-        prompts.extend(_collect_expr_prompts(expr.target))
-        prompts.extend(_collect_expr_prompts(expr.start))
-        prompts.extend(_collect_expr_prompts(expr.end))
-    elif isinstance(expr, RecordLiteralExpr):
-        for f in expr.fields:
-            prompts.extend(_collect_expr_prompts(f.value))
-    elif isinstance(expr, RecordFieldExpr):
-        prompts.extend(_collect_expr_prompts(expr.target))
-    elif isinstance(expr, MapLiteralExpr):
-        for e in expr.entries:
-            prompts.extend(_collect_expr_prompts(e.key))
-            prompts.extend(_collect_expr_prompts(e.value))
-    elif isinstance(expr, MapGetExpr):
-        prompts.extend(_collect_expr_prompts(expr.target))
-        prompts.extend(_collect_expr_prompts(expr.key))
-        if expr.default_val is not None:
-            prompts.extend(_collect_expr_prompts(expr.default_val))
-    elif isinstance(expr, MapHasKeyExpr):
-        prompts.extend(_collect_expr_prompts(expr.target))
-        prompts.extend(_collect_expr_prompts(expr.key))
-    return prompts
+def _stmts_have_fail(stmts: list[IRStatement]) -> bool:
+    for s in stmts:
+        if isinstance(s, FailStmt):
+            return True
+        if isinstance(s, IfStmt) and (_stmts_have_fail(s.then_body) or _stmts_have_fail(s.else_body)):
+            return True
+        if isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt, FuncDefStmt)) and _stmts_have_fail(s.body):
+            return True
+    return False
 
 
-def _collect_stmt_prompts(stmt: IRStatement) -> list[str]:
-    prompts: list[str] = []
-    if isinstance(stmt, (VarDeclStmt, AssignStmt, ListAppendStmt, RecordSetFieldStmt)):
-        prompts.extend(_collect_expr_prompts(stmt.value))
-    elif isinstance(stmt, (ListInsertStmt, ListSetIndexStmt)):
-        prompts.extend(_collect_expr_prompts(stmt.index))
-        prompts.extend(_collect_expr_prompts(stmt.value))
-    elif isinstance(stmt, MapSetStmt):
-        prompts.extend(_collect_expr_prompts(stmt.key))
-        prompts.extend(_collect_expr_prompts(stmt.value))
-    elif isinstance(stmt, FailStmt):
-        prompts.extend(_collect_expr_prompts(stmt.message))
-    elif isinstance(stmt, ClampCollectionStmt):
-        prompts.extend(_collect_expr_prompts(stmt.min_val))
-        prompts.extend(_collect_expr_prompts(stmt.max_val))
-    elif isinstance(stmt, FilterCollectionStmt):
-        prompts.extend(_collect_expr_prompts(stmt.predicate))
-    elif isinstance(stmt, PrintStmt):
-        for e in stmt.expressions:
-            prompts.extend(_collect_expr_prompts(e))
-    elif isinstance(stmt, ReturnStmt):
-        if stmt.value is not None:
-            prompts.extend(_collect_expr_prompts(stmt.value))
-    elif isinstance(stmt, IfStmt):
-        prompts.extend(_collect_expr_prompts(stmt.condition))
-        for ch in stmt.then_body:
-            prompts.extend(_collect_stmt_prompts(ch))
-        for ch in stmt.else_body:
-            prompts.extend(_collect_stmt_prompts(ch))
-    elif isinstance(stmt, (ForEachStmt, WhileStmt)):
-        if isinstance(stmt, WhileStmt):
-            prompts.extend(_collect_expr_prompts(stmt.condition))
-        for ch in stmt.body:
-            prompts.extend(_collect_stmt_prompts(ch))
-    elif isinstance(stmt, ForRangeStmt):
-        prompts.extend(_collect_expr_prompts(stmt.start))
-        prompts.extend(_collect_expr_prompts(stmt.end))
-        for ch in stmt.body:
-            prompts.extend(_collect_stmt_prompts(ch))
-    elif isinstance(stmt, FuncDefStmt):
-        for ch in stmt.body:
-            prompts.extend(_collect_stmt_prompts(ch))
-    return prompts
-
-
-def _collect_prompts(program: ProgramIR) -> list[str]:
-    prompts: list[str] = []
-    for stmt in program.statements:
-        prompts.extend(_collect_stmt_prompts(stmt))
-    return prompts
-
-
-def _strip_prompts(stdout: str, prompts: list[str]) -> str:
-    cleaned = stdout
-    changed = True
-    while changed:
-        changed = False
-        for p in prompts:
-            if not p:
-                continue
-            if cleaned.startswith(p):
-                cleaned = cleaned[len(p) :]
-                changed = True
-            elif cleaned.lstrip().startswith(p):
-                l_stripped = cleaned.lstrip()
-                cleaned = l_stripped[len(p) :]
-                changed = True
-    return cleaned
+def _program_has_fail(program: ProgramIR) -> bool:
+    return _stmts_have_fail(program.statements)
 
 
 def evaluate_script(
@@ -425,7 +281,7 @@ def evaluate_script(
             language_gaps=spec.extensibility_gaps.language,
         )
 
-    # Step 5: Execution
+    # Step 5: Execution (with MEME_QUIET_PROMPTS=1 enabled via quiet_prompts=True)
     try:
         exec_res = execute_ir(
             outcome.program,
@@ -434,6 +290,7 @@ def evaluate_script(
             stdin_text=spec.stdin if spec.stdin else None,
             interactive_io=False,
             source_dir=script_path.parent,
+            quiet_prompts=True,
         )
     except Exception as exc:
         return ScriptEvalResult(
@@ -447,7 +304,12 @@ def evaluate_script(
             language_gaps=spec.extensibility_gaps.language,
         )
 
-    if exec_res.returncode != 0:
+    is_expected_fail_exit = (
+        exec_res.returncode == 1
+        and not exec_res.stderr.strip()
+        and _program_has_fail(outcome.program)
+    )
+    if exec_res.returncode != 0 and not is_expected_fail_exit:
         err_msg = exec_res.stderr.strip() or f"Process exited with code {exec_res.returncode}"
         return ScriptEvalResult(
             id=spec.id,
@@ -460,11 +322,8 @@ def evaluate_script(
             language_gaps=spec.extensibility_gaps.language,
         )
 
-    # Step 6: Output checking with prompt-echo stripping
-    prompts = _collect_prompts(outcome.program)
-    answer_stdout = _strip_prompts(exec_res.stdout, prompts)
-
-    if spec.expected_stdout_contains in answer_stdout:
+    # Step 6: Output checking (prompts suppressed at runtime via MEME_QUIET_PROMPTS=1)
+    if spec.expected_stdout_contains in exec_res.stdout:
         return ScriptEvalResult(
             id=spec.id,
             slug=spec.slug,
@@ -482,7 +341,7 @@ def evaluate_script(
             course=spec.course,
             style=spec.style,
             bucket="OUTPUT_MISMATCH",
-            detail=f"Expected {spec.expected_stdout_contains!r} in stdout, got {answer_stdout.strip()!r}",
+            detail=f"Expected {spec.expected_stdout_contains!r} in stdout, got {exec_res.stdout.strip()!r}",
             examples_gaps=spec.extensibility_gaps.examples,
             language_gaps=spec.extensibility_gaps.language,
         )

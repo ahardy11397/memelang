@@ -81,6 +81,7 @@ class _PyGen:
         self.uses_random = False
         self.uses_math = False
         self.uses_json_io = False
+        self.uses_input = False
         self.uses_input_helpers = False
         self.uses_dataclass = False
         self.symbols: dict[str, MemeType] = {}
@@ -192,7 +193,8 @@ class _PyGen:
             return f"{_py_ident(expr.func_name)}({args})"
 
         if isinstance(expr, ReadInputExpr):
-            raw = f"_meme_builtins.input({repr(expr.prompt)})"
+            self.uses_input = True
+            raw = f"_meme_read_line({repr(expr.prompt)})"
             if expr.target_type == "Int":
                 self.uses_input_helpers = True
                 return f"_meme_parse_int({raw})"
@@ -312,7 +314,7 @@ class _PyGen:
         if isinstance(stmt, FailStmt):
             return [
                 f"{pad}_meme_builtins.print(_meme_fmt({self.gen_expr(stmt.message, scope)}))",
-                f"{pad}raise _meme_builtins.SystemExit(0)",
+                f"{pad}raise _meme_builtins.SystemExit(1)",
             ]
 
         if isinstance(stmt, PrintStmt):
@@ -437,13 +439,26 @@ def generate_python(ir: ProgramIR) -> str:
         header.append("from dataclasses import dataclass as _dataclass")
     if gen.uses_json_io:
         header.append("import json as _meme_json")
+    if gen.uses_json_io or gen.uses_input:
         header.append("import os as _meme_os")
+    if gen.uses_json_io:
         header.append("import sys as _meme_sys")
     if gen.uses_math:
         header.append("import math as _meme_math")
     if gen.uses_random:
         header.append("import random as _meme_random")
     header.append("")
+
+    if gen.uses_input:
+        header.extend(
+            [
+                "def _meme_read_line(prompt: str) -> str:",
+                "    if prompt and _meme_os.environ.get('MEME_QUIET_PROMPTS', '').strip().lower() not in ('1', 'true', 'yes'):",
+                "        return _meme_builtins.input(prompt)",
+                "    return _meme_builtins.input()",
+                "",
+            ]
+        )
 
     if gen.uses_json_io:
         header.extend(
