@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 from memelang.ir.schema import (
+    AppendFileStmt,
+    ArgAtExpr,
+    ArgCountExpr,
     AssignStmt,
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    ExitStmt,
     FailStmt,
+    FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
@@ -32,6 +37,7 @@ from memelang.ir.schema import (
     ProgramIR,
     RandomIntExpr,
     RandomListExpr,
+    ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RecordDefStmt,
@@ -49,6 +55,7 @@ from memelang.ir.schema import (
     VarDeclStmt,
     VarRefExpr,
     WhileStmt,
+    WriteFileStmt,
 )
 
 
@@ -129,6 +136,8 @@ class _RustGen:
         self.uses_random = False
         self.uses_input = False
         self.uses_json_io = False
+        self.uses_file_io = False
+        self.uses_argv = False
         self.func_returns: dict[str, MemeType] = {}
         self.records: dict[str, dict[str, MemeType]] = {}
 
@@ -142,12 +151,12 @@ class _RustGen:
         if isinstance(expr, RandomListExpr):
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
-            return "List<Float>"
-        if isinstance(expr, StrEndsWithExpr):
+            return f"List<{expr.element_type}>"  # type: ignore[return-value]
+        if isinstance(expr, (StrEndsWithExpr, FileExistsExpr)):
             return "Bool"
-        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr)):
+        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, ArgCountExpr)):
             return "Int"
-        if isinstance(expr, StringSliceExpr):
+        if isinstance(expr, (StringSliceExpr, ReadFileStringExpr, ArgAtExpr)):
             return "String"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
@@ -282,7 +291,23 @@ class _RustGen:
 
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True
-            return f"_meme_read_json_list(&({self.gen_expr(expr.filepath, scope)}))"
+            return f"_meme_read_json_list_{expr.element_type.lower()}(&({self.gen_expr(expr.filepath, scope)}))"
+
+        if isinstance(expr, FileExistsExpr):
+            self.uses_file_io = True
+            return f"_meme_file_exists(&({self.gen_expr(expr.filepath, scope)}))"
+
+        if isinstance(expr, ReadFileStringExpr):
+            self.uses_file_io = True
+            return f"_meme_read_file_string(&({self.gen_expr(expr.filepath, scope)}))"
+
+        if isinstance(expr, ArgCountExpr):
+            self.uses_argv = True
+            return "(std::env::args().count() as i64)"
+
+        if isinstance(expr, ArgAtExpr):
+            self.uses_argv = True
+            return f"_meme_arg_at({self.gen_expr(expr.index, scope)})"
 
         if isinstance(expr, RecordLiteralExpr):
             fields = ", ".join(
@@ -392,6 +417,11 @@ class _RustGen:
                 f"{pad}std::process::exit(1);",
             ]
 
+        if isinstance(stmt, ExitStmt):
+            return [
+                f"{pad}std::process::exit((({self.gen_expr(stmt.code, scope)}) & 0xFF) as i32);"
+            ]
+
         if isinstance(stmt, PrintStmt):
             if len(stmt.expressions) == 1:
                 return [f"{pad}println!(\"{{}}\", {self._fmt_expr_for_print(stmt.expressions[0], scope)});"]
@@ -457,6 +487,18 @@ class _RustGen:
         if isinstance(stmt, MapSetStmt):
             return [
                 f"{pad}{_rust_ident(stmt.target)}.insert({self.gen_expr(stmt.key, scope)}, {self.gen_expr(stmt.value, scope)});"
+            ]
+
+        if isinstance(stmt, WriteFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_write_file(&({self.gen_expr(stmt.filepath, scope)}), &({self.gen_expr(stmt.content, scope)}));"
+            ]
+
+        if isinstance(stmt, AppendFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_append_file(&({self.gen_expr(stmt.filepath, scope)}), &({self.gen_expr(stmt.content, scope)}));"
             ]
 
         raise TypeError(f"Unsupported statement inside block: {type(stmt)!r}")
@@ -595,6 +637,26 @@ def generate_rust(ir: ProgramIR) -> str:
             ]
         )
 
+    if gen.uses_argv:
+        preamble.extend(
+            [
+                "fn _meme_arg_at(idx: i64) -> String {",
+                "    if idx < 0 {",
+                "        println!(\"Error: argument index {} out of range\", idx);",
+                "        std::process::exit(1);",
+                "    }",
+                "    match std::env::args().nth(idx as usize) {",
+                "        Some(s) => s,",
+                "        None => {",
+                "            println!(\"Error: argument index {} out of range\", idx);",
+                "            std::process::exit(1);",
+                "        }",
+                "    }",
+                "}",
+                "",
+            ]
+        )
+
     if gen.uses_input:
         preamble.extend(
             [
@@ -615,7 +677,7 @@ def generate_rust(ir: ProgramIR) -> str:
             ]
         )
 
-    if gen.uses_json_io:
+    if gen.uses_json_io or gen.uses_file_io:
         preamble.extend(
             [
                 "fn _meme_resolve_path(path: &str) -> std::path::PathBuf {",
@@ -635,33 +697,213 @@ def generate_rust(ir: ProgramIR) -> str:
                 "    p.to_path_buf()",
                 "}",
                 "",
-                "fn _meme_read_json_list(path: &str) -> Vec<f64> {",
+            ]
+        )
+
+    if gen.uses_file_io:
+        preamble.extend(
+            [
+                "fn _meme_file_exists(path: &str) -> bool {",
+                "    _meme_resolve_path(path).is_file()",
+                "}",
+                "",
+                "fn _meme_read_file_string(path: &str) -> String {",
+                "    let resolved = _meme_resolve_path(path);",
+                "    if !resolved.is_file() {",
+                "        println!(\"Error reading file: {}\", path);",
+                "        std::process::exit(1);",
+                "    }",
+                "    match std::fs::read_to_string(&resolved) {",
+                "        Ok(s) => s,",
+                "        Err(_) => {",
+                "            println!(\"Error reading file: {}\", path);",
+                "            std::process::exit(1);",
+                "        }",
+                "    }",
+                "}",
+                "",
+                "fn _meme_write_file(path: &str, content: &str) {",
+                "    if std::fs::write(path.trim(), content).is_err() {",
+                "        println!(\"Error writing file: {}\", path);",
+                "        std::process::exit(1);",
+                "    }",
+                "}",
+                "",
+                "fn _meme_append_file(path: &str, content: &str) {",
+                "    use std::io::Write;",
+                "    match std::fs::OpenOptions::new().create(true).append(true).open(path.trim()) {",
+                "        Ok(mut f) => {",
+                "            if f.write_all(content.as_bytes()).is_err() {",
+                "                println!(\"Error writing file: {}\", path);",
+                "                std::process::exit(1);",
+                "            }",
+                "        }",
+                "        Err(_) => {",
+                "            println!(\"Error writing file: {}\", path);",
+                "            std::process::exit(1);",
+                "        }",
+                "    }",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_json_io:
+        preamble.extend(
+            [
+                "#[derive(Debug)]",
+                "enum _MemeJsonTok {",
+                "    Str(String),",
+                "    Bool(bool),",
+                "    Num(String),",
+                "}",
+                "",
+                "fn _meme_json_fail(msg: &str) -> ! {",
+                "    eprintln!(\"Error reading JSON file: {}\", msg);",
+                "    std::process::exit(1);",
+                "}",
+                "",
+                "fn _meme_parse_json_tokens(path: &str) -> Vec<_MemeJsonTok> {",
                 "    let resolved = _meme_resolve_path(path);",
                 "    let raw = match std::fs::read_to_string(&resolved) {",
                 "        Ok(s) => s,",
-                "        Err(e) => {",
-                "            eprintln!(\"Error reading JSON file: {}\", e);",
-                "            std::process::exit(1);",
-                "        }",
+                "        Err(e) => _meme_json_fail(&e.to_string()),",
                 "    };",
-                "    let trimmed = raw.trim();",
-                "    if !trimmed.starts_with('[') || !trimmed.ends_with(']') {",
-                "        eprintln!(\"Error reading JSON file: expected JSON array\");",
-                "        std::process::exit(1);",
+                "    let chars: Vec<char> = raw.chars().collect();",
+                "    let n = chars.len();",
+                "    let mut i = 0;",
+                "    while i < n && chars[i].is_whitespace() { i += 1; }",
+                "    if i >= n || chars[i] != '[' {",
+                "        _meme_json_fail(\"expected JSON array\");",
                 "    }",
-                "    let inner = trimmed[1..trimmed.len() - 1].trim();",
-                "    if inner.is_empty() {",
-                "        return Vec::new();",
-                "    }",
+                "    i += 1;",
+                "    while i < n && chars[i].is_whitespace() { i += 1; }",
                 "    let mut out = Vec::new();",
-                "    for part in inner.split(',') {",
-                "        let tok = part.trim();",
-                "        match tok.parse::<f64>() {",
-                "            Ok(v) if v.is_finite() => out.push(v),",
-                "            _ => {",
-                "                eprintln!(\"Error reading JSON file: invalid number `{}`\", tok);",
-                "                std::process::exit(1);",
+                "    if i < n && chars[i] == ']' {",
+                "        i += 1;",
+                "        while i < n && chars[i].is_whitespace() { i += 1; }",
+                "        if i != n { _meme_json_fail(\"trailing data after JSON array\"); }",
+                "        return out;",
+                "    }",
+                "    loop {",
+                "        while i < n && chars[i].is_whitespace() { i += 1; }",
+                "        if i >= n { _meme_json_fail(\"unterminated JSON array\"); }",
+                "        let ch = chars[i];",
+                "        if ch == '\"' {",
+                "            i += 1;",
+                "            let mut s = String::new();",
+                "            while i < n && chars[i] != '\"' {",
+                "                if chars[i] == '\\\\' {",
+                "                    i += 1;",
+                "                    if i >= n { _meme_json_fail(\"unterminated string escape\"); }",
+                "                    match chars[i] {",
+                "                        '\"' => s.push('\"'),",
+                "                        '\\\\' => s.push('\\\\'),",
+                "                        '/' => s.push('/'),",
+                "                        'b' => s.push('\\u{0008}'),",
+                "                        'f' => s.push('\\u{000C}'),",
+                "                        'n' => s.push('\\n'),",
+                "                        'r' => s.push('\\r'),",
+                "                        't' => s.push('\\t'),",
+                "                        'u' => {",
+                "                            if i + 4 >= n { _meme_json_fail(\"invalid unicode escape\"); }",
+                "                            let hex: String = chars[i + 1..=i + 4].iter().collect();",
+                "                            let code = u32::from_str_radix(&hex, 16).unwrap_or_else(|_| _meme_json_fail(\"invalid unicode escape\"));",
+                "                            let c = std::char::from_u32(code).unwrap_or_else(|| _meme_json_fail(\"invalid unicode scalar\"));",
+                "                            s.push(c);",
+                "                            i += 4;",
+                "                        }",
+                "                        _ => _meme_json_fail(\"invalid escape sequence\"),",
+                "                    }",
+                "                } else {",
+                "                    s.push(chars[i]);",
+                "                }",
+                "                i += 1;",
                 "            }",
+                "            if i >= n || chars[i] != '\"' { _meme_json_fail(\"unterminated string literal\"); }",
+                "            i += 1;",
+                "            out.push(_MemeJsonTok::Str(s));",
+                "        } else {",
+                "            let start = i;",
+                "            while i < n && !chars[i].is_whitespace() && chars[i] != ',' && chars[i] != ']' {",
+                "                if chars[i] == '[' || chars[i] == '{' || chars[i] == '}' || chars[i] == '\"' {",
+                "                    _meme_json_fail(\"unexpected nested or malformed token\");",
+                "                }",
+                "                i += 1;",
+                "            }",
+                "            if i == start { _meme_json_fail(\"expected element\"); }",
+                "            let tok: String = chars[start..i].iter().collect();",
+                "            if tok == \"true\" {",
+                "                out.push(_MemeJsonTok::Bool(true));",
+                "            } else if tok == \"false\" {",
+                "                out.push(_MemeJsonTok::Bool(false));",
+                "            } else if tok == \"null\" {",
+                "                _meme_json_fail(\"JSON null is not allowed\");",
+                "            } else {",
+                "                out.push(_MemeJsonTok::Num(tok));",
+                "            }",
+                "        }",
+                "        while i < n && chars[i].is_whitespace() { i += 1; }",
+                "        if i < n && chars[i] == ',' {",
+                "            i += 1;",
+                "            continue;",
+                "        } else if i < n && chars[i] == ']' {",
+                "            i += 1;",
+                "            break;",
+                "        } else {",
+                "            _meme_json_fail(\"expected `,` or `]`\");",
+                "        }",
+                "    }",
+                "    while i < n && chars[i].is_whitespace() { i += 1; }",
+                "    if i != n { _meme_json_fail(\"trailing data after JSON array\"); }",
+                "    out",
+                "}",
+                "",
+                "fn _meme_read_json_list_int(path: &str) -> Vec<i64> {",
+                "    let mut out = Vec::new();",
+                "    for tok in _meme_parse_json_tokens(path) {",
+                "        match tok {",
+                "            _MemeJsonTok::Num(s) => match s.parse::<i64>() {",
+                "                Ok(v) => out.push(v),",
+                "                Err(_) => _meme_json_fail(&format!(\"expected Int, got `{}`\", s)),",
+                "            },",
+                "            _ => _meme_json_fail(\"expected Int element\"),",
+                "        }",
+                "    }",
+                "    out",
+                "}",
+                "",
+                "fn _meme_read_json_list_float(path: &str) -> Vec<f64> {",
+                "    let mut out = Vec::new();",
+                "    for tok in _meme_parse_json_tokens(path) {",
+                "        match tok {",
+                "            _MemeJsonTok::Num(s) => match s.parse::<f64>() {",
+                "                Ok(v) if v.is_finite() => out.push(v),",
+                "                _ => _meme_json_fail(&format!(\"expected Float, got `{}`\", s)),",
+                "            },",
+                "            _ => _meme_json_fail(\"expected Float element\"),",
+                "        }",
+                "    }",
+                "    out",
+                "}",
+                "",
+                "fn _meme_read_json_list_string(path: &str) -> Vec<String> {",
+                "    let mut out = Vec::new();",
+                "    for tok in _meme_parse_json_tokens(path) {",
+                "        match tok {",
+                "            _MemeJsonTok::Str(s) => out.push(s),",
+                "            _ => _meme_json_fail(\"expected String element\"),",
+                "        }",
+                "    }",
+                "    out",
+                "}",
+                "",
+                "fn _meme_read_json_list_bool(path: &str) -> Vec<bool> {",
+                "    let mut out = Vec::new();",
+                "    for tok in _meme_parse_json_tokens(path) {",
+                "        match tok {",
+                "            _MemeJsonTok::Bool(b) => out.push(b),",
+                "            _ => _meme_json_fail(\"expected Bool element\"),",
                 "        }",
                 "    }",
                 "    out",

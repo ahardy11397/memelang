@@ -1,0 +1,590 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/512_cli_argument_router.meme": {
+      "source_sha256": "e737aac5c6f2cbd12225222febca8a8d5790a1dd37a1b236bdae479955fba17f",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "CliInvocation",
+          "fields": [
+            {
+              "name": "argc",
+              "field_type": "Int"
+            },
+            {
+              "name": "mode",
+              "field_type": "String"
+            },
+            {
+              "name": "target_env",
+              "field_type": "String"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "func_def",
+          "name": "parse_cli",
+          "params": [
+            {
+              "name": "argc",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "CliInvocation",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "argc"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "record_literal",
+                    "record_name": "CliInvocation",
+                    "fields": [
+                      {
+                        "name": "argc",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "argc"
+                        }
+                      },
+                      {
+                        "name": "mode",
+                        "value": {
+                          "expr_type": "arg_at",
+                          "index": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        }
+                      },
+                      {
+                        "name": "target_env",
+                        "value": {
+                          "expr_type": "arg_at",
+                          "index": {
+                            "expr_type": "literal",
+                            "value": 2,
+                            "data_type": "Int"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "source_line": 8
+                }
+              ],
+              "else_body": [],
+              "source_line": 7
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "argc"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "record_literal",
+                    "record_name": "CliInvocation",
+                    "fields": [
+                      {
+                        "name": "argc",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "argc"
+                        }
+                      },
+                      {
+                        "name": "mode",
+                        "value": {
+                          "expr_type": "arg_at",
+                          "index": {
+                            "expr_type": "literal",
+                            "value": 1,
+                            "data_type": "Int"
+                          }
+                        }
+                      },
+                      {
+                        "name": "target_env",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "staging",
+                          "data_type": "String"
+                        }
+                      }
+                    ]
+                  },
+                  "source_line": 10
+                }
+              ],
+              "else_body": [],
+              "source_line": 9
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "record_literal",
+                "record_name": "CliInvocation",
+                "fields": [
+                  {
+                    "name": "argc",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "argc"
+                    }
+                  },
+                  {
+                    "name": "mode",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "status",
+                      "data_type": "String"
+                    }
+                  },
+                  {
+                    "name": "target_env",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "local",
+                      "data_type": "String"
+                    }
+                  }
+                ]
+              },
+              "source_line": 11
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "var_decl",
+          "name": "inv",
+          "var_type": "CliInvocation",
+          "value": {
+            "expr_type": "call",
+            "func_name": "parse_cli",
+            "args": [
+              {
+                "expr_type": "arg_count"
+              }
+            ]
+          },
+          "source_line": 13
+        },
+        {
+          "op": "var_decl",
+          "name": "prog_name",
+          "var_type": "String",
+          "value": {
+            "expr_type": "arg_at",
+            "index": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 14
+        },
+        {
+          "op": "var_decl",
+          "name": "has_prog",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "binary_op",
+            "op": ">",
+            "left": {
+              "expr_type": "string_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "prog_name"
+              }
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 15
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "argc",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "inv"
+              },
+              "field_name": "argc"
+            },
+            {
+              "expr_type": "literal",
+              "value": "has_prog",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "has_prog"
+            },
+            {
+              "expr_type": "literal",
+              "value": "mode",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "inv"
+              },
+              "field_name": "mode"
+            },
+            {
+              "expr_type": "literal",
+              "value": "env",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "inv"
+              },
+              "field_name": "target_env"
+            }
+          ],
+          "source_line": 16
+        }
+      ],
+      "canonical_meme": "record CliInvocation:\n    argc: Int\n    mode: String\n    target_env: String\nfunction parse_cli(argc: Int) -> CliInvocation:\n    if argc > 2:\n        return CliInvocation(argc=argc, mode=argument 1, target_env=argument 2)\n    if argc == 2:\n        return CliInvocation(argc=argc, mode=argument 1, target_env=\"staging\")\n    return CliInvocation(argc=argc, mode=\"status\", target_env=\"local\")\ndefine inv: CliInvocation as parse_cli(argument count)\ndefine prog_name: String as argument 0\ndefine has_prog: Bool as length of string prog_name > 0\nprint \"argc\", inv.argc, \"has_prog\", has_prog, \"mode\", inv.mode, \"env\", inv.target_env",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "CliInvocation",
+            "fields": [
+              {
+                "name": "argc",
+                "field_type": "Int"
+              },
+              {
+                "name": "mode",
+                "field_type": "String"
+              },
+              {
+                "name": "target_env",
+                "field_type": "String"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "parse_cli",
+            "params": [
+              {
+                "name": "argc",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "CliInvocation",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "argc"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "record_literal",
+                      "record_name": "CliInvocation",
+                      "fields": [
+                        {
+                          "name": "argc",
+                          "value": {
+                            "expr_type": "var_ref",
+                            "name": "argc"
+                          }
+                        },
+                        {
+                          "name": "mode",
+                          "value": {
+                            "expr_type": "arg_at",
+                            "index": {
+                              "expr_type": "literal",
+                              "value": 1,
+                              "data_type": "Int"
+                            }
+                          }
+                        },
+                        {
+                          "name": "target_env",
+                          "value": {
+                            "expr_type": "arg_at",
+                            "index": {
+                              "expr_type": "literal",
+                              "value": 2,
+                              "data_type": "Int"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "source_line": 8
+                  }
+                ],
+                "else_body": [],
+                "source_line": 7
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "argc"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "record_literal",
+                      "record_name": "CliInvocation",
+                      "fields": [
+                        {
+                          "name": "argc",
+                          "value": {
+                            "expr_type": "var_ref",
+                            "name": "argc"
+                          }
+                        },
+                        {
+                          "name": "mode",
+                          "value": {
+                            "expr_type": "arg_at",
+                            "index": {
+                              "expr_type": "literal",
+                              "value": 1,
+                              "data_type": "Int"
+                            }
+                          }
+                        },
+                        {
+                          "name": "target_env",
+                          "value": {
+                            "expr_type": "literal",
+                            "value": "staging",
+                            "data_type": "String"
+                          }
+                        }
+                      ]
+                    },
+                    "source_line": 10
+                  }
+                ],
+                "else_body": [],
+                "source_line": 9
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "record_literal",
+                  "record_name": "CliInvocation",
+                  "fields": [
+                    {
+                      "name": "argc",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "argc"
+                      }
+                    },
+                    {
+                      "name": "mode",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": "status",
+                        "data_type": "String"
+                      }
+                    },
+                    {
+                      "name": "target_env",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": "local",
+                        "data_type": "String"
+                      }
+                    }
+                  ]
+                },
+                "source_line": 11
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "var_decl",
+            "name": "inv",
+            "var_type": "CliInvocation",
+            "value": {
+              "expr_type": "call",
+              "func_name": "parse_cli",
+              "args": [
+                {
+                  "expr_type": "arg_count"
+                }
+              ]
+            },
+            "source_line": 13
+          },
+          {
+            "op": "var_decl",
+            "name": "prog_name",
+            "var_type": "String",
+            "value": {
+              "expr_type": "arg_at",
+              "index": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 14
+          },
+          {
+            "op": "var_decl",
+            "name": "has_prog",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "binary_op",
+              "op": ">",
+              "left": {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "prog_name"
+                }
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 15
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "argc",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "inv"
+                },
+                "field_name": "argc"
+              },
+              {
+                "expr_type": "literal",
+                "value": "has_prog",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "has_prog"
+              },
+              {
+                "expr_type": "literal",
+                "value": "mode",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "inv"
+                },
+                "field_name": "mode"
+              },
+              {
+                "expr_type": "literal",
+                "value": "env",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "inv"
+                },
+                "field_name": "target_env"
+              }
+            ],
+            "source_line": 16
+          }
+        ]
+      }
+    }
+  }
+}

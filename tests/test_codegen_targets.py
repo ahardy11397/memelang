@@ -5,17 +5,23 @@ import pytest
 from memelang.codegen import TargetLang, generate_code
 from memelang.lockfile.manager import LockfileManager
 from memelang.ir.schema import (
+    AppendFileStmt,
+    ArgAtExpr,
+    ArgCountExpr,
     AssignStmt,
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    ExitStmt,
     FailStmt,
+    FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
     FuncDefStmt,
     FuncParam,
     ListAppendStmt,
     ListIndexExpr,
+    ListLengthExpr,
     ListLiteralExpr,
     ListSetIndexStmt,
     LiteralExpr,
@@ -27,7 +33,9 @@ from memelang.ir.schema import (
     PrintStmt,
     ProgramIR,
     RandomListExpr,
+    ReadFileStringExpr,
     ReadInputExpr,
+    ReadJsonListExpr,
     RecordDefStmt,
     RecordFieldDef,
     RecordFieldExpr,
@@ -40,6 +48,7 @@ from memelang.ir.schema import (
     StringSliceExpr,
     VarDeclStmt,
     VarRefExpr,
+    WriteFileStmt,
 )
 from memelang.runner.executor import execute_ir
 
@@ -981,3 +990,260 @@ def test_meme_quiet_prompts_suppresses_prompt_echo_across_targets(target: Target
     assert quiet.returncode == 0, quiet.stderr
     assert "Enter number: " not in quiet.stdout
     assert quiet.stdout.strip() == "42"
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_file_io_write_append_read_exists_and_missing_error_parity(target: TargetLang):
+    program = ProgramIR(
+        items=[
+            VarDeclStmt(
+                name="p",
+                var_type="String",
+                value=LiteralExpr(value="memo.txt", data_type="String"),
+            ),
+            PrintStmt(expressions=[FileExistsExpr(filepath=VarRefExpr(name="p"))]),
+            WriteFileStmt(
+                filepath=VarRefExpr(name="p"),
+                content=LiteralExpr(value="line1\n", data_type="String"),
+            ),
+            PrintStmt(expressions=[FileExistsExpr(filepath=VarRefExpr(name="p"))]),
+            AppendFileStmt(
+                filepath=VarRefExpr(name="p"),
+                content=LiteralExpr(value="line2", data_type="String"),
+            ),
+            VarDeclStmt(
+                name="body",
+                var_type="String",
+                value=ReadFileStringExpr(filepath=VarRefExpr(name="p")),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="body")]),
+            WriteFileStmt(
+                filepath=VarRefExpr(name="p"),
+                content=LiteralExpr(value="overwritten", data_type="String"),
+            ),
+            PrintStmt(expressions=[ReadFileStringExpr(filepath=VarRefExpr(name="p"))]),
+        ]
+    )
+    res = execute_ir(program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.splitlines() == ["false", "true", "line1", "line2", "overwritten"]
+
+    missing_prog = ProgramIR(
+        items=[
+            PrintStmt(
+                expressions=[
+                    ReadFileStringExpr(
+                        filepath=LiteralExpr(value="does_not_exist.txt", data_type="String")
+                    )
+                ]
+            )
+        ]
+    )
+    missing_res = execute_ir(missing_prog, target)
+    assert missing_res.returncode == 1
+    assert missing_res.stdout.strip() == "Error reading file: does_not_exist.txt"
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize(
+    ("code_val", "expected_rc"),
+    [
+        (0, 0),
+        (42, 42),
+        (255, 255),
+        (256, 0),
+        (258, 2),
+        (-1, 255),
+        (-250, 6),
+    ],
+)
+def test_exit_stmt_truncation_and_immediate_termination_across_targets(
+    target: TargetLang, code_val: int, expected_rc: int
+):
+    prog = ProgramIR(
+        items=[
+            PrintStmt(expressions=[LiteralExpr(value="before", data_type="String")]),
+            ExitStmt(code=LiteralExpr(value=code_val, data_type="Int")),
+            PrintStmt(expressions=[LiteralExpr(value="after", data_type="String")]),
+        ]
+    )
+    res = execute_ir(prog, target)
+    assert res.returncode == expected_rc
+    assert res.stdout.strip() == "before"
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_argv_count_positional_and_out_of_range_parity(target: TargetLang):
+    prog = ProgramIR(
+        items=[
+            PrintStmt(
+                expressions=[
+                    ArgCountExpr(),
+                    ArgAtExpr(index=LiteralExpr(value=1, data_type="Int")),
+                    ArgAtExpr(index=LiteralExpr(value=2, data_type="Int")),
+                ]
+            )
+        ]
+    )
+    res = execute_ir(prog, target, argv=["add", "buy milk"])
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.strip() == "3 add buy milk"
+
+    # Out-of-range index -> deterministic fail-style exit 1
+    oor_prog = ProgramIR(
+        items=[
+            PrintStmt(expressions=[ArgAtExpr(index=LiteralExpr(value=5, data_type="Int"))])
+        ]
+    )
+    oor_res = execute_ir(oor_prog, target, argv=["only_one"])
+    assert oor_res.returncode == 1
+    assert oor_res.stdout.strip() == "Error: argument index 5 out of range"
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_read_json_list_typed_elements_escapes_and_error_parity(target: TargetLang, tmp_path):
+    int_file = tmp_path / "ints.json"
+    int_file.write_text(" [ -10 , 0 ,\n  42 , 99 ] \n", encoding="utf-8")
+
+    float_file = tmp_path / "floats.json"
+    float_file.write_text("[ 1.5, -2.25, 3, 4.0e1 ]", encoding="utf-8")
+
+    str_file = tmp_path / "strings.json"
+    str_file.write_text(
+        r'["alpha, beta", "quote: \"hi\"", "slash: \\", "unicode: \u0041\nline2"]',
+        encoding="utf-8",
+    )
+
+    bool_file = tmp_path / "bools.json"
+    bool_file.write_text("[ true , false , true ]", encoding="utf-8")
+
+    empty_file = tmp_path / "empty.json"
+    empty_file.write_text(" [ \n\t ] ", encoding="utf-8")
+
+    prog = ProgramIR(
+        items=[
+            VarDeclStmt(
+                name="ints",
+                var_type="List<Int>",
+                value=ReadJsonListExpr(
+                    filepath=LiteralExpr(value="ints.json", data_type="String"),
+                    element_type="Int",
+                    explicit_type=True,
+                ),
+            ),
+            VarDeclStmt(
+                name="floats",
+                var_type="List<Float>",
+                value=ReadJsonListExpr(
+                    filepath=LiteralExpr(value="floats.json", data_type="String"),
+                    element_type="Float",
+                    explicit_type=True,
+                ),
+            ),
+            VarDeclStmt(
+                name="strs",
+                var_type="List<String>",
+                value=ReadJsonListExpr(
+                    filepath=LiteralExpr(value="strings.json", data_type="String"),
+                    element_type="String",
+                    explicit_type=True,
+                ),
+            ),
+            VarDeclStmt(
+                name="bools",
+                var_type="List<Bool>",
+                value=ReadJsonListExpr(
+                    filepath=LiteralExpr(value="bools.json", data_type="String"),
+                    element_type="Bool",
+                    explicit_type=True,
+                ),
+            ),
+            VarDeclStmt(
+                name="empty_ints",
+                var_type="List<Int>",
+                value=ReadJsonListExpr(
+                    filepath=LiteralExpr(value="empty.json", data_type="String"),
+                    element_type="Int",
+                    explicit_type=True,
+                ),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="ints")]),
+            PrintStmt(expressions=[VarRefExpr(name="floats")]),
+            PrintStmt(
+                expressions=[
+                    ListLengthExpr(target=VarRefExpr(name="strs")),
+                    ListIndexExpr(
+                        target=VarRefExpr(name="strs"),
+                        index=LiteralExpr(value=0, data_type="Int"),
+                    ),
+                    ListIndexExpr(
+                        target=VarRefExpr(name="strs"),
+                        index=LiteralExpr(value=1, data_type="Int"),
+                    ),
+                    ListIndexExpr(
+                        target=VarRefExpr(name="strs"),
+                        index=LiteralExpr(value=2, data_type="Int"),
+                    ),
+                    ListIndexExpr(
+                        target=VarRefExpr(name="strs"),
+                        index=LiteralExpr(value=3, data_type="Int"),
+                    ),
+                ]
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="bools")]),
+            PrintStmt(expressions=[ListLengthExpr(target=VarRefExpr(name="empty_ints"))]),
+        ]
+    )
+
+    res = execute_ir(prog, target, source_dir=tmp_path)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.splitlines() == [
+        "[-10, 0, 42, 99]",
+        "[1.5, -2.25, 3, 40]",
+        '4 alpha, beta quote: "hi" slash: \\ unicode: A',
+        "line2",
+        "[true, false, true]",
+        "0",
+    ]
+
+    # Null in JSON array is rejected with non-zero exit across all targets
+    null_file = tmp_path / "bad_null.json"
+    null_file.write_text("[1, null, 3]", encoding="utf-8")
+    null_prog = ProgramIR(
+        items=[
+            VarDeclStmt(
+                name="bad",
+                var_type="List<Int>",
+                value=ReadJsonListExpr(
+                    filepath=LiteralExpr(value="bad_null.json", data_type="String"),
+                    element_type="Int",
+                    explicit_type=True,
+                ),
+            )
+        ]
+    )
+    null_res = execute_ir(null_prog, target, source_dir=tmp_path)
+    assert null_res.returncode == 1
+
+    # Boolean inside numeric JSON array is rejected (Python bool is a subclass of int, so must be guarded)
+    bool_in_num_file = tmp_path / "bool_in_num.json"
+    bool_in_num_file.write_text("[1, true, 3]", encoding="utf-8")
+    bool_in_num_prog = ProgramIR(
+        items=[
+            VarDeclStmt(
+                name="bad_num",
+                var_type="List<Int>",
+                value=ReadJsonListExpr(
+                    filepath=LiteralExpr(value="bool_in_num.json", data_type="String"),
+                    element_type="Int",
+                    explicit_type=True,
+                ),
+            )
+        ]
+    )
+    bool_in_num_res = execute_ir(bool_in_num_prog, target, source_dir=tmp_path)
+    assert bool_in_num_res.returncode == 1
+
+
+
+

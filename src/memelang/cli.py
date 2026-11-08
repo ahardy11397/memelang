@@ -325,7 +325,7 @@ def main(argv: list[str] | None = None) -> int:
                 sys.stdout.write(exec_res.stdout)
             if exec_res.stderr:
                 sys.stderr.write(exec_res.stderr)
-            return 0 if exec_res.returncode == 0 else 1
+            return exec_res.returncode
 
         return 1
 

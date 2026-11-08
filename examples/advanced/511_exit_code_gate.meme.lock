@@ -1,0 +1,580 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/511_exit_code_gate.meme": {
+      "source_sha256": "4516e27d2d634fe0fde5be5d5ab496a26a87ad7b65283182db328a627e98680e",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "CheckReport",
+          "fields": [
+            {
+              "name": "service",
+              "field_type": "String"
+            },
+            {
+              "name": "errors",
+              "field_type": "Int"
+            },
+            {
+              "name": "warnings",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "func_def",
+          "name": "evaluate_gate",
+          "params": [
+            {
+              "name": "report",
+              "param_type": "CheckReport"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "<",
+                "left": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "report"
+                  },
+                  "field_name": "errors"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "exit_stmt",
+                  "code": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  },
+                  "source_line": 8
+                }
+              ],
+              "else_body": [],
+              "source_line": 7
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "report"
+                  },
+                  "field_name": "errors"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "BLOCKED",
+                    "data_type": "String"
+                  },
+                  "source_line": 10
+                }
+              ],
+              "else_body": [],
+              "source_line": 9
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "report"
+                  },
+                  "field_name": "warnings"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "WARN",
+                    "data_type": "String"
+                  },
+                  "source_line": 12
+                }
+              ],
+              "else_body": [],
+              "source_line": 11
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "literal",
+                "value": "PASS",
+                "data_type": "String"
+              },
+              "source_line": 13
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "var_decl",
+          "name": "r1",
+          "var_type": "CheckReport",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "CheckReport",
+            "fields": [
+              {
+                "name": "service",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "auth-gateway",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "errors",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "warnings",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 15
+        },
+        {
+          "op": "var_decl",
+          "name": "r2",
+          "var_type": "CheckReport",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "CheckReport",
+            "fields": [
+              {
+                "name": "service",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "payment-worker",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "errors",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "warnings",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 16
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r1"
+              },
+              "field_name": "service"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "evaluate_gate",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                }
+              ]
+            }
+          ],
+          "source_line": 17
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "r2"
+              },
+              "field_name": "service"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "evaluate_gate",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "r2"
+                }
+              ]
+            }
+          ],
+          "source_line": 18
+        },
+        {
+          "op": "exit_stmt",
+          "code": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 19
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "unreachable",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 20
+        }
+      ],
+      "canonical_meme": "record CheckReport:\n    service: String\n    errors: Int\n    warnings: Int\nfunction evaluate_gate(report: CheckReport) -> String:\n    if report.errors < 0:\n        exit with code 3\n    if report.errors > 0:\n        return \"BLOCKED\"\n    if report.warnings > 0:\n        return \"WARN\"\n    return \"PASS\"\ndefine r1: CheckReport as CheckReport(service=\"auth-gateway\", errors=0, warnings=0)\ndefine r2: CheckReport as CheckReport(service=\"payment-worker\", errors=0, warnings=2)\nprint r1.service, evaluate_gate(r1)\nprint r2.service, evaluate_gate(r2)\nexit with code 0\nprint \"unreachable\"",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "CheckReport",
+            "fields": [
+              {
+                "name": "service",
+                "field_type": "String"
+              },
+              {
+                "name": "errors",
+                "field_type": "Int"
+              },
+              {
+                "name": "warnings",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "evaluate_gate",
+            "params": [
+              {
+                "name": "report",
+                "param_type": "CheckReport"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "<",
+                  "left": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "report"
+                    },
+                    "field_name": "errors"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "exit_stmt",
+                    "code": {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    },
+                    "source_line": 8
+                  }
+                ],
+                "else_body": [],
+                "source_line": 7
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "report"
+                    },
+                    "field_name": "errors"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "BLOCKED",
+                      "data_type": "String"
+                    },
+                    "source_line": 10
+                  }
+                ],
+                "else_body": [],
+                "source_line": 9
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "report"
+                    },
+                    "field_name": "warnings"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "WARN",
+                      "data_type": "String"
+                    },
+                    "source_line": 12
+                  }
+                ],
+                "else_body": [],
+                "source_line": 11
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "PASS",
+                  "data_type": "String"
+                },
+                "source_line": 13
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "var_decl",
+            "name": "r1",
+            "var_type": "CheckReport",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "CheckReport",
+              "fields": [
+                {
+                  "name": "service",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "auth-gateway",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "errors",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "warnings",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 15
+          },
+          {
+            "op": "var_decl",
+            "name": "r2",
+            "var_type": "CheckReport",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "CheckReport",
+              "fields": [
+                {
+                  "name": "service",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "payment-worker",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "errors",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "warnings",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 16
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r1"
+                },
+                "field_name": "service"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "evaluate_gate",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "r1"
+                  }
+                ]
+              }
+            ],
+            "source_line": 17
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "r2"
+                },
+                "field_name": "service"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "evaluate_gate",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "r2"
+                  }
+                ]
+              }
+            ],
+            "source_line": 18
+          },
+          {
+            "op": "exit_stmt",
+            "code": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 19
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "unreachable",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 20
+          }
+        ]
+      }
+    }
+  }
+}

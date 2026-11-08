@@ -1,0 +1,16 @@
+record CliInvocation:
+    argc: Int
+    mode: String
+    target_env: String
+
+function parse_cli(argc: Int) -> CliInvocation:
+    if argc > 2:
+        return CliInvocation(argc=argc, mode=argument 1, target_env=argument 2)
+    if argc == 2:
+        return CliInvocation(argc=argc, mode=argument 1, target_env="staging")
+    return CliInvocation(argc=argc, mode="status", target_env="local")
+
+define inv as parse_cli(argument count)
+define prog_name: String as argument 0
+define has_prog: Bool as length of string prog_name > 0
+print "argc", inv.argc, "has_prog", has_prog, "mode", inv.mode, "env", inv.target_env

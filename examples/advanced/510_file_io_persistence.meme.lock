@@ -1,0 +1,782 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/510_file_io_persistence.meme": {
+      "source_sha256": "24c2a022eb68af04033ac70f1743ad7282dbb87b3ae0bd164eaebad769413c2b",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "AuditEntry",
+          "fields": [
+            {
+              "name": "actor",
+              "field_type": "String"
+            },
+            {
+              "name": "action",
+              "field_type": "String"
+            },
+            {
+              "name": "status",
+              "field_type": "String"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "func_def",
+          "name": "format_entry",
+          "params": [
+            {
+              "name": "entry",
+              "param_type": "AuditEntry"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "entry"
+                          },
+                          "field_name": "actor"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": "|",
+                          "data_type": "String"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "entry"
+                        },
+                        "field_name": "action"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": "|",
+                      "data_type": "String"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "entry"
+                    },
+                    "field_name": "status"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": "\n",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 7
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "var_decl",
+          "name": "log_path",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "audit_state.log",
+            "data_type": "String"
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "initial_exists",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "file_exists",
+              "filepath": {
+                "expr_type": "var_ref",
+                "name": "log_path"
+              }
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "var_decl",
+          "name": "e1",
+          "var_type": "AuditEntry",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "AuditEntry",
+            "fields": [
+              {
+                "name": "actor",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "alice",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "action",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "deploy_prod",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "status",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "OK",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 12
+        },
+        {
+          "op": "write_file",
+          "filepath": {
+            "expr_type": "var_ref",
+            "name": "log_path"
+          },
+          "content": {
+            "expr_type": "call",
+            "func_name": "format_entry",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "e1"
+              }
+            ]
+          },
+          "source_line": 13
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "after_write_exists",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "file_exists",
+              "filepath": {
+                "expr_type": "var_ref",
+                "name": "log_path"
+              }
+            }
+          ],
+          "source_line": 14
+        },
+        {
+          "op": "var_decl",
+          "name": "e2",
+          "var_type": "AuditEntry",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "AuditEntry",
+            "fields": [
+              {
+                "name": "actor",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "bob",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "action",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "rotate_keys",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "status",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "OK",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 16
+        },
+        {
+          "op": "append_file",
+          "filepath": {
+            "expr_type": "var_ref",
+            "name": "log_path"
+          },
+          "content": {
+            "expr_type": "call",
+            "func_name": "format_entry",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "e2"
+              }
+            ]
+          },
+          "source_line": 17
+        },
+        {
+          "op": "var_decl",
+          "name": "e3",
+          "var_type": "AuditEntry",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "AuditEntry",
+            "fields": [
+              {
+                "name": "actor",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "eve",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "action",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "drop_table",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "status",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "DENIED",
+                  "data_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 19
+        },
+        {
+          "op": "append_file",
+          "filepath": {
+            "expr_type": "var_ref",
+            "name": "log_path"
+          },
+          "content": {
+            "expr_type": "call",
+            "func_name": "format_entry",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "e3"
+              }
+            ]
+          },
+          "source_line": 20
+        },
+        {
+          "op": "var_decl",
+          "name": "saved_log",
+          "var_type": "String",
+          "value": {
+            "expr_type": "read_file_string",
+            "filepath": {
+              "expr_type": "var_ref",
+              "name": "log_path"
+            }
+          },
+          "source_line": 22
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "log_length",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "string_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "saved_log"
+              }
+            }
+          ],
+          "source_line": 23
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "saved_log"
+            }
+          ],
+          "source_line": 24
+        },
+        {
+          "op": "write_file",
+          "filepath": {
+            "expr_type": "var_ref",
+            "name": "log_path"
+          },
+          "content": {
+            "expr_type": "literal",
+            "value": "RESET\n",
+            "data_type": "String"
+          },
+          "source_line": 26
+        },
+        {
+          "op": "var_decl",
+          "name": "after_overwrite",
+          "var_type": "String",
+          "value": {
+            "expr_type": "read_file_string",
+            "filepath": {
+              "expr_type": "var_ref",
+              "name": "log_path"
+            }
+          },
+          "source_line": 27
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "after_overwrite"
+            }
+          ],
+          "source_line": 28
+        }
+      ],
+      "canonical_meme": "record AuditEntry:\n    actor: String\n    action: String\n    status: String\nfunction format_entry(entry: AuditEntry) -> String:\n    return entry.actor + \"|\" + entry.action + \"|\" + entry.status + \"\\n\"\ndefine log_path: String as \"audit_state.log\"\nprint \"initial_exists\", file exists log_path\ndefine e1: AuditEntry as AuditEntry(actor=\"alice\", action=\"deploy_prod\", status=\"OK\")\nwrite file log_path with format_entry(e1)\nprint \"after_write_exists\", file exists log_path\ndefine e2: AuditEntry as AuditEntry(actor=\"bob\", action=\"rotate_keys\", status=\"OK\")\nappend format_entry(e2) to file log_path\ndefine e3: AuditEntry as AuditEntry(actor=\"eve\", action=\"drop_table\", status=\"DENIED\")\nappend format_entry(e3) to file log_path\ndefine saved_log: String as read string from file log_path\nprint \"log_length\", length of string saved_log\nprint saved_log\nwrite file log_path with \"RESET\\n\"\ndefine after_overwrite: String as read string from file log_path\nprint after_overwrite",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "AuditEntry",
+            "fields": [
+              {
+                "name": "actor",
+                "field_type": "String"
+              },
+              {
+                "name": "action",
+                "field_type": "String"
+              },
+              {
+                "name": "status",
+                "field_type": "String"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "format_entry",
+            "params": [
+              {
+                "name": "entry",
+                "param_type": "AuditEntry"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "+",
+                        "left": {
+                          "expr_type": "binary_op",
+                          "op": "+",
+                          "left": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "entry"
+                            },
+                            "field_name": "actor"
+                          },
+                          "right": {
+                            "expr_type": "literal",
+                            "value": "|",
+                            "data_type": "String"
+                          }
+                        },
+                        "right": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "entry"
+                          },
+                          "field_name": "action"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": "|",
+                        "data_type": "String"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "entry"
+                      },
+                      "field_name": "status"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": "\n",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 7
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "var_decl",
+            "name": "log_path",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "audit_state.log",
+              "data_type": "String"
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "initial_exists",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "file_exists",
+                "filepath": {
+                  "expr_type": "var_ref",
+                  "name": "log_path"
+                }
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "var_decl",
+            "name": "e1",
+            "var_type": "AuditEntry",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "AuditEntry",
+              "fields": [
+                {
+                  "name": "actor",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "alice",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "action",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "deploy_prod",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "status",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "OK",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 12
+          },
+          {
+            "op": "write_file",
+            "filepath": {
+              "expr_type": "var_ref",
+              "name": "log_path"
+            },
+            "content": {
+              "expr_type": "call",
+              "func_name": "format_entry",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "e1"
+                }
+              ]
+            },
+            "source_line": 13
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "after_write_exists",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "file_exists",
+                "filepath": {
+                  "expr_type": "var_ref",
+                  "name": "log_path"
+                }
+              }
+            ],
+            "source_line": 14
+          },
+          {
+            "op": "var_decl",
+            "name": "e2",
+            "var_type": "AuditEntry",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "AuditEntry",
+              "fields": [
+                {
+                  "name": "actor",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "bob",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "action",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "rotate_keys",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "status",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "OK",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 16
+          },
+          {
+            "op": "append_file",
+            "filepath": {
+              "expr_type": "var_ref",
+              "name": "log_path"
+            },
+            "content": {
+              "expr_type": "call",
+              "func_name": "format_entry",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "e2"
+                }
+              ]
+            },
+            "source_line": 17
+          },
+          {
+            "op": "var_decl",
+            "name": "e3",
+            "var_type": "AuditEntry",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "AuditEntry",
+              "fields": [
+                {
+                  "name": "actor",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "eve",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "action",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "drop_table",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "status",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "DENIED",
+                    "data_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 19
+          },
+          {
+            "op": "append_file",
+            "filepath": {
+              "expr_type": "var_ref",
+              "name": "log_path"
+            },
+            "content": {
+              "expr_type": "call",
+              "func_name": "format_entry",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "e3"
+                }
+              ]
+            },
+            "source_line": 20
+          },
+          {
+            "op": "var_decl",
+            "name": "saved_log",
+            "var_type": "String",
+            "value": {
+              "expr_type": "read_file_string",
+              "filepath": {
+                "expr_type": "var_ref",
+                "name": "log_path"
+              }
+            },
+            "source_line": 22
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "log_length",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "string_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "saved_log"
+                }
+              }
+            ],
+            "source_line": 23
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "saved_log"
+              }
+            ],
+            "source_line": 24
+          },
+          {
+            "op": "write_file",
+            "filepath": {
+              "expr_type": "var_ref",
+              "name": "log_path"
+            },
+            "content": {
+              "expr_type": "literal",
+              "value": "RESET\n",
+              "data_type": "String"
+            },
+            "source_line": 26
+          },
+          {
+            "op": "var_decl",
+            "name": "after_overwrite",
+            "var_type": "String",
+            "value": {
+              "expr_type": "read_file_string",
+              "filepath": {
+                "expr_type": "var_ref",
+                "name": "log_path"
+              }
+            },
+            "source_line": 27
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "after_overwrite"
+              }
+            ],
+            "source_line": 28
+          }
+        ]
+      }
+    }
+  }
+}

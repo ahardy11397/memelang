@@ -33,18 +33,18 @@ un-op ::= "\"-\"" | "\"not\""
 sort-dir ::= "\"ascending\"" | "\"descending\""
 opt-source-line ::= (ws "," ws "\"source_line\"" ws ":" ws (pos-int | "null"))?
 
-ir-expr ::= literal-expr | list-literal-expr | var-ref-expr | random-int-expr | random-list-expr | binary-op-expr | unary-op-expr | list-length-expr | list-index-expr | string-length-expr | string-slice-expr | call-expr | read-input-expr | str-ends-with-expr | read-json-list-expr | record-literal-expr | record-field-expr | map-literal-expr | map-get-expr | map-has-key-expr
+ir-expr ::= literal-expr | list-literal-expr | var-ref-expr | random-int-expr | random-list-expr | binary-op-expr | unary-op-expr | list-length-expr | list-index-expr | string-length-expr | string-slice-expr | call-expr | read-input-expr | str-ends-with-expr | file-exists-expr | read-file-string-expr | arg-count-expr | arg-at-expr | read-json-list-expr | record-literal-expr | record-field-expr | map-literal-expr | map-get-expr | map-has-key-expr
 expr-list ::= "[" ws (ir-expr (ws "," ws ir-expr)*)? ws "]"
 
 int-lit-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws "\"value\"" ws ":" ws integer ws "," ws "\"data_type\"" ws ":" ws "\"Int\"" ws "}"
 int-bin-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"binary_op\"" ws "," ws "\"op\"" ws ":" ws int-bin-op ws "," ws "\"left\"" ws ":" ws int-expr ws "," ws "\"right\"" ws ":" ws int-expr ws "}"
 int-un-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"unary_op\"" ws "," ws "\"op\"" ws ":" ws "\"-\"" ws "," ws "\"operand\"" ws ":" ws int-expr ws "}"
-int-expr ::= int-lit-expr | var-ref-expr | random-int-expr | int-bin-expr | int-un-expr | list-length-expr | list-index-expr | string-length-expr | call-expr | read-input-expr | record-field-expr | map-get-expr
+int-expr ::= int-lit-expr | var-ref-expr | random-int-expr | int-bin-expr | int-un-expr | list-length-expr | list-index-expr | string-length-expr | arg-count-expr | call-expr | read-input-expr | record-field-expr | map-get-expr
 
 bool-lit-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws "\"value\"" ws ":" ws boolean ws "," ws "\"data_type\"" ws ":" ws "\"Bool\"" ws "}"
 bool-bin-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"binary_op\"" ws "," ws "\"op\"" ws ":" ws bool-cmp-op ws "," ws "\"left\"" ws ":" ws ir-expr ws "," ws "\"right\"" ws ":" ws ir-expr ws "}"
 bool-un-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"unary_op\"" ws "," ws "\"op\"" ws ":" ws "\"not\"" ws "," ws "\"operand\"" ws ":" ws bool-expr ws "}"
-bool-expr ::= bool-lit-expr | var-ref-expr | bool-bin-expr | bool-un-expr | list-index-expr | call-expr | str-ends-with-expr | read-input-expr | record-field-expr | map-get-expr | map-has-key-expr
+bool-expr ::= bool-lit-expr | var-ref-expr | bool-bin-expr | bool-un-expr | list-index-expr | call-expr | str-ends-with-expr | file-exists-expr | read-input-expr | record-field-expr | map-get-expr | map-has-key-expr
 
 literal-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws (
     "\"value\"" ws ":" ws integer ws "," ws "\"data_type\"" ws ":" ws ("\"Int\"" | "\"Float\"")
@@ -65,7 +65,11 @@ string-slice-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"string_slice\"" ws ","
 call-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"call\"" ws "," ws "\"func_name\"" ws ":" ws ident-str (ws "," ws "\"args\"" ws ":" ws expr-list)? ws "}"
 read-input-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"read_input\"" (ws "," ws "\"prompt\"" ws ":" ws string)? (ws "," ws "\"target_type\"" ws ":" ws scalar-type)? ws "}"
 str-ends-with-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"str_ends_with\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"suffix\"" ws ":" ws ir-expr ws "}"
-read-json-list-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"read_json_list\"" ws "," ws "\"filepath\"" ws ":" ws ir-expr ws "}"
+file-exists-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"file_exists\"" ws "," ws "\"filepath\"" ws ":" ws ir-expr ws "}"
+read-file-string-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"read_file_string\"" ws "," ws "\"filepath\"" ws ":" ws ir-expr ws "}"
+arg-count-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"arg_count\"" ws "}"
+arg-at-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"arg_at\"" ws "," ws "\"index\"" ws ":" ws int-expr ws "}"
+read-json-list-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"read_json_list\"" ws "," ws "\"filepath\"" ws ":" ws ir-expr (ws "," ws "\"element_type\"" ws ":" ws scalar-type)? (ws "," ws "\"explicit_type\"" ws ":" ws boolean)? ws "}"
 record-field-init ::= "{" ws "\"name\"" ws ":" ws ident-str ws "," ws "\"value\"" ws ":" ws ir-expr ws "}"
 record-field-init-list ::= "[" ws (record-field-init (ws "," ws record-field-init)*)? ws "]"
 record-literal-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"record_literal\"" ws "," ws "\"record_name\"" ws ":" ws ident-str (ws "," ws "\"fields\"" ws ":" ws record-field-init-list)? ws "}"
@@ -76,7 +80,7 @@ map-literal-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"map_literal\"" ws "," w
 map-get-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"map_get\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"key\"" ws ":" ws ir-expr (ws "," ws "\"default_val\"" ws ":" ws (ir-expr | "null"))? ws "}"
 map-has-key-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"map_has_key\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"key\"" ws ":" ws ir-expr ws "}"
 
-body-stmt ::= var-decl-stmt | assign-stmt | sort-stmt | clamp-stmt | filter-stmt | append-stmt | insert-stmt | set-index-stmt | record-set-field-stmt | map-set-stmt | fail-stmt | print-stmt | if-stmt | for-each-stmt | for-range-stmt | while-stmt | return-stmt
+body-stmt ::= var-decl-stmt | assign-stmt | sort-stmt | clamp-stmt | filter-stmt | append-stmt | insert-stmt | set-index-stmt | record-set-field-stmt | map-set-stmt | write-file-stmt | append-file-stmt | fail-stmt | exit-stmt | print-stmt | if-stmt | for-each-stmt | for-range-stmt | while-stmt | return-stmt
 ir-stmt ::= body-stmt | func-def-stmt | record-def-stmt
 stmt-list ::= "[" ws (body-stmt (ws "," ws body-stmt)*)? ws "]"
 func-param ::= "{" ws "\"name\"" ws ":" ws ident-str ws "," ws "\"param_type\"" ws ":" ws non-void-type ws "}"
@@ -94,7 +98,10 @@ insert-stmt ::= "{" ws "\"op\"" ws ":" ws "\"list_insert\"" ws "," ws "\"target\
 set-index-stmt ::= "{" ws "\"op\"" ws ":" ws "\"list_set_index\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"index\"" ws ":" ws int-expr ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
 record-set-field-stmt ::= "{" ws "\"op\"" ws ":" ws "\"record_set_field\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"field_name\"" ws ":" ws ident-str ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
 map-set-stmt ::= "{" ws "\"op\"" ws ":" ws "\"map_set\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"key\"" ws ":" ws ir-expr ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
+write-file-stmt ::= "{" ws "\"op\"" ws ":" ws "\"write_file\"" ws "," ws "\"filepath\"" ws ":" ws ir-expr ws "," ws "\"content\"" ws ":" ws ir-expr opt-source-line ws "}"
+append-file-stmt ::= "{" ws "\"op\"" ws ":" ws "\"append_file\"" ws "," ws "\"filepath\"" ws ":" ws ir-expr ws "," ws "\"content\"" ws ":" ws ir-expr opt-source-line ws "}"
 fail-stmt ::= "{" ws "\"op\"" ws ":" ws "\"fail_stmt\"" ws "," ws "\"message\"" ws ":" ws ir-expr opt-source-line ws "}"
+exit-stmt ::= "{" ws "\"op\"" ws ":" ws "\"exit_stmt\"" ws "," ws "\"code\"" ws ":" ws int-expr opt-source-line ws "}"
 print-stmt ::= "{" ws "\"op\"" ws ":" ws "\"print_stmt\"" ws "," ws "\"expressions\"" ws ":" ws "[" ws ir-expr (ws "," ws ir-expr)* ws "]" opt-source-line ws "}"
 if-stmt ::= "{" ws "\"op\"" ws ":" ws "\"if_stmt\"" ws "," ws "\"condition\"" ws ":" ws bool-expr ws "," ws "\"then_body\"" ws ":" ws stmt-list (ws "," ws "\"else_body\"" ws ":" ws stmt-list)? opt-source-line ws "}"
 for-each-stmt ::= "{" ws "\"op\"" ws ":" ws "\"for_each\"" ws "," ws "\"item_var\"" ws ":" ws ident-str ws "," ws "\"collection\"" ws ":" ws ident-str ws "," ws "\"body\"" ws ":" ws stmt-list opt-source-line ws "}"

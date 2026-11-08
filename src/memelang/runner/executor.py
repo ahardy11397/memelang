@@ -11,11 +11,16 @@ import tempfile
 
 from memelang.codegen import TargetLang, generate_code
 from memelang.ir.schema import (
+    AppendFileStmt,
+    ArgAtExpr,
+    ArgCountExpr,
     AssignStmt,
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    ExitStmt,
     FailStmt,
+    FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
@@ -37,6 +42,7 @@ from memelang.ir.schema import (
     ProgramIR,
     RandomIntExpr,
     RandomListExpr,
+    ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RecordFieldExpr,
@@ -49,6 +55,7 @@ from memelang.ir.schema import (
     UnaryOpExpr,
     VarDeclStmt,
     WhileStmt,
+    WriteFileStmt,
 )
 
 
@@ -85,6 +92,10 @@ def _expr_uses_input(expr: IRExpr) -> bool:
         return any(_expr_uses_input(a) for a in expr.args)
     if isinstance(expr, StrEndsWithExpr):
         return _expr_uses_input(expr.target) or _expr_uses_input(expr.suffix)
+    if isinstance(expr, (FileExistsExpr, ReadFileStringExpr)):
+        return _expr_uses_input(expr.filepath)
+    if isinstance(expr, ArgAtExpr):
+        return _expr_uses_input(expr.index)
     if isinstance(expr, ReadJsonListExpr):
         return _expr_uses_input(expr.filepath)
     if isinstance(expr, StringLengthExpr):
@@ -126,7 +137,13 @@ def _stmts_use_input(stmts: list[IRStatement]) -> bool:
             _expr_uses_input(s.key) or _expr_uses_input(s.value)
         ):
             return True
+        if isinstance(s, (WriteFileStmt, AppendFileStmt)) and (
+            _expr_uses_input(s.filepath) or _expr_uses_input(s.content)
+        ):
+            return True
         if isinstance(s, FailStmt) and _expr_uses_input(s.message):
+            return True
+        if isinstance(s, ExitStmt) and _expr_uses_input(s.code):
             return True
         if isinstance(s, ClampCollectionStmt) and (
             _expr_uses_input(s.min_val) or _expr_uses_input(s.max_val)
@@ -172,9 +189,10 @@ def _run_target_cmd(
     stdin_text: str | None,
     interactive_io: bool,
     env: dict[str, str] | None = None,
+    cwd: Path | None = None,
 ) -> ExecutionResult:
     if interactive_io:
-        proc = subprocess.run(cmd, env=env)
+        proc = subprocess.run(cmd, env=env, cwd=cwd)
         return ExecutionResult(
             stdout="",
             stderr="",
@@ -188,6 +206,7 @@ def _run_target_cmd(
         text=True,
         timeout=timeout_sec,
         env=env,
+        cwd=cwd,
     )
     return ExecutionResult(
         stdout=proc.stdout,
@@ -205,6 +224,8 @@ def execute_ir(
     interactive_io: bool = False,
     source_dir: Path | None = None,
     quiet_prompts: bool = False,
+    argv: list[str] | None = None,
+    cwd: Path | None = None,
 ) -> ExecutionResult:
     code = generate_code(ir, target)
     run_env: dict[str, str] | None = None
@@ -214,21 +235,24 @@ def execute_ir(
             run_env["MEME_SOURCE_DIR"] = str(source_dir.resolve())
         if quiet_prompts:
             run_env["MEME_QUIET_PROMPTS"] = "1"
+    extra_args = list(argv) if argv else []
 
     try:
         with tempfile.TemporaryDirectory(prefix=f"meme_{target}_") as tmp_dir:
             tmp = Path(tmp_dir)
+            exec_cwd = cwd if cwd is not None else tmp
 
             if target == "python":
                 src_path = tmp / "main.py"
                 src_path.write_text(code, encoding="utf-8")
                 return _run_target_cmd(
-                    [sys.executable, str(src_path)],
+                    [sys.executable, str(src_path), *extra_args],
                     code=code,
                     timeout_sec=timeout_sec,
                     stdin_text=stdin_text,
                     interactive_io=interactive_io,
                     env=run_env,
+                    cwd=exec_cwd,
                 )
 
             if target == "rust":
@@ -249,12 +273,13 @@ def execute_ir(
                         generated_code=code,
                     )
                 return _run_target_cmd(
-                    [str(bin_path)],
+                    [str(bin_path), *extra_args],
                     code=code,
                     timeout_sec=timeout_sec,
                     stdin_text=stdin_text,
                     interactive_io=interactive_io,
                     env=run_env,
+                    cwd=exec_cwd,
                 )
 
             if target == "cpp":
@@ -275,12 +300,13 @@ def execute_ir(
                         generated_code=code,
                     )
                 return _run_target_cmd(
-                    [str(bin_path)],
+                    [str(bin_path), *extra_args],
                     code=code,
                     timeout_sec=timeout_sec,
                     stdin_text=stdin_text,
                     interactive_io=interactive_io,
                     env=run_env,
+                    cwd=exec_cwd,
                 )
     except subprocess.TimeoutExpired as exc:
         out_str = (

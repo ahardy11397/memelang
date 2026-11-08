@@ -149,9 +149,30 @@ class StrEndsWithExpr(IRNode):
     suffix: IRExpr
 
 
+class FileExistsExpr(IRNode):
+    expr_type: Literal["file_exists"] = "file_exists"
+    filepath: IRExpr
+
+
+class ReadFileStringExpr(IRNode):
+    expr_type: Literal["read_file_string"] = "read_file_string"
+    filepath: IRExpr
+
+
+class ArgCountExpr(IRNode):
+    expr_type: Literal["arg_count"] = "arg_count"
+
+
+class ArgAtExpr(IRNode):
+    expr_type: Literal["arg_at"] = "arg_at"
+    index: IRExpr
+
+
 class ReadJsonListExpr(IRNode):
     expr_type: Literal["read_json_list"] = "read_json_list"
     filepath: IRExpr
+    element_type: Literal["Int", "Float", "String", "Bool"] = "Float"
+    explicit_type: bool = False
 
 
 class StringLengthExpr(IRNode):
@@ -221,6 +242,10 @@ IRExpr = Annotated[
     | CallExpr
     | ReadInputExpr
     | StrEndsWithExpr
+    | FileExistsExpr
+    | ReadFileStringExpr
+    | ArgCountExpr
+    | ArgAtExpr
     | ReadJsonListExpr
     | StringLengthExpr
     | StringSliceExpr
@@ -308,6 +333,12 @@ class FailStmt(IRNode):
     source_line: int | None = None
 
 
+class ExitStmt(IRNode):
+    op: Literal["exit_stmt"] = "exit_stmt"
+    code: IRExpr
+    source_line: int | None = None
+
+
 class PrintStmt(IRNode):
     op: Literal["print_stmt"] = "print_stmt"
     expressions: list[IRExpr]
@@ -389,6 +420,20 @@ class MapSetStmt(IRNode):
     source_line: int | None = None
 
 
+class WriteFileStmt(IRNode):
+    op: Literal["write_file"] = "write_file"
+    filepath: IRExpr
+    content: IRExpr
+    source_line: int | None = None
+
+
+class AppendFileStmt(IRNode):
+    op: Literal["append_file"] = "append_file"
+    filepath: IRExpr
+    content: IRExpr
+    source_line: int | None = None
+
+
 IRStatement = Annotated[
     VarDeclStmt
     | AssignStmt
@@ -399,6 +444,7 @@ IRStatement = Annotated[
     | ListInsertStmt
     | ListSetIndexStmt
     | FailStmt
+    | ExitStmt
     | PrintStmt
     | IfStmt
     | ForEachStmt
@@ -408,7 +454,9 @@ IRStatement = Annotated[
     | ReturnStmt
     | RecordDefStmt
     | RecordSetFieldStmt
-    | MapSetStmt,
+    | MapSetStmt
+    | WriteFileStmt
+    | AppendFileStmt,
     Field(discriminator="op"),
 ]
 
@@ -470,6 +518,10 @@ ListLengthExpr.model_rebuild()
 ListIndexExpr.model_rebuild()
 CallExpr.model_rebuild()
 StrEndsWithExpr.model_rebuild()
+FileExistsExpr.model_rebuild()
+ReadFileStringExpr.model_rebuild()
+ArgCountExpr.model_rebuild()
+ArgAtExpr.model_rebuild()
 ReadJsonListExpr.model_rebuild()
 StringLengthExpr.model_rebuild()
 StringSliceExpr.model_rebuild()
@@ -486,6 +538,7 @@ ListAppendStmt.model_rebuild()
 ListInsertStmt.model_rebuild()
 ListSetIndexStmt.model_rebuild()
 FailStmt.model_rebuild()
+ExitStmt.model_rebuild()
 PrintStmt.model_rebuild()
 IfStmt.model_rebuild()
 ForEachStmt.model_rebuild()
@@ -496,6 +549,8 @@ ReturnStmt.model_rebuild()
 RecordDefStmt.model_rebuild()
 RecordSetFieldStmt.model_rebuild()
 MapSetStmt.model_rebuild()
+WriteFileStmt.model_rebuild()
+AppendFileStmt.model_rebuild()
 AmbiguityCandidate.model_rebuild()
 AmbiguityDiagnostic.model_rebuild()
 SynthesisResult.model_rebuild()

@@ -5,11 +5,16 @@ from __future__ import annotations
 import keyword
 
 from memelang.ir.schema import (
+    AppendFileStmt,
+    ArgAtExpr,
+    ArgCountExpr,
     AssignStmt,
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    ExitStmt,
     FailStmt,
+    FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
@@ -34,6 +39,7 @@ from memelang.ir.schema import (
     ProgramIR,
     RandomIntExpr,
     RandomListExpr,
+    ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RecordDefStmt,
@@ -51,6 +57,7 @@ from memelang.ir.schema import (
     VarDeclStmt,
     VarRefExpr,
     WhileStmt,
+    WriteFileStmt,
 )
 
 
@@ -81,6 +88,8 @@ class _PyGen:
         self.uses_random = False
         self.uses_math = False
         self.uses_json_io = False
+        self.uses_file_io = False
+        self.uses_argv = False
         self.uses_input = False
         self.uses_input_helpers = False
         self.uses_dataclass = False
@@ -98,12 +107,12 @@ class _PyGen:
         if isinstance(expr, RandomListExpr):
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
-            return "List<Float>"
-        if isinstance(expr, StrEndsWithExpr):
+            return f"List<{expr.element_type}>"  # type: ignore[return-value]
+        if isinstance(expr, (StrEndsWithExpr, FileExistsExpr)):
             return "Bool"
-        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr)):
+        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, ArgCountExpr)):
             return "Int"
-        if isinstance(expr, StringSliceExpr):
+        if isinstance(expr, (StringSliceExpr, ReadFileStringExpr, ArgAtExpr)):
             return "String"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
@@ -221,7 +230,23 @@ class _PyGen:
 
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True
-            return f"_meme_read_json_list({self.gen_expr(expr.filepath, scope)})"
+            return f"_meme_read_json_list({self.gen_expr(expr.filepath, scope)}, {repr(expr.element_type)})"
+
+        if isinstance(expr, FileExistsExpr):
+            self.uses_file_io = True
+            return f"_meme_file_exists({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ReadFileStringExpr):
+            self.uses_file_io = True
+            return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ArgCountExpr):
+            self.uses_argv = True
+            return "_meme_builtins.len(_meme_sys.argv)"
+
+        if isinstance(expr, ArgAtExpr):
+            self.uses_argv = True
+            return f"_meme_arg_at({self.gen_expr(expr.index, scope)})"
 
         if isinstance(expr, RecordLiteralExpr):
             fields_code = ", ".join(
@@ -315,6 +340,11 @@ class _PyGen:
             return [
                 f"{pad}_meme_builtins.print(_meme_fmt({self.gen_expr(stmt.message, scope)}))",
                 f"{pad}raise _meme_builtins.SystemExit(1)",
+            ]
+
+        if isinstance(stmt, ExitStmt):
+            return [
+                f"{pad}raise _meme_builtins.SystemExit(_meme_builtins.int({self.gen_expr(stmt.code, scope)}) & 0xFF)"
             ]
 
         if isinstance(stmt, PrintStmt):
@@ -411,6 +441,18 @@ class _PyGen:
                 f"{pad}{_py_ident(stmt.target)}[{self.gen_expr(stmt.key, scope)}] = {self.gen_expr(stmt.value, scope)}"
             ]
 
+        if isinstance(stmt, WriteFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_write_file({self.gen_expr(stmt.filepath, scope)}, {self.gen_expr(stmt.content, scope)})"
+            ]
+
+        if isinstance(stmt, AppendFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_append_file({self.gen_expr(stmt.filepath, scope)}, {self.gen_expr(stmt.content, scope)})"
+            ]
+
         raise TypeError(f"Unsupported IRStatement: {type(stmt)!r}")
 
 
@@ -439,15 +481,28 @@ def generate_python(ir: ProgramIR) -> str:
         header.append("from dataclasses import dataclass as _dataclass")
     if gen.uses_json_io:
         header.append("import json as _meme_json")
-    if gen.uses_json_io or gen.uses_input:
+    if gen.uses_json_io or gen.uses_file_io or gen.uses_input:
         header.append("import os as _meme_os")
-    if gen.uses_json_io:
+    if gen.uses_json_io or gen.uses_file_io or gen.uses_argv:
         header.append("import sys as _meme_sys")
     if gen.uses_math:
         header.append("import math as _meme_math")
     if gen.uses_random:
         header.append("import random as _meme_random")
     header.append("")
+
+    if gen.uses_argv:
+        header.extend(
+            [
+                "def _meme_arg_at(idx: int) -> str:",
+                "    _i = _meme_builtins.int(idx)",
+                "    if _i < 0 or _i >= _meme_builtins.len(_meme_sys.argv):",
+                "        _meme_builtins.print(f'Error: argument index {_i} out of range')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    return _meme_sys.argv[_i]",
+                "",
+            ]
+        )
 
     if gen.uses_input:
         header.extend(
@@ -460,7 +515,7 @@ def generate_python(ir: ProgramIR) -> str:
             ]
         )
 
-    if gen.uses_json_io:
+    if gen.uses_json_io or gen.uses_file_io:
         header.extend(
             [
                 "def _meme_resolve_path(path: str) -> str:",
@@ -474,13 +529,78 @@ def generate_python(ir: ProgramIR) -> str:
                 "            return _cand",
                 "    return _p",
                 "",
-                "def _meme_read_json_list(path: str) -> list[float]:",
+            ]
+        )
+
+    if gen.uses_file_io:
+        header.extend(
+            [
+                "def _meme_file_exists(path: str) -> bool:",
+                "    return _meme_os.path.isfile(_meme_resolve_path(path))",
+                "",
+                "def _meme_read_file_string(path: str) -> str:",
+                "    _rp = _meme_resolve_path(path)",
+                "    if not _meme_os.path.isfile(_rp):",
+                "        _meme_builtins.print(f'Error reading file: {path}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    try:",
+                "        with _meme_builtins.open(_rp, 'r', encoding='utf-8') as _f:",
+                "            return _f.read()",
+                "    except _meme_builtins.Exception:",
+                "        _meme_builtins.print(f'Error reading file: {path}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "",
+                "def _meme_write_file(path: str, content: str) -> None:",
+                "    try:",
+                "        with _meme_builtins.open(path.strip(), 'w', encoding='utf-8') as _f:",
+                "            _f.write(content)",
+                "    except _meme_builtins.Exception:",
+                "        _meme_builtins.print(f'Error writing file: {path}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "",
+                "def _meme_append_file(path: str, content: str) -> None:",
+                "    try:",
+                "        with _meme_builtins.open(path.strip(), 'a', encoding='utf-8') as _f:",
+                "            _f.write(content)",
+                "    except _meme_builtins.Exception:",
+                "        _meme_builtins.print(f'Error writing file: {path}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "",
+            ]
+        )
+
+    if gen.uses_json_io:
+        header.extend(
+            [
+                "def _meme_read_json_list(path: str, elem_type: str = 'Float'):",
                 "    try:",
                 "        with _meme_builtins.open(_meme_resolve_path(path), 'r', encoding='utf-8') as _f:",
                 "            _data = _meme_json.load(_f)",
                 "        if not _meme_builtins.isinstance(_data, _meme_builtins.list):",
                 "            raise _meme_builtins.ValueError('Expected JSON list')",
-                "        return [_meme_builtins.float(_x) for _x in _data if not _meme_builtins.isinstance(_x, _meme_builtins.bool)]",
+                "        _out = []",
+                "        for _x in _data:",
+                "            if _x is None:",
+                "                raise _meme_builtins.ValueError('JSON null is not allowed')",
+                "            if elem_type == 'Int':",
+                "                if _meme_builtins.isinstance(_x, _meme_builtins.bool) or not _meme_builtins.isinstance(_x, _meme_builtins.int):",
+                "                    raise _meme_builtins.ValueError(f'Expected Int element, got {_x!r}')",
+                "                _out.append(_meme_builtins.int(_x))",
+                "            elif elem_type == 'Float':",
+                "                if _meme_builtins.isinstance(_x, _meme_builtins.bool) or not _meme_builtins.isinstance(_x, (_meme_builtins.int, _meme_builtins.float)):",
+                "                    raise _meme_builtins.ValueError(f'Expected Float element, got {_x!r}')",
+                "                _out.append(_meme_builtins.float(_x))",
+                "            elif elem_type == 'String':",
+                "                if not _meme_builtins.isinstance(_x, _meme_builtins.str):",
+                "                    raise _meme_builtins.ValueError(f'Expected String element, got {_x!r}')",
+                "                _out.append(_x)",
+                "            elif elem_type == 'Bool':",
+                "                if not _meme_builtins.isinstance(_x, _meme_builtins.bool):",
+                "                    raise _meme_builtins.ValueError(f'Expected Bool element, got {_x!r}')",
+                "                _out.append(_x)",
+                "            else:",
+                "                raise _meme_builtins.ValueError(f'Unsupported element type: {elem_type}')",
+                "        return _out",
                 "    except _meme_builtins.Exception as _e:",
                 "        _meme_builtins.print(f'Error reading JSON file: {_e}', file=_meme_sys.stderr)",
                 "        raise _meme_builtins.SystemExit(1)",

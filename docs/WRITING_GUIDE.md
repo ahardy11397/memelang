@@ -360,6 +360,16 @@ function loadFile(filepath: String) -> List<Float>:
 
 The `else return "<message>"` form (**LLM-voice only**) and `fail with "<message>"` (**offline**) compile to a `fail_stmt`: it prints the message to stdout and **exits with status code 1 (non-zero)** — it counts as diverging/returning on that branch, so the static verifier stays happy.
 
+To exit the process immediately with an arbitrary integer status code (without printing an error line), use `exit with code <int-expr>` (**offline** & **LLM-voice**):
+
+```meme
+if errors > 0:
+    exit with code 2
+exit with code 0
+```
+
+Exit codes use C `exit()` unsigned-byte truncation (`code & 0xFF` modulo 256) across all three targets (Python, Rust, C++), so values outside `0..255` wrap deterministically into `0..255` (e.g., `-1` → `255`, `256` → `0`, `258` → `2`). Like `fail with`, `exit with code` counts as a diverging return path in the static verifier.
+
 **Structured English equivalent** (**offline** & **LLM-voice**, typed, with colons):
 
 ```meme
@@ -517,6 +527,45 @@ All three compiler backends (Python, standalone Rust, and C++20) generate native
 
 ---
 
+## 11b. File I/O
+
+Memelang provides four built-in file I/O constructs supported in both **offline** (`heuristic`) and **LLM-voice** modes:
+
+```meme
+define path: String as "notes.txt"
+
+if not (file exists path):
+    write file path with "Header\n"
+
+append "First item\n" to file path
+define contents: String as read string from file path
+print contents
+```
+
+- **`write file <path> with <string-expr>`** — overwrites `<path>` with `<string-expr>` (creating the file if missing). Both `<path>` and `<string-expr>` must have type `String`.
+- **`append <string-expr> to file <path>`** (or `add <string-expr> to file <path>`) — appends `<string-expr>` to the end of `<path>` without truncating existing contents (creating the file if missing). Both arguments must have type `String`.
+- **`read string from file <path>`** — reads the entire UTF-8 text of `<path>` and returns a `String`. If the file does not exist or cannot be read, the program prints `Error reading file: <path>` to stdout and exits immediately with status code `1` across all three targets (Python, Rust, C++).
+- **`file exists <path>`** — returns `Bool` (`true` if `<path>` exists and is a regular file, `false` otherwise). Never raises a runtime error.
+- **`read json file <path> as List<T>`** — reads a JSON array from `<path>` as `List<Int>`, `List<Float>`, `List<String>`, or `List<Bool>` (**offline** & **LLM-voice**). Handles arbitrary whitespace between tokens, quoted strings with JSON escapes (`\"`, `\\`, `\n`, `\t`, `\uXXXX`), and `true`/`false` booleans. JSON `null` or element type mismatches (e.g., booleans inside an `Int`/`Float` list) fail deterministically with exit code `1` across Python, Rust, and C++. The legacy alias `read JSON number list from <path>` remains supported for `List<Float>`.
+
+### Command-Line Arguments (`argv`)
+
+Memelang programs can inspect command-line arguments using two built-in expressions (**offline** & **LLM-voice**):
+
+```meme
+define argc: Int as argument count
+if argc > 1:
+    define subcommand: String as argument 1
+    print "Running:", subcommand
+else:
+    print "No arguments provided"
+```
+
+- **`argument count`** — returns `Int` equal to `argc` (**including the program name** at index `0`). When invoked with no user arguments, `argument count` is `1`. When invoked with `K` user arguments, `argument count` is `1 + K`.
+- **`argument <n>`** — returns `String` at integer index `<n>`. User arguments are **1-based** (`argument 1` is the first user argument, `argument 2` is the second, and `argument 0` is the program path/name). If `<n>` is out of range (`< 0` or `>= argument count`), the program prints `Error: argument index <n> out of range` to stdout and exits immediately with status code `1` across all three targets (Python, Rust, C++). Negative literal indices are rejected statically by the verifier.
+
+---
+
 ## 12. CLI Cheat Sheet
 
 ```bash
@@ -632,7 +681,15 @@ Each construct is labeled **offline** (supported by the zero-dependency `heurist
 | Map lookup / default | `m["a"]` / `m["c"] default 0` | **offline** |
 | Map key test | `m has key "a"` | **offline** |
 | Mutate map entry | `set m["a"] to 10` | **offline** |
+| Check file exists | `file exists path` | **offline** |
+| Read text file | `read string from file path` | **offline** |
+| Write file (overwrite) | `write file path with content` | **offline** |
+| Append to file | `append content to file path` / `add content to file path` | **offline** |
+| Read typed JSON list | `read json file path as List<Int\|Float\|String\|Bool>` / `read JSON number list from path` | **offline** |
+| Argument count (`argc`) | `argument count` *(includes program name at index 0)* | **offline** |
+| Read CLI argument | `argument n` *(1-based for user arguments)* | **offline** |
 | Fail (exits code 1) | `fail with "error message"` (**offline**) / `else return "error message"` (**LLM-voice only**) | **offline** / **LLM-voice only** |
+| Exit with status code | `exit with code <int-expr>` *(truncated via `code & 0xFF` to `0..255`)* | **offline** |
 | Comment (line or inline) | `# this is ignored` / `define x as 1 # inline comment` | **offline** |
 
 Happy memeing.

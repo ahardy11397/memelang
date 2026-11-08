@@ -12,12 +12,17 @@ from memelang.ir.canonical import to_canonical_meme
 from memelang.ir.schema import (
     AmbiguityCandidate,
     AmbiguityDiagnostic,
+    AppendFileStmt,
+    ArgAtExpr,
+    ArgCountExpr,
     AssignStmt,
     BinaryOpExpr,
     BinaryOperator,
     CallExpr,
     ClampCollectionStmt,
+    ExitStmt,
     FailStmt,
+    FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
@@ -43,6 +48,7 @@ from memelang.ir.schema import (
     ProgramIR,
     RandomIntExpr,
     RandomListExpr,
+    ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RecordDefStmt,
@@ -63,6 +69,7 @@ from memelang.ir.schema import (
     VarDeclStmt,
     VarRefExpr,
     WhileStmt,
+    WriteFileStmt,
 )
 from memelang.llm.base import LLMProviderError, has_executable_content
 
@@ -446,6 +453,76 @@ class _ExprParser:
                 target = self.parse_postfix()
                 return ListLengthExpr(target=target)
 
+            if (
+                t.val == "file"
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val == "exists"
+            ):
+                self.consume("IDENT", "file")
+                self.consume("IDENT", "exists")
+                fp = self.parse_postfix()
+                return FileExistsExpr(filepath=fp)
+
+            if (
+                t.val == "read"
+                and self.pos + 2 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "json"
+                and self.tokens[self.pos + 2].kind == "IDENT"
+                and self.tokens[self.pos + 2].val.lower() == "file"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                self.consume("IDENT")
+                fp = self.parse_postfix()
+                self.consume("IDENT", "as")
+                self.consume("IDENT", "List")
+                self.consume("OP", "<")
+                el_tok = self.consume("IDENT")
+                self.consume("OP", ">")
+                if el_tok.val not in ("Int", "Float", "String", "Bool"):
+                    raise LLMProviderError(
+                        f"Unsupported JSON list element type {el_tok.val!r}; expected Int, Float, String, or Bool"
+                    )
+                return ReadJsonListExpr(
+                    filepath=fp,
+                    element_type=cast(Literal["Int", "Float", "String", "Bool"], el_tok.val),
+                    explicit_type=True,
+                )
+
+            if (
+                t.val == "read"
+                and self.pos + 3 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val == "string"
+                and self.tokens[self.pos + 2].kind == "IDENT"
+                and self.tokens[self.pos + 2].val == "from"
+                and self.tokens[self.pos + 3].kind == "IDENT"
+                and self.tokens[self.pos + 3].val == "file"
+            ):
+                self.consume("IDENT", "read")
+                self.consume("IDENT", "string")
+                self.consume("IDENT", "from")
+                self.consume("IDENT", "file")
+                fp = self.parse_postfix()
+                return ReadFileStringExpr(filepath=fp)
+
+            if (
+                t.val == "argument"
+                and self.pos + 1 < len(self.tokens)
+            ):
+                if (
+                    self.tokens[self.pos + 1].kind == "IDENT"
+                    and self.tokens[self.pos + 1].val == "count"
+                ):
+                    self.consume("IDENT", "argument")
+                    self.consume("IDENT", "count")
+                    return ArgCountExpr()
+                self.consume("IDENT", "argument")
+                idx_expr = self.parse_unary()
+                return ArgAtExpr(index=idx_expr)
+
             ident = self.consume("IDENT").val
             if (nxt := self.peek()) and nxt.kind == "OP" and nxt.val == "(":
                 self.consume("OP", "(")
@@ -528,6 +605,23 @@ def _parse_expr(
             end=_parse_expr(m_slice.group(3), symbols, func_returns, records),
         )
 
+    m_read_json_typed = re.fullmatch(
+        r"read\s+json\s+file\s+(.+?)\s+as\s+List\s*<\s*([A-Za-z_]\w*)\s*>",
+        s,
+        flags=re.IGNORECASE,
+    )
+    if m_read_json_typed:
+        raw_el = m_read_json_typed.group(2)
+        if raw_el not in ("Int", "Float", "String", "Bool"):
+            raise LLMProviderError(
+                f"Unsupported JSON list element type {raw_el!r}; expected Int, Float, String, or Bool"
+            )
+        return ReadJsonListExpr(
+            filepath=_parse_expr(m_read_json_typed.group(1), symbols, func_returns, records),
+            element_type=cast(Literal["Int", "Float", "String", "Bool"], raw_el),
+            explicit_type=True,
+        )
+
     m_read_json = re.fullmatch(
         r"read\s+JSON\s+number\s+list\s+from\s+(.+)",
         s,
@@ -535,8 +629,32 @@ def _parse_expr(
     )
     if m_read_json:
         return ReadJsonListExpr(
-            filepath=_parse_expr(m_read_json.group(1), symbols, func_returns, records)
+            filepath=_parse_expr(m_read_json.group(1), symbols, func_returns, records),
+            element_type="Float",
+            explicit_type=False,
         )
+
+    m_read_file_str = re.fullmatch(
+        r"read\s+string\s+from\s+file\s+(.+)",
+        s,
+        flags=re.IGNORECASE,
+    )
+    if m_read_file_str:
+        return ReadFileStringExpr(
+            filepath=_parse_expr(m_read_file_str.group(1), symbols, func_returns, records)
+        )
+
+    m_file_exists = re.fullmatch(
+        r"file\s+exists\s+(.+)",
+        s,
+        flags=re.IGNORECASE,
+    )
+    if m_file_exists:
+        cand = m_file_exists.group(1)
+        if not re.search(r"\b(?:and|or)\b", cand):
+            return FileExistsExpr(
+                filepath=_parse_expr(cand, symbols, func_returns, records)
+            )
 
     m_ends_with = re.fullmatch(
         r"(.+?)\s+ends\s+with\s+(.+)",
@@ -676,12 +794,12 @@ def _guess_expr_type(
     if isinstance(expr, RandomListExpr):
         return "List<Int>"
     if isinstance(expr, ReadJsonListExpr):
-        return "List<Float>"
-    if isinstance(expr, StrEndsWithExpr):
+        return cast(MemeType, f"List<{expr.element_type}>")
+    if isinstance(expr, (StrEndsWithExpr, FileExistsExpr)):
         return "Bool"
-    if isinstance(expr, StringSliceExpr):
+    if isinstance(expr, (StringSliceExpr, ReadFileStringExpr, ArgAtExpr)):
         return "String"
-    if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr)):
+    if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, ArgCountExpr)):
         return "Int"
     if isinstance(expr, ReadInputExpr):
         return expr.target_type
@@ -1252,6 +1370,28 @@ class HeuristicProvider:
                 target=target, item_var=item_var, predicate=pred, source_line=line.lineno
             )
 
+        # `write file <path> with <content>`
+        m_write_file = re.fullmatch(
+            r"write\s+file\s+(.+?)\s+with\s+(.+)", text, flags=re.IGNORECASE
+        )
+        if m_write_file:
+            return WriteFileStmt(
+                filepath=_pe(m_write_file.group(1)),
+                content=_pe(m_write_file.group(2)),
+                source_line=line.lineno,
+            )
+
+        # `append|add <content> to file <path>`
+        m_append_file = re.fullmatch(
+            r"(?:append|add)\s+(.+?)\s+to\s+file\s+(.+)", text, flags=re.IGNORECASE
+        )
+        if m_append_file:
+            return AppendFileStmt(
+                filepath=_pe(m_append_file.group(2)),
+                content=_pe(m_append_file.group(1)),
+                source_line=line.lineno,
+            )
+
         # `append|add <expr> to <target>`
         m_append = re.fullmatch(
             r"(?:append|add)\s+(.+?)\s+to\s+([A-Za-z_]\w*)", text, flags=re.IGNORECASE
@@ -1282,6 +1422,14 @@ class HeuristicProvider:
         if m_fail:
             return FailStmt(
                 message=_pe(m_fail.group(1)),
+                source_line=line.lineno,
+            )
+
+        # `exit with code <expr>`
+        m_exit = re.fullmatch(r"exit\s+with\s+code\s+(.+)", text, flags=re.IGNORECASE)
+        if m_exit:
+            return ExitStmt(
+                code=_pe(m_exit.group(1)),
                 source_line=line.lineno,
             )
 
@@ -1349,6 +1497,10 @@ class HeuristicProvider:
             ) or HeuristicProvider._find_free_var(expr.suffix, symbols)
         if isinstance(expr, ReadJsonListExpr):
             return HeuristicProvider._find_free_var(expr.filepath, symbols)
+        if isinstance(expr, (FileExistsExpr, ReadFileStringExpr)):
+            return HeuristicProvider._find_free_var(expr.filepath, symbols)
+        if isinstance(expr, ArgAtExpr):
+            return HeuristicProvider._find_free_var(expr.index, symbols)
         if isinstance(expr, ListIndexExpr):
             return HeuristicProvider._find_free_var(
                 expr.target, symbols

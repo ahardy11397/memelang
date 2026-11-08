@@ -4,11 +4,16 @@ from __future__ import annotations
 
 import json
 from memelang.ir.schema import (
+    AppendFileStmt,
+    ArgAtExpr,
+    ArgCountExpr,
     AssignStmt,
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    ExitStmt,
     FailStmt,
+    FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
@@ -32,6 +37,7 @@ from memelang.ir.schema import (
     ProgramIR,
     RandomIntExpr,
     RandomListExpr,
+    ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RecordDefStmt,
@@ -49,6 +55,7 @@ from memelang.ir.schema import (
     VarDeclStmt,
     VarRefExpr,
     WhileStmt,
+    WriteFileStmt,
 )
 
 
@@ -123,7 +130,25 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
     if isinstance(expr, StrEndsWithExpr):
         return f"{format_expr(expr.target)} ends with {format_expr(expr.suffix)}"
 
+    if isinstance(expr, FileExistsExpr):
+        res = f"file exists {format_expr(expr.filepath, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, ReadFileStringExpr):
+        res = f"read string from file {format_expr(expr.filepath, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, ArgCountExpr):
+        return "argument count"
+
+    if isinstance(expr, ArgAtExpr):
+        res = f"argument {format_expr(expr.index, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
     if isinstance(expr, ReadJsonListExpr):
+        if expr.explicit_type or expr.element_type != "Float":
+            res = f"read json file {format_expr(expr.filepath, 6)} as List<{expr.element_type}>"
+            return f"({res})" if parent_prec > 5 else res
         return f"read JSON number list from {format_expr(expr.filepath)}"
 
     if isinstance(expr, StringLengthExpr):
@@ -195,6 +220,9 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
     if isinstance(stmt, FailStmt):
         return [f"{pad}fail with {format_expr(stmt.message)}"]
 
+    if isinstance(stmt, ExitStmt):
+        return [f"{pad}exit with code {format_expr(stmt.code)}"]
+
     if isinstance(stmt, PrintStmt):
         exprs = ", ".join(format_expr(e) for e in stmt.expressions)
         return [f"{pad}print {exprs}"]
@@ -254,6 +282,12 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
 
     if isinstance(stmt, MapSetStmt):
         return [f"{pad}set {stmt.target}[{format_expr(stmt.key)}] to {format_expr(stmt.value)}"]
+
+    if isinstance(stmt, WriteFileStmt):
+        return [f"{pad}write file {format_expr(stmt.filepath)} with {format_expr(stmt.content)}"]
+
+    if isinstance(stmt, AppendFileStmt):
+        return [f"{pad}append {format_expr(stmt.content)} to file {format_expr(stmt.filepath)}"]
 
     raise TypeError(f"Unsupported statement node: {type(stmt)!r}")
 

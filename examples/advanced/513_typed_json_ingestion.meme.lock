@@ -1,0 +1,650 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/513_typed_json_ingestion.meme": {
+      "source_sha256": "3e923c23840948452ab82d7e8ebb3cc50fe6ca5762a11859056a625139950c94",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "DatasetSummary",
+          "fields": [
+            {
+              "name": "int_sum",
+              "field_type": "Int"
+            },
+            {
+              "name": "float_count",
+              "field_type": "Int"
+            },
+            {
+              "name": "first_tag",
+              "field_type": "String"
+            },
+            {
+              "name": "active_count",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "write_file",
+          "filepath": {
+            "expr_type": "literal",
+            "value": "ints.json",
+            "data_type": "String"
+          },
+          "content": {
+            "expr_type": "literal",
+            "value": " [ 10 , -5 , 42 , 0 ] ",
+            "data_type": "String"
+          },
+          "source_line": 7
+        },
+        {
+          "op": "write_file",
+          "filepath": {
+            "expr_type": "literal",
+            "value": "floats.json",
+            "data_type": "String"
+          },
+          "content": {
+            "expr_type": "literal",
+            "value": "[\n  1.5,\n  2.25,\n  -0.75\n]",
+            "data_type": "String"
+          },
+          "source_line": 8
+        },
+        {
+          "op": "write_file",
+          "filepath": {
+            "expr_type": "literal",
+            "value": "tags.json",
+            "data_type": "String"
+          },
+          "content": {
+            "expr_type": "literal",
+            "value": "[\"alpha, beta\", \"quote:\\\"ok\\\"\", \"line1\\nline2\"]",
+            "data_type": "String"
+          },
+          "source_line": 9
+        },
+        {
+          "op": "write_file",
+          "filepath": {
+            "expr_type": "literal",
+            "value": "flags.json",
+            "data_type": "String"
+          },
+          "content": {
+            "expr_type": "literal",
+            "value": "[ true , false , true , true ]",
+            "data_type": "String"
+          },
+          "source_line": 10
+        },
+        {
+          "op": "var_decl",
+          "name": "nums",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "read_json_list",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "ints.json",
+              "data_type": "String"
+            },
+            "element_type": "Int",
+            "explicit_type": true
+          },
+          "source_line": 12
+        },
+        {
+          "op": "var_decl",
+          "name": "weights",
+          "var_type": "List<Float>",
+          "value": {
+            "expr_type": "read_json_list",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "floats.json",
+              "data_type": "String"
+            },
+            "element_type": "Float",
+            "explicit_type": true
+          },
+          "source_line": 13
+        },
+        {
+          "op": "var_decl",
+          "name": "tags",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "read_json_list",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tags.json",
+              "data_type": "String"
+            },
+            "element_type": "String",
+            "explicit_type": true
+          },
+          "source_line": 14
+        },
+        {
+          "op": "var_decl",
+          "name": "flags",
+          "var_type": "List<Bool>",
+          "value": {
+            "expr_type": "read_json_list",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "flags.json",
+              "data_type": "String"
+            },
+            "element_type": "Bool",
+            "explicit_type": true
+          },
+          "source_line": 15
+        },
+        {
+          "op": "var_decl",
+          "name": "total",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 17
+        },
+        {
+          "op": "for_each",
+          "item_var": "n",
+          "collection": "nums",
+          "body": [
+            {
+              "op": "assign",
+              "name": "total",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "total"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                }
+              },
+              "source_line": 19
+            }
+          ],
+          "source_line": 18
+        },
+        {
+          "op": "var_decl",
+          "name": "trues",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 21
+        },
+        {
+          "op": "for_each",
+          "item_var": "b",
+          "collection": "flags",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "var_ref",
+                "name": "b"
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "trues",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "trues"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 24
+                }
+              ],
+              "else_body": [],
+              "source_line": 23
+            }
+          ],
+          "source_line": 22
+        },
+        {
+          "op": "var_decl",
+          "name": "summary",
+          "var_type": "DatasetSummary",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "DatasetSummary",
+            "fields": [
+              {
+                "name": "int_sum",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "total"
+                }
+              },
+              {
+                "name": "float_count",
+                "value": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "weights"
+                  }
+                }
+              },
+              {
+                "name": "first_tag",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "tags"
+                  },
+                  "index": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                }
+              },
+              {
+                "name": "active_count",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "trues"
+                }
+              }
+            ]
+          },
+          "source_line": 26
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "summary"
+            }
+          ],
+          "source_line": 27
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "tags"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 28
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "weights"
+            }
+          ],
+          "source_line": 29
+        }
+      ],
+      "canonical_meme": "record DatasetSummary:\n    int_sum: Int\n    float_count: Int\n    first_tag: String\n    active_count: Int\nwrite file \"ints.json\" with \" [ 10 , -5 , 42 , 0 ] \"\nwrite file \"floats.json\" with \"[\\n  1.5,\\n  2.25,\\n  -0.75\\n]\"\nwrite file \"tags.json\" with \"[\\\"alpha, beta\\\", \\\"quote:\\\\\\\"ok\\\\\\\"\\\", \\\"line1\\\\nline2\\\"]\"\nwrite file \"flags.json\" with \"[ true , false , true , true ]\"\ndefine list nums as read json file \"ints.json\" as List<Int>\ndefine list weights as read json file \"floats.json\" as List<Float>\ndefine list tags as read json file \"tags.json\" as List<String>\ndefine list flags as read json file \"flags.json\" as List<Bool>\ndefine total: Int as 0\nfor each n in nums:\n    set total to total + n\ndefine trues: Int as 0\nfor each b in flags:\n    if b:\n        set trues to trues + 1\ndefine summary: DatasetSummary as DatasetSummary(int_sum=total, float_count=length of weights, first_tag=tags[0], active_count=trues)\nprint summary\nprint tags[1]\nprint weights",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "DatasetSummary",
+            "fields": [
+              {
+                "name": "int_sum",
+                "field_type": "Int"
+              },
+              {
+                "name": "float_count",
+                "field_type": "Int"
+              },
+              {
+                "name": "first_tag",
+                "field_type": "String"
+              },
+              {
+                "name": "active_count",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "write_file",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "ints.json",
+              "data_type": "String"
+            },
+            "content": {
+              "expr_type": "literal",
+              "value": " [ 10 , -5 , 42 , 0 ] ",
+              "data_type": "String"
+            },
+            "source_line": 7
+          },
+          {
+            "op": "write_file",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "floats.json",
+              "data_type": "String"
+            },
+            "content": {
+              "expr_type": "literal",
+              "value": "[\n  1.5,\n  2.25,\n  -0.75\n]",
+              "data_type": "String"
+            },
+            "source_line": 8
+          },
+          {
+            "op": "write_file",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tags.json",
+              "data_type": "String"
+            },
+            "content": {
+              "expr_type": "literal",
+              "value": "[\"alpha, beta\", \"quote:\\\"ok\\\"\", \"line1\\nline2\"]",
+              "data_type": "String"
+            },
+            "source_line": 9
+          },
+          {
+            "op": "write_file",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "flags.json",
+              "data_type": "String"
+            },
+            "content": {
+              "expr_type": "literal",
+              "value": "[ true , false , true , true ]",
+              "data_type": "String"
+            },
+            "source_line": 10
+          },
+          {
+            "op": "var_decl",
+            "name": "nums",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "read_json_list",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "ints.json",
+                "data_type": "String"
+              },
+              "element_type": "Int",
+              "explicit_type": true
+            },
+            "source_line": 12
+          },
+          {
+            "op": "var_decl",
+            "name": "weights",
+            "var_type": "List<Float>",
+            "value": {
+              "expr_type": "read_json_list",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "floats.json",
+                "data_type": "String"
+              },
+              "element_type": "Float",
+              "explicit_type": true
+            },
+            "source_line": 13
+          },
+          {
+            "op": "var_decl",
+            "name": "tags",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "read_json_list",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tags.json",
+                "data_type": "String"
+              },
+              "element_type": "String",
+              "explicit_type": true
+            },
+            "source_line": 14
+          },
+          {
+            "op": "var_decl",
+            "name": "flags",
+            "var_type": "List<Bool>",
+            "value": {
+              "expr_type": "read_json_list",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "flags.json",
+                "data_type": "String"
+              },
+              "element_type": "Bool",
+              "explicit_type": true
+            },
+            "source_line": 15
+          },
+          {
+            "op": "var_decl",
+            "name": "total",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 17
+          },
+          {
+            "op": "for_each",
+            "item_var": "n",
+            "collection": "nums",
+            "body": [
+              {
+                "op": "assign",
+                "name": "total",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "total"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  }
+                },
+                "source_line": 19
+              }
+            ],
+            "source_line": 18
+          },
+          {
+            "op": "var_decl",
+            "name": "trues",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 21
+          },
+          {
+            "op": "for_each",
+            "item_var": "b",
+            "collection": "flags",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "var_ref",
+                  "name": "b"
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "trues",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "trues"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 24
+                  }
+                ],
+                "else_body": [],
+                "source_line": 23
+              }
+            ],
+            "source_line": 22
+          },
+          {
+            "op": "var_decl",
+            "name": "summary",
+            "var_type": "DatasetSummary",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "DatasetSummary",
+              "fields": [
+                {
+                  "name": "int_sum",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "total"
+                  }
+                },
+                {
+                  "name": "float_count",
+                  "value": {
+                    "expr_type": "list_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "weights"
+                    }
+                  }
+                },
+                {
+                  "name": "first_tag",
+                  "value": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "tags"
+                    },
+                    "index": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  }
+                },
+                {
+                  "name": "active_count",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "trues"
+                  }
+                }
+              ]
+            },
+            "source_line": 26
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "summary"
+              }
+            ],
+            "source_line": 27
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "tags"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 28
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "weights"
+              }
+            ],
+            "source_line": 29
+          }
+        ]
+      }
+    }
+  }
+}

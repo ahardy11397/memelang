@@ -51,7 +51,11 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"expr_type": "call", "func_name": "fn", "args": [...]}`
 - `{"expr_type": "read_input", "prompt": "Enter x: ", "target_type": "Float"}` (`target_type` in `"Int"`, `"Float"`, `"Bool"`, `"String"`)
 - `{"expr_type": "str_ends_with", "target": <String expr>, "suffix": <String expr>}` (case-insensitive suffix check, e.g. `if filepath is json` -> `suffix` `".json"`, returns `"Bool"`)
-- `{"expr_type": "read_json_list", "filepath": <String expr>}` (loads a JSON array of numbers from `filepath` as `"List<Float>"`)
+- `{"expr_type": "file_exists", "filepath": <String expr>}` (`file exists <path>`, returns `"Bool"`, never errors)
+- `{"expr_type": "read_file_string", "filepath": <String expr>}` (`read string from file <path>`, returns `"String"`)
+- `{"expr_type": "arg_count"}` (`argument count`, returns `"Int"`, argc including program name at index 0)
+- `{"expr_type": "arg_at", "index": <Int expr>}` (`argument <n>`, returns `"String"`, 1-based for user CLI args where 0 is program name)
+- `{"expr_type": "read_json_list", "filepath": <String expr>, "element_type": "Float"}` (`read json file <path> as List<T>` where `element_type` is `"Int"`, `"Float"`, `"String"`, or `"Bool"`, or `read JSON number list from <path>` defaulting to `"Float"`)
 - `{"expr_type": "record_literal", "record_name": "User", "fields": [{"name": "id", "value": <expr>}, ...]}`
 - `{"expr_type": "record_field", "target": <expr>, "field_name": "id"}`
 - `{"expr_type": "map_literal", "key_type": "String", "value_type": "Int", "entries": [{"key": <expr>, "value": <expr>}, ...]}`
@@ -68,6 +72,7 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "list_insert", "target": "nums", "index": <Int expr>, "value": <expr>}` (inserts at 0-based `index`, shifting elements right)
 - `{"op": "list_set_index", "target": "nums", "index": <Int expr>, "value": <expr>}` (sets element at 0-based `index` in-place)
 - `{"op": "fail_stmt", "message": <String expr>}` (prints error message and exits cleanly; counts as returning on that branch!)
+- `{"op": "exit_stmt", "code": <Int expr>}` (`exit with code <int-expr>`, exits immediately with status code `code & 0xFF`; counts as returning on that branch!)
 - `{"op": "print_stmt", "expressions": [<expr>, ...]}`
 - `{"op": "if_stmt", "condition": <expr>, "then_body": [...], "else_body": [...]}`
 - `{"op": "for_each", "item_var": "n", "collection": "nums", "body": [...]}`
@@ -78,6 +83,8 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "record_def", "name": "User", "fields": [{"name": "id", "field_type": "Int"}, ...]}`
 - `{"op": "record_set_field", "target": "u", "field_name": "id", "value": <expr>}`
 - `{"op": "map_set", "target": "m", "key": <expr>, "value": <expr>}`
+- `{"op": "write_file", "filepath": <String expr>, "content": <String expr>}` (`write file <path> with <content>`, overwrites/creates file)
+- `{"op": "append_file", "filepath": <String expr>, "content": <String expr>}` (`append <content> to file <path>`, appends/creates file)
 
 ### Rules
 1. Ignore ONLY `#` comment lines, pure narrative header lines (`this runs in the shell`), and the `class <name>` header line itself. You MUST emit EVERY helper `define function <name>` inside a `class` as a top-level `{"op": "func_def", ...}` BEFORE the main statements, and inline `define function main`'s body as top-level statements at the end!

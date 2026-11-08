@@ -9,11 +9,16 @@ from memelang.ir.canonical import format_expr, to_canonical_meme
 from memelang.ir.schema import (
     AmbiguityCandidate,
     AmbiguityDiagnostic,
+    AppendFileStmt,
+    ArgAtExpr,
+    ArgCountExpr,
     AssignStmt,
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    ExitStmt,
     FailStmt,
+    FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
     ForRangeStmt,
@@ -38,6 +43,7 @@ from memelang.ir.schema import (
     ProgramIR,
     RandomIntExpr,
     RandomListExpr,
+    ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RecordDefStmt,
@@ -57,6 +63,7 @@ from memelang.ir.schema import (
     VarDeclStmt,
     VarRefExpr,
     WhileStmt,
+    WriteFileStmt,
 )
 
 
@@ -662,13 +669,54 @@ class _StaticChecker:
                 )
             return "Bool"
 
+        if isinstance(expr, FileExistsExpr):
+            fp_t = self.infer_expr_type(expr.filepath, scope, stmt_idx)
+            if fp_t != "String":
+                raise StaticVerificationError(
+                    f"`file_exists` requires String filepath, got {fp_t}", stmt_idx
+                )
+            return "Bool"
+
+        if isinstance(expr, ReadFileStringExpr):
+            fp_t = self.infer_expr_type(expr.filepath, scope, stmt_idx)
+            if fp_t != "String":
+                raise StaticVerificationError(
+                    f"`read_file_string` requires String filepath, got {fp_t}", stmt_idx
+                )
+            return "String"
+
+        if isinstance(expr, ArgCountExpr):
+            return "Int"
+
+        if isinstance(expr, ArgAtExpr):
+            idx_t = self.infer_expr_type(expr.index, scope, stmt_idx)
+            if idx_t != "Int":
+                raise StaticVerificationError(
+                    f"`arg_at` index must be Int, got {idx_t}", stmt_idx
+                )
+            if (
+                isinstance(expr.index, LiteralExpr)
+                and isinstance(expr.index.value, int)
+                and not isinstance(expr.index.value, bool)
+                and expr.index.value < 0
+            ):
+                raise StaticVerificationError(
+                    f"Negative argument index ({expr.index.value}) is not allowed", stmt_idx
+                )
+            return "String"
+
         if isinstance(expr, ReadJsonListExpr):
             fp_t = self.infer_expr_type(expr.filepath, scope, stmt_idx)
             if fp_t != "String":
                 raise StaticVerificationError(
                     f"`read_json_list` requires String filepath, got {fp_t}", stmt_idx
                 )
-            return "List<Float>"
+            if expr.element_type not in ("Int", "Float", "String", "Bool"):
+                raise StaticVerificationError(
+                    f"`read_json_list` element_type must be Int, Float, String, or Bool, got {expr.element_type}",
+                    stmt_idx,
+                )
+            return cast(MemeType, f"List<{expr.element_type}>")
 
         if isinstance(expr, StringLengthExpr):
             target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
@@ -995,6 +1043,14 @@ class _StaticChecker:
                 )
             return True
 
+        if isinstance(stmt, ExitStmt):
+            code_t = self.infer_expr_type(stmt.code, scope, stmt_idx)
+            if code_t != "Int":
+                raise StaticVerificationError(
+                    f"`exit_stmt` requires Int code, got {code_t}", stmt_idx
+                )
+            return True
+
         if isinstance(stmt, PrintStmt):
             if not stmt.expressions:
                 raise StaticVerificationError("`print` requires at least one expression", stmt_idx)
@@ -1187,6 +1243,32 @@ class _StaticChecker:
                 )
             return False
 
+        if isinstance(stmt, WriteFileStmt):
+            fp_t = self.infer_expr_type(stmt.filepath, scope, stmt_idx)
+            if fp_t != "String":
+                raise StaticVerificationError(
+                    f"`write_file` requires String filepath, got {fp_t}", stmt_idx
+                )
+            c_t = self.infer_expr_type(stmt.content, scope, stmt_idx)
+            if c_t != "String":
+                raise StaticVerificationError(
+                    f"`write_file` requires String content, got {c_t}", stmt_idx
+                )
+            return False
+
+        if isinstance(stmt, AppendFileStmt):
+            fp_t = self.infer_expr_type(stmt.filepath, scope, stmt_idx)
+            if fp_t != "String":
+                raise StaticVerificationError(
+                    f"`append_file` requires String filepath, got {fp_t}", stmt_idx
+                )
+            c_t = self.infer_expr_type(stmt.content, scope, stmt_idx)
+            if c_t != "String":
+                raise StaticVerificationError(
+                    f"`append_file` requires String content, got {c_t}", stmt_idx
+                )
+            return False
+
         raise StaticVerificationError(f"Unsupported statement node: {type(stmt)!r}", stmt_idx)
 
 
@@ -1215,6 +1297,10 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
         return any(_expr_references_var(a, name) for a in expr.args)
     if isinstance(expr, StrEndsWithExpr):
         return _expr_references_var(expr.target, name) or _expr_references_var(expr.suffix, name)
+    if isinstance(expr, (FileExistsExpr, ReadFileStringExpr)):
+        return _expr_references_var(expr.filepath, name)
+    if isinstance(expr, ArgAtExpr):
+        return _expr_references_var(expr.index, name)
     if isinstance(expr, ReadJsonListExpr):
         return _expr_references_var(expr.filepath, name)
     if isinstance(expr, StringLengthExpr):
@@ -1277,6 +1363,10 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
             or _expr_references_var(s.value, name)
         ):
             return True
+        if isinstance(s, (WriteFileStmt, AppendFileStmt)) and (
+            _expr_references_var(s.filepath, name) or _expr_references_var(s.content, name)
+        ):
+            return True
         if isinstance(s, (SortCollectionStmt, ClampCollectionStmt, FilterCollectionStmt)) and (
             s.target == name
         ):
@@ -1288,6 +1378,8 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
         if isinstance(s, FilterCollectionStmt) and _expr_references_var(s.predicate, name):
             return True
         if isinstance(s, FailStmt) and _expr_references_var(s.message, name):
+            return True
+        if isinstance(s, ExitStmt) and _expr_references_var(s.code, name):
             return True
         if isinstance(s, PrintStmt) and any(
             _expr_references_var(e, name) for e in s.expressions

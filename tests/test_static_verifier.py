@@ -1047,3 +1047,294 @@ def test_loop_collision_ambiguity_renders_actual_clamp_bounds_in_descriptions():
     assert "[5, 50]" in cands[3]
     assert "[1, 10]" not in cands[3]
 
+
+def test_file_io_verification_and_canonical_roundtrip():
+    from memelang.ir.canonical import to_canonical_meme
+    from memelang.ir.schema import (
+        AppendFileStmt,
+        FileExistsExpr,
+        ReadFileStringExpr,
+        WriteFileStmt,
+    )
+    from memelang.llm.heuristic import HeuristicProvider
+
+    prog = ProgramIR(
+        items=[
+            VarDeclStmt(
+                name="path",
+                var_type="String",
+                value=LiteralExpr(value="notes.txt", data_type="String"),
+            ),
+            WriteFileStmt(
+                filepath=VarRefExpr(name="path"),
+                content=LiteralExpr(value="hello", data_type="String"),
+            ),
+            AppendFileStmt(
+                filepath=VarRefExpr(name="path"),
+                content=LiteralExpr(value=" world", data_type="String"),
+            ),
+            VarDeclStmt(
+                name="exists",
+                var_type="Bool",
+                value=FileExistsExpr(filepath=VarRefExpr(name="path")),
+            ),
+            VarDeclStmt(
+                name="text",
+                var_type="String",
+                value=ReadFileStringExpr(filepath=VarRefExpr(name="path")),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="exists"), VarRefExpr(name="text")]),
+        ]
+    )
+    out = verify_synthesis(prog)
+    assert out.is_unambiguous and out.program is not None
+
+    canonical = to_canonical_meme(out.program)
+    assert 'write file path with "hello"' in canonical
+    assert 'append " world" to file path' in canonical
+    assert "file exists path" in canonical
+    assert "read string from file path" in canonical
+
+    re_syn = HeuristicProvider().synthesize(canonical)
+    re_out = verify_synthesis(re_syn)
+    assert re_out.is_unambiguous and re_out.program is not None
+    assert to_canonical_meme(re_out.program) == canonical
+
+    # Type check failures
+    with pytest.raises(StaticVerificationError, match="`write_file` requires String filepath"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    WriteFileStmt(
+                        filepath=LiteralExpr(value=123, data_type="Int"),
+                        content=LiteralExpr(value="x", data_type="String"),
+                    )
+                ]
+            )
+        )
+    with pytest.raises(StaticVerificationError, match="`write_file` requires String content"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    WriteFileStmt(
+                        filepath=LiteralExpr(value="a.txt", data_type="String"),
+                        content=LiteralExpr(value=123, data_type="Int"),
+                    )
+                ]
+            )
+        )
+    with pytest.raises(StaticVerificationError, match="`append_file` requires String content"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    AppendFileStmt(
+                        filepath=LiteralExpr(value="a.txt", data_type="String"),
+                        content=LiteralExpr(value=True, data_type="Bool"),
+                    )
+                ]
+            )
+        )
+    with pytest.raises(StaticVerificationError, match="`file_exists` requires String filepath"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    PrintStmt(
+                        expressions=[FileExistsExpr(filepath=LiteralExpr(value=1, data_type="Int"))]
+                    )
+                ]
+            )
+        )
+    with pytest.raises(StaticVerificationError, match="`read_file_string` requires String filepath"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    PrintStmt(
+                        expressions=[
+                            ReadFileStringExpr(filepath=LiteralExpr(value=1, data_type="Int"))
+                        ]
+                    )
+                ]
+            )
+        )
+
+
+def test_exit_stmt_verification_return_path_and_roundtrip():
+    from memelang.ir.canonical import to_canonical_meme
+    from memelang.ir.schema import ExitStmt, IfStmt
+    from memelang.llm.heuristic import HeuristicProvider
+
+    # ExitStmt counts as diverging return path inside non-Void function
+    prog = ProgramIR(
+        items=[
+            FuncDefStmt(
+                name="checked",
+                params=[FuncParam(name="x", param_type="Int")],
+                return_type="Int",
+                body=[
+                    IfStmt(
+                        condition=BinaryOpExpr(
+                            op="<",
+                            left=VarRefExpr(name="x"),
+                            right=LiteralExpr(value=0, data_type="Int"),
+                        ),
+                        then_body=[ExitStmt(code=LiteralExpr(value=2, data_type="Int"))],
+                        else_body=[ReturnStmt(value=VarRefExpr(name="x"))],
+                    )
+                ],
+            ),
+            ExitStmt(code=LiteralExpr(value=0, data_type="Int")),
+        ]
+    )
+    out = verify_synthesis(prog)
+    assert out.is_unambiguous and out.program is not None
+    can = to_canonical_meme(out.program)
+    assert "exit with code 2" in can
+    assert "exit with code 0" in can
+    re_out = verify_synthesis(HeuristicProvider().synthesize(can))
+    assert re_out.is_unambiguous and re_out.program is not None
+    assert to_canonical_meme(re_out.program) == can
+
+    with pytest.raises(StaticVerificationError, match="`exit_stmt` requires Int code"):
+        verify_synthesis(
+            ProgramIR(items=[ExitStmt(code=LiteralExpr(value="bad", data_type="String"))])
+        )
+
+
+def test_argv_verification_and_canonical_roundtrip():
+    from memelang.ir.canonical import to_canonical_meme
+    from memelang.ir.schema import ArgAtExpr, ArgCountExpr
+    from memelang.llm.heuristic import HeuristicProvider
+
+    prog = ProgramIR(
+        items=[
+            VarDeclStmt(name="n", var_type="Int", value=ArgCountExpr()),
+            VarDeclStmt(
+                name="first",
+                var_type="String",
+                value=ArgAtExpr(index=LiteralExpr(value=1, data_type="Int")),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="n"), VarRefExpr(name="first")]),
+        ]
+    )
+    out = verify_synthesis(prog)
+    assert out.is_unambiguous and out.program is not None
+    can = to_canonical_meme(out.program)
+    assert "argument count" in can
+    assert "argument 1" in can
+    re_out = verify_synthesis(HeuristicProvider().synthesize(can))
+    assert re_out.is_unambiguous and re_out.program is not None
+    assert to_canonical_meme(re_out.program) == can
+
+    with pytest.raises(StaticVerificationError, match="`arg_at` index must be Int"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    PrintStmt(
+                        expressions=[
+                            ArgAtExpr(index=LiteralExpr(value="bad", data_type="String"))
+                        ]
+                    )
+                ]
+            )
+        )
+
+    with pytest.raises(StaticVerificationError, match="Negative argument index"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    PrintStmt(
+                        expressions=[ArgAtExpr(index=LiteralExpr(value=-1, data_type="Int"))]
+                    )
+                ]
+            )
+        )
+
+
+def test_typed_read_json_list_verification_and_canonical_roundtrip():
+    from memelang.ir.canonical import to_canonical_meme
+    from memelang.ir.schema import ReadJsonListExpr
+    from memelang.llm.heuristic import HeuristicProvider
+
+    prog = ProgramIR(
+        items=[
+            VarDeclStmt(
+                name="legacy_nums",
+                var_type="List<Float>",
+                value=ReadJsonListExpr(
+                    filepath=LiteralExpr(value="a.json", data_type="String"),
+                ),
+            ),
+            VarDeclStmt(
+                name="explicit_floats",
+                var_type="List<Float>",
+                value=ReadJsonListExpr(
+                    filepath=LiteralExpr(value="b.json", data_type="String"),
+                    element_type="Float",
+                    explicit_type=True,
+                ),
+            ),
+            VarDeclStmt(
+                name="ints",
+                var_type="List<Int>",
+                value=ReadJsonListExpr(
+                    filepath=LiteralExpr(value="c.json", data_type="String"),
+                    element_type="Int",
+                    explicit_type=True,
+                ),
+            ),
+            VarDeclStmt(
+                name="tags",
+                var_type="List<String>",
+                value=ReadJsonListExpr(
+                    filepath=LiteralExpr(value="d.json", data_type="String"),
+                    element_type="String",
+                    explicit_type=True,
+                ),
+            ),
+            VarDeclStmt(
+                name="flags",
+                var_type="List<Bool>",
+                value=ReadJsonListExpr(
+                    filepath=LiteralExpr(value="e.json", data_type="String"),
+                    element_type="Bool",
+                    explicit_type=True,
+                ),
+            ),
+        ]
+    )
+    out = verify_synthesis(prog)
+    assert out.is_unambiguous and out.program is not None
+
+    can = to_canonical_meme(out.program)
+    assert 'read JSON number list from "a.json"' in can
+    assert 'read json file "b.json" as List<Float>' in can
+    assert 'read json file "c.json" as List<Int>' in can
+    assert 'read json file "d.json" as List<String>' in can
+    assert 'read json file "e.json" as List<Bool>' in can
+
+    re_out = verify_synthesis(HeuristicProvider().synthesize(can))
+    assert re_out.is_unambiguous and re_out.program is not None
+    assert to_canonical_meme(re_out.program) == can
+
+    # Type mismatch between declared variable type and ReadJsonListExpr element_type fails
+    with pytest.raises(StaticVerificationError, match="declared as List<Int> but initialized with List<String>"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    VarDeclStmt(
+                        name="bad",
+                        var_type="List<Int>",
+                        value=ReadJsonListExpr(
+                            filepath=LiteralExpr(value="d.json", data_type="String"),
+                            element_type="String",
+                            explicit_type=True,
+                        ),
+                    )
+                ]
+            )
+        )
+
+
+
+
+

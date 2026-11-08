@@ -259,6 +259,13 @@ def test_gbnf_and_system_prompt_include_file_json_insert_and_fail():
     for token in (
         "str_ends_with",
         "read_json_list",
+        "write_file",
+        "append_file",
+        "read_file_string",
+        "file_exists",
+        "exit_stmt",
+        "arg_count",
+        "arg_at",
         "list_insert",
         "list_set_index",
         "string_length",

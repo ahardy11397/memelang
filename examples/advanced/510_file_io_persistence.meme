@@ -1,0 +1,28 @@
+record AuditEntry:
+    actor: String
+    action: String
+    status: String
+
+function format_entry(entry: AuditEntry) -> String:
+    return entry.actor + "|" + entry.action + "|" + entry.status + "\n"
+
+define log_path: String as "audit_state.log"
+print "initial_exists", file exists log_path
+
+define e1 as AuditEntry(actor="alice", action="deploy_prod", status="OK")
+write file log_path with format_entry(e1)
+print "after_write_exists", file exists log_path
+
+define e2 as AuditEntry(actor="bob", action="rotate_keys", status="OK")
+append format_entry(e2) to file log_path
+
+define e3 as AuditEntry(actor="eve", action="drop_table", status="DENIED")
+append format_entry(e3) to file log_path
+
+define saved_log: String as read string from file log_path
+print "log_length", length of string saved_log
+print saved_log
+
+write file log_path with "RESET\n"
+define after_overwrite: String as read string from file log_path
+print after_overwrite

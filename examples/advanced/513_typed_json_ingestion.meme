@@ -1,0 +1,29 @@
+record DatasetSummary:
+    int_sum: Int
+    float_count: Int
+    first_tag: String
+    active_count: Int
+
+write file "ints.json" with " [ 10 , -5 , 42 , 0 ] "
+write file "floats.json" with "[\n  1.5,\n  2.25,\n  -0.75\n]"
+write file "tags.json" with "[\"alpha, beta\", \"quote:\\\"ok\\\"\", \"line1\\nline2\"]"
+write file "flags.json" with "[ true , false , true , true ]"
+
+define list nums as read json file "ints.json" as List<Int>
+define list weights as read json file "floats.json" as List<Float>
+define list tags as read json file "tags.json" as List<String>
+define list flags as read json file "flags.json" as List<Bool>
+
+define total: Int as 0
+for each n in nums:
+    set total to total + n
+
+define trues: Int as 0
+for each b in flags:
+    if b:
+        set trues to trues + 1
+
+define summary as DatasetSummary(int_sum=total, float_count=length of weights, first_tag=tags[0], active_count=trues)
+print summary
+print tags[1]
+print weights

@@ -1,0 +1,20 @@
+record CheckReport:
+    service: String
+    errors: Int
+    warnings: Int
+
+function evaluate_gate(report: CheckReport) -> String:
+    if report.errors < 0:
+        exit with code 3
+    if report.errors > 0:
+        return "BLOCKED"
+    if report.warnings > 0:
+        return "WARN"
+    return "PASS"
+
+define r1 as CheckReport(service="auth-gateway", errors=0, warnings=0)
+define r2 as CheckReport(service="payment-worker", errors=0, warnings=2)
+print r1.service, evaluate_gate(r1)
+print r2.service, evaluate_gate(r2)
+exit with code 0
+print "unreachable"
