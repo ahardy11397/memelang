@@ -34,7 +34,7 @@ BASE_PROMPT_PREFIX = """You are the frontend semantic synthesizer for the `meme`
 Translate the user's English `.meme` source file into a strict JSON object matching `SynthesisResult`: `{"items": [...]}`.
 
 ### Allowed Static Types (`MemeType`)
-`"Int"`, `"Float"`, `"Bool"`, `"String"`, `"List<Int>"`, `"List<Float>"`, `"List<Bool>"`, `"List<String>"`, `"List<List<Int>>"`, `"List<List<Float>>"`, `"List<List<Bool>>"`, `"List<List<String>>"`, `"Void"`.
+`"Int"`, `"Float"`, `"Bool"`, `"String"`, `"List<Int>"`, `"List<Float>"`, `"List<Bool>"`, `"List<String>"`, `"List<List<Int>>"`, `"List<List<Float>>"`, `"List<List<Bool>>"`, `"List<List<String>>"`, `"Map<K, V>"` (where `K` is `"Int"`, `"Bool"`, or `"String"`), `<RecordName>`, `"List<<RecordName>>"`, `"Void"`.
 
 ### Allowed Expressions (`expr_type` REQUIRED on every expression)
 - `{"expr_type": "literal", "value": 10, "data_type": "Int"}` (also `"Float"`, `"Bool"`, `"String"`)
@@ -52,6 +52,11 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"expr_type": "read_input", "prompt": "Enter x: ", "target_type": "Float"}` (`target_type` in `"Int"`, `"Float"`, `"Bool"`, `"String"`)
 - `{"expr_type": "str_ends_with", "target": <String expr>, "suffix": <String expr>}` (case-insensitive suffix check, e.g. `if filepath is json` -> `suffix` `".json"`, returns `"Bool"`)
 - `{"expr_type": "read_json_list", "filepath": <String expr>}` (loads a JSON array of numbers from `filepath` as `"List<Float>"`)
+- `{"expr_type": "record_literal", "record_name": "User", "fields": [{"name": "id", "value": <expr>}, ...]}`
+- `{"expr_type": "record_field", "target": <expr>, "field_name": "id"}`
+- `{"expr_type": "map_literal", "key_type": "String", "value_type": "Int", "entries": [{"key": <expr>, "value": <expr>}, ...]}`
+- `{"expr_type": "map_get", "target": <expr>, "key": <expr>, "default_val": <expr or null>}`
+- `{"expr_type": "map_has_key", "target": <expr>, "key": <expr>}`
 
 ### Allowed Statements (`op` REQUIRED on every statement)
 - `{"op": "var_decl", "name": "x", "var_type": "Float", "value": <expr>, "source_line": 1}`
@@ -70,6 +75,9 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "while_loop", "condition": <expr>, "body": [...]}`
 - `{"op": "func_def", "name": "f", "params": [{"name": "a", "param_type": "Int"}], "return_type": "Int", "body": [...]}`
 - `{"op": "return_stmt", "value": <expr>}`
+- `{"op": "record_def", "name": "User", "fields": [{"name": "id", "field_type": "Int"}, ...]}`
+- `{"op": "record_set_field", "target": "u", "field_name": "id", "value": <expr>}`
+- `{"op": "map_set", "target": "m", "key": <expr>, "value": <expr>}`
 
 ### Rules
 1. Ignore ONLY `#` comment lines, pure narrative header lines (`this runs in the shell`), and the `class <name>` header line itself. You MUST emit EVERY helper `define function <name>` inside a `class` as a top-level `{"op": "func_def", ...}` BEFORE the main statements, and inline `define function main`'s body as top-level statements at the end!
@@ -264,6 +272,7 @@ class CompilationUnit:
 
 
 _FUNC_HEADER_RE = re.compile(r"^(?:define\s+function|function)\s+([A-Za-z_][A-Za-z0-9_-]*)\b")
+_RECORD_HEADER_RE = re.compile(r"^record\s+([A-Za-z_][A-Za-z0-9_]*)\s*:?\s*$", re.IGNORECASE)
 _CLASS_HEADER_RE = re.compile(r"^class\s+[A-Za-z_][A-Za-z0-9_-]*\s*:?\s*$")
 
 
@@ -295,12 +304,26 @@ def split_compilation_units(source_text: str) -> list[CompilationUnit]:
         ]
 
     base_indent = min(func_indents)
+    record_lines: list[tuple[int, str]] = []
     func_units: list[CompilationUnit] = []
     main_lines: list[tuple[int, str]] = []
 
     i = 0
     while i < len(indexed):
         ln, ind, raw = indexed[i]
+        m_rec = _RECORD_HEADER_RE.match(raw.strip()) if ind == base_indent else None
+        if m_rec:
+            record_lines.append(
+                (ln, raw[base_indent:] if len(raw) >= base_indent else raw.strip())
+            )
+            i += 1
+            while i < len(indexed) and indexed[i][1] > base_indent:
+                bln, _, braw = indexed[i]
+                dedented = braw[base_indent:] if len(braw) >= base_indent else braw.lstrip()
+                record_lines.append((bln, dedented))
+                i += 1
+            continue
+
         m = _FUNC_HEADER_RE.match(raw.strip()) if ind == base_indent else None
         if m:
             fn_name = m.group(1)
@@ -338,7 +361,16 @@ def split_compilation_units(source_text: str) -> list[CompilationUnit]:
             main_lines.append((ln, ded))
             i += 1
 
-    units = list(func_units)
+    units: list[CompilationUnit] = []
+    if record_lines:
+        units.append(
+            CompilationUnit(
+                is_func=False,
+                text="\n".join(r for _, r in record_lines),
+                line_numbers=[r_ln for r_ln, _ in record_lines],
+            )
+        )
+    units.extend(func_units)
     if main_lines:
         units.append(
             CompilationUnit(

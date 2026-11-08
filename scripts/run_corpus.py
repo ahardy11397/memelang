@@ -34,12 +34,19 @@ from memelang.ir.schema import (
     ListLengthExpr,
     ListLiteralExpr,
     ListSetIndexStmt,
+    MapGetExpr,
+    MapHasKeyExpr,
+    MapLiteralExpr,
+    MapSetStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
     RandomListExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RecordFieldExpr,
+    RecordLiteralExpr,
+    RecordSetFieldStmt,
     ReturnStmt,
     StrEndsWithExpr,
     StringLengthExpr,
@@ -192,15 +199,35 @@ def _collect_expr_prompts(expr: IRExpr) -> list[str]:
         prompts.extend(_collect_expr_prompts(expr.target))
         prompts.extend(_collect_expr_prompts(expr.start))
         prompts.extend(_collect_expr_prompts(expr.end))
+    elif isinstance(expr, RecordLiteralExpr):
+        for f in expr.fields:
+            prompts.extend(_collect_expr_prompts(f.value))
+    elif isinstance(expr, RecordFieldExpr):
+        prompts.extend(_collect_expr_prompts(expr.target))
+    elif isinstance(expr, MapLiteralExpr):
+        for e in expr.entries:
+            prompts.extend(_collect_expr_prompts(e.key))
+            prompts.extend(_collect_expr_prompts(e.value))
+    elif isinstance(expr, MapGetExpr):
+        prompts.extend(_collect_expr_prompts(expr.target))
+        prompts.extend(_collect_expr_prompts(expr.key))
+        if expr.default_val is not None:
+            prompts.extend(_collect_expr_prompts(expr.default_val))
+    elif isinstance(expr, MapHasKeyExpr):
+        prompts.extend(_collect_expr_prompts(expr.target))
+        prompts.extend(_collect_expr_prompts(expr.key))
     return prompts
 
 
 def _collect_stmt_prompts(stmt: IRStatement) -> list[str]:
     prompts: list[str] = []
-    if isinstance(stmt, (VarDeclStmt, AssignStmt, ListAppendStmt)):
+    if isinstance(stmt, (VarDeclStmt, AssignStmt, ListAppendStmt, RecordSetFieldStmt)):
         prompts.extend(_collect_expr_prompts(stmt.value))
     elif isinstance(stmt, (ListInsertStmt, ListSetIndexStmt)):
         prompts.extend(_collect_expr_prompts(stmt.index))
+        prompts.extend(_collect_expr_prompts(stmt.value))
+    elif isinstance(stmt, MapSetStmt):
+        prompts.extend(_collect_expr_prompts(stmt.key))
         prompts.extend(_collect_expr_prompts(stmt.value))
     elif isinstance(stmt, FailStmt):
         prompts.extend(_collect_expr_prompts(stmt.message))

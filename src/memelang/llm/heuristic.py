@@ -83,12 +83,14 @@ _VALID_TYPES: set[str] = {
 }
 
 
-def _is_valid_type(t: str) -> bool:
+def _is_valid_type(t: str, records: dict[str, dict[str, MemeType]] | None = None) -> bool:
     t = t.strip().replace(" ", "")
     if t in _VALID_TYPES:
         return True
+    if records and t in records:
+        return True
     if t.startswith("List<") and t.endswith(">"):
-        return _is_valid_type(t[5:-1])
+        return _is_valid_type(t[5:-1], records)
     if t.startswith("Map<") and t.endswith(">"):
         inner = t[4:-1]
         depth = 0
@@ -102,7 +104,9 @@ def _is_valid_type(t: str) -> bool:
                 comma = i
                 break
         if comma != -1:
-            return _is_valid_type(inner[:comma]) and _is_valid_type(inner[comma + 1 :])
+            return _is_valid_type(inner[:comma], records) and _is_valid_type(
+                inner[comma + 1 :], records
+            )
     return False
 
 
@@ -250,6 +254,13 @@ class _ExprParser:
     def parse_comparison(self) -> IRExpr:
         left = self.parse_add()
         t = self.peek()
+        if t and t.kind == "IDENT" and t.val == "has":
+            self.consume("IDENT", "has")
+            if (nxt := self.peek()) and nxt.kind == "IDENT" and nxt.val == "key":
+                self.consume("IDENT", "key")
+            key_expr = self.parse_add()
+            left = MapHasKeyExpr(target=left, key=key_expr)
+            t = self.peek()
         if t and t.kind == "OP" and t.val in ("==", "!=", "<", "<=", ">", ">="):
             op = cast(BinaryOperator, self.consume().val)
             right = self.parse_add()
@@ -291,20 +302,20 @@ class _ExprParser:
                 self.consume("OP", "]")
                 if (nxt := self.peek()) and nxt.kind == "IDENT" and nxt.val == "default":
                     self.consume("IDENT", "default")
-                    def_val = self.parse_or()
+                    def_val = self.parse_unary()
                     node = MapGetExpr(target=node, key=idx, default_val=def_val)
                 else:
-                    node = ListIndexExpr(target=node, index=idx)
+                    tgt_t = _guess_expr_type(
+                        node, self.symbols, self.func_returns, self.records
+                    )
+                    if tgt_t.startswith("Map<"):
+                        node = MapGetExpr(target=node, key=idx, default_val=None)
+                    else:
+                        node = ListIndexExpr(target=node, index=idx)
             elif t.kind == "OP" and t.val == ".":
                 self.consume("OP", ".")
                 f_tok = self.consume("IDENT")
                 node = RecordFieldExpr(target=node, field_name=f_tok.val)
-            elif t.kind == "IDENT" and t.val == "has":
-                self.consume("IDENT", "has")
-                if (nxt := self.peek()) and nxt.kind == "IDENT" and nxt.val == "key":
-                    self.consume("IDENT", "key")
-                key_expr = self.parse_or()
-                node = MapHasKeyExpr(target=node, key=key_expr)
             else:
                 break
         return node
@@ -344,7 +355,7 @@ class _ExprParser:
                 guessed = _guess_expr_type(
                     elems[0], self.symbols, self.func_returns, self.records
                 )
-                if _is_valid_type(guessed):
+                if _is_valid_type(guessed, self.records):
                     el_type = guessed
             return ListLiteralExpr(elements=elems, element_type=el_type)
 
@@ -373,9 +384,9 @@ class _ExprParser:
                 v_guessed = _guess_expr_type(
                     entries[0].value, self.symbols, self.func_returns, self.records
                 )
-                if _is_valid_type(k_guessed):
+                if _is_valid_type(k_guessed, self.records):
                     k_type = k_guessed
-                if _is_valid_type(v_guessed):
+                if _is_valid_type(v_guessed, self.records):
                     v_type = v_guessed
             return MapLiteralExpr(key_type=k_type, value_type=v_type, entries=entries)
 
@@ -455,21 +466,23 @@ def _parse_expr(
 
     # Special English phrase expressions
     m_empty = re.fullmatch(
-        r"empty\s+List<(.+?)>", s
+        r"empty\s+List<(.+)>", s
     )
     if m_empty:
-        el_t = cast(MemeType, m_empty.group(1))
+        el_t = cast(MemeType, _normalize_type(m_empty.group(1)))
         return ListLiteralExpr(elements=[], element_type=el_t)
 
     m_empty_map = re.fullmatch(
-        r"empty\s+Map<([A-Za-z0-9_]+),\s*([A-Za-z0-9_<>]+)>", s
+        r"empty\s+(Map<.+>)", s
     )
     if m_empty_map:
-        return MapLiteralExpr(
-            key_type=m_empty_map.group(1),
-            value_type=m_empty_map.group(2),
-            entries=[],
-        )
+        mt = _map_types_of(_normalize_type(m_empty_map.group(1)))
+        if mt is not None:
+            return MapLiteralExpr(
+                key_type=mt[0],
+                value_type=mt[1],
+                entries=[],
+            )
 
     m_slice = re.fullmatch(
         r"slice\s+(.+?)\s+from\s+(.+?)\s+to\s+(.+)",
@@ -478,9 +491,9 @@ def _parse_expr(
     )
     if m_slice:
         return StringSliceExpr(
-            target=_parse_expr(m_slice.group(1)),
-            start=_parse_expr(m_slice.group(2)),
-            end=_parse_expr(m_slice.group(3)),
+            target=_parse_expr(m_slice.group(1), symbols, func_returns, records),
+            start=_parse_expr(m_slice.group(2), symbols, func_returns, records),
+            end=_parse_expr(m_slice.group(3), symbols, func_returns, records),
         )
 
     m_read_json = re.fullmatch(
@@ -489,7 +502,9 @@ def _parse_expr(
         flags=re.IGNORECASE,
     )
     if m_read_json:
-        return ReadJsonListExpr(filepath=_parse_expr(m_read_json.group(1)))
+        return ReadJsonListExpr(
+            filepath=_parse_expr(m_read_json.group(1), symbols, func_returns, records)
+        )
 
     m_ends_with = re.fullmatch(
         r"(.+?)\s+ends\s+with\s+(.+)",
@@ -498,8 +513,8 @@ def _parse_expr(
     )
     if m_ends_with:
         return StrEndsWithExpr(
-            target=_parse_expr(m_ends_with.group(1)),
-            suffix=_parse_expr(m_ends_with.group(2)),
+            target=_parse_expr(m_ends_with.group(1), symbols, func_returns, records),
+            suffix=_parse_expr(m_ends_with.group(2), symbols, func_returns, records),
         )
 
     m_rand_list = re.fullmatch(
@@ -508,10 +523,10 @@ def _parse_expr(
         flags=re.IGNORECASE,
     )
     if m_rand_list:
-        count_e = _parse_expr(m_rand_list.group(1))
+        count_e = _parse_expr(m_rand_list.group(1), symbols, func_returns, records)
         if m_rand_list.group(2) and m_rand_list.group(3):
-            lo_e = _parse_expr(m_rand_list.group(2))
-            hi_e = _parse_expr(m_rand_list.group(3))
+            lo_e = _parse_expr(m_rand_list.group(2), symbols, func_returns, records)
+            hi_e = _parse_expr(m_rand_list.group(3), symbols, func_returns, records)
             return RandomListExpr(count=count_e, min_val=lo_e, max_val=hi_e, implicit_bounds=False)
         return RandomListExpr(
             count=count_e,
@@ -536,8 +551,8 @@ def _parse_expr(
     )
     if m_rand_int:
         return RandomIntExpr(
-            min_val=_parse_expr(m_rand_int.group(1)),
-            max_val=_parse_expr(m_rand_int.group(2)),
+            min_val=_parse_expr(m_rand_int.group(1), symbols, func_returns, records),
+            max_val=_parse_expr(m_rand_int.group(2), symbols, func_returns, records),
         )
 
     m_read = re.fullmatch(
@@ -679,7 +694,7 @@ def _refine_list_literal_types(
             _refine_list_literal_types(e, symbols, func_returns, records) for e in expr.elements
         ]
         first_t = _guess_expr_type(refined_elems[0], symbols, func_returns, records)
-        if _is_valid_type(first_t):
+        if _is_valid_type(first_t, records):
             return ListLiteralExpr(
                 elements=refined_elems,
                 element_type=cast(MemeType, first_t),
@@ -846,8 +861,12 @@ class HeuristicProvider:
             )
             if m_for_range:
                 loop_var = m_for_range.group(1)
-                start_e = _parse_expr(m_for_range.group(2))
-                end_e = _parse_expr(m_for_range.group(3))
+                start_e = _parse_expr(
+                    m_for_range.group(2), symbols, self._func_returns, self._records
+                )
+                end_e = _parse_expr(
+                    m_for_range.group(3), symbols, self._func_returns, self._records
+                )
                 if i + 1 >= len(lines) or lines[i + 1].indent <= base_indent:
                     raise LLMProviderError(f"Expected indented block after line {line.lineno}")
                 loop_syms = dict(symbols)
@@ -867,7 +886,9 @@ class HeuristicProvider:
             # 3. `while <cond>[:]`
             m_while = re.fullmatch(r"while\s+(.+?)\s*:?", text, flags=re.IGNORECASE)
             if m_while:
-                cond_e = _parse_expr(m_while.group(1))
+                cond_e = _parse_expr(
+                    m_while.group(1), symbols, self._func_returns, self._records
+                )
                 if i + 1 >= len(lines) or lines[i + 1].indent <= base_indent:
                     raise LLMProviderError(f"Expected indented block after line {line.lineno}")
                 sub_items, i = self._parse_block(
@@ -893,8 +914,7 @@ class HeuristicProvider:
             m_rec = re.fullmatch(r"record\s+([A-Za-z_]\w*)\s*:?", text, flags=re.IGNORECASE)
             if m_rec:
                 rec_name = m_rec.group(1)
-                _VALID_TYPES.add(rec_name)
-                _VALID_TYPES.add(f"List<{rec_name}>")
+                self._records[rec_name] = {}
                 if i + 1 >= len(lines) or lines[i + 1].indent <= base_indent:
                     raise LLMProviderError(f"Expected indented block after line {line.lineno}")
                 rec_indent = lines[i + 1].indent
@@ -905,12 +925,11 @@ class HeuristicProvider:
                     if fl_txt and not fl_txt.startswith("#") and fl_txt != "pass":
                         fn_p, _, ft_p = fl_txt.partition(":")
                         fn_p = fn_p.strip()
-                        ft_p = ft_p.strip().replace(" ", "")
-                        if not fn_p or not ft_p:
+                        ft_p = _normalize_type(ft_p)
+                        if not fn_p or not ft_p or not _is_valid_type(ft_p, self._records):
                             raise LLMProviderError(
                                 f"Invalid field declaration in record {rec_name}: {lines[curr].text!r}"
                             )
-                        _VALID_TYPES.add(ft_p)
                         rec_fields.append(RecordFieldDef(name=fn_p, field_type=ft_p))
                     curr += 1
                 i = curr
@@ -929,7 +948,7 @@ class HeuristicProvider:
                 fn_name = m_fn.group(1)
                 raw_params = m_fn.group(2).strip()
                 ret_str = _normalize_type((m_fn.group(3) or "Void").strip())
-                if not _is_valid_type(ret_str):
+                if not _is_valid_type(ret_str, self._records):
                     raise LLMProviderError(f"Unknown return type {ret_str!r} at line {line.lineno}")
                 ret_mt = cast(MemeType, ret_str)
                 self._func_returns[fn_name] = ret_mt
@@ -940,7 +959,7 @@ class HeuristicProvider:
                         p_name, _, p_type = p_chunk.partition(":")
                         p_name = p_name.strip()
                         p_type = _normalize_type(p_type.strip() or "Int")
-                        if not _is_valid_type(p_type):
+                        if not _is_valid_type(p_type, self._records):
                             raise LLMProviderError(
                                 f"Unknown parameter type {p_type!r} at line {line.lineno}"
                             )
@@ -976,7 +995,7 @@ class HeuristicProvider:
         cond_str: str,
     ) -> tuple[IfStmt, int]:
         line = lines[if_idx]
-        cond_e = _parse_expr(cond_str)
+        cond_e = _parse_expr(cond_str, symbols, self._func_returns, self._records)
         if if_idx + 1 >= len(lines) or lines[if_idx + 1].indent <= base_indent:
             raise LLMProviderError(f"Expected indented block after line {line.lineno}")
         then_items, i = self._parse_block(
@@ -1035,7 +1054,7 @@ class HeuristicProvider:
             explicit_t = m_def_list.group(2)
             v_type = (
                 cast(MemeType, explicit_t)
-                if explicit_t in _VALID_TYPES
+                if explicit_t and _is_valid_type(explicit_t, recs)
                 else _guess_expr_type(val, symbols, fn_rets, recs)
             )
             if not v_type.startswith("List<"):
@@ -1056,7 +1075,7 @@ class HeuristicProvider:
             )
             if explicit_t:
                 cleaned_t = _normalize_type(explicit_t)
-                if not _is_valid_type(cleaned_t):
+                if not _is_valid_type(cleaned_t, recs):
                     raise LLMProviderError(f"Unknown type {explicit_t!r} at line {line.lineno}")
                 v_type = cast(MemeType, cleaned_t)
             else:
@@ -1212,11 +1231,6 @@ class HeuristicProvider:
             v_type = _guess_expr_type(val, symbols, fn_rets, recs)
             symbols[name] = v_type
             return VarDeclStmt(name=name, var_type=v_type, value=val, source_line=line.lineno)
-            if name in symbols:
-                return AssignStmt(name=name, value=val, source_line=line.lineno)
-            v_type = _guess_expr_type(val, symbols, fn_rets, getattr(self, "_records", None))
-            symbols[name] = v_type
-            return VarDeclStmt(name=name, var_type=v_type, value=val, source_line=line.lineno)
 
         raise LLMProviderError(
             f"Heuristic frontend could not parse line {line.lineno}: {text!r}. "
@@ -1258,6 +1272,34 @@ class HeuristicProvider:
             return HeuristicProvider._find_free_var(
                 expr.target, symbols
             ) or HeuristicProvider._find_free_var(expr.index, symbols)
+        if isinstance(expr, RecordFieldExpr):
+            return HeuristicProvider._find_free_var(expr.target, symbols)
+        if isinstance(expr, RecordLiteralExpr):
+            for f in expr.fields:
+                found = HeuristicProvider._find_free_var(f.value, symbols)
+                if found:
+                    return found
+        if isinstance(expr, MapGetExpr):
+            return (
+                HeuristicProvider._find_free_var(expr.target, symbols)
+                or HeuristicProvider._find_free_var(expr.key, symbols)
+                or (
+                    HeuristicProvider._find_free_var(expr.default_val, symbols)
+                    if expr.default_val is not None
+                    else None
+                )
+            )
+        if isinstance(expr, MapHasKeyExpr):
+            return HeuristicProvider._find_free_var(
+                expr.target, symbols
+            ) or HeuristicProvider._find_free_var(expr.key, symbols)
+        if isinstance(expr, MapLiteralExpr):
+            for e in expr.entries:
+                found = HeuristicProvider._find_free_var(
+                    e.key, symbols
+                ) or HeuristicProvider._find_free_var(e.value, symbols)
+                if found:
+                    return found
         return None
 
     @staticmethod

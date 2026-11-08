@@ -785,6 +785,231 @@ def test_verify_2d_list_indexing():
     assert outcome.passed
 
 
+def test_verify_records_and_maps_negative_cases():
+    from memelang.ir.schema import (
+        MapEntry,
+        MapGetExpr,
+        MapHasKeyExpr,
+        MapLiteralExpr,
+        MapSetStmt,
+        RecordDefStmt,
+        RecordFieldDef,
+        RecordFieldExpr,
+        RecordFieldInit,
+        RecordLiteralExpr,
+        RecordSetFieldStmt,
+    )
+
+    user_def = RecordDefStmt(
+        name="User",
+        fields=[
+            RecordFieldDef(name="id", field_type="Int"),
+            RecordFieldDef(name="name", field_type="String"),
+        ],
+    )
+
+    # 1. Unknown record instantiation & unknown variable type
+    with pytest.raises(StaticVerificationError, match="unknown record `Ghost`"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    PrintStmt(expressions=[RecordLiteralExpr(record_name="Ghost", fields=[])])
+                ]
+            )
+        )
+
+    with pytest.raises(StaticVerificationError, match="Unknown type `Ghost`"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    VarDeclStmt(
+                        name="g",
+                        var_type="Ghost",
+                        value=RecordLiteralExpr(record_name="Ghost", fields=[]),
+                    )
+                ]
+            )
+        )
+
+    # 2. Duplicate record definition
+    with pytest.raises(StaticVerificationError, match="Duplicate record definition `User`"):
+        verify_synthesis(ProgramIR(items=[user_def, user_def]))
+
+    # 3. Unknown field in RecordLiteralExpr
+    with pytest.raises(StaticVerificationError, match="Unknown field `age`"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    user_def,
+                    VarDeclStmt(
+                        name="u",
+                        var_type="User",
+                        value=RecordLiteralExpr(
+                            record_name="User",
+                            fields=[
+                                RecordFieldInit(name="id", value=LiteralExpr(value=1, data_type="Int")),
+                                RecordFieldInit(name="name", value=LiteralExpr(value="A", data_type="String")),
+                                RecordFieldInit(name="age", value=LiteralExpr(value=9, data_type="Int")),
+                            ],
+                        ),
+                    ),
+                ]
+            )
+        )
+
+    # 4. Missing required field in RecordLiteralExpr
+    with pytest.raises(StaticVerificationError, match="Missing required fields"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    user_def,
+                    VarDeclStmt(
+                        name="u",
+                        var_type="User",
+                        value=RecordLiteralExpr(
+                            record_name="User",
+                            fields=[
+                                RecordFieldInit(name="id", value=LiteralExpr(value=1, data_type="Int")),
+                            ],
+                        ),
+                    ),
+                ]
+            )
+        )
+
+    # 5. Field type mismatch in RecordLiteralExpr
+    with pytest.raises(StaticVerificationError, match="expects Int, got String"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    user_def,
+                    VarDeclStmt(
+                        name="u",
+                        var_type="User",
+                        value=RecordLiteralExpr(
+                            record_name="User",
+                            fields=[
+                                RecordFieldInit(name="id", value=LiteralExpr(value="bad", data_type="String")),
+                                RecordFieldInit(name="name", value=LiteralExpr(value="A", data_type="String")),
+                            ],
+                        ),
+                    ),
+                ]
+            )
+        )
+
+    # 6. RecordFieldExpr & RecordSetFieldStmt on unknown field / non-record
+    with pytest.raises(StaticVerificationError, match="has no field `missing`"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    user_def,
+                    VarDeclStmt(
+                        name="u",
+                        var_type="User",
+                        value=RecordLiteralExpr(
+                            record_name="User",
+                            fields=[
+                                RecordFieldInit(name="id", value=LiteralExpr(value=1, data_type="Int")),
+                                RecordFieldInit(name="name", value=LiteralExpr(value="A", data_type="String")),
+                            ],
+                        ),
+                    ),
+                    PrintStmt(expressions=[RecordFieldExpr(target=VarRefExpr(name="u"), field_name="missing")]),
+                ]
+            )
+        )
+
+    with pytest.raises(StaticVerificationError, match="is not a record"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    VarDeclStmt(name="x", var_type="Int", value=LiteralExpr(value=1, data_type="Int")),
+                    RecordSetFieldStmt(target="x", field_name="id", value=LiteralExpr(value=2, data_type="Int")),
+                ]
+            )
+        )
+
+    # 7. Unhashable Map key type (Float)
+    with pytest.raises(StaticVerificationError, match="Map key type must be Int, Bool, or String"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    VarDeclStmt(
+                        name="m",
+                        var_type="Map<Float, Int>",
+                        value=MapLiteralExpr(key_type="Float", value_type="Int", entries=[]),
+                    )
+                ]
+            )
+        )
+
+    # 8. Map key/value/default type mismatches
+    valid_map_decl = VarDeclStmt(
+        name="m",
+        var_type="Map<String, Int>",
+        value=MapLiteralExpr(
+            key_type="String",
+            value_type="Int",
+            entries=[
+                MapEntry(
+                    key=LiteralExpr(value="a", data_type="String"),
+                    value=LiteralExpr(value=1, data_type="Int"),
+                )
+            ],
+        ),
+    )
+    with pytest.raises(StaticVerificationError, match="Map default value expected Int, got String"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    valid_map_decl,
+                    PrintStmt(
+                        expressions=[
+                            MapGetExpr(
+                                target=VarRefExpr(name="m"),
+                                key=LiteralExpr(value="a", data_type="String"),
+                                default_val=LiteralExpr(value="bad", data_type="String"),
+                            )
+                        ]
+                    ),
+                ]
+            )
+        )
+
+    with pytest.raises(StaticVerificationError, match="Map key check expected String, got Int"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    valid_map_decl,
+                    PrintStmt(
+                        expressions=[
+                            MapHasKeyExpr(
+                                target=VarRefExpr(name="m"),
+                                key=LiteralExpr(value=123, data_type="Int"),
+                            )
+                        ]
+                    ),
+                ]
+            )
+        )
+
+    with pytest.raises(StaticVerificationError, match="Map set value expected Int, got String"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    valid_map_decl,
+                    MapSetStmt(
+                        target="m",
+                        key=LiteralExpr(value="b", data_type="String"),
+                        value=LiteralExpr(value="wrong", data_type="String"),
+                    ),
+                ]
+            )
+        )
+
+
+
 
 
 

@@ -408,6 +408,14 @@ def test_exhaustive_ir_synchronization_across_canonical_heuristic_verifier_gbnf_
         "string_slice",
         "str_ends_with",
         "read_json_list",
+        "record_def",
+        "record_set_field",
+        "record_literal",
+        "record_field",
+        "map_literal",
+        "map_get",
+        "map_has_key",
+        "map_set",
         "List<List<Int>>",
     ):
         assert token in MEMELANG_GBNF
@@ -513,6 +521,26 @@ def test_records_and_maps_canonical_and_roundtrip():
     roundtrip_out = verify_synthesis(roundtrip_syn)
     assert roundtrip_out.is_unambiguous and roundtrip_out.program is not None
     assert to_canonical_meme(roundtrip_out.program) == canonical
+    assert isinstance(roundtrip_out.program.statements[-1], PrintStmt)
+    assert isinstance(roundtrip_out.program.statements[-1].expressions[1], MapGetExpr)
+
+
+def test_map_default_and_has_key_precedence_roundtrip():
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """define scores: Map<String, Int> as {"Alice": 10}
+define x: Int as (scores["Bob"] default 0) + 5
+if scores has key "Alice" and x > 0:
+    print x
+"""
+    syn = HeuristicProvider().synthesize(src)
+    out = verify_synthesis(syn)
+    assert out.is_unambiguous and out.program is not None
+    canonical = to_canonical_meme(out.program)
+    roundtrip = verify_synthesis(HeuristicProvider().synthesize(canonical))
+    assert roundtrip.is_unambiguous and roundtrip.program == out.program
+
 
 
 

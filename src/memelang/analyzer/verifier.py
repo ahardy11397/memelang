@@ -443,11 +443,38 @@ class _StaticChecker:
         self.functions: dict[str, tuple[list[MemeType], MemeType]] = {}
         self.records: dict[str, dict[str, MemeType]] = {}
 
+    def _validate_type(
+        self, meme_type: MemeType, stmt_idx: int | None, allow_void: bool = False
+    ) -> None:
+        if meme_type == "Void":
+            if allow_void:
+                return
+            raise StaticVerificationError("Type `Void` is not allowed here", stmt_idx)
+        if meme_type in ("Int", "Float", "Bool", "String"):
+            return
+        if meme_type in self.records:
+            return
+        el_t = _element_type_of(meme_type)
+        if el_t is not None:
+            self._validate_type(el_t, stmt_idx, allow_void=False)
+            return
+        map_t = _map_types_of(meme_type)
+        if map_t is not None:
+            k_t, v_t = map_t
+            if k_t not in ("Int", "Bool", "String"):
+                raise StaticVerificationError(
+                    f"Map key type must be Int, Bool, or String, got {k_t}", stmt_idx
+                )
+            self._validate_type(v_t, stmt_idx, allow_void=False)
+            return
+        raise StaticVerificationError(f"Unknown type `{meme_type}`", stmt_idx)
+
     def infer_expr_type(self, expr: IRExpr, scope: _Scope, stmt_idx: int | None) -> MemeType:
         if isinstance(expr, LiteralExpr):
             return expr.data_type
 
         if isinstance(expr, ListLiteralExpr):
+            self._validate_type(expr.element_type, stmt_idx, allow_void=False)
             for el in expr.elements:
                 el_t = self.infer_expr_type(el, scope, stmt_idx)
                 if el_t != expr.element_type:
@@ -724,6 +751,8 @@ class _StaticChecker:
             return rec_fields[expr.field_name]
 
         if isinstance(expr, MapLiteralExpr):
+            map_type_str = f"Map<{expr.key_type}, {expr.value_type}>"
+            self._validate_type(map_type_str, stmt_idx, allow_void=False)
             for e in expr.entries:
                 k_t = self.infer_expr_type(e.key, scope, stmt_idx)
                 v_t = self.infer_expr_type(e.value, scope, stmt_idx)
@@ -735,7 +764,7 @@ class _StaticChecker:
                     raise StaticVerificationError(
                         f"Map literal value expected {expr.value_type}, got {v_t}", stmt_idx
                     )
-            return f"Map<{expr.key_type}, {expr.value_type}>"
+            return map_type_str
 
         if isinstance(expr, MapGetExpr):
             target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
@@ -788,6 +817,7 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"Variable `{stmt.name}` cannot have type Void", stmt_idx
                 )
+            self._validate_type(stmt.var_type, stmt_idx, allow_void=False)
             if stmt.name in scope.symbols:
                 raise StaticVerificationError(
                     f"Variable `{stmt.name}` is already declared in this scope", stmt_idx
@@ -1045,12 +1075,14 @@ class _StaticChecker:
                     raise StaticVerificationError(
                         f"Parameter `{p.name}` cannot have type Void", stmt_idx
                     )
+                self._validate_type(p.param_type, stmt_idx, allow_void=False)
                 if p.name in fn_scope.symbols:
                     raise StaticVerificationError(
                         f"Duplicate parameter name `{p.name}` in function `{stmt.name}`", stmt_idx
                     )
                 param_types.append(p.param_type)
                 fn_scope.define(p.name, p.param_type)
+            self._validate_type(stmt.return_type, stmt_idx, allow_void=True)
             self.functions[stmt.name] = (param_types, stmt.return_type)
 
             saw_return = False
@@ -1098,6 +1130,7 @@ class _StaticChecker:
                     raise StaticVerificationError(
                         f"Record field `{f.name}` cannot have type Void", stmt_idx
                     )
+                self._validate_type(f.field_type, stmt_idx, allow_void=False)
                 if f.name in fields:
                     raise StaticVerificationError(
                         f"Duplicate field name `{f.name}` in record `{stmt.name}`", stmt_idx
@@ -1191,6 +1224,27 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
             or _expr_references_var(expr.start, name)
             or _expr_references_var(expr.end, name)
         )
+    if isinstance(expr, RecordLiteralExpr):
+        return any(_expr_references_var(f.value, name) for f in expr.fields)
+    if isinstance(expr, RecordFieldExpr):
+        return _expr_references_var(expr.target, name)
+    if isinstance(expr, MapLiteralExpr):
+        return any(
+            _expr_references_var(e.key, name) or _expr_references_var(e.value, name)
+            for e in expr.entries
+        )
+    if isinstance(expr, MapGetExpr):
+        return (
+            _expr_references_var(expr.target, name)
+            or _expr_references_var(expr.key, name)
+            or (
+                _expr_references_var(expr.default_val, name)
+                if expr.default_val is not None
+                else False
+            )
+        )
+    if isinstance(expr, MapHasKeyExpr):
+        return _expr_references_var(expr.target, name) or _expr_references_var(expr.key, name)
     return False
 
 
@@ -1209,6 +1263,16 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
         if isinstance(s, (ListInsertStmt, ListSetIndexStmt)) and (
             s.target == name
             or _expr_references_var(s.index, name)
+            or _expr_references_var(s.value, name)
+        ):
+            return True
+        if isinstance(s, RecordSetFieldStmt) and (
+            s.target == name or _expr_references_var(s.value, name)
+        ):
+            return True
+        if isinstance(s, MapSetStmt) and (
+            s.target == name
+            or _expr_references_var(s.key, name)
             or _expr_references_var(s.value, name)
         ):
             return True

@@ -892,6 +892,60 @@ def test_advanced_examples_output_parity():
         )
 
 
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_codegen_unsorted_map_keys_and_out_of_order_record_fields_parity(target: TargetLang):
+    program = ProgramIR(
+        items=[
+            RecordDefStmt(
+                name="Item",
+                fields=[
+                    RecordFieldDef(name="sku", field_type="String"),
+                    RecordFieldDef(name="qty", field_type="Int"),
+                    RecordFieldDef(name="active", field_type="Bool"),
+                ],
+            ),
+            VarDeclStmt(
+                name="it",
+                var_type="Item",
+                value=RecordLiteralExpr(
+                    record_name="Item",
+                    fields=[
+                        RecordFieldInit(name="active", value=LiteralExpr(value=True, data_type="Bool")),
+                        RecordFieldInit(name="qty", value=LiteralExpr(value=5, data_type="Int")),
+                        RecordFieldInit(name="sku", value=LiteralExpr(value="SKU-9", data_type="String")),
+                    ],
+                ),
+            ),
+            VarDeclStmt(
+                name="m",
+                var_type="Map<String, Int>",
+                value=MapLiteralExpr(
+                    key_type="String",
+                    value_type="Int",
+                    entries=[
+                        MapEntry(
+                            key=LiteralExpr(value="zebra", data_type="String"),
+                            value=LiteralExpr(value=1, data_type="Int"),
+                        ),
+                        MapEntry(
+                            key=LiteralExpr(value="apple", data_type="String"),
+                            value=LiteralExpr(value=2, data_type="Int"),
+                        ),
+                        MapEntry(
+                            key=LiteralExpr(value="mango", data_type="String"),
+                            value=LiteralExpr(value=3, data_type="Int"),
+                        ),
+                    ],
+                ),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="it"), VarRefExpr(name="m")]),
+        ]
+    )
+    output = _run_target(program, target)
+    assert output.strip() == "Item(sku=SKU-9, qty=5, active=true) {apple: 2, mango: 3, zebra: 1}"
+
+
+
 
 
 

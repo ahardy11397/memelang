@@ -286,8 +286,17 @@ class _CppGen:
             return f"_meme_read_json_list({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, RecordLiteralExpr):
+            rec_def = self.records.get(expr.record_name)
+            if rec_def:
+                field_map = {f.name: f.value for f in expr.fields}
+                ordered_fields = [
+                    (fname, field_map[fname]) for fname in rec_def if fname in field_map
+                ]
+            else:
+                ordered_fields = [(f.name, f.value) for f in expr.fields]
             fields = ", ".join(
-                f".{_cpp_ident(f.name)} = {self.gen_expr(f.value, scope)}" for f in expr.fields
+                f".{_cpp_ident(fname)} = {self.gen_expr(fval, scope)}"
+                for fname, fval in ordered_fields
             )
             return f"{_cpp_ident(expr.record_name)}{{ {fields} }}"
 

@@ -29,12 +29,19 @@ from memelang.ir.schema import (
     ListLengthExpr,
     ListLiteralExpr,
     ListSetIndexStmt,
+    MapGetExpr,
+    MapHasKeyExpr,
+    MapLiteralExpr,
+    MapSetStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
     RandomListExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RecordFieldExpr,
+    RecordLiteralExpr,
+    RecordSetFieldStmt,
     ReturnStmt,
     StrEndsWithExpr,
     StringLengthExpr,
@@ -88,15 +95,35 @@ def _expr_uses_input(expr: IRExpr) -> bool:
             or _expr_uses_input(expr.start)
             or _expr_uses_input(expr.end)
         )
+    if isinstance(expr, RecordLiteralExpr):
+        return any(_expr_uses_input(f.value) for f in expr.fields)
+    if isinstance(expr, RecordFieldExpr):
+        return _expr_uses_input(expr.target)
+    if isinstance(expr, MapLiteralExpr):
+        return any(
+            _expr_uses_input(e.key) or _expr_uses_input(e.value) for e in expr.entries
+        )
+    if isinstance(expr, MapGetExpr):
+        return (
+            _expr_uses_input(expr.target)
+            or _expr_uses_input(expr.key)
+            or (_expr_uses_input(expr.default_val) if expr.default_val is not None else False)
+        )
+    if isinstance(expr, MapHasKeyExpr):
+        return _expr_uses_input(expr.target) or _expr_uses_input(expr.key)
     return False
 
 
 def _stmts_use_input(stmts: list[IRStatement]) -> bool:
     for s in stmts:
-        if isinstance(s, (VarDeclStmt, AssignStmt, ListAppendStmt)) and _expr_uses_input(s.value):
+        if isinstance(s, (VarDeclStmt, AssignStmt, ListAppendStmt, RecordSetFieldStmt)) and _expr_uses_input(s.value):
             return True
         if isinstance(s, (ListInsertStmt, ListSetIndexStmt)) and (
             _expr_uses_input(s.index) or _expr_uses_input(s.value)
+        ):
+            return True
+        if isinstance(s, MapSetStmt) and (
+            _expr_uses_input(s.key) or _expr_uses_input(s.value)
         ):
             return True
         if isinstance(s, FailStmt) and _expr_uses_input(s.message):

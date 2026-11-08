@@ -148,11 +148,13 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
     if isinstance(expr, MapGetExpr):
         base = f"{format_expr(expr.target, 6)}[{format_expr(expr.key)}]"
         if expr.default_val is not None:
-            return f"{base} default {format_expr(expr.default_val)}"
+            res = f"{base} default {format_expr(expr.default_val, 6)}"
+            return f"({res})" if parent_prec > 5 else res
         return base
 
     if isinstance(expr, MapHasKeyExpr):
-        return f"{format_expr(expr.target, 3)} has key {format_expr(expr.key, 4)}"
+        res = f"{format_expr(expr.target, 3)} has key {format_expr(expr.key, 4)}"
+        return f"({res})" if parent_prec > 3 else res
 
     raise TypeError(f"Unsupported expression node: {type(expr)!r}")
 
