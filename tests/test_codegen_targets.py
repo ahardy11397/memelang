@@ -10,13 +10,16 @@ from memelang.ir.schema import (
     ArgCountExpr,
     AssignStmt,
     BinaryOpExpr,
+    BreakStmt,
     CallExpr,
     ClampCollectionStmt,
+    ContinueStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
+    ForRangeStmt,
     FuncDefStmt,
     FuncParam,
     ListAppendStmt,
@@ -44,10 +47,21 @@ from memelang.ir.schema import (
     RecordSetFieldStmt,
     ReturnStmt,
     SortCollectionStmt,
+    StrContainsExpr,
+    StringCharAtExpr,
+    StringIndexOfExpr,
+    StringJoinExpr,
     StringLengthExpr,
+    StringLowerExpr,
+    StringReplaceExpr,
     StringSliceExpr,
+    StringSplitExpr,
+    StringTrimExpr,
+    StringUpperExpr,
+    StrStartsWithExpr,
     VarDeclStmt,
     VarRefExpr,
+    WhileStmt,
     WriteFileStmt,
 )
 from memelang.runner.executor import execute_ir
@@ -1243,6 +1257,349 @@ def test_read_json_list_typed_elements_escapes_and_error_parity(target: TargetLa
     )
     bool_in_num_res = execute_ir(bool_in_num_prog, target, source_dir=tmp_path)
     assert bool_in_num_res.returncode == 1
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_break_and_continue_across_all_loop_kinds_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.ir.canonical import to_canonical_meme
+    from memelang.llm.heuristic import HeuristicProvider
+
+    source = """
+define list nums as [2, 5, 8, 11, 14, 17, 20]
+define evens_sum: Int as 0
+for each n in nums:
+    if n % 2 != 0:
+        continue
+    if n > 15:
+        break
+    set evens_sum to evens_sum + n
+print "evens_sum", evens_sum
+
+define range_acc: Int as 0
+for i from 1 to 10:
+    if i == 3 or i == 5:
+        continue
+    if i == 7:
+        break
+    set range_acc to range_acc + i
+print "range_acc", range_acc
+
+define w: Int as 0
+define w_hits: Int as 0
+while w < 10:
+    set w to w + 1
+    if w % 2 == 0:
+        continue
+    set w_hits to w_hits + w
+    if w >= 5:
+        break
+print "w", w, "w_hits", w_hits
+""".strip()
+
+    prov = HeuristicProvider()
+    outcome = verify_synthesis(prov.synthesize(source))
+    assert outcome.program is not None
+    canon = to_canonical_meme(outcome.program)
+    assert "continue" in canon and "break" in canon
+
+    # Round-trip canonical decompiled source through heuristic
+    rt_outcome = verify_synthesis(prov.synthesize(canon))
+    assert rt_outcome.program is not None
+
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.splitlines() == [
+        "evens_sum 24",
+        "range_acc 13",
+        "w 5 w_hits 9",
+    ]
+
+
+def test_break_and_continue_verifier_loop_scope_rules():
+    from memelang.analyzer.verifier import StaticVerificationError, verify_program
+
+    # 1. break at top level
+    with pytest.raises(StaticVerificationError, match="`break` statement outside of a loop"):
+        verify_program(ProgramIR(statements=[BreakStmt()]))
+
+    # 2. continue at top level
+    with pytest.raises(StaticVerificationError, match="`continue` statement outside of a loop"):
+        verify_program(ProgramIR(statements=[ContinueStmt()]))
+
+    # 3. break inside a function body (not in a loop)
+    with pytest.raises(StaticVerificationError, match="`break` statement outside of a loop"):
+        verify_program(
+            ProgramIR(
+                statements=[
+                    FuncDefStmt(
+                        name="bad_fn",
+                        params=[],
+                        return_type="Void",
+                        body=[BreakStmt()],
+                    )
+                ]
+            )
+        )
+
+    # 4. break inside a function defined inside a loop body (func_def resets loop scope)
+    with pytest.raises(StaticVerificationError, match="`break` statement outside of a loop"):
+        verify_program(
+            ProgramIR(
+                statements=[
+                    ForRangeStmt(
+                        loop_var="i",
+                        start=LiteralExpr(value=1, data_type="Int"),
+                        end=LiteralExpr(value=3, data_type="Int"),
+                        body=[
+                            FuncDefStmt(
+                                name="inner_fn",
+                                params=[],
+                                return_type="Void",
+                                body=[BreakStmt()],
+                            )
+                        ],
+                    )
+                ]
+            )
+        )
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_string_verbs_all_10_cross_target_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.ir.canonical import to_canonical_meme
+    from memelang.llm.heuristic import HeuristicProvider
+
+    source = """
+define raw: String as " \\t\\n  pre_Hello--World--Hello_suf  \\r\\n "
+define trimmed: String as trim raw
+print "trimmed:", trimmed
+
+define has_world: Bool as trimmed contains "World"
+define has_mars: Bool as trimmed contains "Mars"
+define starts_ok: Bool as trimmed starts with "pre_"
+define starts_bad: Bool as trimmed starts with "PRE_"
+print has_world, has_mars, starts_ok, starts_bad
+
+define replaced: String as replace "Hello" with "Hi" in trimmed
+define up: String as upper replaced
+define lo: String as lower up
+print replaced
+print up
+print lo
+
+define parts: List<String> as split lo by "--"
+print "parts_len:", length of parts, parts
+define rejoined: String as join parts with "::"
+print "rejoined:", rejoined
+
+define idx_found: Int as index of "::world::" in rejoined
+define idx_missing: Int as index of "galaxy" in rejoined
+define ch0: String as char at 0 of rejoined
+define ch4: String as char at 4 of rejoined
+print idx_found, idx_missing, ch0, ch4
+""".strip()
+
+    prov = HeuristicProvider()
+    outcome = verify_synthesis(prov.synthesize(source))
+    assert outcome.program is not None
+
+    canon = to_canonical_meme(outcome.program)
+    rt_outcome = verify_synthesis(prov.synthesize(canon))
+    assert rt_outcome.program is not None
+
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.splitlines() == [
+        "trimmed: pre_Hello--World--Hello_suf",
+        "true false true false",
+        "pre_Hi--World--Hi_suf",
+        "PRE_HI--WORLD--HI_SUF",
+        "pre_hi--world--hi_suf",
+        "parts_len: 3 [pre_hi, world, hi_suf]",
+        "rejoined: pre_hi::world::hi_suf",
+        "6 -1 p h",
+    ]
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_string_split_runtime_empty_sep_and_char_at_oob_errors(target: TargetLang):
+    # Dynamic empty separator in split -> exit 1 with deterministic message
+    prog_split = ProgramIR(
+        statements=[
+            VarDeclStmt(
+                name="sep",
+                var_type="String",
+                value=StringTrimExpr(target=LiteralExpr(value="   ", data_type="String")),
+            ),
+            VarDeclStmt(
+                name="parts",
+                var_type="List<String>",
+                value=StringSplitExpr(
+                    target=LiteralExpr(value="a,b", data_type="String"),
+                    separator=VarRefExpr(name="sep"),
+                ),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="parts")]),
+        ]
+    )
+    res_split = execute_ir(prog_split, target)
+    assert res_split.returncode == 1
+    assert res_split.stdout.strip() == "Error: empty separator in split"
+
+    # Out-of-bounds char at -> exit 1 with deterministic message
+    prog_char = ProgramIR(
+        statements=[
+            VarDeclStmt(
+                name="c",
+                var_type="String",
+                value=StringCharAtExpr(
+                    target=LiteralExpr(value="abc", data_type="String"),
+                    index=LiteralExpr(value=5, data_type="Int"),
+                ),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="c")]),
+        ]
+    )
+    res_char = execute_ir(prog_char, target)
+    assert res_char.returncode == 1
+    assert res_char.stdout.strip() == "Error: string index 5 out of range"
+
+
+def test_string_verbs_static_verifier_rules():
+    from memelang.analyzer.verifier import StaticVerificationError, verify_program
+
+    # Static empty literal separator in split
+    with pytest.raises(StaticVerificationError, match="`string_split` separator cannot be empty"):
+        verify_program(
+            ProgramIR(
+                statements=[
+                    VarDeclStmt(
+                        name="parts",
+                        var_type="List<String>",
+                        value=StringSplitExpr(
+                            target=LiteralExpr(value="a,b", data_type="String"),
+                            separator=LiteralExpr(value="", data_type="String"),
+                        ),
+                    )
+                ]
+            )
+        )
+
+    # join requires List<String>
+    with pytest.raises(StaticVerificationError, match="`string_join` requires List<String>"):
+        verify_program(
+            ProgramIR(
+                statements=[
+                    VarDeclStmt(
+                        name="s",
+                        var_type="String",
+                        value=StringJoinExpr(
+                            items=ListLiteralExpr(
+                                elements=[LiteralExpr(value=1, data_type="Int")],
+                                element_type="Int",
+                            ),
+                            separator=LiteralExpr(value=",", data_type="String"),
+                        ),
+                    )
+                ]
+            )
+        )
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_map_iteration_and_loop_with_index_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.ir.canonical import to_canonical_meme
+    from memelang.llm.heuristic import HeuristicProvider
+
+    source = """
+define scores: Map<String, Int> as {"zara": 85, "alice": 95, "bob": 90, "charlie": 88}
+
+for each k in scores:
+    if k == "bob":
+        continue
+    print k, scores[k]
+
+define nums: List<Int> as [10, 20, 30, 40]
+for each index i item v in nums:
+    if i == 1:
+        continue
+    print i, v
+    if i == 2:
+        break
+
+for each idx, k in scores:
+    print idx, k, scores[k]
+    if idx == 1:
+        break
+""".strip()
+
+    prov = HeuristicProvider()
+    outcome = verify_synthesis(prov.synthesize(source))
+    assert outcome.program is not None
+
+    canon = to_canonical_meme(outcome.program)
+    assert "for each index i item v in nums:" in canon
+    assert "for each index idx item k in scores:" in canon
+    rt_outcome = verify_synthesis(prov.synthesize(canon))
+    assert rt_outcome.program is not None
+
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.splitlines() == [
+        "alice 95",
+        "charlie 88",
+        "zara 85",
+        "0 10",
+        "2 30",
+        "0 alice 95",
+        "1 bob 90",
+    ]
+
+
+def test_negative_indexing_policy_upgraded_diagnostics_and_loop_rules():
+    from memelang.analyzer.verifier import StaticVerificationError, verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    prov = HeuristicProvider()
+
+    # 1. Negative list index via heuristic (`nums[-1]` parses as UnaryOpExpr(-, 1))
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Negative list index \(-1\) is not allowed; use positive index `nums\[length of nums - 1\]` instead",
+    ):
+        verify_synthesis(
+            prov.synthesize(
+                "define nums: List<Int> as [10, 20, 30]\ndefine last: Int as nums[-1]"
+            )
+        )
+
+    # 2. Negative string char at index
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Negative string index \(-1\) is not allowed; use positive index `char at \(length of string s - 1\) of s` instead",
+    ):
+        verify_synthesis(
+            prov.synthesize(
+                'define s: String as "hello"\ndefine last_ch: String as char at -1 of s'
+            )
+        )
+
+    # 3. Duplicate index_var and item_var name in for_each
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"`for each` index variable `x` cannot have the same name as item variable `x`",
+    ):
+        verify_synthesis(
+            prov.synthesize(
+                "define nums: List<Int> as [1, 2]\nfor each index x item x in nums:\n    print x"
+            )
+        )
+
+
+
 
 
 

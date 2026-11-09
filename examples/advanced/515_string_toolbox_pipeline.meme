@@ -1,0 +1,17 @@
+# String toolbox pipeline exercising all 10 built-in string verbs
+define raw: String as "  prefix_Alpha,Beta,Gamma_suffix  "
+define cleaned: String as trim raw
+print cleaned
+
+if cleaned starts with "prefix_" and cleaned contains "Beta":
+    define body: String as replace "prefix_" with "" in cleaned
+    set body to replace "_suffix" with "" in body
+    define upper_body: String as upper body
+    define lower_body: String as lower upper_body
+    print upper_body, lower_body
+    define parts: List<String> as split lower_body by ","
+    define joined: String as join parts with "|"
+    define beta_idx: Int as index of "beta" in joined
+    define missing_idx: Int as index of "delta" in joined
+    define first_ch: String as char at 0 of joined
+    print joined, beta_idx, missing_idx, first_ch

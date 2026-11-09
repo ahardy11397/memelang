@@ -1,0 +1,348 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/516_map_iteration_and_indexed_loops.meme": {
+      "source_sha256": "a0e533bf548e8436e4fb79c66db2bdd1d0243cd418dedc287756bd676ce0b5a4",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "scores",
+          "var_type": "Map<String, Int>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "Int",
+            "entries": [
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "zara",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 85,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "alice",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 95,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "bob",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 90,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 2
+        },
+        {
+          "op": "for_each",
+          "item_var": "k",
+          "index_var": null,
+          "collection": "scores",
+          "body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "k"
+                },
+                {
+                  "expr_type": "map_get",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "scores"
+                  },
+                  "key": {
+                    "expr_type": "var_ref",
+                    "name": "k"
+                  },
+                  "default_val": null
+                }
+              ],
+              "source_line": 5
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "items",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": "alpha",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "beta",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "literal",
+                "value": "gamma",
+                "data_type": "String"
+              }
+            ],
+            "element_type": "String"
+          },
+          "source_line": 7
+        },
+        {
+          "op": "for_each",
+          "item_var": "label",
+          "index_var": "idx",
+          "collection": "items",
+          "body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "idx"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "label"
+                }
+              ],
+              "source_line": 9
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "for_each",
+          "item_var": "student",
+          "index_var": "rank",
+          "collection": "scores",
+          "body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "rank"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "student"
+                },
+                {
+                  "expr_type": "map_get",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "scores"
+                  },
+                  "key": {
+                    "expr_type": "var_ref",
+                    "name": "student"
+                  },
+                  "default_val": null
+                }
+              ],
+              "source_line": 12
+            }
+          ],
+          "source_line": 11
+        }
+      ],
+      "canonical_meme": "define scores: Map<String, Int> as {\"zara\": 85, \"alice\": 95, \"bob\": 90}\nfor each k in scores:\n    print k, scores[k]\ndefine list items as [\"alpha\", \"beta\", \"gamma\"]\nfor each index idx item label in items:\n    print idx, label\nfor each index rank item student in scores:\n    print rank, student, scores[student]",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "scores",
+            "var_type": "Map<String, Int>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "Int",
+              "entries": [
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "zara",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 85,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "alice",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 95,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "bob",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 90,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 2
+          },
+          {
+            "op": "for_each",
+            "item_var": "k",
+            "index_var": null,
+            "collection": "scores",
+            "body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "k"
+                  },
+                  {
+                    "expr_type": "map_get",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "scores"
+                    },
+                    "key": {
+                      "expr_type": "var_ref",
+                      "name": "k"
+                    },
+                    "default_val": null
+                  }
+                ],
+                "source_line": 5
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "items",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": "alpha",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "beta",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "gamma",
+                  "data_type": "String"
+                }
+              ],
+              "element_type": "String"
+            },
+            "source_line": 7
+          },
+          {
+            "op": "for_each",
+            "item_var": "label",
+            "index_var": "idx",
+            "collection": "items",
+            "body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "idx"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "label"
+                  }
+                ],
+                "source_line": 9
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "for_each",
+            "item_var": "student",
+            "index_var": "rank",
+            "collection": "scores",
+            "body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "rank"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "student"
+                  },
+                  {
+                    "expr_type": "map_get",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "scores"
+                    },
+                    "key": {
+                      "expr_type": "var_ref",
+                      "name": "student"
+                    },
+                    "default_val": null
+                  }
+                ],
+                "source_line": 12
+              }
+            ],
+            "source_line": 11
+          }
+        ]
+      }
+    }
+  }
+}

@@ -14,8 +14,10 @@ from memelang.ir.schema import (
     ArgCountExpr,
     AssignStmt,
     BinaryOpExpr,
+    BreakStmt,
     CallExpr,
     ClampCollectionStmt,
+    ContinueStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -54,9 +56,19 @@ from memelang.ir.schema import (
     RecordSetFieldStmt,
     ReturnStmt,
     SortCollectionStmt,
+    StrContainsExpr,
     StrEndsWithExpr,
+    StrStartsWithExpr,
+    StringCharAtExpr,
+    StringIndexOfExpr,
+    StringJoinExpr,
     StringLengthExpr,
+    StringLowerExpr,
+    StringReplaceExpr,
     StringSliceExpr,
+    StringSplitExpr,
+    StringTrimExpr,
+    StringUpperExpr,
     SynthesisItem,
     SynthesisResult,
     UnaryOpExpr,
@@ -446,6 +458,37 @@ def _check_literal_bounds(lo: IRExpr, hi: IRExpr, stmt_idx: int | None) -> None:
         )
 
 
+# ---------------------------------------------------------------------------
+# Negative Indexing Policy (Phase 2 Task 13)
+# ---------------------------------------------------------------------------
+# Design decision: KEEP the static ban on negative indices across lists and
+# strings (`ListIndexExpr`, `ListInsertStmt`, `ListSetIndexStmt`,
+# `StringCharAtExpr`, `StringSliceExpr`) and upgrade the verifier diagnostic
+# to suggest the explicit 0-based positive-index equivalent using
+# `length of <list> - k` or `length of string <str> - k`.
+# Both `LiteralExpr(value=-k, data_type="Int")` and
+# `UnaryOpExpr(op="-", operand=LiteralExpr(value=k, data_type="Int"))` are
+# recognized as negative literal indices.
+def _extract_negative_int_literal(expr: IRExpr) -> int | None:
+    if (
+        isinstance(expr, LiteralExpr)
+        and isinstance(expr.value, int)
+        and not isinstance(expr.value, bool)
+        and expr.value < 0
+    ):
+        return expr.value
+    if (
+        isinstance(expr, UnaryOpExpr)
+        and expr.op == "-"
+        and isinstance(expr.operand, LiteralExpr)
+        and isinstance(expr.operand.value, int)
+        and not isinstance(expr.operand.value, bool)
+        and expr.operand.value > 0
+    ):
+        return -expr.operand.value
+    return None
+
+
 class _StaticChecker:
     def __init__(self) -> None:
         self.functions: dict[str, tuple[list[MemeType], MemeType]] = {}
@@ -621,14 +664,13 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"List index must be Int, got {idx_t}", stmt_idx
                 )
-            if (
-                isinstance(expr.index, LiteralExpr)
-                and isinstance(expr.index.value, int)
-                and not isinstance(expr.index.value, bool)
-                and expr.index.value < 0
-            ):
+            neg_idx = _extract_negative_int_literal(expr.index)
+            if neg_idx is not None:
+                tgt_str = format_expr(expr.target)
+                offset = -neg_idx
                 raise StaticVerificationError(
-                    f"Negative list index ({expr.index.value}) is not allowed", stmt_idx
+                    f"Negative list index ({neg_idx}) is not allowed; use positive index `{tgt_str}[length of {tgt_str} - {offset}]` instead",
+                    stmt_idx,
                 )
             return elem_t
 
@@ -668,6 +710,118 @@ class _StaticChecker:
                     f"`str_ends_with` requires String operands, got ({t_t}, {s_t})", stmt_idx
                 )
             return "Bool"
+
+        if isinstance(expr, StrStartsWithExpr):
+            t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            p_t = self.infer_expr_type(expr.prefix, scope, stmt_idx)
+            if t_t != "String" or p_t != "String":
+                raise StaticVerificationError(
+                    f"`str_starts_with` requires String operands, got ({t_t}, {p_t})", stmt_idx
+                )
+            return "Bool"
+
+        if isinstance(expr, StrContainsExpr):
+            t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            sub_t = self.infer_expr_type(expr.substring, scope, stmt_idx)
+            if t_t != "String" or sub_t != "String":
+                raise StaticVerificationError(
+                    f"`str_contains` requires String operands, got ({t_t}, {sub_t})", stmt_idx
+                )
+            return "Bool"
+
+        if isinstance(expr, StringReplaceExpr):
+            t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            o_t = self.infer_expr_type(expr.old, scope, stmt_idx)
+            n_t = self.infer_expr_type(expr.new, scope, stmt_idx)
+            if t_t != "String" or o_t != "String" or n_t != "String":
+                raise StaticVerificationError(
+                    f"`string_replace` requires String operands, got ({t_t}, {o_t}, {n_t})",
+                    stmt_idx,
+                )
+            return "String"
+
+        if isinstance(expr, StringUpperExpr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if target_t != "String":
+                raise StaticVerificationError(
+                    f"`string_upper` requires a String target, got {target_t}", stmt_idx
+                )
+            return "String"
+
+        if isinstance(expr, StringLowerExpr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if target_t != "String":
+                raise StaticVerificationError(
+                    f"`string_lower` requires a String target, got {target_t}", stmt_idx
+                )
+            return "String"
+
+        if isinstance(expr, StringTrimExpr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if target_t != "String":
+                raise StaticVerificationError(
+                    f"`string_trim` requires a String target, got {target_t}", stmt_idx
+                )
+            return "String"
+
+        if isinstance(expr, StringSplitExpr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            sep_t = self.infer_expr_type(expr.separator, scope, stmt_idx)
+            if target_t != "String" or sep_t != "String":
+                raise StaticVerificationError(
+                    f"`string_split` requires String operands, got ({target_t}, {sep_t})",
+                    stmt_idx,
+                )
+            if (
+                isinstance(expr.separator, LiteralExpr)
+                and isinstance(expr.separator.value, str)
+                and expr.separator.value == ""
+            ):
+                raise StaticVerificationError(
+                    "`string_split` separator cannot be empty", stmt_idx
+                )
+            return "List<String>"
+
+        if isinstance(expr, StringJoinExpr):
+            items_t = self.infer_expr_type(expr.items, scope, stmt_idx)
+            sep_t = self.infer_expr_type(expr.separator, scope, stmt_idx)
+            if items_t != "List<String>" or sep_t != "String":
+                raise StaticVerificationError(
+                    f"`string_join` requires List<String> and String separator, got ({items_t}, {sep_t})",
+                    stmt_idx,
+                )
+            return "String"
+
+        if isinstance(expr, StringIndexOfExpr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            sub_t = self.infer_expr_type(expr.substring, scope, stmt_idx)
+            if target_t != "String" or sub_t != "String":
+                raise StaticVerificationError(
+                    f"`string_index_of` requires String operands, got ({target_t}, {sub_t})",
+                    stmt_idx,
+                )
+            return "Int"
+
+        if isinstance(expr, StringCharAtExpr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if target_t != "String":
+                raise StaticVerificationError(
+                    f"`string_char_at` requires a String target, got {target_t}", stmt_idx
+                )
+            idx_t = self.infer_expr_type(expr.index, scope, stmt_idx)
+            if idx_t != "Int":
+                raise StaticVerificationError(
+                    f"`string_char_at` index must be Int, got {idx_t}", stmt_idx
+                )
+            neg_idx = _extract_negative_int_literal(expr.index)
+            if neg_idx is not None:
+                tgt_str = format_expr(expr.target)
+                offset = -neg_idx
+                raise StaticVerificationError(
+                    f"Negative string index ({neg_idx}) is not allowed; use positive index `char at (length of string {tgt_str} - {offset}) of {tgt_str}` instead",
+                    stmt_idx,
+                )
+            return "String"
 
         if isinstance(expr, FileExistsExpr):
             fp_t = self.infer_expr_type(expr.filepath, scope, stmt_idx)
@@ -738,19 +892,15 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"`string_slice` indices must be Int, got ({start_t}, {end_t})", stmt_idx
                 )
-            if (
-                isinstance(expr.start, LiteralExpr)
-                and isinstance(expr.start.value, int)
-                and not isinstance(expr.start.value, bool)
-                and expr.start.value < 0
-            ) or (
-                isinstance(expr.end, LiteralExpr)
-                and isinstance(expr.end.value, int)
-                and not isinstance(expr.end.value, bool)
-                and expr.end.value < 0
-            ):
+            neg_start = _extract_negative_int_literal(expr.start)
+            neg_end = _extract_negative_int_literal(expr.end)
+            if neg_start is not None or neg_end is not None:
+                tgt_str = format_expr(expr.target)
+                bad = neg_start if neg_start is not None else neg_end
+                assert bad is not None
                 raise StaticVerificationError(
-                    "Negative string slice index is not allowed", stmt_idx
+                    f"Negative string slice index ({bad}) is not allowed; use positive index `length of string {tgt_str} - {-bad}` instead",
+                    stmt_idx,
                 )
             _check_literal_bounds(expr.start, expr.end, stmt_idx)
             return "String"
@@ -859,6 +1009,7 @@ class _StaticChecker:
         scope: _Scope,
         stmt_idx: int | None,
         expected_return: MemeType | None = None,
+        in_loop: bool = False,
     ) -> bool:
         """Validates `stmt`; returns True iff statement guarantees a return on all paths."""
         if isinstance(stmt, VarDeclStmt):
@@ -985,14 +1136,11 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"`list_insert` index must be Int, got {idx_t}", stmt_idx
                 )
-            if (
-                isinstance(stmt.index, LiteralExpr)
-                and isinstance(stmt.index.value, int)
-                and not isinstance(stmt.index.value, bool)
-                and stmt.index.value < 0
-            ):
+            neg_idx = _extract_negative_int_literal(stmt.index)
+            if neg_idx is not None:
                 raise StaticVerificationError(
-                    f"Negative list insert index ({stmt.index.value}) is not allowed", stmt_idx
+                    f"Negative list insert index ({neg_idx}) is not allowed; use positive index `length of {stmt.target} - {-neg_idx}` instead",
+                    stmt_idx,
                 )
             val_t = self.infer_expr_type(stmt.value, scope, stmt_idx)
             if val_t != elem_t:
@@ -1018,14 +1166,11 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"`list_set_index` index must be Int, got {idx_t}", stmt_idx
                 )
-            if (
-                isinstance(stmt.index, LiteralExpr)
-                and isinstance(stmt.index.value, int)
-                and not isinstance(stmt.index.value, bool)
-                and stmt.index.value < 0
-            ):
+            neg_idx = _extract_negative_int_literal(stmt.index)
+            if neg_idx is not None:
                 raise StaticVerificationError(
-                    f"Negative list set index ({stmt.index.value}) is not allowed", stmt_idx
+                    f"Negative list set index ({neg_idx}) is not allowed; use positive index `set {stmt.target}[length of {stmt.target} - {-neg_idx}] to ...` instead",
+                    stmt_idx,
                 )
             val_t = self.infer_expr_type(stmt.value, scope, stmt_idx)
             if val_t != elem_t:
@@ -1067,13 +1212,19 @@ class _StaticChecker:
             then_scope = _Scope(parent=scope)
             then_ret = False
             for child in stmt.then_body:
-                then_ret = self.check_stmt(child, then_scope, stmt_idx, expected_return) or then_ret
+                then_ret = (
+                    self.check_stmt(child, then_scope, stmt_idx, expected_return, in_loop=in_loop)
+                    or then_ret
+                )
             else_ret = False
             if stmt.else_body:
                 else_scope = _Scope(parent=scope)
                 for child in stmt.else_body:
                     else_ret = (
-                        self.check_stmt(child, else_scope, stmt_idx, expected_return) or else_ret
+                        self.check_stmt(
+                            child, else_scope, stmt_idx, expected_return, in_loop=in_loop
+                        )
+                        or else_ret
                     )
             return then_ret and bool(stmt.else_body) and else_ret
 
@@ -1084,14 +1235,26 @@ class _StaticChecker:
                     f"`for each` references undeclared collection `{stmt.collection}`", stmt_idx
                 )
             elem_t = _element_type_of(col_t)
-            if elem_t is None:
+            map_t = _map_types_of(col_t)
+            if elem_t is not None:
+                item_t = elem_t
+            elif map_t is not None:
+                item_t = map_t[0]
+            else:
                 raise StaticVerificationError(
-                    f"`for each` requires a List collection, got {col_t}", stmt_idx
+                    f"`for each` requires a List or Map collection, got {col_t}", stmt_idx
                 )
             loop_scope = _Scope(parent=scope)
-            loop_scope.define(stmt.item_var, elem_t)
+            if stmt.index_var is not None:
+                if stmt.index_var == stmt.item_var:
+                    raise StaticVerificationError(
+                        f"`for each` index variable `{stmt.index_var}` cannot have the same name as item variable `{stmt.item_var}`",
+                        stmt_idx,
+                    )
+                loop_scope.define(stmt.index_var, "Int")
+            loop_scope.define(stmt.item_var, item_t)
             for child in stmt.body:
-                self.check_stmt(child, loop_scope, stmt_idx, expected_return)
+                self.check_stmt(child, loop_scope, stmt_idx, expected_return, in_loop=True)
             return False
 
         if isinstance(stmt, ForRangeStmt):
@@ -1104,7 +1267,7 @@ class _StaticChecker:
             loop_scope = _Scope(parent=scope)
             loop_scope.define(stmt.loop_var, "Int")
             for child in stmt.body:
-                self.check_stmt(child, loop_scope, stmt_idx, expected_return)
+                self.check_stmt(child, loop_scope, stmt_idx, expected_return, in_loop=True)
             return False
 
         if isinstance(stmt, WhileStmt):
@@ -1115,7 +1278,27 @@ class _StaticChecker:
                 )
             loop_scope = _Scope(parent=scope)
             for child in stmt.body:
-                self.check_stmt(child, loop_scope, stmt_idx, expected_return)
+                self.check_stmt(child, loop_scope, stmt_idx, expected_return, in_loop=True)
+            return False
+
+        # Loop-control Scope Policy (Phase 2 Task 11):
+        # `break` (`loop_break`) and `continue` (`loop_continue`) are legal ONLY inside
+        # `for_each`, `for_range`, or `while_loop` bodies (`in_loop=True`). A `func_def`
+        # introduces its own fresh scope and resets `in_loop=False`, so a `break` or
+        # `continue` inside a function body (even if the function is defined inside a
+        # loop body) is rejected unless enclosed by an inner loop inside that function.
+        if isinstance(stmt, BreakStmt):
+            if not in_loop:
+                raise StaticVerificationError(
+                    "`break` statement outside of a loop", stmt_idx
+                )
+            return False
+
+        if isinstance(stmt, ContinueStmt):
+            if not in_loop:
+                raise StaticVerificationError(
+                    "`continue` statement outside of a loop", stmt_idx
+                )
             return False
 
         if isinstance(stmt, FuncDefStmt):
@@ -1144,7 +1327,10 @@ class _StaticChecker:
 
             saw_return = False
             for child in stmt.body:
-                saw_return = self.check_stmt(child, fn_scope, stmt_idx, stmt.return_type) or saw_return
+                saw_return = (
+                    self.check_stmt(child, fn_scope, stmt_idx, stmt.return_type, in_loop=False)
+                    or saw_return
+                )
             if stmt.return_type != "Void" and not saw_return:
                 raise StaticVerificationError(
                     f"Function `{stmt.name}` has return type {stmt.return_type} but does not return on all control paths",
@@ -1297,6 +1483,24 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
         return any(_expr_references_var(a, name) for a in expr.args)
     if isinstance(expr, StrEndsWithExpr):
         return _expr_references_var(expr.target, name) or _expr_references_var(expr.suffix, name)
+    if isinstance(expr, StrStartsWithExpr):
+        return _expr_references_var(expr.target, name) or _expr_references_var(expr.prefix, name)
+    if isinstance(expr, (StrContainsExpr, StringIndexOfExpr)):
+        return _expr_references_var(expr.target, name) or _expr_references_var(expr.substring, name)
+    if isinstance(expr, StringReplaceExpr):
+        return (
+            _expr_references_var(expr.target, name)
+            or _expr_references_var(expr.old, name)
+            or _expr_references_var(expr.new, name)
+        )
+    if isinstance(expr, (StringUpperExpr, StringLowerExpr, StringTrimExpr)):
+        return _expr_references_var(expr.target, name)
+    if isinstance(expr, StringSplitExpr):
+        return _expr_references_var(expr.target, name) or _expr_references_var(expr.separator, name)
+    if isinstance(expr, StringJoinExpr):
+        return _expr_references_var(expr.items, name) or _expr_references_var(expr.separator, name)
+    if isinstance(expr, StringCharAtExpr):
+        return _expr_references_var(expr.target, name) or _expr_references_var(expr.index, name)
     if isinstance(expr, (FileExistsExpr, ReadFileStringExpr)):
         return _expr_references_var(expr.filepath, name)
     if isinstance(expr, ArgAtExpr):

@@ -1,0 +1,34 @@
+function first_divisible_above(items: List<Int>, divisor: Int, floor: Int) -> Int:
+    define found: Int as -1
+    for each n in items:
+        if n <= floor:
+            continue
+        if n % divisor == 0:
+            set found to n
+            break
+    return found
+
+define list readings as [3, 6, 9, 12, 14, 18, 21, 24]
+print "first_match", first_divisible_above(readings, 6, 10)
+print "no_match", first_divisible_above(readings, 100, 0)
+
+define odd_sum: Int as 0
+for i from 1 to 15:
+    if i % 2 == 0:
+        continue
+    if odd_sum + i > 25:
+        break
+    set odd_sum to odd_sum + i
+print "odd_sum", odd_sum
+
+define cursor: Int as 0
+define scanned: Int as 0
+while cursor < length of readings:
+    define val: Int as readings[cursor]
+    set cursor to cursor + 1
+    if val % 2 != 0:
+        continue
+    set scanned to scanned + val
+    if scanned >= 30:
+        break
+print "cursor", cursor, "scanned", scanned

@@ -1,0 +1,1074 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/514_loop_control_break_continue.meme": {
+      "source_sha256": "4eeaee189c33d24c248de1b000e4104e3d8bdbe8dff752b6a2d1e5828c8c4934",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "first_divisible_above",
+          "params": [
+            {
+              "name": "items",
+              "param_type": "List<Int>"
+            },
+            {
+              "name": "divisor",
+              "param_type": "Int"
+            },
+            {
+              "name": "floor",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "found",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": -1,
+                "data_type": "Int"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "for_each",
+              "item_var": "n",
+              "collection": "items",
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "<=",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "floor"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "loop_continue",
+                      "source_line": 5
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 4
+                },
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "%",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "divisor"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "found",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "source_line": 7
+                    },
+                    {
+                      "op": "loop_break",
+                      "source_line": 8
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 6
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "found"
+              },
+              "source_line": 9
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "readings",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 6,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 9,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 12,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 14,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 18,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 21,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 24,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "first_match",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "first_divisible_above",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "readings"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "no_match",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "first_divisible_above",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "readings"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 100,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 13
+        },
+        {
+          "op": "var_decl",
+          "name": "odd_sum",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 15
+        },
+        {
+          "op": "for_range",
+          "loop_var": "i",
+          "start": {
+            "expr_type": "literal",
+            "value": 1,
+            "data_type": "Int"
+          },
+          "end": {
+            "expr_type": "literal",
+            "value": 15,
+            "data_type": "Int"
+          },
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "%",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "loop_continue",
+                  "source_line": 18
+                }
+              ],
+              "else_body": [],
+              "source_line": 17
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "odd_sum"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 25,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "loop_break",
+                  "source_line": 20
+                }
+              ],
+              "else_body": [],
+              "source_line": 19
+            },
+            {
+              "op": "assign",
+              "name": "odd_sum",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "odd_sum"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "i"
+                }
+              },
+              "source_line": 21
+            }
+          ],
+          "source_line": 16
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "odd_sum",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "odd_sum"
+            }
+          ],
+          "source_line": 22
+        },
+        {
+          "op": "var_decl",
+          "name": "cursor",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 24
+        },
+        {
+          "op": "var_decl",
+          "name": "scanned",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 25
+        },
+        {
+          "op": "while_loop",
+          "condition": {
+            "expr_type": "binary_op",
+            "op": "<",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "cursor"
+            },
+            "right": {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "readings"
+              }
+            }
+          },
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "val",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "readings"
+                },
+                "index": {
+                  "expr_type": "var_ref",
+                  "name": "cursor"
+                }
+              },
+              "source_line": 27
+            },
+            {
+              "op": "assign",
+              "name": "cursor",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "cursor"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 28
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "!=",
+                "left": {
+                  "expr_type": "binary_op",
+                  "op": "%",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "val"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "loop_continue",
+                  "source_line": 30
+                }
+              ],
+              "else_body": [],
+              "source_line": 29
+            },
+            {
+              "op": "assign",
+              "name": "scanned",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "scanned"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "val"
+                }
+              },
+              "source_line": 31
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">=",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "scanned"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 30,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "loop_break",
+                  "source_line": 33
+                }
+              ],
+              "else_body": [],
+              "source_line": 32
+            }
+          ],
+          "source_line": 26
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "cursor",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "cursor"
+            },
+            {
+              "expr_type": "literal",
+              "value": "scanned",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "scanned"
+            }
+          ],
+          "source_line": 34
+        }
+      ],
+      "canonical_meme": "function first_divisible_above(items: List<Int>, divisor: Int, floor: Int) -> Int:\n    define found: Int as -1\n    for each n in items:\n        if n <= floor:\n            continue\n        if n % divisor == 0:\n            set found to n\n            break\n    return found\ndefine list readings as [3, 6, 9, 12, 14, 18, 21, 24]\nprint \"first_match\", first_divisible_above(readings, 6, 10)\nprint \"no_match\", first_divisible_above(readings, 100, 0)\ndefine odd_sum: Int as 0\nfor i from 1 to 15:\n    if i % 2 == 0:\n        continue\n    if odd_sum + i > 25:\n        break\n    set odd_sum to odd_sum + i\nprint \"odd_sum\", odd_sum\ndefine cursor: Int as 0\ndefine scanned: Int as 0\nwhile cursor < length of readings:\n    define val: Int as readings[cursor]\n    set cursor to cursor + 1\n    if val % 2 != 0:\n        continue\n    set scanned to scanned + val\n    if scanned >= 30:\n        break\nprint \"cursor\", cursor, \"scanned\", scanned",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "first_divisible_above",
+            "params": [
+              {
+                "name": "items",
+                "param_type": "List<Int>"
+              },
+              {
+                "name": "divisor",
+                "param_type": "Int"
+              },
+              {
+                "name": "floor",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "found",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": -1,
+                  "data_type": "Int"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "for_each",
+                "item_var": "n",
+                "collection": "items",
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "<=",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "floor"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "loop_continue",
+                        "source_line": 5
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 4
+                  },
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "%",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "n"
+                        },
+                        "right": {
+                          "expr_type": "var_ref",
+                          "name": "divisor"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 0,
+                        "data_type": "Int"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "found",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "n"
+                        },
+                        "source_line": 7
+                      },
+                      {
+                        "op": "loop_break",
+                        "source_line": 8
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 6
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "found"
+                },
+                "source_line": 9
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "readings",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 9,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 12,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 14,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 18,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 21,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 24,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "first_match",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "first_divisible_above",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "readings"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 6,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "no_match",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "first_divisible_above",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "readings"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 100,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 13
+          },
+          {
+            "op": "var_decl",
+            "name": "odd_sum",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 15
+          },
+          {
+            "op": "for_range",
+            "loop_var": "i",
+            "start": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            },
+            "end": {
+              "expr_type": "literal",
+              "value": 15,
+              "data_type": "Int"
+            },
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "%",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "loop_continue",
+                    "source_line": 18
+                  }
+                ],
+                "else_body": [],
+                "source_line": 17
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "odd_sum"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "i"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 25,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "loop_break",
+                    "source_line": 20
+                  }
+                ],
+                "else_body": [],
+                "source_line": 19
+              },
+              {
+                "op": "assign",
+                "name": "odd_sum",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "odd_sum"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  }
+                },
+                "source_line": 21
+              }
+            ],
+            "source_line": 16
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "odd_sum",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "odd_sum"
+              }
+            ],
+            "source_line": 22
+          },
+          {
+            "op": "var_decl",
+            "name": "cursor",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 24
+          },
+          {
+            "op": "var_decl",
+            "name": "scanned",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 25
+          },
+          {
+            "op": "while_loop",
+            "condition": {
+              "expr_type": "binary_op",
+              "op": "<",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "cursor"
+              },
+              "right": {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "readings"
+                }
+              }
+            },
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "val",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "readings"
+                  },
+                  "index": {
+                    "expr_type": "var_ref",
+                    "name": "cursor"
+                  }
+                },
+                "source_line": 27
+              },
+              {
+                "op": "assign",
+                "name": "cursor",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "cursor"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 28
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "!=",
+                  "left": {
+                    "expr_type": "binary_op",
+                    "op": "%",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "val"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "loop_continue",
+                    "source_line": 30
+                  }
+                ],
+                "else_body": [],
+                "source_line": 29
+              },
+              {
+                "op": "assign",
+                "name": "scanned",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "scanned"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "val"
+                  }
+                },
+                "source_line": 31
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">=",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "scanned"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 30,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "loop_break",
+                    "source_line": 33
+                  }
+                ],
+                "else_body": [],
+                "source_line": 32
+              }
+            ],
+            "source_line": 26
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "cursor",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "cursor"
+              },
+              {
+                "expr_type": "literal",
+                "value": "scanned",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "scanned"
+              }
+            ],
+            "source_line": 34
+          }
+        ]
+      }
+    }
+  }
+}

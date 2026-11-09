@@ -51,6 +51,16 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"expr_type": "call", "func_name": "fn", "args": [...]}`
 - `{"expr_type": "read_input", "prompt": "Enter x: ", "target_type": "Float"}` (`target_type` in `"Int"`, `"Float"`, `"Bool"`, `"String"`)
 - `{"expr_type": "str_ends_with", "target": <String expr>, "suffix": <String expr>}` (case-insensitive suffix check, e.g. `if filepath is json` -> `suffix` `".json"`, returns `"Bool"`)
+- `{"expr_type": "str_contains", "target": <String expr>, "substring": <String expr>}` (`<target> contains <substring>`, case-sensitive substring test, returns `"Bool"`)
+- `{"expr_type": "str_starts_with", "target": <String expr>, "prefix": <String expr>}` (`<target> starts with <prefix>`, case-sensitive prefix test, returns `"Bool"`)
+- `{"expr_type": "string_replace", "target": <String expr>, "old": <String expr>, "new": <String expr>}` (`replace <old> with <new> in <target>`, replaces all occurrences, returns `"String"`)
+- `{"expr_type": "string_upper", "target": <String expr>}` (`upper <target>`, returns `"String"`)
+- `{"expr_type": "string_lower", "target": <String expr>}` (`lower <target>`, returns `"String"`)
+- `{"expr_type": "string_trim", "target": <String expr>}` (`trim <target>`, strips ASCII whitespace from both ends, returns `"String"`)
+- `{"expr_type": "string_split", "target": <String expr>, "separator": <String expr>}` (`split <target> by <separator>`, non-empty separator required, returns `"List<String>"`)
+- `{"expr_type": "string_join", "items": <List<String> expr>, "separator": <String expr>}` (`join <items> with <separator>`, returns `"String"`)
+- `{"expr_type": "string_index_of", "target": <String expr>, "substring": <String expr>}` (`index of <substring> in <target>`, returns 0-based `"Int"` or `-1` when absent)
+- `{"expr_type": "string_char_at", "target": <String expr>, "index": <Int expr>}` (`char at <index> of <target>`, 0-based single-char `"String"`, fails exit 1 on out-of-range)
 - `{"expr_type": "file_exists", "filepath": <String expr>}` (`file exists <path>`, returns `"Bool"`, never errors)
 - `{"expr_type": "read_file_string", "filepath": <String expr>}` (`read string from file <path>`, returns `"String"`)
 - `{"expr_type": "arg_count"}` (`argument count`, returns `"Int"`, argc including program name at index 0)
@@ -75,9 +85,11 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "exit_stmt", "code": <Int expr>}` (`exit with code <int-expr>`, exits immediately with status code `code & 0xFF`; counts as returning on that branch!)
 - `{"op": "print_stmt", "expressions": [<expr>, ...]}`
 - `{"op": "if_stmt", "condition": <expr>, "then_body": [...], "else_body": [...]}`
-- `{"op": "for_each", "item_var": "n", "collection": "nums", "body": [...]}`
+- `{"op": "for_each", "item_var": "n", "index_var": "i", "collection": "nums", "body": [...]}` (`index_var` is optional string or `null`, 0-based `"Int"`; `collection` can be `List<T>` or `Map<K, V>` where `item_var` receives sorted keys `K`)
 - `{"op": "for_range", "loop_var": "i", "start": <expr>, "end": <expr>, "body": [...]}`
 - `{"op": "while_loop", "condition": <expr>, "body": [...]}`
+- `{"op": "loop_break"}` (`break`, exits the innermost enclosing `for_each`, `for_range`, or `while_loop`)
+- `{"op": "loop_continue"}` (`continue`, skips to the next iteration of the innermost enclosing loop)
 - `{"op": "func_def", "name": "f", "params": [{"name": "a", "param_type": "Int"}], "return_type": "Int", "body": [...]}`
 - `{"op": "return_stmt", "value": <expr>}`
 - `{"op": "record_def", "name": "User", "fields": [{"name": "id", "field_type": "Int"}, ...]}`

@@ -1,0 +1,550 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/515_string_toolbox_pipeline.meme": {
+      "source_sha256": "507db0ac420a8c032126086e1d70f09f89897cfa2895fa49d59f8d327c41b63f",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "raw",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "  prefix_Alpha,Beta,Gamma_suffix  ",
+            "data_type": "String"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "cleaned",
+          "var_type": "String",
+          "value": {
+            "expr_type": "string_trim",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "raw"
+            }
+          },
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "cleaned"
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "binary_op",
+            "op": "and",
+            "left": {
+              "expr_type": "str_starts_with",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "cleaned"
+              },
+              "prefix": {
+                "expr_type": "literal",
+                "value": "prefix_",
+                "data_type": "String"
+              }
+            },
+            "right": {
+              "expr_type": "str_contains",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "cleaned"
+              },
+              "substring": {
+                "expr_type": "literal",
+                "value": "Beta",
+                "data_type": "String"
+              }
+            }
+          },
+          "then_body": [
+            {
+              "op": "var_decl",
+              "name": "body",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_replace",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "cleaned"
+                },
+                "old": {
+                  "expr_type": "literal",
+                  "value": "prefix_",
+                  "data_type": "String"
+                },
+                "new": {
+                  "expr_type": "literal",
+                  "value": "",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 7
+            },
+            {
+              "op": "assign",
+              "name": "body",
+              "value": {
+                "expr_type": "string_replace",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "body"
+                },
+                "old": {
+                  "expr_type": "literal",
+                  "value": "_suffix",
+                  "data_type": "String"
+                },
+                "new": {
+                  "expr_type": "literal",
+                  "value": "",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 8
+            },
+            {
+              "op": "var_decl",
+              "name": "upper_body",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_upper",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "body"
+                }
+              },
+              "source_line": 9
+            },
+            {
+              "op": "var_decl",
+              "name": "lower_body",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_lower",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "upper_body"
+                }
+              },
+              "source_line": 10
+            },
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "upper_body"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "lower_body"
+                }
+              ],
+              "source_line": 11
+            },
+            {
+              "op": "var_decl",
+              "name": "parts",
+              "var_type": "List<String>",
+              "value": {
+                "expr_type": "string_split",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "lower_body"
+                },
+                "separator": {
+                  "expr_type": "literal",
+                  "value": ",",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 12
+            },
+            {
+              "op": "var_decl",
+              "name": "joined",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_join",
+                "items": {
+                  "expr_type": "var_ref",
+                  "name": "parts"
+                },
+                "separator": {
+                  "expr_type": "literal",
+                  "value": "|",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 13
+            },
+            {
+              "op": "var_decl",
+              "name": "beta_idx",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_index_of",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "joined"
+                },
+                "substring": {
+                  "expr_type": "literal",
+                  "value": "beta",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 14
+            },
+            {
+              "op": "var_decl",
+              "name": "missing_idx",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "string_index_of",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "joined"
+                },
+                "substring": {
+                  "expr_type": "literal",
+                  "value": "delta",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 15
+            },
+            {
+              "op": "var_decl",
+              "name": "first_ch",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_char_at",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "joined"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 16
+            },
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "joined"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "beta_idx"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "missing_idx"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "first_ch"
+                }
+              ],
+              "source_line": 17
+            }
+          ],
+          "else_body": [],
+          "source_line": 6
+        }
+      ],
+      "canonical_meme": "define raw: String as \"  prefix_Alpha,Beta,Gamma_suffix  \"\ndefine cleaned: String as trim raw\nprint cleaned\nif cleaned starts with \"prefix_\" and cleaned contains \"Beta\":\n    define body: String as replace \"prefix_\" with \"\" in cleaned\n    set body to replace \"_suffix\" with \"\" in body\n    define upper_body: String as upper body\n    define lower_body: String as lower upper_body\n    print upper_body, lower_body\n    define list parts as split lower_body by \",\"\n    define joined: String as join parts with \"|\"\n    define beta_idx: Int as index of \"beta\" in joined\n    define missing_idx: Int as index of \"delta\" in joined\n    define first_ch: String as char at 0 of joined\n    print joined, beta_idx, missing_idx, first_ch",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "raw",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "  prefix_Alpha,Beta,Gamma_suffix  ",
+              "data_type": "String"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "cleaned",
+            "var_type": "String",
+            "value": {
+              "expr_type": "string_trim",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "raw"
+              }
+            },
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "cleaned"
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "binary_op",
+              "op": "and",
+              "left": {
+                "expr_type": "str_starts_with",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "cleaned"
+                },
+                "prefix": {
+                  "expr_type": "literal",
+                  "value": "prefix_",
+                  "data_type": "String"
+                }
+              },
+              "right": {
+                "expr_type": "str_contains",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "cleaned"
+                },
+                "substring": {
+                  "expr_type": "literal",
+                  "value": "Beta",
+                  "data_type": "String"
+                }
+              }
+            },
+            "then_body": [
+              {
+                "op": "var_decl",
+                "name": "body",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_replace",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "cleaned"
+                  },
+                  "old": {
+                    "expr_type": "literal",
+                    "value": "prefix_",
+                    "data_type": "String"
+                  },
+                  "new": {
+                    "expr_type": "literal",
+                    "value": "",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 7
+              },
+              {
+                "op": "assign",
+                "name": "body",
+                "value": {
+                  "expr_type": "string_replace",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "body"
+                  },
+                  "old": {
+                    "expr_type": "literal",
+                    "value": "_suffix",
+                    "data_type": "String"
+                  },
+                  "new": {
+                    "expr_type": "literal",
+                    "value": "",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 8
+              },
+              {
+                "op": "var_decl",
+                "name": "upper_body",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_upper",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "body"
+                  }
+                },
+                "source_line": 9
+              },
+              {
+                "op": "var_decl",
+                "name": "lower_body",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_lower",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "upper_body"
+                  }
+                },
+                "source_line": 10
+              },
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "upper_body"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "lower_body"
+                  }
+                ],
+                "source_line": 11
+              },
+              {
+                "op": "var_decl",
+                "name": "parts",
+                "var_type": "List<String>",
+                "value": {
+                  "expr_type": "string_split",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "lower_body"
+                  },
+                  "separator": {
+                    "expr_type": "literal",
+                    "value": ",",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 12
+              },
+              {
+                "op": "var_decl",
+                "name": "joined",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_join",
+                  "items": {
+                    "expr_type": "var_ref",
+                    "name": "parts"
+                  },
+                  "separator": {
+                    "expr_type": "literal",
+                    "value": "|",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 13
+              },
+              {
+                "op": "var_decl",
+                "name": "beta_idx",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_index_of",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "joined"
+                  },
+                  "substring": {
+                    "expr_type": "literal",
+                    "value": "beta",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 14
+              },
+              {
+                "op": "var_decl",
+                "name": "missing_idx",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "string_index_of",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "joined"
+                  },
+                  "substring": {
+                    "expr_type": "literal",
+                    "value": "delta",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 15
+              },
+              {
+                "op": "var_decl",
+                "name": "first_ch",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_char_at",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "joined"
+                  },
+                  "index": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 16
+              },
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "joined"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "beta_idx"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "missing_idx"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "first_ch"
+                  }
+                ],
+                "source_line": 17
+              }
+            ],
+            "else_body": [],
+            "source_line": 6
+          }
+        ]
+      }
+    }
+  }
+}

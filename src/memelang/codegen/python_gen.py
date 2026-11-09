@@ -10,8 +10,10 @@ from memelang.ir.schema import (
     ArgCountExpr,
     AssignStmt,
     BinaryOpExpr,
+    BreakStmt,
     CallExpr,
     ClampCollectionStmt,
+    ContinueStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -50,9 +52,19 @@ from memelang.ir.schema import (
     RecordSetFieldStmt,
     ReturnStmt,
     SortCollectionStmt,
+    StrContainsExpr,
     StrEndsWithExpr,
+    StrStartsWithExpr,
+    StringCharAtExpr,
+    StringIndexOfExpr,
+    StringJoinExpr,
     StringLengthExpr,
+    StringLowerExpr,
+    StringReplaceExpr,
     StringSliceExpr,
+    StringSplitExpr,
+    StringTrimExpr,
+    StringUpperExpr,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -92,6 +104,8 @@ class _PyGen:
         self.uses_argv = False
         self.uses_input = False
         self.uses_input_helpers = False
+        self.uses_str_split = False
+        self.uses_char_at = False
         self.uses_dataclass = False
         self.symbols: dict[str, MemeType] = {}
         self.func_returns: dict[str, MemeType] = {}
@@ -108,11 +122,29 @@ class _PyGen:
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
-        if isinstance(expr, (StrEndsWithExpr, FileExistsExpr)):
+        if isinstance(expr, StringSplitExpr):
+            return "List<String>"
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr)):
             return "Bool"
-        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, ArgCountExpr)):
+        if isinstance(
+            expr,
+            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr),
+        ):
             return "Int"
-        if isinstance(expr, (StringSliceExpr, ReadFileStringExpr, ArgAtExpr)):
+        if isinstance(
+            expr,
+            (
+                StringSliceExpr,
+                StringReplaceExpr,
+                StringUpperExpr,
+                StringLowerExpr,
+                StringTrimExpr,
+                StringJoinExpr,
+                StringCharAtExpr,
+                ReadFileStringExpr,
+                ArgAtExpr,
+            ),
+        ):
             return "String"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
@@ -218,6 +250,45 @@ class _PyGen:
             tgt = self.gen_expr(expr.target, scope)
             suf = self.gen_expr(expr.suffix, scope)
             return f"({tgt}.strip().lower().endswith({suf}.lower()))"
+
+        if isinstance(expr, StrStartsWithExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            pre = self.gen_expr(expr.prefix, scope)
+            return f"({tgt}.startswith({pre}))"
+
+        if isinstance(expr, StrContainsExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            sub = self.gen_expr(expr.substring, scope)
+            return f"({sub} in {tgt})"
+
+        if isinstance(expr, StringReplaceExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            old_s = self.gen_expr(expr.old, scope)
+            new_s = self.gen_expr(expr.new, scope)
+            return f"{tgt}.replace({old_s}, {new_s})"
+
+        if isinstance(expr, StringUpperExpr):
+            return f"{self.gen_expr(expr.target, scope)}.upper()"
+
+        if isinstance(expr, StringLowerExpr):
+            return f"{self.gen_expr(expr.target, scope)}.lower()"
+
+        if isinstance(expr, StringTrimExpr):
+            return f"{self.gen_expr(expr.target, scope)}.strip()"
+
+        if isinstance(expr, StringSplitExpr):
+            self.uses_str_split = True
+            return f"_meme_str_split({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.separator, scope)})"
+
+        if isinstance(expr, StringJoinExpr):
+            return f"({self.gen_expr(expr.separator, scope)}).join({self.gen_expr(expr.items, scope)})"
+
+        if isinstance(expr, StringIndexOfExpr):
+            return f"{self.gen_expr(expr.target, scope)}.find({self.gen_expr(expr.substring, scope)})"
+
+        if isinstance(expr, StringCharAtExpr):
+            self.uses_char_at = True
+            return f"_meme_char_at({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.index, scope)})"
 
         if isinstance(expr, StringLengthExpr):
             return f"_meme_builtins.len({self.gen_expr(expr.target, scope)})"
@@ -369,8 +440,20 @@ class _PyGen:
         if isinstance(stmt, ForEachStmt):
             sub = dict(scope)
             col_t = scope.get(stmt.collection, "List<Int>")
-            sub[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[assignment]
-            lines = [f"{pad}for {_py_ident(stmt.item_var)} in {_py_ident(stmt.collection)}[:]:"]
+            map_t = _map_types_of(col_t)
+            if map_t is not None:
+                sub[stmt.item_var] = map_t[0]  # type: ignore[assignment]
+                iter_expr = f"_meme_builtins.sorted({_py_ident(stmt.collection)}.keys())"
+            else:
+                sub[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[assignment]
+                iter_expr = f"{_py_ident(stmt.collection)}[:]"
+            if stmt.index_var is not None:
+                sub[stmt.index_var] = "Int"
+                lines = [
+                    f"{pad}for {_py_ident(stmt.index_var)}, {_py_ident(stmt.item_var)} in _meme_builtins.enumerate({iter_expr}):"
+                ]
+            else:
+                lines = [f"{pad}for {_py_ident(stmt.item_var)} in {iter_expr}:"]
             if stmt.body:
                 for ch in stmt.body:
                     lines.extend(self.gen_stmt(ch, sub, indent + 1))
@@ -400,6 +483,12 @@ class _PyGen:
             else:
                 lines.append(f"{pad}    pass")
             return lines
+
+        if isinstance(stmt, BreakStmt):
+            return [f"{pad}break"]
+
+        if isinstance(stmt, ContinueStmt):
+            return [f"{pad}continue"]
 
         if isinstance(stmt, FuncDefStmt):
             self.func_returns[stmt.name] = stmt.return_type
@@ -500,6 +589,31 @@ def generate_python(ir: ProgramIR) -> str:
                 "        _meme_builtins.print(f'Error: argument index {_i} out of range')",
                 "        raise _meme_builtins.SystemExit(1)",
                 "    return _meme_sys.argv[_i]",
+                "",
+            ]
+        )
+
+    if gen.uses_str_split:
+        header.extend(
+            [
+                "def _meme_str_split(s: str, sep: str) -> list[str]:",
+                "    if sep == '':",
+                "        _meme_builtins.print('Error: empty separator in split')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    return s.split(sep)",
+                "",
+            ]
+        )
+
+    if gen.uses_char_at:
+        header.extend(
+            [
+                "def _meme_char_at(s: str, idx: int) -> str:",
+                "    _i = _meme_builtins.int(idx)",
+                "    if _i < 0 or _i >= _meme_builtins.len(s):",
+                "        _meme_builtins.print(f'Error: string index {_i} out of range')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    return s[_i]",
                 "",
             ]
         )

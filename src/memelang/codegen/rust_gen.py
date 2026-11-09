@@ -8,8 +8,10 @@ from memelang.ir.schema import (
     ArgCountExpr,
     AssignStmt,
     BinaryOpExpr,
+    BreakStmt,
     CallExpr,
     ClampCollectionStmt,
+    ContinueStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -48,9 +50,19 @@ from memelang.ir.schema import (
     RecordSetFieldStmt,
     ReturnStmt,
     SortCollectionStmt,
+    StrContainsExpr,
     StrEndsWithExpr,
+    StrStartsWithExpr,
+    StringCharAtExpr,
+    StringIndexOfExpr,
+    StringJoinExpr,
     StringLengthExpr,
+    StringLowerExpr,
+    StringReplaceExpr,
     StringSliceExpr,
+    StringSplitExpr,
+    StringTrimExpr,
+    StringUpperExpr,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -138,6 +150,8 @@ class _RustGen:
         self.uses_json_io = False
         self.uses_file_io = False
         self.uses_argv = False
+        self.uses_str_split = False
+        self.uses_char_at = False
         self.func_returns: dict[str, MemeType] = {}
         self.records: dict[str, dict[str, MemeType]] = {}
 
@@ -152,11 +166,29 @@ class _RustGen:
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
-        if isinstance(expr, (StrEndsWithExpr, FileExistsExpr)):
+        if isinstance(expr, StringSplitExpr):
+            return "List<String>"
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr)):
             return "Bool"
-        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, ArgCountExpr)):
+        if isinstance(
+            expr,
+            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr),
+        ):
             return "Int"
-        if isinstance(expr, (StringSliceExpr, ReadFileStringExpr, ArgAtExpr)):
+        if isinstance(
+            expr,
+            (
+                StringSliceExpr,
+                StringReplaceExpr,
+                StringUpperExpr,
+                StringLowerExpr,
+                StringTrimExpr,
+                StringJoinExpr,
+                StringCharAtExpr,
+                ReadFileStringExpr,
+                ArgAtExpr,
+            ),
+        ):
             return "String"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
@@ -278,6 +310,47 @@ class _RustGen:
             tgt = self.gen_expr(expr.target, scope)
             suf = self.gen_expr(expr.suffix, scope)
             return f"({tgt}.trim().to_lowercase().ends_with(&({suf}.to_lowercase())))"
+
+        if isinstance(expr, StrStartsWithExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            pre = self.gen_expr(expr.prefix, scope)
+            return f"({tgt}.starts_with(&({pre})))"
+
+        if isinstance(expr, StrContainsExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            sub = self.gen_expr(expr.substring, scope)
+            return f"({tgt}.contains(&({sub})))"
+
+        if isinstance(expr, StringReplaceExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            old_s = self.gen_expr(expr.old, scope)
+            new_s = self.gen_expr(expr.new, scope)
+            return f"({tgt}.replace(&({old_s}), &({new_s})))"
+
+        if isinstance(expr, StringUpperExpr):
+            return f"({self.gen_expr(expr.target, scope)}.to_uppercase())"
+
+        if isinstance(expr, StringLowerExpr):
+            return f"({self.gen_expr(expr.target, scope)}.to_lowercase())"
+
+        if isinstance(expr, StringTrimExpr):
+            return f"({self.gen_expr(expr.target, scope)}.trim().to_string())"
+
+        if isinstance(expr, StringSplitExpr):
+            self.uses_str_split = True
+            return f"_meme_str_split(&({self.gen_expr(expr.target, scope)}), &({self.gen_expr(expr.separator, scope)}))"
+
+        if isinstance(expr, StringJoinExpr):
+            return f"(({self.gen_expr(expr.items, scope)}).join(&({self.gen_expr(expr.separator, scope)})))"
+
+        if isinstance(expr, StringIndexOfExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            sub = self.gen_expr(expr.substring, scope)
+            return f"(match ({tgt}).find(&({sub})) {{ Some(_i) => _i as i64, None => -1_i64 }})"
+
+        if isinstance(expr, StringCharAtExpr):
+            self.uses_char_at = True
+            return f"_meme_char_at(&({self.gen_expr(expr.target, scope)}), {self.gen_expr(expr.index, scope)})"
 
         if isinstance(expr, StringLengthExpr):
             tgt = self.gen_expr(expr.target, scope)
@@ -445,12 +518,47 @@ class _RustGen:
         if isinstance(stmt, ForEachStmt):
             sub = dict(scope)
             col_t = scope.get(stmt.collection, "List<Int>")
-            sub[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[assignment]
-            lines = [f"{pad}for {_rust_ident(stmt.item_var)} in {_rust_ident(stmt.collection)}.clone().into_iter() {{"]
-            for ch in stmt.body:
-                lines.extend(self.gen_stmt(ch, sub, indent + 1))
-            lines.append(f"{pad}}}")
-            return lines
+            map_t = _map_types_of(col_t)
+            col_ident = _rust_ident(stmt.collection)
+            item_ident = _rust_ident(stmt.item_var)
+            if map_t is not None:
+                sub[stmt.item_var] = map_t[0]  # type: ignore[assignment]
+                lines = [
+                    f"{pad}{{",
+                    f"{pad}    let mut _meme_keys: Vec<_> = {col_ident}.keys().cloned().collect();",
+                    f"{pad}    _meme_keys.sort();",
+                ]
+                if stmt.index_var is not None:
+                    sub[stmt.index_var] = "Int"
+                    idx_ident = _rust_ident(stmt.index_var)
+                    lines.append(
+                        f"{pad}    for (_meme_idx, mut {item_ident}) in _meme_keys.into_iter().enumerate() {{"
+                    )
+                    lines.append(f"{pad}        let mut {idx_ident}: i64 = _meme_idx as i64;")
+                else:
+                    lines.append(f"{pad}    for mut {item_ident} in _meme_keys.into_iter() {{")
+                for ch in stmt.body:
+                    lines.extend(self.gen_stmt(ch, sub, indent + 2))
+                lines.append(f"{pad}    }}")
+                lines.append(f"{pad}}}")
+                return lines
+            else:
+                sub[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[assignment]
+                if stmt.index_var is not None:
+                    sub[stmt.index_var] = "Int"
+                    idx_ident = _rust_ident(stmt.index_var)
+                    lines = [
+                        f"{pad}for (_meme_idx, mut {item_ident}) in {col_ident}.clone().into_iter().enumerate() {{",
+                        f"{pad}    let mut {idx_ident}: i64 = _meme_idx as i64;",
+                    ]
+                else:
+                    lines = [
+                        f"{pad}for mut {item_ident} in {col_ident}.clone().into_iter() {{"
+                    ]
+                for ch in stmt.body:
+                    lines.extend(self.gen_stmt(ch, sub, indent + 1))
+                lines.append(f"{pad}}}")
+                return lines
 
         if isinstance(stmt, ForRangeStmt):
             sub = dict(scope)
@@ -470,6 +578,12 @@ class _RustGen:
                 lines.extend(self.gen_stmt(ch, sub, indent + 1))
             lines.append(f"{pad}}}")
             return lines
+
+        if isinstance(stmt, BreakStmt):
+            return [f"{pad}break;"]
+
+        if isinstance(stmt, ContinueStmt):
+            return [f"{pad}continue;"]
 
         if isinstance(stmt, ReturnStmt):
             if stmt.value is None:
@@ -652,6 +766,35 @@ def generate_rust(ir: ProgramIR) -> str:
                 "            std::process::exit(1);",
                 "        }",
                 "    }",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_str_split:
+        preamble.extend(
+            [
+                "fn _meme_str_split(s: &str, sep: &str) -> Vec<String> {",
+                "    if sep.is_empty() {",
+                "        println!(\"Error: empty separator in split\");",
+                "        std::process::exit(1);",
+                "    }",
+                "    s.split(sep).map(|p| p.to_string()).collect()",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_char_at:
+        preamble.extend(
+            [
+                "fn _meme_char_at(s: &str, idx: i64) -> String {",
+                "    let bytes = s.as_bytes();",
+                "    if idx < 0 || (idx as usize) >= bytes.len() {",
+                "        println!(\"Error: string index {} out of range\", idx);",
+                "        std::process::exit(1);",
+                "    }",
+                "    (bytes[idx as usize] as char).to_string()",
                 "}",
                 "",
             ]

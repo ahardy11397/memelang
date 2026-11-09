@@ -9,8 +9,10 @@ from memelang.ir.schema import (
     ArgCountExpr,
     AssignStmt,
     BinaryOpExpr,
+    BreakStmt,
     CallExpr,
     ClampCollectionStmt,
+    ContinueStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -48,9 +50,19 @@ from memelang.ir.schema import (
     RecordSetFieldStmt,
     ReturnStmt,
     SortCollectionStmt,
+    StrContainsExpr,
     StrEndsWithExpr,
+    StrStartsWithExpr,
+    StringCharAtExpr,
+    StringIndexOfExpr,
+    StringJoinExpr,
     StringLengthExpr,
+    StringLowerExpr,
+    StringReplaceExpr,
     StringSliceExpr,
+    StringSplitExpr,
+    StringTrimExpr,
+    StringUpperExpr,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -128,7 +140,51 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
         return f"read {expr.target_type} with prompt {json.dumps(expr.prompt)}"
 
     if isinstance(expr, StrEndsWithExpr):
-        return f"{format_expr(expr.target)} ends with {format_expr(expr.suffix)}"
+        res = f"{format_expr(expr.target, 3)} ends with {format_expr(expr.suffix, 4)}"
+        return f"({res})" if parent_prec > 3 else res
+
+    if isinstance(expr, StrStartsWithExpr):
+        res = f"{format_expr(expr.target, 3)} starts with {format_expr(expr.prefix, 4)}"
+        return f"({res})" if parent_prec > 3 else res
+
+    if isinstance(expr, StrContainsExpr):
+        res = f"{format_expr(expr.target, 3)} contains {format_expr(expr.substring, 4)}"
+        return f"({res})" if parent_prec > 3 else res
+
+    if isinstance(expr, StringReplaceExpr):
+        res = (
+            f"replace {format_expr(expr.old, 6)} with {format_expr(expr.new, 6)} "
+            f"in {format_expr(expr.target, 6)}"
+        )
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, StringUpperExpr):
+        res = f"upper {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, StringLowerExpr):
+        res = f"lower {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, StringTrimExpr):
+        res = f"trim {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, StringSplitExpr):
+        res = f"split {format_expr(expr.target, 6)} by {format_expr(expr.separator, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, StringJoinExpr):
+        res = f"join {format_expr(expr.items, 6)} with {format_expr(expr.separator, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, StringIndexOfExpr):
+        res = f"index of {format_expr(expr.substring, 6)} in {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, StringCharAtExpr):
+        res = f"char at {format_expr(expr.index, 6)} of {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
 
     if isinstance(expr, FileExistsExpr):
         res = f"file exists {format_expr(expr.filepath, 6)}"
@@ -238,7 +294,12 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
         return lines
 
     if isinstance(stmt, ForEachStmt):
-        lines = [f"{pad}for each {stmt.item_var} in {stmt.collection}:"]
+        if stmt.index_var is not None:
+            lines = [
+                f"{pad}for each index {stmt.index_var} item {stmt.item_var} in {stmt.collection}:"
+            ]
+        else:
+            lines = [f"{pad}for each {stmt.item_var} in {stmt.collection}:"]
         for child in stmt.body:
             lines.extend(_format_stmt(child, indent + 1))
         return lines
@@ -256,6 +317,12 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
         for child in stmt.body:
             lines.extend(_format_stmt(child, indent + 1))
         return lines
+
+    if isinstance(stmt, BreakStmt):
+        return [f"{pad}break"]
+
+    if isinstance(stmt, ContinueStmt):
+        return [f"{pad}continue"]
 
     if isinstance(stmt, FuncDefStmt):
         params = ", ".join(f"{p.name}: {p.param_type}" for p in stmt.params)

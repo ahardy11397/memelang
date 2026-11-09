@@ -202,7 +202,14 @@ for i from 1 to 20          # i = 1, 2, ..., 20 (not 19!)
 ```meme
 for each n in numbers
   print n
+
+# Loop with 0-based index (canonical form: `for each index <i> item <x> in <col>:`
+# or shorthand `for each <i>, <x> in <col>:`):
+for each index i item n in numbers:
+    print i, n
 ```
+
+`for each` works on both `List<T>` (iterating a snapshot of elements) and `Map<K, V>` (iterating a **sorted snapshot of keys** `K` for deterministic cross-target output parity across Python, Rust, and C++). When `index <i> item <x>` (or `<i>, <x>`) is specified, `<i>` is bound as a 0-based `Int` index alongside `<x>`.
 
 **While loop** (**offline** & **LLM-voice**):
 
@@ -211,6 +218,21 @@ while digit_buffer > 0
   define extracted_digit as digit_buffer % 10
   set digit_buffer to digit_buffer / 10
 ```
+
+**Loop control (`break` / `continue`)** (**offline** & **LLM-voice**):
+
+```meme
+for each n in numbers:
+    if n < 0:
+        continue
+    if n > 100:
+        break
+    print n
+```
+
+- `break` (`loop_break`) immediately exits the innermost enclosing `for each`, `for ... from ... to ...`, or `while` loop.
+- `continue` (`loop_continue`) skips the rest of the current iteration and proceeds to the next iteration of the innermost enclosing loop.
+- **Scope boundary rule:** `break` and `continue` are statically rejected by the verifier when used outside a loop body. A `function` definition (`func_def`) establishes its own scope boundary (`in_loop=False`), so `break` or `continue` inside a function body is rejected unless enclosed by a loop inside that function itself (even if the function were defined inside an outer loop body).
 
 ---
 
@@ -235,6 +257,7 @@ clamp numbers between 1 and 10               # offline & LLM-voice (clamp every 
 
 **Indexing:**
 - **Offline (`heuristic`):** 0-based bracket indexing `numbers[0]`, `sorted[length of sorted - 1]`.
+- **Negative indexing policy:** Negative literal indices (such as `numbers[-1]`, `char at -1 of s`, or `slice s from -1 to 2`) are **statically banned** across lists and strings. The verifier rejects them with a `StaticVerificationError` that suggests the explicit 0-based positive-index equivalent (e.g., `use positive index \`numbers[length of numbers - 1]\` instead` or `use positive index \`char at (length of string s - 1) of s\` instead`).
 - **LLM-voice only:** when you *say* a position in English (`item 1`, `item 2`, `item last`), counting starts at **1**:
 
 ```meme
@@ -311,11 +334,33 @@ if c is uppercase
   ...
 length of identifier                    # string length (LLM-voice only without `string` keyword)
 
-# Offline (heuristic):
+# Offline (heuristic) & LLM-voice:
 define c as slice identifier from idx to idx + 1   # 0-based [idx, idx + 1)
+define ch as char at idx of identifier             # 0-based single-char String (fails exit 1 if out of range)
 define n as length of string identifier            # `length of string <expr>` required offline
-define ok as filepath ends with ".json"            # case-insensitive suffix test (offline & LLM-voice)
+define ok as filepath ends with ".json"            # case-insensitive suffix test
+define has_sub as identifier contains "id"         # case-sensitive substring test
+define has_pre as identifier starts with "user_"   # case-sensitive prefix test
+define cleaned as trim raw_line                    # strip ASCII whitespace from both ends
+define up as upper cleaned                         # uppercase conversion
+define lo as lower cleaned                         # lowercase conversion
+define patched as replace "foo" with "bar" in lo   # replace all occurrences of old with new
+define parts: List<String> as split patched by "," # split on non-empty separator -> List<String>
+define joined as join parts with "|"               # join List<String> with separator -> String
+define pos as index of "bar" in joined             # 0-based first index, or -1 when absent
 ```
+
+### String Verb Semantics (Python, Rust, and C++ Parity)
+
+- **Byte / ASCII code-unit indexing:** `length of string`, `slice ... from ... to ...`, `char at <index> of <target>`, and `index of <sub-expr> in <target>` operate on 0-based byte / ASCII code-unit positions across all three backends (UTF-8 multi-byte codepoint grapheme indexing is out of scope).
+- **`<target> contains <substring>` (`str_contains`)** and **`<target> starts with <prefix>` (`str_starts_with`)**: case-sensitive boolean checks (`Bool`). Note that `<target> ends with <suffix>` (`str_ends_with`) remains case-insensitive for backward compatibility with file-extension checks.
+- **`replace <old> with <new> in <target>` (`string_replace`)**: replaces all non-overlapping occurrences of `<old>` with `<new>` in `<target>`. If `<old>` is `""`, returns `<target>` unchanged across all three targets.
+- **`upper <target>` (`string_upper`)** and **`lower <target>` (`string_lower`)**: return an uppercase or lowercase copy of `<target>`.
+- **`trim <target>` (`string_trim`)**: strips leading and trailing ASCII whitespace characters (`' '`, `'\t'`, `'\n'`, `'\r'`, `'\v'`, `'\f'`) and returns the trimmed `String`.
+- **`split <target> by <separator>` (`string_split`)**: splits `<target>` around every occurrence of non-empty `<separator>`, returning `List<String>`. An empty literal separator `""` is rejected statically by the verifier (`StaticVerificationError`); a dynamic empty separator at runtime prints `Error: empty separator in split` to stdout and exits immediately with status code `1` across all three targets.
+- **`join <items> with <separator>` (`string_join`)**: joins a `List<String>` with `<separator>` between adjacent elements, returning `String`.
+- **`index of <substring> in <target>` (`string_index_of`)**: returns the 0-based `Int` index of the first occurrence of `<substring>` in `<target>`, or `-1` when `<substring>` is not found.
+- **`char at <index> of <target>` (`string_char_at`)**: returns a single-character `String` at 0-based `<index>`. Out-of-range indices print `Error: string index <index> out of range` to stdout and exit immediately with status code `1` across all three targets.
 
 ---
 
@@ -523,7 +568,17 @@ if user_roles has key "alice":
     print "Found alice"
 ```
 
-All three compiler backends (Python, standalone Rust, and C++20) generate native representations (Python `@dataclass` and `dict`, Rust `struct` and `std::collections::HashMap`, C++ `struct` and `std::unordered_map`) with deterministic output formatting parity.
+Iterate over map keys in deterministic sorted key order (optionally with a 0-based index):
+
+```meme
+for each k in user_roles:
+    print k, user_roles[k]
+
+for each index idx item k in user_roles:
+    print idx, k, user_roles[k]
+```
+
+All three compiler backends (Python, standalone Rust, and C++20) generate native representations (Python `@dataclass` and `dict`, Rust `struct` and `std::collections::HashMap`, C++ `struct` and `std::unordered_map`) with deterministic output formatting and sorted-key iteration parity.
 
 ---
 
@@ -660,8 +715,11 @@ Each construct is labeled **offline** (supported by the zero-dependency `heurist
 | Print | `print x` / `print "a, ", b` | **offline** |
 | Branch | `if <cond>[:]` / `else if <cond>[:]` / `else[:]` (indentation) | **offline** |
 | Count 1..N inclusive | `for i from 1 to N[:]` | **offline** |
-| Iterate a list | `for each n in list[:]` *(two words `for each`; `foreach` is **LLM-voice only**)* | **offline** |
+| Iterate a list or map | `for each x in col[:]` *(two words `for each`; `foreach` is **LLM-voice only**; iterates sorted keys on `Map<K, V>`)* | **offline** |
+| Iterate with 0-based index | `for each index i item x in col[:]` / `for each i, x in col[:]` | **offline** |
 | Repeat while | `while <cond>[:]` | **offline** |
+| Exit loop early | `break` | **offline** |
+| Skip to next iteration | `continue` | **offline** |
 | Sort in place | `sort list ascending` / `sort list descending` | **offline** |
 | Sort into a copy | `define list out as list` + `sort out descending` (**offline**) / `define out as empty` + `sort list into out descending` (**LLM-voice only**; verifier normalizes `empty` + `sort` via `_normalize_sort_into_empty`) | **offline** / **LLM-voice only** |
 | Filter (in-place) | `filter list where item >= 0` *(mutates `list` in place — **offline**)* / `define evens as each n in list where <cond>` (**LLM-voice only**) | **offline** / **LLM-voice only** |
@@ -670,7 +728,12 @@ Each construct is labeled **offline** (supported by the zero-dependency `heurist
 | Mutate an element | `set list[i] to v` (**offline**) / `set list item i to v` (**LLM-voice only**) | **offline** / **LLM-voice only** |
 | List length | `length of list` | **offline** |
 | String length | `length of string s` (**offline**) / `length of s` (**LLM-voice only** on strings) | **offline** / **LLM-voice only** |
-| Char at position / slice | `slice s from idx to idx + 1` (0-based, **offline**) / `s char k` (1-based, **LLM-voice only**) | **offline** / **LLM-voice only** |
+| Char at position / slice | `char at idx of s` / `slice s from idx to idx + 1` (0-based, **offline**) / `s char k` (1-based, **LLM-voice only**) | **offline** / **LLM-voice only** |
+| String predicates | `s contains sub` / `s starts with pre` / `s ends with suf` | **offline** |
+| String case & trim | `upper s` / `lower s` / `trim s` | **offline** |
+| String replace | `replace old with new in s` | **offline** |
+| String split & join | `split s by sep` / `join items with sep` | **offline** |
+| String index of | `index of sub in s` *(0-based `Int`, `-1` if absent)* | **offline** |
 | Define a function | `function f(a: Int, b: Int) -> Int:` (**offline**, explicit types required) / `define function f with a, b` (**LLM-voice only**, defaults params to `Float`) | **offline** / **LLM-voice only** |
 | Call a function | `define r: Int as f(a, b)` (**offline**) / `define r as f from a, b` (**LLM-voice only**) | **offline** / **LLM-voice only** |
 | Define a record | `record User:\n    id: Int\n    name: String` | **offline** |

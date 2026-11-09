@@ -1,0 +1,12 @@
+# Map iteration (sorted keys) and indexed for-each loops
+define scores: Map<String, Int> as {"zara": 85, "alice": 95, "bob": 90}
+
+for each k in scores:
+    print k, scores[k]
+
+define items: List<String> as ["alpha", "beta", "gamma"]
+for each index idx item label in items:
+    print idx, label
+
+for each index rank item student in scores:
+    print rank, student, scores[student]

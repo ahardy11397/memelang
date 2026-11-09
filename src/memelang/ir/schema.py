@@ -149,6 +149,64 @@ class StrEndsWithExpr(IRNode):
     suffix: IRExpr
 
 
+class StrStartsWithExpr(IRNode):
+    expr_type: Literal["str_starts_with"] = "str_starts_with"
+    target: IRExpr
+    prefix: IRExpr
+
+
+class StrContainsExpr(IRNode):
+    expr_type: Literal["str_contains"] = "str_contains"
+    target: IRExpr
+    substring: IRExpr
+
+
+class StringReplaceExpr(IRNode):
+    expr_type: Literal["string_replace"] = "string_replace"
+    target: IRExpr
+    old: IRExpr
+    new: IRExpr
+
+
+class StringUpperExpr(IRNode):
+    expr_type: Literal["string_upper"] = "string_upper"
+    target: IRExpr
+
+
+class StringLowerExpr(IRNode):
+    expr_type: Literal["string_lower"] = "string_lower"
+    target: IRExpr
+
+
+class StringTrimExpr(IRNode):
+    expr_type: Literal["string_trim"] = "string_trim"
+    target: IRExpr
+
+
+class StringSplitExpr(IRNode):
+    expr_type: Literal["string_split"] = "string_split"
+    target: IRExpr
+    separator: IRExpr
+
+
+class StringJoinExpr(IRNode):
+    expr_type: Literal["string_join"] = "string_join"
+    items: IRExpr
+    separator: IRExpr
+
+
+class StringIndexOfExpr(IRNode):
+    expr_type: Literal["string_index_of"] = "string_index_of"
+    target: IRExpr
+    substring: IRExpr
+
+
+class StringCharAtExpr(IRNode):
+    expr_type: Literal["string_char_at"] = "string_char_at"
+    target: IRExpr
+    index: IRExpr
+
+
 class FileExistsExpr(IRNode):
     expr_type: Literal["file_exists"] = "file_exists"
     filepath: IRExpr
@@ -242,6 +300,16 @@ IRExpr = Annotated[
     | CallExpr
     | ReadInputExpr
     | StrEndsWithExpr
+    | StrStartsWithExpr
+    | StrContainsExpr
+    | StringReplaceExpr
+    | StringUpperExpr
+    | StringLowerExpr
+    | StringTrimExpr
+    | StringSplitExpr
+    | StringJoinExpr
+    | StringIndexOfExpr
+    | StringCharAtExpr
     | FileExistsExpr
     | ReadFileStringExpr
     | ArgCountExpr
@@ -356,6 +424,7 @@ class IfStmt(IRNode):
 class ForEachStmt(IRNode):
     op: Literal["for_each"] = "for_each"
     item_var: str
+    index_var: str | None = None
     collection: str
     body: list[IRStatement]
     source_line: int | None = None
@@ -374,6 +443,16 @@ class WhileStmt(IRNode):
     op: Literal["while_loop"] = "while_loop"
     condition: IRExpr
     body: list[IRStatement]
+    source_line: int | None = None
+
+
+class BreakStmt(IRNode):
+    op: Literal["loop_break"] = "loop_break"
+    source_line: int | None = None
+
+
+class ContinueStmt(IRNode):
+    op: Literal["loop_continue"] = "loop_continue"
     source_line: int | None = None
 
 
@@ -450,6 +529,8 @@ IRStatement = Annotated[
     | ForEachStmt
     | ForRangeStmt
     | WhileStmt
+    | BreakStmt
+    | ContinueStmt
     | FuncDefStmt
     | ReturnStmt
     | RecordDefStmt
@@ -518,6 +599,16 @@ ListLengthExpr.model_rebuild()
 ListIndexExpr.model_rebuild()
 CallExpr.model_rebuild()
 StrEndsWithExpr.model_rebuild()
+StrStartsWithExpr.model_rebuild()
+StrContainsExpr.model_rebuild()
+StringReplaceExpr.model_rebuild()
+StringUpperExpr.model_rebuild()
+StringLowerExpr.model_rebuild()
+StringTrimExpr.model_rebuild()
+StringSplitExpr.model_rebuild()
+StringJoinExpr.model_rebuild()
+StringIndexOfExpr.model_rebuild()
+StringCharAtExpr.model_rebuild()
 FileExistsExpr.model_rebuild()
 ReadFileStringExpr.model_rebuild()
 ArgCountExpr.model_rebuild()
@@ -544,6 +635,8 @@ IfStmt.model_rebuild()
 ForEachStmt.model_rebuild()
 ForRangeStmt.model_rebuild()
 WhileStmt.model_rebuild()
+BreakStmt.model_rebuild()
+ContinueStmt.model_rebuild()
 FuncDefStmt.model_rebuild()
 ReturnStmt.model_rebuild()
 RecordDefStmt.model_rebuild()

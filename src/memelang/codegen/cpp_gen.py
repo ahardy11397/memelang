@@ -8,8 +8,10 @@ from memelang.ir.schema import (
     ArgCountExpr,
     AssignStmt,
     BinaryOpExpr,
+    BreakStmt,
     CallExpr,
     ClampCollectionStmt,
+    ContinueStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -48,9 +50,19 @@ from memelang.ir.schema import (
     RecordSetFieldStmt,
     ReturnStmt,
     SortCollectionStmt,
+    StrContainsExpr,
     StrEndsWithExpr,
+    StrStartsWithExpr,
+    StringCharAtExpr,
+    StringIndexOfExpr,
+    StringJoinExpr,
     StringLengthExpr,
+    StringLowerExpr,
+    StringReplaceExpr,
     StringSliceExpr,
+    StringSplitExpr,
+    StringTrimExpr,
+    StringUpperExpr,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -160,11 +172,29 @@ class _CppGen:
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
-        if isinstance(expr, (StrEndsWithExpr, FileExistsExpr)):
+        if isinstance(expr, StringSplitExpr):
+            return "List<String>"
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr)):
             return "Bool"
-        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, ArgCountExpr)):
+        if isinstance(
+            expr,
+            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr),
+        ):
             return "Int"
-        if isinstance(expr, (StringSliceExpr, ReadFileStringExpr, ArgAtExpr)):
+        if isinstance(
+            expr,
+            (
+                StringSliceExpr,
+                StringReplaceExpr,
+                StringUpperExpr,
+                StringLowerExpr,
+                StringTrimExpr,
+                StringJoinExpr,
+                StringCharAtExpr,
+                ReadFileStringExpr,
+                ArgAtExpr,
+            ),
+        ):
             return "String"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
@@ -276,6 +306,45 @@ class _CppGen:
         if isinstance(expr, StrEndsWithExpr):
             self.uses_str_helpers = True
             return f"_meme_ends_with_ci({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.suffix, scope)})"
+
+        if isinstance(expr, StrStartsWithExpr):
+            self.uses_str_helpers = True
+            return f"_meme_starts_with({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.prefix, scope)})"
+
+        if isinstance(expr, StrContainsExpr):
+            return f"({self.gen_expr(expr.target, scope)}.find({self.gen_expr(expr.substring, scope)}) != std::string::npos)"
+
+        if isinstance(expr, StringReplaceExpr):
+            self.uses_str_helpers = True
+            return f"_meme_str_replace({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.old, scope)}, {self.gen_expr(expr.new, scope)})"
+
+        if isinstance(expr, StringUpperExpr):
+            self.uses_str_helpers = True
+            return f"_meme_str_upper({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, StringLowerExpr):
+            self.uses_str_helpers = True
+            return f"_meme_str_lower({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, StringTrimExpr):
+            self.uses_str_helpers = True
+            return f"_meme_trim({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, StringSplitExpr):
+            self.uses_str_helpers = True
+            return f"_meme_str_split({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.separator, scope)})"
+
+        if isinstance(expr, StringJoinExpr):
+            self.uses_str_helpers = True
+            return f"_meme_str_join({self.gen_expr(expr.items, scope)}, {self.gen_expr(expr.separator, scope)})"
+
+        if isinstance(expr, StringIndexOfExpr):
+            self.uses_str_helpers = True
+            return f"_meme_str_index_of({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.substring, scope)})"
+
+        if isinstance(expr, StringCharAtExpr):
+            self.uses_str_helpers = True
+            return f"_meme_char_at({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.index, scope)})"
 
         if isinstance(expr, StringLengthExpr):
             self.uses_str_helpers = True
@@ -455,15 +524,64 @@ class _CppGen:
         if isinstance(stmt, ForEachStmt):
             sub = dict(scope)
             col_t = scope.get(stmt.collection, "List<Int>")
-            el_mtype = col_t[5:-1] if col_t.startswith("List<") else "Int"
-            sub[stmt.item_var] = el_mtype  # type: ignore[assignment]
-            lines = [
-                f"{pad}for ({_cpp_type(el_mtype)} {_cpp_ident(stmt.item_var)} : {_cpp_ident(stmt.collection)}) {{"  # type: ignore[arg-type]
-            ]
-            for ch in stmt.body:
-                lines.extend(self.gen_stmt(ch, sub, indent + 1))
-            lines.append(f"{pad}}}")
-            return lines
+            map_t = _map_types_of(col_t)
+            col_ident = _cpp_ident(stmt.collection)
+            item_ident = _cpp_ident(stmt.item_var)
+            if map_t is not None:
+                el_mtype = map_t[0]
+                sub[stmt.item_var] = el_mtype  # type: ignore[assignment]
+                el_cpp = _cpp_type(el_mtype)  # type: ignore[arg-type]
+                lines = [
+                    f"{pad}{{",
+                    f"{pad}    std::vector<{el_cpp}> _meme_keys;",
+                    f"{pad}    _meme_keys.reserve({col_ident}.size());",
+                    f"{pad}    for (const auto& _meme_kv : {col_ident}) {{ _meme_keys.push_back(_meme_kv.first); }}",
+                    f"{pad}    std::sort(_meme_keys.begin(), _meme_keys.end());",
+                ]
+                if stmt.index_var is not None:
+                    sub[stmt.index_var] = "Int"
+                    idx_ident = _cpp_ident(stmt.index_var)
+                    lines.append(
+                        f"{pad}    for (std::size_t _meme_idx = 0; _meme_idx < _meme_keys.size(); ++_meme_idx) {{"
+                    )
+                    lines.append(
+                        f"{pad}        long long {idx_ident} = static_cast<long long>(_meme_idx);"
+                    )
+                    lines.append(f"{pad}        {el_cpp} {item_ident} = _meme_keys[_meme_idx];")
+                else:
+                    lines.append(f"{pad}    for ({el_cpp} {item_ident} : _meme_keys) {{")
+                for ch in stmt.body:
+                    lines.extend(self.gen_stmt(ch, sub, indent + 2))
+                lines.append(f"{pad}    }}")
+                lines.append(f"{pad}}}")
+                return lines
+            else:
+                el_mtype = col_t[5:-1] if col_t.startswith("List<") else "Int"
+                sub[stmt.item_var] = el_mtype  # type: ignore[assignment]
+                el_cpp = _cpp_type(el_mtype)  # type: ignore[arg-type]
+                if stmt.index_var is not None:
+                    sub[stmt.index_var] = "Int"
+                    idx_ident = _cpp_ident(stmt.index_var)
+                    lines = [
+                        f"{pad}{{",
+                        f"{pad}    auto _meme_col = {col_ident};",
+                        f"{pad}    for (std::size_t _meme_idx = 0; _meme_idx < _meme_col.size(); ++_meme_idx) {{",
+                        f"{pad}        long long {idx_ident} = static_cast<long long>(_meme_idx);",
+                        f"{pad}        {el_cpp} {item_ident} = _meme_col[_meme_idx];",
+                    ]
+                    for ch in stmt.body:
+                        lines.extend(self.gen_stmt(ch, sub, indent + 2))
+                    lines.append(f"{pad}    }}")
+                    lines.append(f"{pad}}}")
+                    return lines
+                else:
+                    lines = [
+                        f"{pad}for ({el_cpp} {item_ident} : {col_ident}) {{"
+                    ]
+                    for ch in stmt.body:
+                        lines.extend(self.gen_stmt(ch, sub, indent + 1))
+                    lines.append(f"{pad}}}")
+                    return lines
 
         if isinstance(stmt, ForRangeStmt):
             sub = dict(scope)
@@ -486,6 +604,12 @@ class _CppGen:
                 lines.extend(self.gen_stmt(ch, sub, indent + 1))
             lines.append(f"{pad}}}")
             return lines
+
+        if isinstance(stmt, BreakStmt):
+            return [f"{pad}break;"]
+
+        if isinstance(stmt, ContinueStmt):
+            return [f"{pad}continue;"]
 
         if isinstance(stmt, ReturnStmt):
             if stmt.value is None:
@@ -782,6 +906,81 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        if (std::tolower(static_cast<unsigned char>(ts[off + i])) != std::tolower(static_cast<unsigned char>(suf[i]))) return false;",
                 "    }",
                 "    return true;",
+                "}",
+                "inline bool _meme_starts_with(const std::string& s, const std::string& pre) {",
+                "    return s.size() >= pre.size() && s.compare(0, pre.size(), pre) == 0;",
+                "}",
+                "inline std::string _meme_str_upper(const std::string& s) {",
+                "    std::string out;",
+                "    out.reserve(s.size());",
+                "    for (unsigned char c : s) out.push_back(static_cast<char>(std::toupper(c)));",
+                "    return out;",
+                "}",
+                "inline std::string _meme_str_lower(const std::string& s) {",
+                "    std::string out;",
+                "    out.reserve(s.size());",
+                "    for (unsigned char c : s) out.push_back(static_cast<char>(std::tolower(c)));",
+                "    return out;",
+                "}",
+                "inline std::string _meme_str_replace(const std::string& s, const std::string& old_sub, const std::string& new_sub) {",
+                "    if (old_sub.empty()) {",
+                "        std::string out = new_sub;",
+                "        for (char c : s) {",
+                "            out.push_back(c);",
+                "            out += new_sub;",
+                "        }",
+                "        return out;",
+                "    }",
+                "    std::string out;",
+                "    std::size_t pos = 0;",
+                "    while (true) {",
+                "        std::size_t found = s.find(old_sub, pos);",
+                "        if (found == std::string::npos) {",
+                "            out.append(s, pos, std::string::npos);",
+                "            break;",
+                "        }",
+                "        out.append(s, pos, found - pos);",
+                "        out += new_sub;",
+                "        pos = found + old_sub.size();",
+                "    }",
+                "    return out;",
+                "}",
+                "inline std::vector<std::string> _meme_str_split(const std::string& s, const std::string& sep) {",
+                "    if (sep.empty()) {",
+                "        std::cout << \"Error: empty separator in split\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    std::vector<std::string> out;",
+                "    std::size_t pos = 0;",
+                "    while (true) {",
+                "        std::size_t found = s.find(sep, pos);",
+                "        if (found == std::string::npos) {",
+                "            out.push_back(s.substr(pos));",
+                "            break;",
+                "        }",
+                "        out.push_back(s.substr(pos, found - pos));",
+                "        pos = found + sep.size();",
+                "    }",
+                "    return out;",
+                "}",
+                "inline std::string _meme_str_join(const std::vector<std::string>& items, const std::string& sep) {",
+                "    std::string out;",
+                "    for (std::size_t i = 0; i < items.size(); ++i) {",
+                "        if (i > 0) out += sep;",
+                "        out += items[i];",
+                "    }",
+                "    return out;",
+                "}",
+                "inline long long _meme_str_index_of(const std::string& s, const std::string& sub) {",
+                "    std::size_t pos = s.find(sub);",
+                "    return pos == std::string::npos ? -1LL : static_cast<long long>(pos);",
+                "}",
+                "inline std::string _meme_char_at(const std::string& s, long long idx) {",
+                "    if (idx < 0 || static_cast<std::size_t>(idx) >= s.size()) {",
+                "        std::cout << \"Error: string index \" << idx << \" out of range\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    return std::string(1, s[static_cast<std::size_t>(idx)]);",
                 "}",
                 "",
             ]

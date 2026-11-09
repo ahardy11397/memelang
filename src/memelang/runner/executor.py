@@ -49,9 +49,19 @@ from memelang.ir.schema import (
     RecordLiteralExpr,
     RecordSetFieldStmt,
     ReturnStmt,
+    StrContainsExpr,
     StrEndsWithExpr,
+    StrStartsWithExpr,
+    StringCharAtExpr,
+    StringIndexOfExpr,
+    StringJoinExpr,
     StringLengthExpr,
+    StringLowerExpr,
+    StringReplaceExpr,
     StringSliceExpr,
+    StringSplitExpr,
+    StringTrimExpr,
+    StringUpperExpr,
     UnaryOpExpr,
     VarDeclStmt,
     WhileStmt,
@@ -92,6 +102,24 @@ def _expr_uses_input(expr: IRExpr) -> bool:
         return any(_expr_uses_input(a) for a in expr.args)
     if isinstance(expr, StrEndsWithExpr):
         return _expr_uses_input(expr.target) or _expr_uses_input(expr.suffix)
+    if isinstance(expr, StrStartsWithExpr):
+        return _expr_uses_input(expr.target) or _expr_uses_input(expr.prefix)
+    if isinstance(expr, (StrContainsExpr, StringIndexOfExpr)):
+        return _expr_uses_input(expr.target) or _expr_uses_input(expr.substring)
+    if isinstance(expr, StringReplaceExpr):
+        return (
+            _expr_uses_input(expr.target)
+            or _expr_uses_input(expr.old)
+            or _expr_uses_input(expr.new)
+        )
+    if isinstance(expr, (StringUpperExpr, StringLowerExpr, StringTrimExpr)):
+        return _expr_uses_input(expr.target)
+    if isinstance(expr, StringSplitExpr):
+        return _expr_uses_input(expr.target) or _expr_uses_input(expr.separator)
+    if isinstance(expr, StringJoinExpr):
+        return _expr_uses_input(expr.items) or _expr_uses_input(expr.separator)
+    if isinstance(expr, StringCharAtExpr):
+        return _expr_uses_input(expr.target) or _expr_uses_input(expr.index)
     if isinstance(expr, (FileExistsExpr, ReadFileStringExpr)):
         return _expr_uses_input(expr.filepath)
     if isinstance(expr, ArgAtExpr):

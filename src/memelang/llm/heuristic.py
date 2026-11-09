@@ -18,8 +18,10 @@ from memelang.ir.schema import (
     AssignStmt,
     BinaryOpExpr,
     BinaryOperator,
+    BreakStmt,
     CallExpr,
     ClampCollectionStmt,
+    ContinueStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -60,9 +62,19 @@ from memelang.ir.schema import (
     ReturnStmt,
     SortCollectionStmt,
     SortDirection,
+    StrContainsExpr,
     StrEndsWithExpr,
+    StrStartsWithExpr,
+    StringCharAtExpr,
+    StringIndexOfExpr,
+    StringJoinExpr,
     StringLengthExpr,
+    StringLowerExpr,
+    StringReplaceExpr,
     StringSliceExpr,
+    StringSplitExpr,
+    StringTrimExpr,
+    StringUpperExpr,
     SynthesisItem,
     SynthesisResult,
     UnaryOpExpr,
@@ -290,6 +302,47 @@ class _ExprParser:
             key_expr = self.parse_add()
             left = MapHasKeyExpr(target=left, key=key_expr)
             t = self.peek()
+        elif t and t.kind == "IDENT" and t.val.lower() == "contains":
+            self.consume("IDENT")
+            sub_expr = self.parse_add()
+            left = StrContainsExpr(target=left, substring=sub_expr)
+            t = self.peek()
+        elif t and t.kind == "IDENT" and t.val.lower() == "starts_with":
+            self.consume("IDENT")
+            pref_expr = self.parse_add()
+            left = StrStartsWithExpr(target=left, prefix=pref_expr)
+            t = self.peek()
+        elif (
+            t
+            and t.kind == "IDENT"
+            and t.val.lower() == "starts"
+            and self.pos + 1 < len(self.tokens)
+            and self.tokens[self.pos + 1].kind == "IDENT"
+            and self.tokens[self.pos + 1].val.lower() == "with"
+        ):
+            self.consume("IDENT")
+            self.consume("IDENT")
+            pref_expr = self.parse_add()
+            left = StrStartsWithExpr(target=left, prefix=pref_expr)
+            t = self.peek()
+        elif t and t.kind == "IDENT" and t.val.lower() == "ends_with":
+            self.consume("IDENT")
+            suf_expr = self.parse_add()
+            left = StrEndsWithExpr(target=left, suffix=suf_expr)
+            t = self.peek()
+        elif (
+            t
+            and t.kind == "IDENT"
+            and t.val.lower() == "ends"
+            and self.pos + 1 < len(self.tokens)
+            and self.tokens[self.pos + 1].kind == "IDENT"
+            and self.tokens[self.pos + 1].val.lower() == "with"
+        ):
+            self.consume("IDENT")
+            self.consume("IDENT")
+            suf_expr = self.parse_add()
+            left = StrEndsWithExpr(target=left, suffix=suf_expr)
+            t = self.peek()
         if t and t.kind == "OP" and t.val in ("==", "!=", "<", "<=", ">", ">="):
             op = cast(BinaryOperator, self.consume().val)
             right = self.parse_add()
@@ -345,6 +398,32 @@ class _ExprParser:
                 self.consume("OP", ".")
                 f_tok = self.consume("IDENT")
                 node = RecordFieldExpr(target=node, field_name=f_tok.val)
+            elif (
+                t.kind == "IDENT"
+                and t.val.lower() in ("char", "character")
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "at"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                idx_e = self.parse_unary()
+                node = StringCharAtExpr(target=node, index=idx_e)
+            elif t.kind == "IDENT" and t.val.lower() == "indexof":
+                self.consume("IDENT")
+                sub_e = self.parse_unary()
+                node = StringIndexOfExpr(target=node, substring=sub_e)
+            elif (
+                t.kind == "IDENT"
+                and t.val.lower() == "index"
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "of"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                sub_e = self.parse_unary()
+                node = StringIndexOfExpr(target=node, substring=sub_e)
             else:
                 break
         return node
@@ -448,10 +527,140 @@ class _ExprParser:
                     )
                 ):
                     self.consume()
-                    target = self.parse_postfix()
+                    target = self.parse_unary()
                     return StringLengthExpr(target=target)
-                target = self.parse_postfix()
+                target = self.parse_unary()
                 return ListLengthExpr(target=target)
+
+            if (
+                t.val.lower() in ("upper", "uppercase", "lower", "lowercase", "trim")
+                and t.val not in self.symbols
+                and not (self.func_returns and t.val in self.func_returns)
+                and not (self.records and t.val in self.records)
+                and self.pos + 1 < len(self.tokens)
+            ):
+                verb = self.consume("IDENT").val.lower()
+                if (nxt := self.peek()) and nxt.kind == "IDENT" and nxt.val.lower() == "of":
+                    self.consume("IDENT")
+                target = self.parse_unary()
+                if verb in ("upper", "uppercase"):
+                    return StringUpperExpr(target=target)
+                if verb in ("lower", "lowercase"):
+                    return StringLowerExpr(target=target)
+                return StringTrimExpr(target=target)
+
+            if (
+                t.val.lower() == "replace"
+                and t.val not in self.symbols
+                and not (self.func_returns and t.val in self.func_returns)
+                and self.pos + 1 < len(self.tokens)
+            ):
+                self.consume("IDENT")
+                old_e = self.parse_add()
+                sep_tok = self.consume("IDENT")
+                if sep_tok.val.lower() == "with":
+                    new_e = self.parse_add()
+                    in_tok = self.consume("IDENT")
+                    if in_tok.val.lower() != "in":
+                        raise LLMProviderError(f"Expected 'in' in replace expression, got {in_tok.val!r}")
+                    tgt_e = self.parse_unary()
+                    return StringReplaceExpr(target=tgt_e, old=old_e, new=new_e)
+                if sep_tok.val.lower() == "in":
+                    tgt_e = self.parse_add()
+                    with_tok = self.consume("IDENT")
+                    if with_tok.val.lower() != "with":
+                        raise LLMProviderError(f"Expected 'with' in replace expression, got {with_tok.val!r}")
+                    new_e = self.parse_unary()
+                    return StringReplaceExpr(target=tgt_e, old=old_e, new=new_e)
+                raise LLMProviderError(f"Expected 'with' or 'in' in replace expression, got {sep_tok.val!r}")
+
+            if (
+                t.val.lower() == "split"
+                and t.val not in self.symbols
+                and not (self.func_returns and t.val in self.func_returns)
+                and self.pos + 1 < len(self.tokens)
+                and not (self.tokens[self.pos + 1].kind == "OP" and self.tokens[self.pos + 1].val == "(")
+            ):
+                self.consume("IDENT")
+                tgt_e = self.parse_unary()
+                by_tok = self.consume("IDENT")
+                if by_tok.val.lower() not in ("by", "on", "with"):
+                    raise LLMProviderError(f"Expected 'by', 'on', or 'with' in split expression, got {by_tok.val!r}")
+                sep_e = self.parse_unary()
+                return StringSplitExpr(target=tgt_e, separator=sep_e)
+
+            if (
+                t.val.lower() == "join"
+                and t.val not in self.symbols
+                and not (self.func_returns and t.val in self.func_returns)
+                and self.pos + 1 < len(self.tokens)
+                and not (self.tokens[self.pos + 1].kind == "OP" and self.tokens[self.pos + 1].val == "(")
+            ):
+                self.consume("IDENT")
+                items_e = self.parse_unary()
+                with_tok = self.consume("IDENT")
+                if with_tok.val.lower() not in ("with", "by"):
+                    raise LLMProviderError(f"Expected 'with' or 'by' in join expression, got {with_tok.val!r}")
+                sep_e = self.parse_unary()
+                return StringJoinExpr(items=items_e, separator=sep_e)
+
+            if (
+                t.val.lower() == "indexof"
+                and t.val not in self.symbols
+                and not (self.func_returns and t.val in self.func_returns)
+                and self.pos + 1 < len(self.tokens)
+                and not (self.tokens[self.pos + 1].kind == "OP" and self.tokens[self.pos + 1].val == "(")
+            ) or (
+                t.val.lower() == "index"
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "of"
+            ):
+                if t.val.lower() == "index":
+                    self.consume("IDENT")
+                    self.consume("IDENT")
+                else:
+                    self.consume("IDENT")
+                sub_e = self.parse_add()
+                in_tok = self.consume("IDENT")
+                if in_tok.val.lower() != "in":
+                    raise LLMProviderError(f"Expected 'in' in index of expression, got {in_tok.val!r}")
+                tgt_e = self.parse_unary()
+                return StringIndexOfExpr(target=tgt_e, substring=sub_e)
+
+            if (
+                t.val.lower() in ("char", "character")
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "at"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                idx_e = self.parse_add()
+                of_tok = self.consume("IDENT")
+                if of_tok.val.lower() not in ("of", "in"):
+                    raise LLMProviderError(f"Expected 'of' or 'in' in char at expression, got {of_tok.val!r}")
+                tgt_e = self.parse_unary()
+                return StringCharAtExpr(target=tgt_e, index=idx_e)
+
+            if (
+                t.val.lower() == "slice"
+                and t.val not in self.symbols
+                and not (self.func_returns and t.val in self.func_returns)
+                and self.pos + 1 < len(self.tokens)
+                and not (self.tokens[self.pos + 1].kind == "OP" and self.tokens[self.pos + 1].val == "(")
+            ):
+                self.consume("IDENT")
+                tgt_e = self.parse_add()
+                from_tok = self.consume("IDENT")
+                if from_tok.val.lower() != "from":
+                    raise LLMProviderError(f"Expected 'from' in slice expression, got {from_tok.val!r}")
+                start_e = self.parse_add()
+                to_tok = self.consume("IDENT")
+                if to_tok.val.lower() != "to":
+                    raise LLMProviderError(f"Expected 'to' in slice expression, got {to_tok.val!r}")
+                end_e = self.parse_add()
+                return StringSliceExpr(target=tgt_e, start=start_e, end=end_e)
 
             if (
                 t.val == "file"
@@ -593,18 +802,6 @@ def _parse_expr(
             entries=[],
         )
 
-    m_slice = re.fullmatch(
-        r"slice\s+(.+?)\s+from\s+(.+?)\s+to\s+(.+)",
-        s,
-        flags=re.IGNORECASE,
-    )
-    if m_slice:
-        return StringSliceExpr(
-            target=_parse_expr(m_slice.group(1), symbols, func_returns, records),
-            start=_parse_expr(m_slice.group(2), symbols, func_returns, records),
-            end=_parse_expr(m_slice.group(3), symbols, func_returns, records),
-        )
-
     m_read_json_typed = re.fullmatch(
         r"read\s+json\s+file\s+(.+?)\s+as\s+List\s*<\s*([A-Za-z_]\w*)\s*>",
         s,
@@ -655,17 +852,6 @@ def _parse_expr(
             return FileExistsExpr(
                 filepath=_parse_expr(cand, symbols, func_returns, records)
             )
-
-    m_ends_with = re.fullmatch(
-        r"(.+?)\s+ends\s+with\s+(.+)",
-        s,
-        flags=re.IGNORECASE,
-    )
-    if m_ends_with:
-        return StrEndsWithExpr(
-            target=_parse_expr(m_ends_with.group(1), symbols, func_returns, records),
-            suffix=_parse_expr(m_ends_with.group(2), symbols, func_returns, records),
-        )
 
     m_rand_list = re.fullmatch(
         r"(.+?)\s+random\s+(?:integers?|numbers?)(?:\s+between\s+(.+?)\s+and\s+(.+))?",
@@ -795,11 +981,29 @@ def _guess_expr_type(
         return "List<Int>"
     if isinstance(expr, ReadJsonListExpr):
         return cast(MemeType, f"List<{expr.element_type}>")
-    if isinstance(expr, (StrEndsWithExpr, FileExistsExpr)):
+    if isinstance(expr, StringSplitExpr):
+        return "List<String>"
+    if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr)):
         return "Bool"
-    if isinstance(expr, (StringSliceExpr, ReadFileStringExpr, ArgAtExpr)):
+    if isinstance(
+        expr,
+        (
+            StringSliceExpr,
+            StringReplaceExpr,
+            StringUpperExpr,
+            StringLowerExpr,
+            StringTrimExpr,
+            StringJoinExpr,
+            StringCharAtExpr,
+            ReadFileStringExpr,
+            ArgAtExpr,
+        ),
+    ):
         return "String"
-    if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, ArgCountExpr)):
+    if isinstance(
+        expr,
+        (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr),
+    ):
         return "Int"
     if isinstance(expr, ReadInputExpr):
         return expr.target_type
@@ -946,16 +1150,24 @@ class HeuristicProvider:
             text = line.text
             stmt_num = len(items) + 1
 
-            # 1. `for each <var> in <col>[:]` (check both inline and indented ambiguous sort!)
+            # 1. `for each [index <i> item] <var> in <col>[:]` (check both inline and indented ambiguous sort!)
             m_foreach = re.fullmatch(
-                r"for\s+each\s+([A-Za-z_]\w*)\s+in\s+([A-Za-z_]\w*)(?:\s*:\s*(.+))?:?",
+                r"for\s+each\s+(?:index\s+([A-Za-z_]\w*)\s+item\s+([A-Za-z_]\w*)|([A-Za-z_]\w*)\s*,\s*([A-Za-z_]\w*)|([A-Za-z_]\w*))\s+in\s+([A-Za-z_]\w*)(?:\s*:\s*(.+))?:?",
                 text,
                 flags=re.IGNORECASE,
             )
             if m_foreach:
-                item_var = m_foreach.group(1)
-                col_name = m_foreach.group(2)
-                inline_body_txt = m_foreach.group(3)
+                if m_foreach.group(1) and m_foreach.group(2):
+                    index_var: str | None = m_foreach.group(1)
+                    item_var = m_foreach.group(2)
+                elif m_foreach.group(3) and m_foreach.group(4):
+                    index_var = m_foreach.group(3)
+                    item_var = m_foreach.group(4)
+                else:
+                    index_var = None
+                    item_var = m_foreach.group(5)
+                col_name = m_foreach.group(6)
+                inline_body_txt = m_foreach.group(7)
 
                 # Check if single-child body is an ambiguous `sort [from A to B]`
                 child_lines: list[_SourceLine] = []
@@ -969,7 +1181,7 @@ class HeuristicProvider:
                         child_lines.append(lines[j])
                         j += 1
 
-                if top_level and len(child_lines) == 1:
+                if top_level and len(child_lines) == 1 and index_var is None:
                     m_amb_sort = re.fullmatch(
                         r"sort(?:\s+" + re.escape(col_name) + r")?(?:\s+from\s+(.+?)\s+to\s+(.+))?",
                         child_lines[0].text,
@@ -1009,12 +1221,18 @@ class HeuristicProvider:
                         f"Cannot iterate over undeclared collection {col_name!r} at line {line.lineno}"
                     )
                 col_t = symbols[col_name]
-                if not col_t.startswith("List<"):
+                map_t = _map_types_of(col_t)
+                if col_t.startswith("List<"):
+                    el_t = cast(MemeType, col_t[5:-1])
+                elif map_t is not None:
+                    el_t = map_t[0]
+                else:
                     raise LLMProviderError(
-                        f"Cannot iterate over non-list {col_name!r} of type {col_t!r} at line {line.lineno}"
+                        f"Cannot iterate over non-collection {col_name!r} of type {col_t!r} at line {line.lineno}"
                     )
                 loop_syms = dict(symbols)
-                el_t = cast(MemeType, col_t[5:-1])
+                if index_var is not None:
+                    loop_syms[index_var] = "Int"
                 loop_syms[item_var] = el_t
                 if inline_body_txt:
                     sub_items, _ = self._parse_block(child_lines, 0, base_indent + 4, loop_syms)
@@ -1028,6 +1246,7 @@ class HeuristicProvider:
                 items.append(
                     ForEachStmt(
                         item_var=item_var,
+                        index_var=index_var,
                         collection=col_name,
                         body=[cast(IRStatement, s) for s in sub_items],
                         source_line=line.lineno,
@@ -1441,6 +1660,12 @@ class HeuristicProvider:
                 expressions=[_pe(c) for c in chunks], source_line=line.lineno
             )
 
+        # `break` / `continue`
+        if re.fullmatch(r"break(?:\s+loop)?", text, flags=re.IGNORECASE):
+            return BreakStmt(source_line=line.lineno)
+        if re.fullmatch(r"continue(?:\s+loop)?", text, flags=re.IGNORECASE):
+            return ContinueStmt(source_line=line.lineno)
+
         # `return [<expr>]`
         if re.fullmatch(r"return", text, flags=re.IGNORECASE):
             return ReturnStmt(value=None, source_line=line.lineno)
@@ -1495,6 +1720,34 @@ class HeuristicProvider:
             return HeuristicProvider._find_free_var(
                 expr.target, symbols
             ) or HeuristicProvider._find_free_var(expr.suffix, symbols)
+        if isinstance(expr, StrStartsWithExpr):
+            return HeuristicProvider._find_free_var(
+                expr.target, symbols
+            ) or HeuristicProvider._find_free_var(expr.prefix, symbols)
+        if isinstance(expr, (StrContainsExpr, StringIndexOfExpr)):
+            return HeuristicProvider._find_free_var(
+                expr.target, symbols
+            ) or HeuristicProvider._find_free_var(expr.substring, symbols)
+        if isinstance(expr, StringReplaceExpr):
+            return (
+                HeuristicProvider._find_free_var(expr.target, symbols)
+                or HeuristicProvider._find_free_var(expr.old, symbols)
+                or HeuristicProvider._find_free_var(expr.new, symbols)
+            )
+        if isinstance(expr, (StringUpperExpr, StringLowerExpr, StringTrimExpr)):
+            return HeuristicProvider._find_free_var(expr.target, symbols)
+        if isinstance(expr, StringSplitExpr):
+            return HeuristicProvider._find_free_var(
+                expr.target, symbols
+            ) or HeuristicProvider._find_free_var(expr.separator, symbols)
+        if isinstance(expr, StringJoinExpr):
+            return HeuristicProvider._find_free_var(
+                expr.items, symbols
+            ) or HeuristicProvider._find_free_var(expr.separator, symbols)
+        if isinstance(expr, StringCharAtExpr):
+            return HeuristicProvider._find_free_var(
+                expr.target, symbols
+            ) or HeuristicProvider._find_free_var(expr.index, symbols)
         if isinstance(expr, ReadJsonListExpr):
             return HeuristicProvider._find_free_var(expr.filepath, symbols)
         if isinstance(expr, (FileExistsExpr, ReadFileStringExpr)):
