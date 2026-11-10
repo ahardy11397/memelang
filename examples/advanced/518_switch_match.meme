@@ -1,0 +1,35 @@
+# Pattern matching on scalars (Int, String, Bool) with optional otherwise
+function classify_status(code: Int) -> String:
+    match code:
+        when 200:
+            return "OK"
+        when 404:
+            return "Not Found"
+        when 500:
+            return "Server Error"
+        otherwise:
+            return "Unknown Code"
+
+function format_role(role: String) -> String:
+    define title: String as "Guest"
+    match role:
+        when "admin":
+            set title to "Administrator"
+        when "editor":
+            set title to "Content Editor"
+    return title
+
+function describe_flag(flag: Bool) -> String:
+    match flag:
+        when true:
+            return "Enabled"
+        otherwise:
+            return "Disabled"
+
+print "Status 200:", classify_status(200)
+print "Status 404:", classify_status(404)
+print "Status 418:", classify_status(418)
+print "Role admin:", format_role("admin")
+print "Role viewer:", format_role("viewer")
+print "Flag true:", describe_flag(true)
+print "Flag false:", describe_flag(false)

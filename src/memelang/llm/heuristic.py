@@ -21,6 +21,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     ClampCollectionStmt,
+    CompoundAssignStmt,
     ContinueStmt,
     ExitStmt,
     FailStmt,
@@ -46,6 +47,11 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MemeType,
+    OptionalIsNothingExpr,
+    OptionalNoneExpr,
+    OptionalUnwrapExpr,
+    OptionalUnwrapOrDefaultExpr,
+    OptionalWrapExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -75,6 +81,8 @@ from memelang.ir.schema import (
     StringSplitExpr,
     StringTrimExpr,
     StringUpperExpr,
+    SwitchCase,
+    SwitchStmt,
     SynthesisItem,
     SynthesisResult,
     UnaryOpExpr,
@@ -110,6 +118,8 @@ def _is_valid_type(t: str, records: dict[str, dict[str, MemeType]] | None = None
         return True
     if t.startswith("List<") and t.endswith(">"):
         return _is_valid_type(t[5:-1], records)
+    if t.startswith("Optional<") and t.endswith(">"):
+        return _is_valid_type(t[9:-1], records)
     if t.startswith("Map<") and t.endswith(">"):
         inner = t[4:-1]
         depth = 0
@@ -133,6 +143,8 @@ def _normalize_type(t: str) -> str:
     t = t.strip()
     if t.startswith("List<") and t.endswith(">"):
         return f"List<{_normalize_type(t[5:-1])}>"
+    if t.startswith("Optional<") and t.endswith(">"):
+        return f"Optional<{_normalize_type(t[9:-1])}>"
     if t.startswith("Map<") and t.endswith(">"):
         inner = t[4:-1]
         depth = 0
@@ -295,6 +307,30 @@ class _ExprParser:
     def parse_comparison(self) -> IRExpr:
         left = self.parse_add()
         t = self.peek()
+        if (
+            t
+            and t.kind == "IDENT"
+            and t.val.lower() == "is"
+            and self.pos + 1 < len(self.tokens)
+        ):
+            if (
+                self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "nothing"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                return OptionalIsNothingExpr(target=left, negated=False)
+            if (
+                self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "not"
+                and self.pos + 2 < len(self.tokens)
+                and self.tokens[self.pos + 2].kind == "IDENT"
+                and self.tokens[self.pos + 2].val.lower() == "nothing"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                self.consume("IDENT")
+                return OptionalIsNothingExpr(target=left, negated=True)
         if t and t.kind == "IDENT" and t.val == "has":
             self.consume("IDENT", "has")
             if (nxt := self.peek()) and nxt.kind == "IDENT" and nxt.val == "key":
@@ -506,6 +542,40 @@ class _ExprParser:
             return MapLiteralExpr(key_type=k_guessed, value_type=v_guessed, entries=entries)
 
         if t.kind == "IDENT":
+            if t.val == "nothing" and t.val not in self.symbols:
+                self.consume()
+                return OptionalNoneExpr()
+            if (
+                t.val == "optional"
+                and t.val not in self.symbols
+                and not (self.func_returns and t.val in self.func_returns)
+                and self.pos + 1 < len(self.tokens)
+            ):
+                self.consume("IDENT", "optional")
+                val_e = self.parse_unary()
+                return OptionalWrapExpr(value=val_e)
+            if (
+                t.val == "value"
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "of"
+            ):
+                self.consume("IDENT", "value")
+                self.consume("IDENT")
+                tgt_e = self.parse_unary()
+                if (
+                    (nxt := self.peek())
+                    and nxt.kind == "IDENT"
+                    and nxt.val.lower() == "or"
+                    and self.pos + 1 < len(self.tokens)
+                    and self.tokens[self.pos + 1].kind == "IDENT"
+                    and self.tokens[self.pos + 1].val.lower() == "else"
+                ):
+                    self.consume("IDENT")
+                    self.consume("IDENT")
+                    dflt_e = self.parse_add()
+                    return OptionalUnwrapOrDefaultExpr(target=tgt_e, default_val=dflt_e)
+                return OptionalUnwrapExpr(target=tgt_e)
             if t.val in ("true", "True"):
                 self.consume()
                 return LiteralExpr(value=True, data_type="Bool")
@@ -1030,6 +1100,20 @@ def _guess_expr_type(
         )
     if isinstance(expr, MapHasKeyExpr):
         return "Bool"
+    if isinstance(expr, OptionalNoneExpr):
+        return "Optional<Void>"
+    if isinstance(expr, OptionalWrapExpr):
+        inner_t = _guess_expr_type(expr.value, symbols, func_returns, records)
+        return cast(MemeType, f"Optional<{inner_t}>")
+    if isinstance(expr, OptionalIsNothingExpr):
+        return "Bool"
+    if isinstance(expr, (OptionalUnwrapExpr, OptionalUnwrapOrDefaultExpr)):
+        tgt_t = _guess_expr_type(expr.target, symbols, func_returns, records)
+        if tgt_t.startswith("Optional<") and tgt_t.endswith(">"):
+            return cast(MemeType, tgt_t[9:-1])
+        if isinstance(expr, OptionalUnwrapOrDefaultExpr):
+            return _guess_expr_type(expr.default_val, symbols, func_returns, records)
+        raise LLMProviderError(f"Cannot unwrap non-optional expression of type {tgt_t!r}")
     if isinstance(expr, VarRefExpr):
         if expr.name in symbols:
             return symbols[expr.name]
@@ -1311,6 +1395,13 @@ class HeuristicProvider:
                 items.append(if_stmt)
                 continue
 
+            # 4b. `match <target>[:]`
+            m_match = re.fullmatch(r"match\s+(.+?)\s*:?", text, flags=re.IGNORECASE)
+            if m_match:
+                match_stmt, i = self._parse_match(lines, i, base_indent, symbols, m_match.group(1))
+                items.append(match_stmt)
+                continue
+
             # 5. `record <name>[:]`
             m_rec = re.fullmatch(r"record\s+([A-Za-z_]\w*)\s*:?", text, flags=re.IGNORECASE)
             if m_rec:
@@ -1431,6 +1522,61 @@ class HeuristicProvider:
                 condition=cond_e,
                 then_body=[cast(IRStatement, s) for s in then_items],
                 else_body=else_stmts,
+                source_line=line.lineno,
+            ),
+            i,
+        )
+
+    def _parse_match(
+        self,
+        lines: list[_SourceLine],
+        match_idx: int,
+        base_indent: int,
+        symbols: dict[str, MemeType],
+        target_str: str,
+    ) -> tuple[SwitchStmt, int]:
+        line = lines[match_idx]
+        target_e = _parse_expr(target_str, symbols, self._func_returns, self._records)
+        i = match_idx + 1
+        if i >= len(lines) or lines[i].indent <= base_indent:
+            raise LLMProviderError(f"Expected indented block after `match` at line {line.lineno}")
+        case_indent = lines[i].indent
+        cases: list[SwitchCase] = []
+        default_body: list[IRStatement] = []
+
+        while i < len(lines) and lines[i].indent == case_indent:
+            cur_line = lines[i]
+            m_when = re.fullmatch(r"when\s+(.+?)\s*:?", cur_line.text, flags=re.IGNORECASE)
+            m_other = re.fullmatch(r"otherwise\s*:?", cur_line.text, flags=re.IGNORECASE)
+            if m_when:
+                val_e = _parse_expr(m_when.group(1), symbols, self._func_returns, self._records)
+                if i + 1 >= len(lines) or lines[i + 1].indent <= case_indent:
+                    raise LLMProviderError(f"Expected indented block after `when` at line {cur_line.lineno}")
+                body_items, i = self._parse_block(
+                    lines, i + 1, lines[i + 1].indent, dict(symbols)
+                )
+                cases.append(
+                    SwitchCase(
+                        value=val_e,
+                        body=[cast(IRStatement, s) for s in body_items],
+                    )
+                )
+            elif m_other:
+                if i + 1 >= len(lines) or lines[i + 1].indent <= case_indent:
+                    raise LLMProviderError(f"Expected indented block after `otherwise` at line {cur_line.lineno}")
+                default_items, i = self._parse_block(
+                    lines, i + 1, lines[i + 1].indent, dict(symbols)
+                )
+                default_body = [cast(IRStatement, s) for s in default_items]
+                break
+            else:
+                break
+
+        return (
+            SwitchStmt(
+                target=target_e,
+                cases=cases,
+                default_body=default_body,
                 source_line=line.lineno,
             ),
             i,
@@ -1611,14 +1757,70 @@ class HeuristicProvider:
                 source_line=line.lineno,
             )
 
-        # `append|add <expr> to <target>`
+        # `append <expr> to <target>`
         m_append = re.fullmatch(
-            r"(?:append|add)\s+(.+?)\s+to\s+([A-Za-z_]\w*)", text, flags=re.IGNORECASE
+            r"append\s+(.+?)\s+to\s+([A-Za-z_]\w*)", text, flags=re.IGNORECASE
         )
         if m_append:
             return ListAppendStmt(
                 target=m_append.group(2),
                 value=_pe(m_append.group(1)),
+                source_line=line.lineno,
+            )
+
+        # `add <expr> to <target>` (list append if target is List<...>, else compound +=)
+        m_add = re.fullmatch(
+            r"add\s+(.+?)\s+to\s+([A-Za-z_]\w*)", text, flags=re.IGNORECASE
+        )
+        if m_add:
+            target = m_add.group(2)
+            val = _pe(m_add.group(1))
+            if symbols.get(target, "").startswith("List<"):
+                return ListAppendStmt(
+                    target=target,
+                    value=val,
+                    source_line=line.lineno,
+                )
+            return CompoundAssignStmt(
+                target=target,
+                operator="+",
+                value=val,
+                source_line=line.lineno,
+            )
+
+        # `subtract <expr> from <target>`
+        m_sub = re.fullmatch(
+            r"subtract\s+(.+?)\s+from\s+([A-Za-z_]\w*)", text, flags=re.IGNORECASE
+        )
+        if m_sub:
+            return CompoundAssignStmt(
+                target=m_sub.group(2),
+                operator="-",
+                value=_pe(m_sub.group(1)),
+                source_line=line.lineno,
+            )
+
+        # `multiply <target> by <expr>`
+        m_mul = re.fullmatch(
+            r"multiply\s+([A-Za-z_]\w*)\s+by\s+(.+)", text, flags=re.IGNORECASE
+        )
+        if m_mul:
+            return CompoundAssignStmt(
+                target=m_mul.group(1),
+                operator="*",
+                value=_pe(m_mul.group(2)),
+                source_line=line.lineno,
+            )
+
+        # `divide <target> by <expr>`
+        m_div = re.fullmatch(
+            r"divide\s+([A-Za-z_]\w*)\s+by\s+(.+)", text, flags=re.IGNORECASE
+        )
+        if m_div:
+            return CompoundAssignStmt(
+                target=m_div.group(1),
+                operator="/",
+                value=_pe(m_div.group(2)),
                 source_line=line.lineno,
             )
 

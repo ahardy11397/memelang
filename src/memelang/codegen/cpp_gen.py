@@ -11,6 +11,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     ClampCollectionStmt,
+    CompoundAssignStmt,
     ContinueStmt,
     ExitStmt,
     FailStmt,
@@ -35,6 +36,11 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MemeType,
+    OptionalIsNothingExpr,
+    OptionalNoneExpr,
+    OptionalUnwrapExpr,
+    OptionalUnwrapOrDefaultExpr,
+    OptionalWrapExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -63,6 +69,8 @@ from memelang.ir.schema import (
     StringSplitExpr,
     StringTrimExpr,
     StringUpperExpr,
+    SwitchCase,
+    SwitchStmt,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -135,6 +143,9 @@ def _cpp_type(meme_type: MemeType | str) -> str:
     if meme_type.startswith("List<") and meme_type.endswith(">"):
         inner = meme_type[5:-1]
         return f"std::vector<{_cpp_type(inner)}>"
+    if meme_type.startswith("Optional<") and meme_type.endswith(">"):
+        inner = meme_type[9:-1]
+        return f"std::optional<{_cpp_type(inner)}>"
     map_t = _map_types_of(meme_type)
     if map_t is not None:
         return f"std::unordered_map<{_cpp_type(map_t[0])}, {_cpp_type(map_t[1])}>"
@@ -158,6 +169,8 @@ class _CppGen:
         self.uses_json_io = False
         self.uses_file_io = False
         self.uses_argv = False
+        self.uses_optional_helpers = False
+        self._match_counter = 0
         self.func_returns: dict[str, MemeType] = {}
         self.records: dict[str, dict[str, MemeType]] = {}
 
@@ -221,6 +234,19 @@ class _CppGen:
             return mt[1] if mt else "String"
         if isinstance(expr, MapHasKeyExpr):
             return "Bool"
+        if isinstance(expr, OptionalNoneExpr):
+            return "Optional<Void>"
+        if isinstance(expr, OptionalWrapExpr):
+            return f"Optional<{self.infer_type(expr.value, scope)}>"
+        if isinstance(expr, OptionalIsNothingExpr):
+            return "Bool"
+        if isinstance(expr, (OptionalUnwrapExpr, OptionalUnwrapOrDefaultExpr)):
+            tgt_t = self.infer_type(expr.target, scope)
+            if tgt_t.startswith("Optional<") and tgt_t.endswith(">"):
+                return tgt_t[9:-1]
+            if isinstance(expr, OptionalUnwrapOrDefaultExpr):
+                return self.infer_type(expr.default_val, scope)
+            return "Int"
         if isinstance(expr, UnaryOpExpr):
             return "Bool" if expr.op == "not" else self.infer_type(expr.operand, scope)
         if isinstance(expr, BinaryOpExpr):
@@ -422,6 +448,28 @@ class _CppGen:
             k = self.gen_expr(expr.key, scope)
             return f"({tgt}.count({k}) > 0)"
 
+        if isinstance(expr, OptionalNoneExpr):
+            return "std::nullopt"
+
+        if isinstance(expr, OptionalWrapExpr):
+            return f"std::make_optional({self.gen_expr(expr.value, scope)})"
+
+        if isinstance(expr, OptionalIsNothingExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            if expr.negated:
+                return f"({tgt}.has_value())"
+            return f"(!{tgt}.has_value())"
+
+        if isinstance(expr, OptionalUnwrapExpr):
+            self.uses_optional_helpers = True
+            return f"_meme_unwrap({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, OptionalUnwrapOrDefaultExpr):
+            self.uses_optional_helpers = True
+            tgt = self.gen_expr(expr.target, scope)
+            dflt = self.gen_expr(expr.default_val, scope)
+            return f"_meme_unwrap_or_else({tgt}, [&]() {{ return {dflt}; }})"
+
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
     def gen_stmt(
@@ -436,6 +484,11 @@ class _CppGen:
 
         if isinstance(stmt, AssignStmt):
             return [f"{pad}{_cpp_ident(stmt.name)} = {self.gen_expr(stmt.value, scope)};"]
+
+        if isinstance(stmt, CompoundAssignStmt):
+            return [
+                f"{pad}{_cpp_ident(stmt.target)} {stmt.operator}= {self.gen_expr(stmt.value, scope)};"
+            ]
 
         if isinstance(stmt, SortCollectionStmt):
             tgt = _cpp_ident(stmt.target)
@@ -518,6 +571,34 @@ class _CppGen:
                 else_scope = dict(scope)
                 for ch in stmt.else_body:
                     lines.extend(self.gen_stmt(ch, else_scope, indent + 1))
+            lines.append(f"{pad}}}")
+            return lines
+
+        if isinstance(stmt, SwitchStmt):
+            self._match_counter += 1
+            m_var = f"_meme_m{self._match_counter}"
+            lines = [f"{pad}{{"]
+            if stmt.cases:
+                lines.append(f"{pad}    auto {m_var} = {self.gen_expr(stmt.target, scope)};")
+                for i, case in enumerate(stmt.cases):
+                    kw = "if" if i == 0 else "} else if"
+                    lines.append(f"{pad}    {kw} ({m_var} == {self.gen_expr(case.value, scope)}) {{")
+                    case_scope = dict(scope)
+                    for ch in case.body:
+                        lines.extend(self.gen_stmt(ch, case_scope, indent + 2))
+                if stmt.default_body:
+                    lines.append(f"{pad}    }} else {{")
+                    def_scope = dict(scope)
+                    for ch in stmt.default_body:
+                        lines.extend(self.gen_stmt(ch, def_scope, indent + 2))
+                lines.append(f"{pad}    }}")
+            elif stmt.default_body:
+                lines.append(f"{pad}    (void)({self.gen_expr(stmt.target, scope)});")
+                def_scope = dict(scope)
+                for ch in stmt.default_body:
+                    lines.extend(self.gen_stmt(ch, def_scope, indent + 1))
+            else:
+                lines.append(f"{pad}    (void)({self.gen_expr(stmt.target, scope)});")
             lines.append(f"{pad}}}")
             return lines
 
@@ -716,6 +797,7 @@ def generate_cpp(ir: ProgramIR) -> str:
         "#include <filesystem>",
         "#include <fstream>",
         "#include <iostream>",
+        "#include <optional>",
         "#include <sstream>",
         "#include <string>",
         "#include <unordered_map>",
@@ -769,6 +851,11 @@ def generate_cpp(ir: ProgramIR) -> str:
         "    oss << '}';",
         "    return oss.str();",
         "}",
+        "template <typename T>",
+        "std::string _meme_fmt(const std::optional<T>& opt) {",
+        "    if (opt.has_value()) return _meme_fmt(*opt);",
+        "    return \"None\";",
+        "}",
         "",
     ]
 
@@ -786,6 +873,27 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        std::exit(1);",
                 "    }",
                 "    return args[static_cast<std::size_t>(idx)];",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_optional_helpers:
+        helpers.extend(
+            [
+                "template <typename T>",
+                "T _meme_unwrap(const std::optional<T>& opt) {",
+                "    if (!opt.has_value()) {",
+                "        std::cout << \"Unwrap failed: Optional value is nothing\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    return *opt;",
+                "}",
+                "",
+                "template <typename T, typename F>",
+                "T _meme_unwrap_or_else(const std::optional<T>& opt, F default_fn) {",
+                "    if (opt.has_value()) return *opt;",
+                "    return default_fn();",
                 "}",
                 "",
             ]

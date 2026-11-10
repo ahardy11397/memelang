@@ -18,6 +18,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     CallExpr,
     ClampCollectionStmt,
+    CompoundAssignStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -38,6 +39,11 @@ from memelang.ir.schema import (
     MapHasKeyExpr,
     MapLiteralExpr,
     MapSetStmt,
+    OptionalIsNothingExpr,
+    OptionalNoneExpr,
+    OptionalUnwrapExpr,
+    OptionalUnwrapOrDefaultExpr,
+    OptionalWrapExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -62,6 +68,7 @@ from memelang.ir.schema import (
     StringSplitExpr,
     StringTrimExpr,
     StringUpperExpr,
+    SwitchStmt,
     UnaryOpExpr,
     VarDeclStmt,
     WhileStmt,
@@ -150,12 +157,18 @@ def _expr_uses_input(expr: IRExpr) -> bool:
         )
     if isinstance(expr, MapHasKeyExpr):
         return _expr_uses_input(expr.target) or _expr_uses_input(expr.key)
+    if isinstance(expr, OptionalWrapExpr):
+        return _expr_uses_input(expr.value)
+    if isinstance(expr, (OptionalIsNothingExpr, OptionalUnwrapExpr)):
+        return _expr_uses_input(expr.target)
+    if isinstance(expr, OptionalUnwrapOrDefaultExpr):
+        return _expr_uses_input(expr.target) or _expr_uses_input(expr.default_val)
     return False
 
 
 def _stmts_use_input(stmts: list[IRStatement]) -> bool:
     for s in stmts:
-        if isinstance(s, (VarDeclStmt, AssignStmt, ListAppendStmt, RecordSetFieldStmt)) and _expr_uses_input(s.value):
+        if isinstance(s, (VarDeclStmt, AssignStmt, CompoundAssignStmt, ListAppendStmt, RecordSetFieldStmt)) and _expr_uses_input(s.value):
             return True
         if isinstance(s, (ListInsertStmt, ListSetIndexStmt)) and (
             _expr_uses_input(s.index) or _expr_uses_input(s.value)
@@ -187,6 +200,15 @@ def _stmts_use_input(stmts: list[IRStatement]) -> bool:
             _expr_uses_input(s.condition)
             or _stmts_use_input(s.then_body)
             or _stmts_use_input(s.else_body)
+        ):
+            return True
+        if isinstance(s, SwitchStmt) and (
+            _expr_uses_input(s.target)
+            or any(
+                _expr_uses_input(c.value) or _stmts_use_input(c.body)
+                for c in s.cases
+            )
+            or _stmts_use_input(s.default_body)
         ):
             return True
         if isinstance(s, ForEachStmt) and _stmts_use_input(s.body):

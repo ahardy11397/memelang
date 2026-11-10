@@ -1,0 +1,774 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/518_switch_match.meme": {
+      "source_sha256": "770f5328673b6dd93152966eb9aff6bbc186ade065fa8614887dd98be29e6235",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "classify_status",
+          "params": [
+            {
+              "name": "code",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "switch_stmt",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "code"
+              },
+              "cases": [
+                {
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 200,
+                    "data_type": "Int"
+                  },
+                  "body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": "OK",
+                        "data_type": "String"
+                      },
+                      "source_line": 5
+                    }
+                  ]
+                },
+                {
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 404,
+                    "data_type": "Int"
+                  },
+                  "body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": "Not Found",
+                        "data_type": "String"
+                      },
+                      "source_line": 7
+                    }
+                  ]
+                },
+                {
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 500,
+                    "data_type": "Int"
+                  },
+                  "body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": "Server Error",
+                        "data_type": "String"
+                      },
+                      "source_line": 9
+                    }
+                  ]
+                }
+              ],
+              "default_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Unknown Code",
+                    "data_type": "String"
+                  },
+                  "source_line": 11
+                }
+              ],
+              "source_line": 3
+            }
+          ],
+          "source_line": 2
+        },
+        {
+          "op": "func_def",
+          "name": "format_role",
+          "params": [
+            {
+              "name": "role",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "title",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "Guest",
+                "data_type": "String"
+              },
+              "source_line": 14
+            },
+            {
+              "op": "switch_stmt",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "role"
+              },
+              "cases": [
+                {
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "admin",
+                    "data_type": "String"
+                  },
+                  "body": [
+                    {
+                      "op": "assign",
+                      "name": "title",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": "Administrator",
+                        "data_type": "String"
+                      },
+                      "source_line": 17
+                    }
+                  ]
+                },
+                {
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "editor",
+                    "data_type": "String"
+                  },
+                  "body": [
+                    {
+                      "op": "assign",
+                      "name": "title",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": "Content Editor",
+                        "data_type": "String"
+                      },
+                      "source_line": 19
+                    }
+                  ]
+                }
+              ],
+              "default_body": [],
+              "source_line": 15
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "title"
+              },
+              "source_line": 20
+            }
+          ],
+          "source_line": 13
+        },
+        {
+          "op": "func_def",
+          "name": "describe_flag",
+          "params": [
+            {
+              "name": "flag",
+              "param_type": "Bool"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "switch_stmt",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "flag"
+              },
+              "cases": [
+                {
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  },
+                  "body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": "Enabled",
+                        "data_type": "String"
+                      },
+                      "source_line": 25
+                    }
+                  ]
+                }
+              ],
+              "default_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Disabled",
+                    "data_type": "String"
+                  },
+                  "source_line": 27
+                }
+              ],
+              "source_line": 23
+            }
+          ],
+          "source_line": 22
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Status 200:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "classify_status",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 200,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 29
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Status 404:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "classify_status",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 404,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 30
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Status 418:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "classify_status",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 418,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 31
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Role admin:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "format_role",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "admin",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 32
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Role viewer:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "format_role",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": "viewer",
+                  "data_type": "String"
+                }
+              ]
+            }
+          ],
+          "source_line": 33
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Flag true:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "describe_flag",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              ]
+            }
+          ],
+          "source_line": 34
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Flag false:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "describe_flag",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                }
+              ]
+            }
+          ],
+          "source_line": 35
+        }
+      ],
+      "canonical_meme": "function classify_status(code: Int) -> String:\n    match code:\n        when 200:\n            return \"OK\"\n        when 404:\n            return \"Not Found\"\n        when 500:\n            return \"Server Error\"\n        otherwise:\n            return \"Unknown Code\"\nfunction format_role(role: String) -> String:\n    define title: String as \"Guest\"\n    match role:\n        when \"admin\":\n            set title to \"Administrator\"\n        when \"editor\":\n            set title to \"Content Editor\"\n    return title\nfunction describe_flag(flag: Bool) -> String:\n    match flag:\n        when true:\n            return \"Enabled\"\n        otherwise:\n            return \"Disabled\"\nprint \"Status 200:\", classify_status(200)\nprint \"Status 404:\", classify_status(404)\nprint \"Status 418:\", classify_status(418)\nprint \"Role admin:\", format_role(\"admin\")\nprint \"Role viewer:\", format_role(\"viewer\")\nprint \"Flag true:\", describe_flag(true)\nprint \"Flag false:\", describe_flag(false)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "classify_status",
+            "params": [
+              {
+                "name": "code",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "switch_stmt",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "code"
+                },
+                "cases": [
+                  {
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 200,
+                      "data_type": "Int"
+                    },
+                    "body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "OK",
+                          "data_type": "String"
+                        },
+                        "source_line": 5
+                      }
+                    ]
+                  },
+                  {
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 404,
+                      "data_type": "Int"
+                    },
+                    "body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "Not Found",
+                          "data_type": "String"
+                        },
+                        "source_line": 7
+                      }
+                    ]
+                  },
+                  {
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 500,
+                      "data_type": "Int"
+                    },
+                    "body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "Server Error",
+                          "data_type": "String"
+                        },
+                        "source_line": 9
+                      }
+                    ]
+                  }
+                ],
+                "default_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "Unknown Code",
+                      "data_type": "String"
+                    },
+                    "source_line": 11
+                  }
+                ],
+                "source_line": 3
+              }
+            ],
+            "source_line": 2
+          },
+          {
+            "op": "func_def",
+            "name": "format_role",
+            "params": [
+              {
+                "name": "role",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "title",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Guest",
+                  "data_type": "String"
+                },
+                "source_line": 14
+              },
+              {
+                "op": "switch_stmt",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "role"
+                },
+                "cases": [
+                  {
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "admin",
+                      "data_type": "String"
+                    },
+                    "body": [
+                      {
+                        "op": "assign",
+                        "name": "title",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "Administrator",
+                          "data_type": "String"
+                        },
+                        "source_line": 17
+                      }
+                    ]
+                  },
+                  {
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "editor",
+                      "data_type": "String"
+                    },
+                    "body": [
+                      {
+                        "op": "assign",
+                        "name": "title",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "Content Editor",
+                          "data_type": "String"
+                        },
+                        "source_line": 19
+                      }
+                    ]
+                  }
+                ],
+                "default_body": [],
+                "source_line": 15
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "title"
+                },
+                "source_line": 20
+              }
+            ],
+            "source_line": 13
+          },
+          {
+            "op": "func_def",
+            "name": "describe_flag",
+            "params": [
+              {
+                "name": "flag",
+                "param_type": "Bool"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "switch_stmt",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "flag"
+                },
+                "cases": [
+                  {
+                    "value": {
+                      "expr_type": "literal",
+                      "value": true,
+                      "data_type": "Bool"
+                    },
+                    "body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "literal",
+                          "value": "Enabled",
+                          "data_type": "String"
+                        },
+                        "source_line": 25
+                      }
+                    ]
+                  }
+                ],
+                "default_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "Disabled",
+                      "data_type": "String"
+                    },
+                    "source_line": 27
+                  }
+                ],
+                "source_line": 23
+              }
+            ],
+            "source_line": 22
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Status 200:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "classify_status",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 200,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 29
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Status 404:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "classify_status",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 404,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 30
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Status 418:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "classify_status",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 418,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 31
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Role admin:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "format_role",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "admin",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 32
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Role viewer:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "format_role",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": "viewer",
+                    "data_type": "String"
+                  }
+                ]
+              }
+            ],
+            "source_line": 33
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Flag true:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "describe_flag",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                ]
+              }
+            ],
+            "source_line": 34
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Flag false:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "describe_flag",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": false,
+                    "data_type": "Bool"
+                  }
+                ]
+              }
+            ],
+            "source_line": 35
+          }
+        ]
+      }
+    }
+  }
+}

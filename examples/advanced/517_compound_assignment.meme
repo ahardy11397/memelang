@@ -1,0 +1,22 @@
+# Compound assignment statements for Int and Float variables
+function adjust_balance(initial: Int, bonus: Int, penalty: Int) -> Int:
+    define total: Int as initial
+    add bonus to total
+    subtract penalty from total
+    multiply total by 3
+    divide total by 2
+    return total
+
+define score: Int as adjust_balance(10, 5, 3)
+print "Adjusted score:", score
+
+define neg_val: Int as -7
+divide neg_val by 2
+print "Truncated negative int div:", neg_val
+
+define ratio: Float as 12.5
+add 2.5 to ratio
+subtract 3.0 from ratio
+multiply ratio by 1.5
+divide ratio by 4.0
+print "Final ratio:", ratio

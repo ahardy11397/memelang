@@ -7,6 +7,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 MemeType = str
 
+# Scope guard (Phase 2 Task 16): Bitwise and shift operators (`&`, `|`, `^`, `<<`, `>>`)
+# are intentionally deferred because Python's unbounded arbitrary-precision ints vs
+# 64-bit signed ints (`i64` / `long long`) in Rust and C++ make bitwise parity a trap.
 BinaryOperator = Literal[
     "+",
     "-",
@@ -23,6 +26,7 @@ BinaryOperator = Literal[
     "or",
 ]
 
+CompoundOperator = Literal["+", "-", "*", "/"]
 UnaryOperator = Literal["-", "not"]
 SortDirection = Literal["ascending", "descending"]
 
@@ -287,6 +291,32 @@ class MapHasKeyExpr(IRNode):
     key: IRExpr
 
 
+class OptionalNoneExpr(IRNode):
+    expr_type: Literal["optional_none"] = "optional_none"
+
+
+class OptionalWrapExpr(IRNode):
+    expr_type: Literal["optional_wrap"] = "optional_wrap"
+    value: IRExpr
+
+
+class OptionalIsNothingExpr(IRNode):
+    expr_type: Literal["optional_is_nothing"] = "optional_is_nothing"
+    target: IRExpr
+    negated: bool = False
+
+
+class OptionalUnwrapExpr(IRNode):
+    expr_type: Literal["optional_unwrap"] = "optional_unwrap"
+    target: IRExpr
+
+
+class OptionalUnwrapOrDefaultExpr(IRNode):
+    expr_type: Literal["optional_unwrap_or_default"] = "optional_unwrap_or_default"
+    target: IRExpr
+    default_val: IRExpr
+
+
 IRExpr = Annotated[
     LiteralExpr
     | ListLiteralExpr
@@ -321,7 +351,12 @@ IRExpr = Annotated[
     | RecordFieldExpr
     | MapLiteralExpr
     | MapGetExpr
-    | MapHasKeyExpr,
+    | MapHasKeyExpr
+    | OptionalNoneExpr
+    | OptionalWrapExpr
+    | OptionalIsNothingExpr
+    | OptionalUnwrapExpr
+    | OptionalUnwrapOrDefaultExpr,
     Field(discriminator="expr_type"),
 ]
 
@@ -345,6 +380,14 @@ class VarDeclStmt(IRNode):
 class AssignStmt(IRNode):
     op: Literal["assign"] = "assign"
     name: str
+    value: IRExpr
+    source_line: int | None = None
+
+
+class CompoundAssignStmt(IRNode):
+    op: Literal["compound_assign"] = "compound_assign"
+    target: str
+    operator: CompoundOperator
     value: IRExpr
     source_line: int | None = None
 
@@ -418,6 +461,19 @@ class IfStmt(IRNode):
     condition: IRExpr
     then_body: list[IRStatement]
     else_body: list[IRStatement] = Field(default_factory=list)
+    source_line: int | None = None
+
+
+class SwitchCase(IRNode):
+    value: IRExpr
+    body: list[IRStatement]
+
+
+class SwitchStmt(IRNode):
+    op: Literal["switch_stmt"] = "switch_stmt"
+    target: IRExpr
+    cases: list[SwitchCase] = Field(default_factory=list)
+    default_body: list[IRStatement] = Field(default_factory=list)
     source_line: int | None = None
 
 
@@ -516,6 +572,7 @@ class AppendFileStmt(IRNode):
 IRStatement = Annotated[
     VarDeclStmt
     | AssignStmt
+    | CompoundAssignStmt
     | SortCollectionStmt
     | ClampCollectionStmt
     | FilterCollectionStmt
@@ -526,6 +583,7 @@ IRStatement = Annotated[
     | ExitStmt
     | PrintStmt
     | IfStmt
+    | SwitchStmt
     | ForEachStmt
     | ForRangeStmt
     | WhileStmt
@@ -621,8 +679,14 @@ RecordFieldExpr.model_rebuild()
 MapLiteralExpr.model_rebuild()
 MapGetExpr.model_rebuild()
 MapHasKeyExpr.model_rebuild()
+OptionalNoneExpr.model_rebuild()
+OptionalWrapExpr.model_rebuild()
+OptionalIsNothingExpr.model_rebuild()
+OptionalUnwrapExpr.model_rebuild()
+OptionalUnwrapOrDefaultExpr.model_rebuild()
 VarDeclStmt.model_rebuild()
 AssignStmt.model_rebuild()
+CompoundAssignStmt.model_rebuild()
 ClampCollectionStmt.model_rebuild()
 FilterCollectionStmt.model_rebuild()
 ListAppendStmt.model_rebuild()
@@ -632,6 +696,8 @@ FailStmt.model_rebuild()
 ExitStmt.model_rebuild()
 PrintStmt.model_rebuild()
 IfStmt.model_rebuild()
+SwitchCase.model_rebuild()
+SwitchStmt.model_rebuild()
 ForEachStmt.model_rebuild()
 ForRangeStmt.model_rebuild()
 WhileStmt.model_rebuild()

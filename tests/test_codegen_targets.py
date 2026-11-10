@@ -1599,6 +1599,369 @@ def test_negative_indexing_policy_upgraded_diagnostics_and_loop_rules():
         )
 
 
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_compound_assignment_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.ir.canonical import to_canonical_meme
+    from memelang.llm.heuristic import HeuristicProvider
+
+    source = """
+define x: Int as 10
+add 5 to x
+subtract 3 from x
+multiply x by 2
+divide x by 5
+print "x:", x
+
+define neg: Int as -7
+divide neg by 2
+print "neg:", neg
+
+define f: Float as 10.0
+add 2.5 to f
+subtract 0.5 from f
+multiply f by 1.5
+divide f by 4.0
+print "f:", f
+
+define nums: List<Int> as [1, 2]
+add 3 to nums
+print "nums:", nums
+""".strip()
+
+    prov = HeuristicProvider()
+    outcome = verify_synthesis(prov.synthesize(source))
+    assert outcome.program is not None
+
+    canon = to_canonical_meme(outcome.program)
+    assert "add 5 to x" in canon
+    assert "subtract 3 from x" in canon
+    assert "multiply x by 2" in canon
+    assert "divide x by 5" in canon
+    assert "append 3 to nums" in canon
+    rt_outcome = verify_synthesis(prov.synthesize(canon))
+    assert rt_outcome.program is not None
+
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.splitlines() == [
+        "x: 4",
+        "neg: -3",
+        "f: 4.5",
+        "nums: [1, 2, 3]",
+    ]
+
+
+def test_compound_assignment_static_verifier_rules():
+    from memelang.analyzer.verifier import StaticVerificationError, verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    prov = HeuristicProvider()
+
+    # 1. Compound assignment on non-numeric variable (String)
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Compound assignment \(`\+`\) requires Int or Float variable, but `s` has type String",
+    ):
+        verify_synthesis(
+            prov.synthesize('define s: String as "hi"\nadd "!" to s')
+        )
+
+    # 2. Compound assignment with mismatched numeric type (Int vs Float)
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Compound assignment \(`\+`\) on `x` \(Int\) requires Int operand, got Float",
+    ):
+        verify_synthesis(
+            prov.synthesize("define x: Int as 10\nadd 1.5 to x")
+        )
+
+    # 3. Compound assignment division by literal zero
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Division or modulo by literal zero",
+    ):
+        verify_synthesis(
+            prov.synthesize("define x: Int as 10\ndivide x by 0")
+        )
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_switch_match_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.ir.canonical import to_canonical_meme
+    from memelang.llm.heuristic import HeuristicProvider
+
+    source = """
+function classify_code(code: Int) -> String:
+    match code:
+        when 1:
+            return "one"
+        when 2:
+            return "two"
+        otherwise:
+            return "many"
+
+define role: String as "admin"
+define access: String as "none"
+match role:
+    when "admin":
+        set access to "full"
+    when "guest":
+        set access to "limited"
+
+define flag: Bool as true
+define flag_desc: String as "off"
+match flag:
+    when true:
+        set flag_desc to "on"
+
+print "Code 1:", classify_code(1)
+print "Code 99:", classify_code(99)
+print "Access:", access
+print "Flag:", flag_desc
+""".strip()
+
+    prov = HeuristicProvider()
+    outcome = verify_synthesis(prov.synthesize(source))
+    assert outcome.program is not None
+
+    canon = to_canonical_meme(outcome.program)
+    assert "match code:" in canon
+    assert "when 1:" in canon
+    assert "otherwise:" in canon
+    assert "match role:" in canon
+    assert 'when "admin":' in canon
+    assert "match flag:" in canon
+
+    rt_outcome = verify_synthesis(prov.synthesize(canon))
+    assert rt_outcome.program is not None
+
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.splitlines() == [
+        "Code 1: one",
+        "Code 99: many",
+        "Access: full",
+        "Flag: on",
+    ]
+
+
+def test_switch_match_static_verifier_rules():
+    from memelang.analyzer.verifier import StaticVerificationError, verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    prov = HeuristicProvider()
+
+    # 1. Non-scalar match target
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"`match` expression must evaluate to Int, String, or Bool, got List<Int>",
+    ):
+        verify_synthesis(
+            prov.synthesize("define xs: List<Int> as [1, 2]\nmatch xs:\n    when 1:\n        print 1")
+        )
+
+    # 2. Non-literal case label
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Match `when` case label must be a literal",
+    ):
+        verify_synthesis(
+            prov.synthesize("define x: Int as 1\ndefine y: Int as 2\nmatch x:\n    when y:\n        print 1")
+        )
+
+    # 3. Label type mismatch with match expression
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Match case label type `String` does not match expression type `Int`",
+    ):
+        verify_synthesis(
+            prov.synthesize('define x: Int as 1\nmatch x:\n    when "one":\n        print 1')
+        )
+
+    # 4. Duplicate case label
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Duplicate match case label `1`",
+    ):
+        verify_synthesis(
+            prov.synthesize("define x: Int as 1\nmatch x:\n    when 1:\n        print 1\n    when 1:\n        print 2")
+        )
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_optional_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.ir.canonical import to_canonical_meme
+    from memelang.llm.heuristic import HeuristicProvider
+
+    source = """
+function find_first_even(nums: List<Int>) -> Optional<Int>:
+    for each n in nums:
+        if n % 2 == 0:
+            return optional n
+    return nothing
+
+define missing: Optional<Int> as find_first_even([1, 3, 5])
+define found: Optional<Int> as find_first_even([1, 3, 4, 7])
+
+if missing is nothing:
+    print "missing: none"
+else:
+    print "missing: some"
+
+if found is not nothing:
+    print "found: some"
+else:
+    print "found: none"
+
+define v1: Int as value of missing or else -1
+print "v1:", v1
+
+# Short-circuiting test: default evaluates ONLY when absent
+# (100 / zero) would crash with zero division if evaluated
+define zero: Int as 0
+define v2: Int as value of found or else 100 / zero
+print "v2:", v2
+
+define v3: Int as value of found
+print "v3:", v3
+"""
+    prov = HeuristicProvider()
+    outcome = verify_synthesis(prov.synthesize(source))
+
+    # Test roundtrip
+    canon = to_canonical_meme(outcome.program)
+    assert "return nothing" in canon
+    assert "return optional n" in canon
+    assert "is nothing" in canon
+    assert "is not nothing" in canon
+    assert "value of missing or else -1" in canon
+    assert "value of found" in canon
+
+    reparsed = verify_synthesis(prov.synthesize(canon))
+    assert reparsed.program is not None
+
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.splitlines() == [
+        "missing: none",
+        "found: some",
+        "v1: -1",
+        "v2: 4",
+        "v3: 4",
+    ]
+
+
+@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+def test_optional_strict_unwrap_fail_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    source = """
+define opt: Optional<Int> as nothing
+define val: Int as value of opt
+print val
+"""
+    prov = HeuristicProvider()
+    outcome = verify_synthesis(prov.synthesize(source))
+    res = execute_ir(outcome.program, target)
+    assert res.returncode != 0
+    assert "Unwrap failed: Optional value is nothing" in res.stdout
+
+
+def test_optional_static_verifier_rules():
+    from memelang.analyzer.verifier import StaticVerificationError, verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    prov = HeuristicProvider()
+
+    # 1. Non-optional assigned nothing
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Variable `x` declared as Int but initialized with Optional<Void>",
+    ):
+        verify_synthesis(
+            prov.synthesize("define x: Int as nothing")
+        )
+
+    # 2. Optional assigned non-wrapped value
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Variable `x` declared as Optional<Int> but initialized with Int",
+    ):
+        verify_synthesis(
+            prov.synthesize("define x: Optional<Int> as 42")
+        )
+
+    # 3. Nested Optional declaration rejected
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Nested Optional types are not allowed: `Optional<Optional<Int>>`",
+    ):
+        verify_synthesis(
+            prov.synthesize("define x: Optional<Optional<Int>> as nothing")
+        )
+
+    # 4. Nested Optional wrapping rejected
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Cannot wrap an Optional type in another Optional: `Optional<Int>`",
+    ):
+        verify_synthesis(
+            prov.synthesize("define x: Optional<Int> as optional (optional 42)")
+        )
+
+    # 5. return nothing in non-optional function
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Return value has type Optional<Void>, expected Int",
+    ):
+        verify_synthesis(
+            prov.synthesize("function f() -> Int:\n    return nothing")
+        )
+
+    # 6. Strict unwrap on non-optional
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Strict unwrap \(`value of`\) requires an Optional operand, got `Int`",
+    ):
+        verify_synthesis(
+            prov.synthesize("define x: Int as 10\ndefine y: Int as value of x")
+        )
+
+    # 7. Safe unwrap on non-optional
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"Safe unwrap \(`or else`\) requires an Optional operand, got `Int`",
+    ):
+        verify_synthesis(
+            prov.synthesize("define x: Int as 10\ndefine y: Int as value of x or else 0")
+        )
+
+    # 8. Safe unwrap default type mismatch
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"`or else` default expression type `String` does not match Optional payload type `Int`",
+    ):
+        verify_synthesis(
+            prov.synthesize('define x: Optional<Int> as optional 10\ndefine y: Int as value of x or else "dflt"')
+        )
+
+    # 9. is nothing check on non-optional
+    with pytest.raises(
+        StaticVerificationError,
+        match=r"`is nothing` check requires an Optional operand, got `Int`",
+    ):
+        verify_synthesis(
+            prov.synthesize("define x: Int as 10\nif x is nothing:\n    print 1")
+        )
+
+
+
+
+
 
 
 

@@ -11,6 +11,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     ClampCollectionStmt,
+    CompoundAssignStmt,
     ContinueStmt,
     ExitStmt,
     FailStmt,
@@ -35,6 +36,11 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MemeType,
+    OptionalIsNothingExpr,
+    OptionalNoneExpr,
+    OptionalUnwrapExpr,
+    OptionalUnwrapOrDefaultExpr,
+    OptionalWrapExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -63,6 +69,8 @@ from memelang.ir.schema import (
     StringSplitExpr,
     StringTrimExpr,
     StringUpperExpr,
+    SwitchCase,
+    SwitchStmt,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -128,6 +136,9 @@ def _rust_type(meme_type: MemeType | str) -> str:
     if meme_type.startswith("List<") and meme_type.endswith(">"):
         inner = meme_type[5:-1]
         return f"Vec<{_rust_type(inner)}>"
+    if meme_type.startswith("Optional<") and meme_type.endswith(">"):
+        inner = meme_type[9:-1]
+        return f"Option<{_rust_type(inner)}>"
     map_t = _map_types_of(meme_type)
     if map_t is not None:
         return f"std::collections::HashMap<{_rust_type(map_t[0])}, {_rust_type(map_t[1])}>"
@@ -152,6 +163,8 @@ class _RustGen:
         self.uses_argv = False
         self.uses_str_split = False
         self.uses_char_at = False
+        self.uses_optional_helpers = False
+        self._match_counter = 0
         self.func_returns: dict[str, MemeType] = {}
         self.records: dict[str, dict[str, MemeType]] = {}
 
@@ -215,6 +228,19 @@ class _RustGen:
             return mt[1] if mt else "String"
         if isinstance(expr, MapHasKeyExpr):
             return "Bool"
+        if isinstance(expr, OptionalNoneExpr):
+            return "Optional<Void>"
+        if isinstance(expr, OptionalWrapExpr):
+            return f"Optional<{self.infer_type(expr.value, scope)}>"
+        if isinstance(expr, OptionalIsNothingExpr):
+            return "Bool"
+        if isinstance(expr, (OptionalUnwrapExpr, OptionalUnwrapOrDefaultExpr)):
+            tgt_t = self.infer_type(expr.target, scope)
+            if tgt_t.startswith("Optional<") and tgt_t.endswith(">"):
+                return tgt_t[9:-1]
+            if isinstance(expr, OptionalUnwrapOrDefaultExpr):
+                return self.infer_type(expr.default_val, scope)
+            return "Int"
         if isinstance(expr, UnaryOpExpr):
             return "Bool" if expr.op == "not" else self.infer_type(expr.operand, scope)
         if isinstance(expr, BinaryOpExpr):
@@ -247,7 +273,7 @@ class _RustGen:
         if isinstance(expr, VarRefExpr):
             ident = _rust_ident(expr.name)
             t = scope.get(expr.name, "Int")
-            if t == "String" or t.startswith("List<") or t.startswith("Map<") or t in self.records:
+            if t == "String" or t.startswith("List<") or t.startswith("Map<") or t.startswith("Optional<") or t in self.records:
                 return f"{ident}.clone()"
             return ident
 
@@ -413,6 +439,27 @@ class _RustGen:
             k = self.gen_expr(expr.key, scope)
             return f"{tgt}.contains_key(&({k}))"
 
+        if isinstance(expr, OptionalNoneExpr):
+            return "None"
+
+        if isinstance(expr, OptionalWrapExpr):
+            return f"Some({self.gen_expr(expr.value, scope)})"
+
+        if isinstance(expr, OptionalIsNothingExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            if expr.negated:
+                return f"({tgt}.is_some())"
+            return f"({tgt}.is_none())"
+
+        if isinstance(expr, OptionalUnwrapExpr):
+            self.uses_optional_helpers = True
+            return f"_meme_unwrap({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, OptionalUnwrapOrDefaultExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            dflt = self.gen_expr(expr.default_val, scope)
+            return f"{tgt}.unwrap_or_else(|| {dflt})"
+
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
     def _fmt_expr_for_print(self, expr: IRExpr, scope: dict[str, MemeType]) -> str:
@@ -434,6 +481,11 @@ class _RustGen:
 
         if isinstance(stmt, AssignStmt):
             return [f"{pad}{_rust_ident(stmt.name)} = {self.gen_expr(stmt.value, scope)};"]
+
+        if isinstance(stmt, CompoundAssignStmt):
+            return [
+                f"{pad}{_rust_ident(stmt.target)} {stmt.operator}= {self.gen_expr(stmt.value, scope)};"
+            ]
 
         if isinstance(stmt, SortCollectionStmt):
             tgt = _rust_ident(stmt.target)
@@ -512,6 +564,34 @@ class _RustGen:
                 else_scope = dict(scope)
                 for ch in stmt.else_body:
                     lines.extend(self.gen_stmt(ch, else_scope, indent + 1))
+            lines.append(f"{pad}}}")
+            return lines
+
+        if isinstance(stmt, SwitchStmt):
+            self._match_counter += 1
+            m_var = f"_meme_m{self._match_counter}"
+            lines = [f"{pad}{{"]
+            if stmt.cases:
+                lines.append(f"{pad}    let {m_var} = {self.gen_expr(stmt.target, scope)};")
+                for i, case in enumerate(stmt.cases):
+                    kw = "if" if i == 0 else "} else if"
+                    lines.append(f"{pad}    {kw} {m_var} == {self.gen_expr(case.value, scope)} {{")
+                    case_scope = dict(scope)
+                    for ch in case.body:
+                        lines.extend(self.gen_stmt(ch, case_scope, indent + 2))
+                if stmt.default_body:
+                    lines.append(f"{pad}    }} else {{")
+                    def_scope = dict(scope)
+                    for ch in stmt.default_body:
+                        lines.extend(self.gen_stmt(ch, def_scope, indent + 2))
+                lines.append(f"{pad}    }}")
+            elif stmt.default_body:
+                lines.append(f"{pad}    let _ = {self.gen_expr(stmt.target, scope)};")
+                def_scope = dict(scope)
+                for ch in stmt.default_body:
+                    lines.extend(self.gen_stmt(ch, def_scope, indent + 1))
+            else:
+                lines.append(f"{pad}    let _ = {self.gen_expr(stmt.target, scope)};")
             lines.append(f"{pad}}}")
             return lines
 
@@ -706,6 +786,14 @@ def generate_rust(ir: ProgramIR) -> str:
         "        items.sort();",
         "        let parts: Vec<String> = items.into_iter().map(|(k, v)| format!(\"{}: {}\", k, v)).collect();",
         "        format!(\"{{{}}}\", parts.join(\", \"))",
+        "    }",
+        "}",
+        "impl<T: _MemeFmt> _MemeFmt for Option<T> {",
+        "    fn meme_fmt(&self) -> String {",
+        "        match self {",
+        "            Some(v) => v.meme_fmt(),",
+        "            None => \"None\".to_string(),",
+        "        }",
         "    }",
         "}",
         "fn _meme_fmt_slice<T: _MemeFmt>(items: &[T]) -> String {",
@@ -1050,6 +1138,22 @@ def generate_rust(ir: ProgramIR) -> str:
                 "        }",
                 "    }",
                 "    out",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_optional_helpers:
+        preamble.extend(
+            [
+                "fn _meme_unwrap<T>(opt: Option<T>) -> T {",
+                "    match opt {",
+                "        Some(v) => v,",
+                "        None => {",
+                "            println!(\"Unwrap failed: Optional value is nothing\");",
+                "            std::process::exit(1);",
+                "        }",
+                "    }",
                 "}",
                 "",
             ]

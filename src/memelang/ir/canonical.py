@@ -12,6 +12,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     ClampCollectionStmt,
+    CompoundAssignStmt,
     ContinueStmt,
     ExitStmt,
     FailStmt,
@@ -35,6 +36,11 @@ from memelang.ir.schema import (
     MapHasKeyExpr,
     MapLiteralExpr,
     MapSetStmt,
+    OptionalIsNothingExpr,
+    OptionalNoneExpr,
+    OptionalUnwrapExpr,
+    OptionalUnwrapOrDefaultExpr,
+    OptionalWrapExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -63,6 +69,8 @@ from memelang.ir.schema import (
     StringSplitExpr,
     StringTrimExpr,
     StringUpperExpr,
+    SwitchCase,
+    SwitchStmt,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -237,6 +245,26 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
         res = f"{format_expr(expr.target, 3)} has key {format_expr(expr.key, 4)}"
         return f"({res})" if parent_prec > 3 else res
 
+    if isinstance(expr, OptionalNoneExpr):
+        return "nothing"
+
+    if isinstance(expr, OptionalWrapExpr):
+        res = f"optional {format_expr(expr.value, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, OptionalIsNothingExpr):
+        kw = "is not nothing" if expr.negated else "is nothing"
+        res = f"{format_expr(expr.target, 3)} {kw}"
+        return f"({res})" if parent_prec > 3 else res
+
+    if isinstance(expr, OptionalUnwrapExpr):
+        res = f"value of {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, OptionalUnwrapOrDefaultExpr):
+        res = f"value of {format_expr(expr.target, 6)} or else {format_expr(expr.default_val, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
     raise TypeError(f"Unsupported expression node: {type(expr)!r}")
 
 
@@ -250,6 +278,17 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
 
     if isinstance(stmt, AssignStmt):
         return [f"{pad}set {stmt.name} to {format_expr(stmt.value)}"]
+
+    if isinstance(stmt, CompoundAssignStmt):
+        val_s = format_expr(stmt.value)
+        if stmt.operator == "+":
+            return [f"{pad}add {val_s} to {stmt.target}"]
+        if stmt.operator == "-":
+            return [f"{pad}subtract {val_s} from {stmt.target}"]
+        if stmt.operator == "*":
+            return [f"{pad}multiply {stmt.target} by {val_s}"]
+        if stmt.operator == "/":
+            return [f"{pad}divide {stmt.target} by {val_s}"]
 
     if isinstance(stmt, SortCollectionStmt):
         return [f"{pad}sort {stmt.target} {stmt.direction}"]
@@ -291,6 +330,18 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
             lines.append(f"{pad}else:")
             for child in stmt.else_body:
                 lines.extend(_format_stmt(child, indent + 1))
+        return lines
+
+    if isinstance(stmt, SwitchStmt):
+        lines = [f"{pad}match {format_expr(stmt.target)}:"]
+        for case in stmt.cases:
+            lines.append(f"{pad}    when {format_expr(case.value)}:")
+            for ch in case.body:
+                lines.extend(_format_stmt(ch, indent + 2))
+        if stmt.default_body:
+            lines.append(f"{pad}    otherwise:")
+            for ch in stmt.default_body:
+                lines.extend(_format_stmt(ch, indent + 2))
         return lines
 
     if isinstance(stmt, ForEachStmt):

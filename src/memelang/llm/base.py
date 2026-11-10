@@ -34,7 +34,7 @@ BASE_PROMPT_PREFIX = """You are the frontend semantic synthesizer for the `meme`
 Translate the user's English `.meme` source file into a strict JSON object matching `SynthesisResult`: `{"items": [...]}`.
 
 ### Allowed Static Types (`MemeType`)
-`"Int"`, `"Float"`, `"Bool"`, `"String"`, `"List<Int>"`, `"List<Float>"`, `"List<Bool>"`, `"List<String>"`, `"List<List<Int>>"`, `"List<List<Float>>"`, `"List<List<Bool>>"`, `"List<List<String>>"`, `"Map<K, V>"` (where `K` is `"Int"`, `"Bool"`, or `"String"`), `<RecordName>`, `"List<<RecordName>>"`, `"Void"`.
+`"Int"`, `"Float"`, `"Bool"`, `"String"`, `"List<Int>"`, `"List<Float>"`, `"List<Bool>"`, `"List<String>"`, `"List<List<Int>>"`, `"List<List<Float>>"`, `"List<List<Bool>>"`, `"List<List<String>>"`, `"Map<K, V>"` (where `K` is `"Int"`, `"Bool"`, or `"String"`), `"Optional<T>"` (where `T` is any scalar, record, `List`, or `Map`), `<RecordName>`, `"List<<RecordName>>"`, `"Void"`.
 
 ### Allowed Expressions (`expr_type` REQUIRED on every expression)
 - `{"expr_type": "literal", "value": 10, "data_type": "Int"}` (also `"Float"`, `"Bool"`, `"String"`)
@@ -71,10 +71,16 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"expr_type": "map_literal", "key_type": "String", "value_type": "Int", "entries": [{"key": <expr>, "value": <expr>}, ...]}`
 - `{"expr_type": "map_get", "target": <expr>, "key": <expr>, "default_val": <expr or null>}`
 - `{"expr_type": "map_has_key", "target": <expr>, "key": <expr>}`
+- `{"expr_type": "optional_none"}` (`nothing`, absent literal for `Optional<T>`)
+- `{"expr_type": "optional_wrap", "value": <expr>}` (`optional <expr>`, wraps value into `Optional<T>`)
+- `{"expr_type": "optional_is_nothing", "target": <expr>, "negated": false}` (`<target> is nothing` or `<target> is not nothing`, returns `"Bool"`)
+- `{"expr_type": "optional_unwrap", "target": <expr>}` (`value of <target>`, strict unwrap, fails exit 1 if absent)
+- `{"expr_type": "optional_unwrap_or_default", "target": <expr>, "default_val": <expr>}` (`value of <target> or else <default>`, safe unwrap with fallback)
 
 ### Allowed Statements (`op` REQUIRED on every statement)
 - `{"op": "var_decl", "name": "x", "var_type": "Float", "value": <expr>, "source_line": 1}`
 - `{"op": "assign", "name": "x", "value": <expr>}`
+- `{"op": "compound_assign", "target": "x", "operator": "+", "value": <expr>}` (`operator` in `"+"`, `"-"`, `"*"`, `"/"` for `add <expr> to <var>`, `subtract <expr> from <var>`, `multiply <var> by <expr>`, `divide <var> by <expr>` on `"Int"` or `"Float"` variables)
 - `{"op": "sort_collection", "target": "nums", "direction": "ascending"}` (`"ascending"` or `"descending"`)
 - `{"op": "clamp_collection", "target": "nums", "min_val": <expr>, "max_val": <expr>}`
 - `{"op": "filter_collection", "target": "nums", "item_var": "n", "predicate": <expr>}`
@@ -85,6 +91,7 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "exit_stmt", "code": <Int expr>}` (`exit with code <int-expr>`, exits immediately with status code `code & 0xFF`; counts as returning on that branch!)
 - `{"op": "print_stmt", "expressions": [<expr>, ...]}`
 - `{"op": "if_stmt", "condition": <expr>, "then_body": [...], "else_body": [...]}`
+- `{"op": "switch_stmt", "target": <expr>, "cases": [{"value": <literal expr>, "body": [...]}, ...], "default_body": [...]}` (`match <scalar-expr>:` with `when <literal>:` cases and optional `otherwise:` block)
 - `{"op": "for_each", "item_var": "n", "index_var": "i", "collection": "nums", "body": [...]}` (`index_var` is optional string or `null`, 0-based `"Int"`; `collection` can be `List<T>` or `Map<K, V>` where `item_var` receives sorted keys `K`)
 - `{"op": "for_range", "loop_var": "i", "start": <expr>, "end": <expr>, "body": [...]}`
 - `{"op": "while_loop", "condition": <expr>, "body": [...]}`

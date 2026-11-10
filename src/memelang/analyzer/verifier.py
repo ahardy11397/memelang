@@ -17,6 +17,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     ClampCollectionStmt,
+    CompoundAssignStmt,
     ContinueStmt,
     ExitStmt,
     FailStmt,
@@ -41,6 +42,11 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MemeType,
+    OptionalIsNothingExpr,
+    OptionalNoneExpr,
+    OptionalUnwrapExpr,
+    OptionalUnwrapOrDefaultExpr,
+    OptionalWrapExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -69,6 +75,8 @@ from memelang.ir.schema import (
     StringSplitExpr,
     StringTrimExpr,
     StringUpperExpr,
+    SwitchCase,
+    SwitchStmt,
     SynthesisItem,
     SynthesisResult,
     UnaryOpExpr,
@@ -161,6 +169,12 @@ def _map_types_of(map_type: MemeType) -> tuple[MemeType, MemeType] | None:
     return None
 
 
+def _optional_type_of(opt_type: MemeType) -> MemeType | None:
+    if opt_type.startswith("Optional<") and opt_type.endswith(">"):
+        return cast(MemeType, opt_type[9:-1])
+    return None
+
+
 def _find_collection_mutations(stmts: list[IRStatement], collection: str) -> list[IRStatement]:
     hits: list[IRStatement] = []
     for s in stmts:
@@ -179,6 +193,10 @@ def _find_collection_mutations(stmts: list[IRStatement], collection: str) -> lis
         elif isinstance(s, IfStmt):
             hits.extend(_find_collection_mutations(s.then_body, collection))
             hits.extend(_find_collection_mutations(s.else_body, collection))
+        elif isinstance(s, SwitchStmt):
+            for c in s.cases:
+                hits.extend(_find_collection_mutations(c.body, collection))
+            hits.extend(_find_collection_mutations(s.default_body, collection))
         elif isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)):
             hits.extend(_find_collection_mutations(s.body, collection))
     return hits
@@ -190,6 +208,11 @@ def _branch_adds_to(stmts: list[IRStatement], target: str) -> bool:
             return True
         if isinstance(s, IfStmt) and (
             _branch_adds_to(s.then_body, target) or _branch_adds_to(s.else_body, target)
+        ):
+            return True
+        if isinstance(s, SwitchStmt) and (
+            any(_branch_adds_to(c.body, target) for c in s.cases)
+            or _branch_adds_to(s.default_body, target)
         ):
             return True
         if isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)) and _branch_adds_to(
@@ -210,6 +233,11 @@ def _has_asymmetric_insert(stmts: list[IRStatement], target: str) -> bool:
                 s.else_body, target
             ):
                 return True
+        elif isinstance(s, SwitchStmt):
+            if any(_has_asymmetric_insert(c.body, target) for c in s.cases) or _has_asymmetric_insert(
+                s.default_body, target
+            ):
+                return True
         elif isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)):
             if _has_asymmetric_insert(s.body, target):
                 return True
@@ -228,6 +256,11 @@ def _contains_loop_with_asymmetric_insert(stmts: list[IRStatement], target: str)
                 s.then_body, target
             ) or _contains_loop_with_asymmetric_insert(s.else_body, target):
                 return True
+        elif isinstance(s, SwitchStmt):
+            if any(
+                _contains_loop_with_asymmetric_insert(c.body, target) for c in s.cases
+            ) or _contains_loop_with_asymmetric_insert(s.default_body, target):
+                return True
     return False
 
 
@@ -238,6 +271,11 @@ def _returns_index_of(stmts: list[IRStatement], target: str) -> bool:
                 return True
         elif isinstance(s, IfStmt):
             if _returns_index_of(s.then_body, target) or _returns_index_of(s.else_body, target):
+                return True
+        elif isinstance(s, SwitchStmt):
+            if any(_returns_index_of(c.body, target) for c in s.cases) or _returns_index_of(
+                s.default_body, target
+            ):
                 return True
         elif isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)):
             if _returns_index_of(s.body, target):
@@ -257,6 +295,10 @@ def _collect_empty_list_decls(stmts: list[IRStatement]) -> list[str]:
         elif isinstance(s, IfStmt):
             names.extend(_collect_empty_list_decls(s.then_body))
             names.extend(_collect_empty_list_decls(s.else_body))
+        elif isinstance(s, SwitchStmt):
+            for c in s.cases:
+                names.extend(_collect_empty_list_decls(c.body))
+            names.extend(_collect_empty_list_decls(s.default_body))
     return names
 
 
@@ -518,6 +560,14 @@ class _StaticChecker:
                 )
             self._validate_type(v_t, stmt_idx, allow_void=False)
             return
+        opt_t = _optional_type_of(meme_type)
+        if opt_t is not None:
+            if opt_t.startswith("Optional<"):
+                raise StaticVerificationError(
+                    f"Nested Optional types are not allowed: `{meme_type}`", stmt_idx
+                )
+            self._validate_type(opt_t, stmt_idx, allow_void=False)
+            return
         raise StaticVerificationError(f"Unknown type `{meme_type}`", stmt_idx)
 
     def infer_expr_type(self, expr: IRExpr, scope: _Scope, stmt_idx: int | None) -> MemeType:
@@ -688,10 +738,13 @@ class _StaticChecker:
             for arg_e, expected_t in zip(expr.args, param_types, strict=True):
                 actual_t = self.infer_expr_type(arg_e, scope, stmt_idx)
                 if actual_t != expected_t:
-                    raise StaticVerificationError(
-                        f"Argument to `{expr.func_name}` expected {expected_t}, got {actual_t}",
-                        stmt_idx,
-                    )
+                    if actual_t == "Optional<Void>" and expected_t.startswith("Optional<"):
+                        pass
+                    else:
+                        raise StaticVerificationError(
+                            f"Argument to `{expr.func_name}` expected {expected_t}, got {actual_t}",
+                            stmt_idx,
+                        )
             if ret_type == "Void":
                 raise StaticVerificationError(
                     f"Void function `{expr.func_name}` cannot be used as an expression value",
@@ -1001,6 +1054,51 @@ class _StaticChecker:
                 )
             return "Bool"
 
+        if isinstance(expr, OptionalNoneExpr):
+            return "Optional<Void>"
+
+        if isinstance(expr, OptionalWrapExpr):
+            inner_t = self.infer_expr_type(expr.value, scope, stmt_idx)
+            if inner_t.startswith("Optional<"):
+                raise StaticVerificationError(
+                    f"Cannot wrap an Optional type in another Optional: `{inner_t}`", stmt_idx
+                )
+            if inner_t == "Void":
+                raise StaticVerificationError("Cannot create Optional<Void>", stmt_idx)
+            return cast(MemeType, f"Optional<{inner_t}>")
+
+        if isinstance(expr, OptionalIsNothingExpr):
+            tgt_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if not tgt_t.startswith("Optional<"):
+                raise StaticVerificationError(
+                    f"`is nothing` check requires an Optional operand, got `{tgt_t}`", stmt_idx
+                )
+            return "Bool"
+
+        if isinstance(expr, OptionalUnwrapExpr):
+            tgt_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            opt_inner = _optional_type_of(tgt_t)
+            if opt_inner is None:
+                raise StaticVerificationError(
+                    f"Strict unwrap (`value of`) requires an Optional operand, got `{tgt_t}`", stmt_idx
+                )
+            return opt_inner
+
+        if isinstance(expr, OptionalUnwrapOrDefaultExpr):
+            tgt_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            opt_inner = _optional_type_of(tgt_t)
+            if opt_inner is None:
+                raise StaticVerificationError(
+                    f"Safe unwrap (`or else`) requires an Optional operand, got `{tgt_t}`", stmt_idx
+                )
+            def_t = self.infer_expr_type(expr.default_val, scope, stmt_idx)
+            if def_t != opt_inner:
+                raise StaticVerificationError(
+                    f"`or else` default expression type `{def_t}` does not match Optional payload type `{opt_inner}`",
+                    stmt_idx,
+                )
+            return opt_inner
+
         raise StaticVerificationError(f"Unsupported expression node: {type(expr)!r}", stmt_idx)
 
     def check_stmt(
@@ -1024,10 +1122,13 @@ class _StaticChecker:
                 )
             val_t = self.infer_expr_type(stmt.value, scope, stmt_idx)
             if val_t != stmt.var_type:
-                raise StaticVerificationError(
-                    f"Variable `{stmt.name}` declared as {stmt.var_type} but initialized with {val_t}",
-                    stmt_idx,
-                )
+                if val_t == "Optional<Void>" and stmt.var_type.startswith("Optional<"):
+                    pass
+                else:
+                    raise StaticVerificationError(
+                        f"Variable `{stmt.name}` declared as {stmt.var_type} but initialized with {val_t}",
+                        stmt_idx,
+                    )
             is_empty = isinstance(stmt.value, ListLiteralExpr) and len(stmt.value.elements) == 0
             scope.define(stmt.name, stmt.var_type, is_empty_list=is_empty)
             return False
@@ -1040,12 +1141,39 @@ class _StaticChecker:
                 )
             val_t = self.infer_expr_type(stmt.value, scope, stmt_idx)
             if val_t != existing:
-                raise StaticVerificationError(
-                    f"Cannot assign {val_t} to variable `{stmt.name}` of type {existing}",
-                    stmt_idx,
-                )
+                if val_t == "Optional<Void>" and existing.startswith("Optional<"):
+                    pass
+                else:
+                    raise StaticVerificationError(
+                        f"Cannot assign {val_t} to variable `{stmt.name}` of type {existing}",
+                        stmt_idx,
+                    )
             if not (isinstance(stmt.value, ListLiteralExpr) and len(stmt.value.elements) == 0):
                 scope.mark_populated(stmt.name)
+            return False
+
+        if isinstance(stmt, CompoundAssignStmt):
+            existing = scope.lookup(stmt.target)
+            if existing is None:
+                raise StaticVerificationError(
+                    f"Compound assignment to undeclared variable `{stmt.target}`", stmt_idx
+                )
+            if existing not in ("Int", "Float"):
+                raise StaticVerificationError(
+                    f"Compound assignment (`{stmt.operator}`) requires Int or Float variable, but `{stmt.target}` has type {existing}",
+                    stmt_idx,
+                )
+            val_t = self.infer_expr_type(stmt.value, scope, stmt_idx)
+            if val_t != existing:
+                raise StaticVerificationError(
+                    f"Compound assignment (`{stmt.operator}`) on `{stmt.target}` ({existing}) requires {existing} operand, got {val_t}",
+                    stmt_idx,
+                )
+            if stmt.operator == "/" and isinstance(stmt.value, LiteralExpr):
+                if stmt.value.value in (0, 0.0) and not isinstance(stmt.value.value, bool):
+                    raise StaticVerificationError(
+                        "Division or modulo by literal zero (`/ 0`)", stmt_idx
+                    )
             return False
 
         if isinstance(stmt, SortCollectionStmt):
@@ -1228,6 +1356,62 @@ class _StaticChecker:
                     )
             return then_ret and bool(stmt.else_body) and else_ret
 
+        if isinstance(stmt, SwitchStmt):
+            target_t = self.infer_expr_type(stmt.target, scope, stmt_idx)
+            if target_t not in ("Int", "String", "Bool"):
+                raise StaticVerificationError(
+                    f"`match` expression must evaluate to Int, String, or Bool, got {target_t}",
+                    stmt_idx,
+                )
+            if not stmt.cases and not stmt.default_body:
+                raise StaticVerificationError(
+                    "`match` statement must contain at least one `when` or `otherwise` clause",
+                    stmt_idx,
+                )
+            seen_labels: set[tuple[type, Any]] = set()
+            case_rets: list[bool] = []
+            for case in stmt.cases:
+                if not isinstance(case.value, LiteralExpr):
+                    raise StaticVerificationError(
+                        "Match `when` case label must be a literal", stmt_idx
+                    )
+                case_t = self.infer_expr_type(case.value, scope, stmt_idx)
+                if case_t != target_t:
+                    raise StaticVerificationError(
+                        f"Match case label type `{case_t}` does not match expression type `{target_t}`",
+                        stmt_idx,
+                    )
+                key = (type(case.value.value), case.value.value)
+                if key in seen_labels:
+                    raise StaticVerificationError(
+                        f"Duplicate match case label `{case.value.value}`", stmt_idx
+                    )
+                seen_labels.add(key)
+                case_scope = _Scope(parent=scope)
+                c_ret = False
+                for child in case.body:
+                    c_ret = (
+                        self.check_stmt(
+                            child, case_scope, stmt_idx, expected_return, in_loop=in_loop
+                        )
+                        or c_ret
+                    )
+                case_rets.append(c_ret)
+
+            default_ret = False
+            if stmt.default_body:
+                def_scope = _Scope(parent=scope)
+                for child in stmt.default_body:
+                    default_ret = (
+                        self.check_stmt(
+                            child, def_scope, stmt_idx, expected_return, in_loop=in_loop
+                        )
+                        or default_ret
+                    )
+
+            all_cases_ret = all(case_rets) if stmt.cases else False
+            return all_cases_ret and bool(stmt.default_body) and default_ret
+
         if isinstance(stmt, ForEachStmt):
             col_t = scope.lookup(stmt.collection)
             if col_t is None:
@@ -1353,9 +1537,12 @@ class _StaticChecker:
                 )
             ret_t = self.infer_expr_type(stmt.value, scope, stmt_idx)
             if ret_t != expected_return:
-                raise StaticVerificationError(
-                    f"Return value has type {ret_t}, expected {expected_return}", stmt_idx
-                )
+                if ret_t == "Optional<Void>" and expected_return.startswith("Optional<"):
+                    pass
+                else:
+                    raise StaticVerificationError(
+                        f"Return value has type {ret_t}, expected {expected_return}", stmt_idx
+                    )
             return True
 
         if isinstance(stmt, RecordDefStmt):
@@ -1536,6 +1723,12 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
         )
     if isinstance(expr, MapHasKeyExpr):
         return _expr_references_var(expr.target, name) or _expr_references_var(expr.key, name)
+    if isinstance(expr, OptionalWrapExpr):
+        return _expr_references_var(expr.value, name)
+    if isinstance(expr, (OptionalIsNothingExpr, OptionalUnwrapExpr)):
+        return _expr_references_var(expr.target, name)
+    if isinstance(expr, OptionalUnwrapOrDefaultExpr):
+        return _expr_references_var(expr.target, name) or _expr_references_var(expr.default_val, name)
     return False
 
 
@@ -1545,6 +1738,10 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
             return True
         if isinstance(s, AssignStmt) and (
             s.name == name or _expr_references_var(s.value, name)
+        ):
+            return True
+        if isinstance(s, CompoundAssignStmt) and (
+            s.target == name or _expr_references_var(s.value, name)
         ):
             return True
         if isinstance(s, ListAppendStmt) and (
@@ -1599,6 +1796,15 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
             or _stmts_reference_var(s.else_body, name)
         ):
             return True
+        if isinstance(s, SwitchStmt) and (
+            _expr_references_var(s.target, name)
+            or any(
+                _expr_references_var(c.value, name) or _stmts_reference_var(c.body, name)
+                for c in s.cases
+            )
+            or _stmts_reference_var(s.default_body, name)
+        ):
+            return True
         if isinstance(s, ForEachStmt) and (
             s.collection == name or _stmts_reference_var(s.body, name)
         ):
@@ -1623,6 +1829,7 @@ def _stmts_mutate_var(stmts: list[IRStatement], name: str) -> bool:
         if isinstance(
             s,
             (
+                CompoundAssignStmt,
                 ListAppendStmt,
                 ListInsertStmt,
                 ListSetIndexStmt,
@@ -1636,6 +1843,11 @@ def _stmts_mutate_var(stmts: list[IRStatement], name: str) -> bool:
             return True
         if isinstance(s, IfStmt) and (
             _stmts_mutate_var(s.then_body, name) or _stmts_mutate_var(s.else_body, name)
+        ):
+            return True
+        if isinstance(s, SwitchStmt) and (
+            any(_stmts_mutate_var(c.body, name) for c in s.cases)
+            or _stmts_mutate_var(s.default_body, name)
         ):
             return True
         if isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)) and _stmts_mutate_var(

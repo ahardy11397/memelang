@@ -1,0 +1,39 @@
+# Demonstrating Optional<T> (nullable error channel and null-safety)
+function find_first_even(nums: List<Int>) -> Optional<Int>:
+    for each n in nums:
+        if n % 2 == 0:
+            return optional n
+    return nothing
+
+function greet(user: Optional<String>) -> String:
+    define name: String as value of user or else "Guest"
+    return "Hello, " + name
+
+define missing: Optional<Int> as find_first_even([1, 3, 5])
+define found: Optional<Int> as find_first_even([1, 3, 4, 7])
+
+if missing is nothing:
+    print "missing is nothing: true"
+else:
+    print "missing is nothing: false"
+
+if found is not nothing:
+    print "found is not nothing: true"
+else:
+    print "found is not nothing: false"
+
+# Safe unwrap with default
+define v_missing: Int as value of missing or else -1
+define v_found: Int as value of found or else -1
+print "v_missing:", v_missing
+print "v_found:", v_found
+
+# Strict unwrap on present value
+define unwrapped: Int as value of found
+print "strict unwrapped:", unwrapped
+
+# Optional<String> with greet function
+define anon: Optional<String> as nothing
+define named: Optional<String> as optional "Alice"
+print greet(anon)
+print greet(named)

@@ -124,6 +124,17 @@ Mutate an existing variable with `set <name> to <expr>` (**offline** & **LLM-voi
 set count to count + 1
 ```
 
+Or use **compound assignment statements** on `Int` or `Float` variables (**offline** & **LLM-voice**):
+
+```meme
+add 5 to count              # count += 5
+subtract 2 from count       # count -= 2
+multiply count by 3         # count *= 3
+divide count by 2           # count /= 2 (C truncation-toward-zero semantics on Int)
+```
+
+> **Note:** When the target variable is a `List<T>`, `add <expr> to <list>` appends `<expr>` to the list (`list_append`); when the target variable is `Int` or `Float`, `add <expr> to <var>` performs in-place numeric addition (`compound_assign`). On `Int` variables, `divide <var> by <expr>` reuses C truncation-toward-zero integer division (`-7 / 2 == -3`) across Python, Rust, and C++.
+
 Every value resolves to one of these types:
 
 | Type | Literal example |
@@ -133,6 +144,7 @@ Every value resolves to one of these types:
 | `Bool` | `true` / `false` |
 | `String` | `"hello"` |
 | `List<Int>` / `List<Float>` / `List<String>` / `List<Bool>` | `[1, 2, 3]` |
+| `Optional<T>` (scalar, record, `List`, `Map`) | `nothing` / `optional 42` |
 
 **Type inference rules by voice:**
 - **LLM-voice only:** untyped numbers, untyped function parameters, bare `empty` lists,
@@ -233,6 +245,24 @@ for each n in numbers:
 - `break` (`loop_break`) immediately exits the innermost enclosing `for each`, `for ... from ... to ...`, or `while` loop.
 - `continue` (`loop_continue`) skips the rest of the current iteration and proceeds to the next iteration of the innermost enclosing loop.
 - **Scope boundary rule:** `break` and `continue` are statically rejected by the verifier when used outside a loop body. A `function` definition (`func_def`) establishes its own scope boundary (`in_loop=False`), so `break` or `continue` inside a function body is rejected unless enclosed by a loop inside that function itself (even if the function were defined inside an outer loop body).
+
+**Match / Switch statements** (**offline** & **LLM-voice**):
+
+```meme
+match status_code:
+    when 200:
+        print "Success"
+    when 404:
+        print "Not Found"
+    otherwise:
+        print "Other"
+```
+
+- Target expression must evaluate to a scalar type: `Int`, `String`, or `Bool`.
+- Case labels under `when` must be literals of the same type as the target (variables or compound expressions as labels are statically rejected).
+- Duplicate case labels are statically rejected by the verifier.
+- `otherwise:` is optional. If omitted and no cases match, execution continues after the match statement (documented no-op).
+- No fallthrough occurs between cases; each case body is an isolated block.
 
 ---
 
@@ -621,6 +651,43 @@ else:
 
 ---
 
+## 11c. Optional Values (Optional<T>)
+
+Memelang uses `Optional<T>` as its deterministic null-safety and error-channel model (**offline** & **LLM-voice**). `Optional<T>` represents a value of type `T` that may either be present or absent (`nothing`).
+
+```meme
+# Declaration & initialization
+define opt_val: Optional<Int> as nothing
+define wrapped: Optional<Int> as optional 42
+
+# Checking presence
+if opt_val is nothing:
+    print "Value is absent"
+
+if wrapped is not nothing:
+    print "Value is present"
+
+# Safe unwrap with fallback (short-circuiting)
+define fallback: Int as value of opt_val or else 100
+print fallback   # prints 100
+
+# Strict unwrap (fails exit 1 if absent)
+define unwrapped: Int as value of wrapped
+print unwrapped  # prints 42
+```
+
+### Static Rules & Parity Semantics
+- **Strict typing (Null safety):** `Optional<T>` is NOT assignable where `T` is expected and vice-versa. You cannot access the inner value without unwrapping (`value of x` or `value of x or else <default>`).
+- **No nested optionals:** `Optional<Optional<T>>` is statically rejected by the verifier.
+- **No `Optional<Void>`:** declaring variables or parameters as `Optional<Void>` or untyped `define x as nothing` is statically rejected.
+- **Functions:** functions may return `Optional<T>`. `return nothing` is legal only in functions declaring `-> Optional<T>`.
+- **Short-circuiting fallback:** in `value of x or else <expr>`, `<expr>` is evaluated **only** when `x` is absent (`nothing`). If `x` is present, the `<expr>` branch is never executed (preventing unwanted side effects or runtime exceptions like division by zero).
+- **Strict unwrap failure:** if `value of x` is evaluated on an absent optional (`nothing`), the program prints `Unwrap failed: Optional value is nothing` to stdout and exits with status code `1` across Python, Rust, and C++.
+
+---
+
+---
+
 ## 12. CLI Cheat Sheet
 
 ```bash
@@ -710,10 +777,12 @@ Each construct is labeled **offline** (supported by the zero-dependency `heurist
 | Interactive header | `this runs in the shell` | **LLM-voice only** |
 | Declare a variable | `define x as <expr>` / `define x: <Type> as <expr>` | **offline** |
 | Reassign a variable | `set x to <expr>` *(always `set ... to`, never `set ... as`)* | **offline** |
+| Compound assignment (`Int`/`Float`) | `add <expr> to x` / `subtract <expr> from x` / `multiply x by <expr>` / `divide x by <expr>` | **offline** |
 | Declare an empty list | `define list out as empty List<Int>` (**offline**) / `define out as empty` (**LLM-voice only**) | **offline** / **LLM-voice only** |
 | Read input | `define x: <Type> as read <Int\|Float\|Bool\|String> with prompt "Prompt? "` (**offline**) / `define x from user "Prompt? "` (**LLM-voice only**) | **offline** / **LLM-voice only** |
 | Print | `print x` / `print "a, ", b` | **offline** |
 | Branch | `if <cond>[:]` / `else if <cond>[:]` / `else[:]` (indentation) | **offline** |
+| Match / Switch | `match <expr>[:]` / `when <literal>[:]` / `otherwise[:]` | **offline** |
 | Count 1..N inclusive | `for i from 1 to N[:]` | **offline** |
 | Iterate a list or map | `for each x in col[:]` *(two words `for each`; `foreach` is **LLM-voice only**; iterates sorted keys on `Map<K, V>`)* | **offline** |
 | Iterate with 0-based index | `for each index i item x in col[:]` / `for each i, x in col[:]` | **offline** |
@@ -744,6 +813,10 @@ Each construct is labeled **offline** (supported by the zero-dependency `heurist
 | Map lookup / default | `m["a"]` / `m["c"] default 0` | **offline** |
 | Map key test | `m has key "a"` | **offline** |
 | Mutate map entry | `set m["a"] to 10` | **offline** |
+| Declare an optional variable | `define x: Optional<Int> as nothing` / `define x: Optional<Int> as optional 42` | **offline** |
+| Test optional presence | `x is nothing` / `x is not nothing` | **offline** |
+| Safe unwrap with default | `value of x or else <default>` *(evaluates default only if absent)* | **offline** |
+| Strict unwrap | `value of x` *(exits with code 1 if absent)* | **offline** |
 | Check file exists | `file exists path` | **offline** |
 | Read text file | `read string from file path` | **offline** |
 | Write file (overwrite) | `write file path with content` | **offline** |

@@ -13,6 +13,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     ClampCollectionStmt,
+    CompoundAssignStmt,
     ContinueStmt,
     ExitStmt,
     FailStmt,
@@ -37,6 +38,11 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MemeType,
+    OptionalIsNothingExpr,
+    OptionalNoneExpr,
+    OptionalUnwrapExpr,
+    OptionalUnwrapOrDefaultExpr,
+    OptionalWrapExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -65,6 +71,8 @@ from memelang.ir.schema import (
     StringSplitExpr,
     StringTrimExpr,
     StringUpperExpr,
+    SwitchCase,
+    SwitchStmt,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -107,6 +115,8 @@ class _PyGen:
         self.uses_str_split = False
         self.uses_char_at = False
         self.uses_dataclass = False
+        self.uses_optional_helpers = False
+        self._match_counter = 0
         self.symbols: dict[str, MemeType] = {}
         self.func_returns: dict[str, MemeType] = {}
         self.records: dict[str, dict[str, MemeType]] = {}
@@ -171,6 +181,19 @@ class _PyGen:
             return mt[1] if mt else "String"
         if isinstance(expr, MapHasKeyExpr):
             return "Bool"
+        if isinstance(expr, OptionalNoneExpr):
+            return "Optional<Void>"
+        if isinstance(expr, OptionalWrapExpr):
+            return f"Optional<{self.infer_type(expr.value, scope)}>"
+        if isinstance(expr, OptionalIsNothingExpr):
+            return "Bool"
+        if isinstance(expr, (OptionalUnwrapExpr, OptionalUnwrapOrDefaultExpr)):
+            tgt_t = self.infer_type(expr.target, scope)
+            if tgt_t.startswith("Optional<") and tgt_t.endswith(">"):
+                return tgt_t[9:-1]
+            if isinstance(expr, OptionalUnwrapOrDefaultExpr):
+                return self.infer_type(expr.default_val, scope)
+            return "Int"
         if isinstance(expr, UnaryOpExpr):
             return "Bool" if expr.op == "not" else self.infer_type(expr.operand, scope)
         if isinstance(expr, BinaryOpExpr):
@@ -350,6 +373,28 @@ class _PyGen:
             tgt = self.gen_expr(expr.target, scope)
             return f"({k} in {tgt})"
 
+        if isinstance(expr, OptionalNoneExpr):
+            return "None"
+
+        if isinstance(expr, OptionalWrapExpr):
+            return self.gen_expr(expr.value, scope)
+
+        if isinstance(expr, OptionalIsNothingExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            if expr.negated:
+                return f"({tgt} is not None)"
+            return f"({tgt} is None)"
+
+        if isinstance(expr, OptionalUnwrapExpr):
+            self.uses_optional_helpers = True
+            return f"_meme_unwrap({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, OptionalUnwrapOrDefaultExpr):
+            self.uses_optional_helpers = True
+            tgt = self.gen_expr(expr.target, scope)
+            dflt = self.gen_expr(expr.default_val, scope)
+            return f"_meme_unwrap_or_else({tgt}, lambda: {dflt})"
+
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
     def gen_stmt(
@@ -369,6 +414,14 @@ class _PyGen:
             if isinstance(stmt.value, VarRefExpr) and scope.get(stmt.name, "").startswith("List<"):
                 val_code = f"_meme_builtins.list({val_code})"
             return [f"{pad}{_py_ident(stmt.name)} = {val_code}"]
+
+        if isinstance(stmt, CompoundAssignStmt):
+            tgt = _py_ident(stmt.target)
+            val_code = self.gen_expr(stmt.value, scope)
+            if stmt.operator == "/" and scope.get(stmt.target, "Int") == "Int":
+                self.uses_math = True
+                return [f"{pad}{tgt} = _meme_int_div({tgt}, {val_code})"]
+            return [f"{pad}{tgt} = ({tgt} {stmt.operator} {val_code})"]
 
         if isinstance(stmt, SortCollectionStmt):
             rev = "True" if stmt.direction == "descending" else "False"
@@ -435,6 +488,31 @@ class _PyGen:
                 else_scope = dict(scope)
                 for ch in stmt.else_body:
                     lines.extend(self.gen_stmt(ch, else_scope, indent + 1))
+            return lines
+
+        if isinstance(stmt, SwitchStmt):
+            self._match_counter += 1
+            m_var = f"_meme_m{self._match_counter}"
+            lines = [f"{pad}{m_var} = {self.gen_expr(stmt.target, scope)}"]
+            if stmt.cases:
+                for i, case in enumerate(stmt.cases):
+                    kw = "if" if i == 0 else "elif"
+                    lines.append(f"{pad}{kw} {m_var} == {self.gen_expr(case.value, scope)}:")
+                    case_scope = dict(scope)
+                    if case.body:
+                        for ch in case.body:
+                            lines.extend(self.gen_stmt(ch, case_scope, indent + 1))
+                    else:
+                        lines.append(f"{pad}    pass")
+                if stmt.default_body:
+                    lines.append(f"{pad}else:")
+                    def_scope = dict(scope)
+                    for ch in stmt.default_body:
+                        lines.extend(self.gen_stmt(ch, def_scope, indent + 1))
+            elif stmt.default_body:
+                def_scope = dict(scope)
+                for ch in stmt.default_body:
+                    lines.extend(self.gen_stmt(ch, def_scope, indent))
             return lines
 
         if isinstance(stmt, ForEachStmt):
@@ -757,6 +835,23 @@ def generate_python(ir: ProgramIR) -> str:
             [
                 "def _meme_rand_int(lo: int, hi: int) -> int:",
                 "    return lo if hi <= lo else _meme_random.randint(lo, hi)",
+                "",
+            ]
+        )
+
+    if gen.uses_optional_helpers:
+        header.extend(
+            [
+                "def _meme_unwrap(opt):",
+                "    if opt is None:",
+                "        _meme_builtins.print('Unwrap failed: Optional value is nothing')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    return opt",
+                "",
+                "def _meme_unwrap_or_else(opt, default_fn):",
+                "    if opt is None:",
+                "        return default_fn()",
+                "    return opt",
                 "",
             ]
         )

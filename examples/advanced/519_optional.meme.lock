@@ -1,0 +1,848 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/519_optional.meme": {
+      "source_sha256": "76a9e894df6ff74d93e6b87db67a027b222291f02b462d2649174af9d9f7b6b2",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "find_first_even",
+          "params": [
+            {
+              "name": "nums",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Optional<Int>",
+          "body": [
+            {
+              "op": "for_each",
+              "item_var": "n",
+              "index_var": null,
+              "collection": "nums",
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "binary_op",
+                      "op": "%",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 2,
+                        "data_type": "Int"
+                      }
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "optional_wrap",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "n"
+                        }
+                      },
+                      "source_line": 5
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 4
+                }
+              ],
+              "source_line": 3
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "optional_none"
+              },
+              "source_line": 6
+            }
+          ],
+          "source_line": 2
+        },
+        {
+          "op": "func_def",
+          "name": "greet",
+          "params": [
+            {
+              "name": "user",
+              "param_type": "Optional<String>"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "name",
+              "var_type": "String",
+              "value": {
+                "expr_type": "optional_unwrap_or_default",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "user"
+                },
+                "default_val": {
+                  "expr_type": "literal",
+                  "value": "Guest",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 9
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "literal",
+                  "value": "Hello, ",
+                  "data_type": "String"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "name"
+                }
+              },
+              "source_line": 10
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "missing",
+          "var_type": "Optional<Int>",
+          "value": {
+            "expr_type": "call",
+            "func_name": "find_first_even",
+            "args": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 5,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              }
+            ]
+          },
+          "source_line": 12
+        },
+        {
+          "op": "var_decl",
+          "name": "found",
+          "var_type": "Optional<Int>",
+          "value": {
+            "expr_type": "call",
+            "func_name": "find_first_even",
+            "args": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 7,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              }
+            ]
+          },
+          "source_line": 13
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "missing"
+            },
+            "negated": false
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "missing is nothing: true",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 16
+            }
+          ],
+          "else_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "missing is nothing: false",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 18
+            }
+          ],
+          "source_line": 15
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "found"
+            },
+            "negated": true
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "found is not nothing: true",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 21
+            }
+          ],
+          "else_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "found is not nothing: false",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 23
+            }
+          ],
+          "source_line": 20
+        },
+        {
+          "op": "var_decl",
+          "name": "v_missing",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "optional_unwrap_or_default",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "missing"
+            },
+            "default_val": {
+              "expr_type": "literal",
+              "value": -1,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 26
+        },
+        {
+          "op": "var_decl",
+          "name": "v_found",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "optional_unwrap_or_default",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "found"
+            },
+            "default_val": {
+              "expr_type": "literal",
+              "value": -1,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 27
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "v_missing:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "v_missing"
+            }
+          ],
+          "source_line": 28
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "v_found:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "v_found"
+            }
+          ],
+          "source_line": 29
+        },
+        {
+          "op": "var_decl",
+          "name": "unwrapped",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "optional_unwrap",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "found"
+            }
+          },
+          "source_line": 32
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "strict unwrapped:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "unwrapped"
+            }
+          ],
+          "source_line": 33
+        },
+        {
+          "op": "var_decl",
+          "name": "anon",
+          "var_type": "Optional<String>",
+          "value": {
+            "expr_type": "optional_none"
+          },
+          "source_line": 36
+        },
+        {
+          "op": "var_decl",
+          "name": "named",
+          "var_type": "Optional<String>",
+          "value": {
+            "expr_type": "optional_wrap",
+            "value": {
+              "expr_type": "literal",
+              "value": "Alice",
+              "data_type": "String"
+            }
+          },
+          "source_line": 37
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "call",
+              "func_name": "greet",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "anon"
+                }
+              ]
+            }
+          ],
+          "source_line": 38
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "call",
+              "func_name": "greet",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "named"
+                }
+              ]
+            }
+          ],
+          "source_line": 39
+        }
+      ],
+      "canonical_meme": "function find_first_even(nums: List<Int>) -> Optional<Int>:\n    for each n in nums:\n        if n % 2 == 0:\n            return optional n\n    return nothing\nfunction greet(user: Optional<String>) -> String:\n    define name: String as value of user or else \"Guest\"\n    return \"Hello, \" + name\ndefine missing: Optional<Int> as find_first_even([1, 3, 5])\ndefine found: Optional<Int> as find_first_even([1, 3, 4, 7])\nif missing is nothing:\n    print \"missing is nothing: true\"\nelse:\n    print \"missing is nothing: false\"\nif found is not nothing:\n    print \"found is not nothing: true\"\nelse:\n    print \"found is not nothing: false\"\ndefine v_missing: Int as value of missing or else -1\ndefine v_found: Int as value of found or else -1\nprint \"v_missing:\", v_missing\nprint \"v_found:\", v_found\ndefine unwrapped: Int as value of found\nprint \"strict unwrapped:\", unwrapped\ndefine anon: Optional<String> as nothing\ndefine named: Optional<String> as optional \"Alice\"\nprint greet(anon)\nprint greet(named)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "find_first_even",
+            "params": [
+              {
+                "name": "nums",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Optional<Int>",
+            "body": [
+              {
+                "op": "for_each",
+                "item_var": "n",
+                "index_var": null,
+                "collection": "nums",
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "binary_op",
+                        "op": "%",
+                        "left": {
+                          "expr_type": "var_ref",
+                          "name": "n"
+                        },
+                        "right": {
+                          "expr_type": "literal",
+                          "value": 2,
+                          "data_type": "Int"
+                        }
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 0,
+                        "data_type": "Int"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "optional_wrap",
+                          "value": {
+                            "expr_type": "var_ref",
+                            "name": "n"
+                          }
+                        },
+                        "source_line": 5
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 4
+                  }
+                ],
+                "source_line": 3
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "optional_none"
+                },
+                "source_line": 6
+              }
+            ],
+            "source_line": 2
+          },
+          {
+            "op": "func_def",
+            "name": "greet",
+            "params": [
+              {
+                "name": "user",
+                "param_type": "Optional<String>"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "name",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "optional_unwrap_or_default",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "user"
+                  },
+                  "default_val": {
+                    "expr_type": "literal",
+                    "value": "Guest",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 9
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "literal",
+                    "value": "Hello, ",
+                    "data_type": "String"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "name"
+                  }
+                },
+                "source_line": 10
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "missing",
+            "var_type": "Optional<Int>",
+            "value": {
+              "expr_type": "call",
+              "func_name": "find_first_even",
+              "args": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 5,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                }
+              ]
+            },
+            "source_line": 12
+          },
+          {
+            "op": "var_decl",
+            "name": "found",
+            "var_type": "Optional<Int>",
+            "value": {
+              "expr_type": "call",
+              "func_name": "find_first_even",
+              "args": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 4,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 7,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                }
+              ]
+            },
+            "source_line": 13
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "missing"
+              },
+              "negated": false
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "missing is nothing: true",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 16
+              }
+            ],
+            "else_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "missing is nothing: false",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 18
+              }
+            ],
+            "source_line": 15
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "found"
+              },
+              "negated": true
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "found is not nothing: true",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 21
+              }
+            ],
+            "else_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "found is not nothing: false",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 23
+              }
+            ],
+            "source_line": 20
+          },
+          {
+            "op": "var_decl",
+            "name": "v_missing",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "optional_unwrap_or_default",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "missing"
+              },
+              "default_val": {
+                "expr_type": "literal",
+                "value": -1,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 26
+          },
+          {
+            "op": "var_decl",
+            "name": "v_found",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "optional_unwrap_or_default",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "found"
+              },
+              "default_val": {
+                "expr_type": "literal",
+                "value": -1,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 27
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "v_missing:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "v_missing"
+              }
+            ],
+            "source_line": 28
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "v_found:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "v_found"
+              }
+            ],
+            "source_line": 29
+          },
+          {
+            "op": "var_decl",
+            "name": "unwrapped",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "optional_unwrap",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "found"
+              }
+            },
+            "source_line": 32
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "strict unwrapped:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "unwrapped"
+              }
+            ],
+            "source_line": 33
+          },
+          {
+            "op": "var_decl",
+            "name": "anon",
+            "var_type": "Optional<String>",
+            "value": {
+              "expr_type": "optional_none"
+            },
+            "source_line": 36
+          },
+          {
+            "op": "var_decl",
+            "name": "named",
+            "var_type": "Optional<String>",
+            "value": {
+              "expr_type": "optional_wrap",
+              "value": {
+                "expr_type": "literal",
+                "value": "Alice",
+                "data_type": "String"
+              }
+            },
+            "source_line": 37
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "call",
+                "func_name": "greet",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "anon"
+                  }
+                ]
+              }
+            ],
+            "source_line": 38
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "call",
+                "func_name": "greet",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "named"
+                  }
+                ]
+              }
+            ],
+            "source_line": 39
+          }
+        ]
+      }
+    }
+  }
+}
