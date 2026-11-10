@@ -187,7 +187,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_shared_args(p_compile)
     p_compile.add_argument(
         "--target",
-        choices=["python", "rust", "cpp"],
+        choices=["python", "rust", "cpp", "go"],
         required=True,
         help="Target programming language",
     )
@@ -209,7 +209,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_shared_args(p_run)
     p_run.add_argument(
         "--target",
-        choices=["python", "rust", "cpp"],
+        choices=["python", "rust", "cpp", "go"],
         default="python",
         help="Target runtime backend (default: python)",
     )

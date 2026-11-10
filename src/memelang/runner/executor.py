@@ -358,6 +358,33 @@ def execute_ir(
                     env=run_env,
                     cwd=exec_cwd,
                 )
+
+            if target == "go":
+                src_path = tmp / "main.go"
+                bin_path = tmp / "app"
+                src_path.write_text(code, encoding="utf-8")
+                comp = subprocess.run(
+                    ["go", "build", "-o", str(bin_path), str(src_path)],
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout_sec,
+                )
+                if comp.returncode != 0:
+                    return ExecutionResult(
+                        stdout=comp.stdout,
+                        stderr=comp.stderr,
+                        returncode=comp.returncode,
+                        generated_code=code,
+                    )
+                return _run_target_cmd(
+                    [str(bin_path), *extra_args],
+                    code=code,
+                    timeout_sec=timeout_sec,
+                    stdin_text=stdin_text,
+                    interactive_io=interactive_io,
+                    env=run_env,
+                    cwd=exec_cwd,
+                )
     except subprocess.TimeoutExpired as exc:
         out_str = (
             exc.stdout

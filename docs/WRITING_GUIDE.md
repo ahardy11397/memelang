@@ -3,7 +3,7 @@
 Memelang (`meme`) is a programming language written in plain English. You write a `.meme`
 file, the compiler turns your English into a strictly-typed Intermediate Representation
 (IR), verifies it for type errors and ambiguity, locks it into `build.lock` for
-deterministic rebuilds, and emits **Python 3**, **Rust**, or **C++20**.
+deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, or **Go**.
 
 Designing software still takes someone who knows how to design software. Memelang just
 removes the ceremony between your design and running code.
@@ -13,7 +13,10 @@ removes the ceremony between your design and running code.
 uv sync --extra local-gguf
 uv run meme pull                        # one-time ~2GB local compiler model
 
-uv run meme run my_program.meme --target rust
+uv run meme run my_program.meme --target go
+# Or compile standalone Go (package main, func main):
+uv run meme compile my_program.meme --target go -o app.go
+go build -o app app.go && ./app
 ```
 
 ---
@@ -133,7 +136,7 @@ multiply count by 3         # count *= 3
 divide count by 2           # count /= 2 (C truncation-toward-zero semantics on Int)
 ```
 
-> **Note:** When the target variable is a `List<T>`, `add <expr> to <list>` appends `<expr>` to the list (`list_append`); when the target variable is `Int` or `Float`, `add <expr> to <var>` performs in-place numeric addition (`compound_assign`). On `Int` variables, `divide <var> by <expr>` reuses C truncation-toward-zero integer division (`-7 / 2 == -3`) across Python, Rust, and C++.
+> **Note:** When the target variable is a `List<T>`, `add <expr> to <list>` appends `<expr>` to the list (`list_append`); when the target variable is `Int` or `Float`, `add <expr> to <var>` performs in-place numeric addition (`compound_assign`). On `Int` variables, `divide <var> by <expr>` reuses C truncation-toward-zero integer division (`-7 / 2 == -3`) across Python, Rust, C++, and Go.
 
 Every value resolves to one of these types:
 
@@ -221,7 +224,7 @@ for each index i item n in numbers:
     print i, n
 ```
 
-`for each` works on both `List<T>` (iterating a snapshot of elements) and `Map<K, V>` (iterating a **sorted snapshot of keys** `K` for deterministic cross-target output parity across Python, Rust, and C++). When `index <i> item <x>` (or `<i>, <x>`) is specified, `<i>` is bound as a 0-based `Int` index alongside `<x>`.
+`for each` works on both `List<T>` (iterating a snapshot of elements) and `Map<K, V>` (iterating a **sorted snapshot of keys** `K` for deterministic cross-target output parity across Python, Rust, C++, and Go). When `index <i> item <x>` (or `<i>, <x>`) is specified, `<i>` is bound as a 0-based `Int` index alongside `<x>`.
 
 **While loop** (**offline** & **LLM-voice**):
 
@@ -380,7 +383,7 @@ define joined as join parts with "|"               # join List<String> with sepa
 define pos as index of "bar" in joined             # 0-based first index, or -1 when absent
 ```
 
-### String Verb Semantics (Python, Rust, and C++ Parity)
+### String Verb Semantics (Python, Rust, C++, and Go Parity)
 
 - **Byte / ASCII code-unit indexing:** `length of string`, `slice ... from ... to ...`, `char at <index> of <target>`, and `index of <sub-expr> in <target>` operate on 0-based byte / ASCII code-unit positions across all three backends (UTF-8 multi-byte codepoint grapheme indexing is out of scope).
 - **`<target> contains <substring>` (`str_contains`)** and **`<target> starts with <prefix>` (`str_starts_with`)**: case-sensitive boolean checks (`Bool`). Note that `<target> ends with <suffix>` (`str_ends_with`) remains case-insensitive for backward compatibility with file-extension checks.
@@ -629,9 +632,9 @@ print contents
 
 - **`write file <path> with <string-expr>`** — overwrites `<path>` with `<string-expr>` (creating the file if missing). Both `<path>` and `<string-expr>` must have type `String`.
 - **`append <string-expr> to file <path>`** (or `add <string-expr> to file <path>`) — appends `<string-expr>` to the end of `<path>` without truncating existing contents (creating the file if missing). Both arguments must have type `String`.
-- **`read string from file <path>`** — reads the entire UTF-8 text of `<path>` and returns a `String`. If the file does not exist or cannot be read, the program prints `Error reading file: <path>` to stdout and exits immediately with status code `1` across all three targets (Python, Rust, C++).
+- **`read string from file <path>`** — reads the entire UTF-8 text of `<path>` and returns a `String`. If the file does not exist or cannot be read, the program prints `Error reading file: <path>` to stdout and exits immediately with status code `1` across all four targets (Python, Rust, C++, Go).
 - **`file exists <path>`** — returns `Bool` (`true` if `<path>` exists and is a regular file, `false` otherwise). Never raises a runtime error.
-- **`read json file <path> as List<T>`** — reads a JSON array from `<path>` as `List<Int>`, `List<Float>`, `List<String>`, or `List<Bool>` (**offline** & **LLM-voice**). Handles arbitrary whitespace between tokens, quoted strings with JSON escapes (`\"`, `\\`, `\n`, `\t`, `\uXXXX`), and `true`/`false` booleans. JSON `null` or element type mismatches (e.g., booleans inside an `Int`/`Float` list) fail deterministically with exit code `1` across Python, Rust, and C++. The legacy alias `read JSON number list from <path>` remains supported for `List<Float>`.
+- **`read json file <path> as List<T>`** — reads a JSON array from `<path>` as `List<Int>`, `List<Float>`, `List<String>`, or `List<Bool>` (**offline** & **LLM-voice**). Handles arbitrary whitespace between tokens, quoted strings with JSON escapes (`\"`, `\\`, `\n`, `\t`, `\uXXXX`), and `true`/`false` booleans. JSON `null` or element type mismatches (e.g., booleans inside an `Int`/`Float` list) fail deterministically with exit code `1` across Python, Rust, C++, and Go. The legacy alias `read JSON number list from <path>` remains supported for `List<Float>`.
 
 ### Command-Line Arguments (`argv`)
 
@@ -647,7 +650,7 @@ else:
 ```
 
 - **`argument count`** — returns `Int` equal to `argc` (**including the program name** at index `0`). When invoked with no user arguments, `argument count` is `1`. When invoked with `K` user arguments, `argument count` is `1 + K`.
-- **`argument <n>`** — returns `String` at integer index `<n>`. User arguments are **1-based** (`argument 1` is the first user argument, `argument 2` is the second, and `argument 0` is the program path/name). If `<n>` is out of range (`< 0` or `>= argument count`), the program prints `Error: argument index <n> out of range` to stdout and exits immediately with status code `1` across all three targets (Python, Rust, C++). Negative literal indices are rejected statically by the verifier.
+- **`argument <n>`** — returns `String` at integer index `<n>`. User arguments are **1-based** (`argument 1` is the first user argument, `argument 2` is the second, and `argument 0` is the program path/name). If `<n>` is out of range (`< 0` or `>= argument count`), the program prints `Error: argument index <n> out of range` to stdout and exits immediately with status code `1` across all four targets (Python, Rust, C++, Go). Negative literal indices are rejected statically by the verifier.
 
 ---
 
@@ -703,8 +706,8 @@ uv run meme run app.meme --provider ollama:qwen2.5-coder:3b
 uv run meme run app.meme --provider gemini:gemini-2.5-flash
 ```
 
-Targets: `python`, `rust`, `cpp`. Rust output is standalone (compiles with bare
-`rustc`, no Cargo.toml); C++ output is standard C++20.
+Targets: `python`, `rust`, `cpp`, `go`. Rust output is standalone (compiles with bare
+`rustc`, no Cargo.toml); C++ output is standard C++20; Go output is standalone (`package main`, `func main`, compiles with `go build` or runs with `go run`, no go.mod or network needed).
 
 ---
 
@@ -758,6 +761,7 @@ choice:
 uv run meme run exam-scorer.meme --target python
 uv run meme run exam-scorer.meme --target rust
 uv run meme run exam-scorer.meme --target cpp
+uv run meme run exam-scorer.meme --target go
 ```
 
 **Type-matching tip:** untyped function parameters default to `Float`, so pass `Float`

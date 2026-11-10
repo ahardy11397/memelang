@@ -1,6 +1,6 @@
 # Memelang (`meme`)
 
-**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline. You write programs in structured or casual plain English (`.meme`), and the compiler uses a small local LLM (or optional cloud API / zero-dependency heuristic parser) to synthesize a **strictly-typed Intermediate Representation (IR)**, verify types & semantic unambiguity, lock the AST into **`build.lock`** for 100% deterministic rebuilds, and emit **Python 3**, **Rust**, or **C++20**.
+**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline. You write programs in structured or casual plain English (`.meme`), and the compiler uses a small local LLM (or optional cloud API / zero-dependency heuristic parser) to synthesize a **strictly-typed Intermediate Representation (IR)**, verify types & semantic unambiguity, lock the AST into **`build.lock`** for 100% deterministic rebuilds, and emit **Python 3**, **Rust**, **C++20**, or **Go**.
 
 ---
 
@@ -26,7 +26,7 @@ Memelang is the first "meme language": **modular English as a modern expression 
 [Deterministic Lockfile (build.lock)] ──(SHA-256 + Resolved IR + Canonical Meme)
         │
         ▼  (0ms LLM latency on rebuilds)
-[Target Codegen: Python 3 | Standalone Rust | C++20]
+[Target Codegen: Python 3 | Standalone Rust | C++20 | Go]
 ```
 
 ---
@@ -35,7 +35,7 @@ Memelang is the first "meme language": **modular English as a modern expression 
 
 New to the language? Start with **[docs/WRITING_GUIDE.md](docs/WRITING_GUIDE.md)** — a practical guide to writing Memelang programs in both voices.
 
-Requires Python 3.13+ and [`uv`](https://docs.astral.sh/uv/) (plus `rustc` and `g++` if running Rust/C++ targets).
+Requires Python 3.13+ and [`uv`](https://docs.astral.sh/uv/) (plus `rustc`, `g++`, or `go` if running native targets).
 
 ```bash
 # Install with built-in local GGUF inference (`llama-cpp-python` + `huggingface-hub`):
@@ -44,10 +44,15 @@ uv sync --dev --extra local-gguf
 # Download the default ~2 GB local 3B compiler model (`Qwen2.5-Coder-3B-Instruct` Q4_K_M):
 uv run meme pull
 
-# Run plain-English programs across Python 3, Rust, and C++20:
+# Run plain-English programs across Python 3, Rust, C++20, and Go:
 uv run meme run examples/hello.meme --target rust
 uv run meme run examples/calc.meme --target cpp
 uv run meme run examples/random_sort_structured.meme --target python
+uv run meme run examples/hello.meme --target go
+
+# Compile standalone Go source (package main, func main):
+uv run meme compile examples/hello.meme --target go -o hello.go
+go build -o hello hello.go && ./hello
 
 # Compile & run multi-function JSON file processing:
 uv run meme compile examples/find-largest.meme --target rust
@@ -134,7 +139,7 @@ Memelang is designed to evolve along **three distinct axes**:
 1. **`examples/` Axis (Syntax & Idiom Extensibility):**
    `.meme` files in `examples/` (including shipped foundational examples and the pre-installed CS 101–103 standard library under `examples/cs101/`, `examples/cs102/`, `examples/cs103/`) act as the language's living syntax and idiom bank ("Memelang is as smart as you make it"). Adding new idiomatic patterns or reference programs here teaches the language new phrasing conventions and capabilities so real programs can be written and learned from.
 2. **`src/` Language Axis (IR & Output Target Extensibility):**
-   The typed Intermediate Representation (`src/memelang/ir/`), static verifier (`src/memelang/analyzer/`), and codegen backends (`src/memelang/codegen/`) define core computational primitives and target languages (`python`, `rust`, `cpp`). Ship today with three runtime languages; more targets are on the roadmap.
+   The typed Intermediate Representation (`src/memelang/ir/`), static verifier (`src/memelang/analyzer/`), and codegen backends (`src/memelang/codegen/`) define core computational primitives and target languages (`python`, `rust`, `cpp`, `go`). Ship today with four runtime languages; more targets are on the roadmap.
 3. **Compiler LLM Axis (Frontend Extensibility):**
    The compiler's own intelligence is an extension point. Every frontend implements the same `LLMProvider` protocol (`auto`, `ollama`, `openai-local`, `llama-cpp`, `gemini`, `heuristic`), and because synthesis output is JSON-schema-constrained to `SynthesisResult`, a stronger or smarter model can be dropped in without touching the verifier, lockfile, or any codegen backend. Long-term (the golang model of a self-extending toolchain), the goal is a compiler that is extendable **at runtime** — the language growing its own capabilities through its LLM frontend.
 

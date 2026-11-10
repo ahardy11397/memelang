@@ -1,0 +1,36 @@
+record PipelineConfig:
+    run_name: String
+    max_retries: Int
+    output_path: String
+
+function resolve_output_path(cli_override: Optional<String>, fallback: String) -> String:
+    return value of cli_override or else fallback
+
+function make_config(argc: Int) -> PipelineConfig:
+    define name: String as "pipeline_run"
+    define cli_path: Optional<String> as nothing
+    if argc > 1:
+        set cli_path to optional argument 1
+    define out_file: String as resolve_output_path(cli_path, "pipeline_default.txt")
+    return PipelineConfig(run_name=name, max_retries=3, output_path=out_file)
+
+define cfg as make_config(argument count)
+print "run_name:", cfg.run_name
+print "max_retries:", cfg.max_retries
+print "output_path:", cfg.output_path
+
+write file cfg.output_path with "STATUS=INITIALIZED\n"
+print "file_exists_before:", file exists cfg.output_path
+
+append "STATUS=COMPLETED\n" to file cfg.output_path
+define contents: String as read string from file cfg.output_path
+define trimmed: String as trim contents
+define lines: List<String> as split trimmed by "\n"
+print "lines_count:", length of lines
+
+for each index i item line in lines:
+    print i, line
+
+define clean_opt: Optional<String> as optional "success"
+if clean_opt is not nothing:
+    print "final_status:", value of clean_opt

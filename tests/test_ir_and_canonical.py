@@ -420,8 +420,8 @@ def test_exhaustive_ir_synchronization_across_canonical_heuristic_verifier_gbnf_
     ):
         assert token in MEMELANG_GBNF
 
-    # 5. Codegen succeeds across all 3 targets
-    for target in ("python", "rust", "cpp"):
+    # 5. Codegen succeeds across all 4 targets
+    for target in ("python", "rust", "cpp", "go"):
         code = generate_code(outcome.program, target)
         assert code.strip() != ""
 

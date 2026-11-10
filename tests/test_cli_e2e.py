@@ -10,7 +10,7 @@ def test_cli_structured_compile_and_run_all_targets(tmp_path: Path, capsys: pyte
     lock_path = tmp_path / "build.lock"
     example = Path("examples/random_sort_structured.meme")
 
-    for target in ("python", "rust", "cpp"):
+    for target in ("python", "rust", "cpp", "go"):
         rc = main(
             [
                 "run",

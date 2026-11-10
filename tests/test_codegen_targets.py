@@ -66,7 +66,7 @@ from memelang.ir.schema import (
 )
 from memelang.runner.executor import execute_ir
 
-TARGETS: list[TargetLang] = ["python", "rust", "cpp"]
+TARGETS: list[TargetLang] = ["python", "rust", "cpp", "go"]
 
 
 @pytest.mark.parametrize("target", TARGETS)
@@ -573,7 +573,7 @@ def _run_target(program: ProgramIR, target: TargetLang) -> str:
     return res.stdout
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_codegen_list_set_index_and_strings_parity(target: TargetLang):
     program = ProgramIR(
         items=[
@@ -610,7 +610,7 @@ def test_codegen_list_set_index_and_strings_parity(target: TargetLang):
     assert output.strip().splitlines() == ["99", "6", "bcd"]
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_codegen_2d_list_indexing_parity(target: TargetLang):
     program = ProgramIR(
         items=[
@@ -648,7 +648,7 @@ def test_codegen_2d_list_indexing_parity(target: TargetLang):
     assert output.strip().splitlines() == ["30"]
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_codegen_string_slice_end_less_than_start_empty_parity(target: TargetLang):
     program = ProgramIR(
         items=[
@@ -685,7 +685,7 @@ def test_codegen_string_slice_end_less_than_start_empty_parity(target: TargetLan
     assert output.strip() == "-1 -3"
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_codegen_record_definition_and_mutation(target: TargetLang):
     program = ProgramIR(
         items=[
@@ -732,7 +732,7 @@ def test_codegen_record_definition_and_mutation(target: TargetLang):
     ]
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_codegen_map_operations_and_formatting(target: TargetLang):
     program = ProgramIR(
         items=[
@@ -794,7 +794,7 @@ def test_codegen_map_operations_and_formatting(target: TargetLang):
     ]
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_codegen_function_with_records_and_maps(target: TargetLang):
     program = ProgramIR(
         items=[
@@ -909,15 +909,19 @@ def test_advanced_examples_output_parity():
         cpp_res = execute_ir(prog, "cpp")
         assert cpp_res.returncode == 0, f"C++ failed on {script.name}: {cpp_res.stderr}"
 
-        assert py_res.stdout == rust_res.stdout == cpp_res.stdout, (
+        go_res = execute_ir(prog, "go")
+        assert go_res.returncode == 0, f"Go failed on {script.name}: {go_res.stderr}"
+
+        assert py_res.stdout == rust_res.stdout == cpp_res.stdout == go_res.stdout, (
             f"Output parity mismatch on {script.name}:\n"
             f"Python:\n{py_res.stdout}\n"
             f"Rust:\n{rust_res.stdout}\n"
-            f"C++:\n{cpp_res.stdout}"
+            f"C++:\n{cpp_res.stdout}\n"
+            f"Go:\n{go_res.stdout}"
         )
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_codegen_unsorted_map_keys_and_out_of_order_record_fields_parity(target: TargetLang):
     program = ProgramIR(
         items=[
@@ -970,7 +974,7 @@ def test_codegen_unsorted_map_keys_and_out_of_order_record_fields_parity(target:
     assert output.strip() == "Item(sku=SKU-9, qty=5, active=true) {apple: 2, mango: 3, zebra: 1}"
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_fail_stmt_exits_with_code_1_across_targets(target: TargetLang):
     program = ProgramIR(
         items=[
@@ -983,7 +987,7 @@ def test_fail_stmt_exits_with_code_1_across_targets(target: TargetLang):
     assert res.stdout.strip() == "Guard failed"
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_meme_quiet_prompts_suppresses_prompt_echo_across_targets(target: TargetLang):
     program = ProgramIR(
         items=[
@@ -1006,7 +1010,7 @@ def test_meme_quiet_prompts_suppresses_prompt_echo_across_targets(target: Target
     assert quiet.stdout.strip() == "42"
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_file_io_write_append_read_exists_and_missing_error_parity(target: TargetLang):
     program = ProgramIR(
         items=[
@@ -1058,7 +1062,7 @@ def test_file_io_write_append_read_exists_and_missing_error_parity(target: Targe
     assert missing_res.stdout.strip() == "Error reading file: does_not_exist.txt"
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 @pytest.mark.parametrize(
     ("code_val", "expected_rc"),
     [
@@ -1086,7 +1090,7 @@ def test_exit_stmt_truncation_and_immediate_termination_across_targets(
     assert res.stdout.strip() == "before"
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_argv_count_positional_and_out_of_range_parity(target: TargetLang):
     prog = ProgramIR(
         items=[
@@ -1114,7 +1118,7 @@ def test_argv_count_positional_and_out_of_range_parity(target: TargetLang):
     assert oor_res.stdout.strip() == "Error: argument index 5 out of range"
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_read_json_list_typed_elements_escapes_and_error_parity(target: TargetLang, tmp_path):
     int_file = tmp_path / "ints.json"
     int_file.write_text(" [ -10 , 0 ,\n  42 , 99 ] \n", encoding="utf-8")
@@ -1259,7 +1263,7 @@ def test_read_json_list_typed_elements_escapes_and_error_parity(target: TargetLa
     assert bool_in_num_res.returncode == 1
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_break_and_continue_across_all_loop_kinds_parity(target: TargetLang):
     from memelang.analyzer.verifier import verify_synthesis
     from memelang.ir.canonical import to_canonical_meme
@@ -1365,7 +1369,7 @@ def test_break_and_continue_verifier_loop_scope_rules():
         )
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_string_verbs_all_10_cross_target_parity(target: TargetLang):
     from memelang.analyzer.verifier import verify_synthesis
     from memelang.ir.canonical import to_canonical_meme
@@ -1423,7 +1427,7 @@ print idx_found, idx_missing, ch0, ch4
     ]
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_string_split_runtime_empty_sep_and_char_at_oob_errors(target: TargetLang):
     # Dynamic empty separator in split -> exit 1 with deterministic message
     prog_split = ProgramIR(
@@ -1508,7 +1512,7 @@ def test_string_verbs_static_verifier_rules():
         )
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_map_iteration_and_loop_with_index_parity(target: TargetLang):
     from memelang.analyzer.verifier import verify_synthesis
     from memelang.ir.canonical import to_canonical_meme
@@ -1599,7 +1603,7 @@ def test_negative_indexing_policy_upgraded_diagnostics_and_loop_rules():
         )
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_compound_assignment_parity(target: TargetLang):
     from memelang.analyzer.verifier import verify_synthesis
     from memelang.ir.canonical import to_canonical_meme
@@ -1686,7 +1690,7 @@ def test_compound_assignment_static_verifier_rules():
         )
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_switch_match_parity(target: TargetLang):
     from memelang.analyzer.verifier import verify_synthesis
     from memelang.ir.canonical import to_canonical_meme
@@ -1790,7 +1794,7 @@ def test_switch_match_static_verifier_rules():
         )
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_optional_parity(target: TargetLang):
     from memelang.analyzer.verifier import verify_synthesis
     from memelang.ir.canonical import to_canonical_meme
@@ -1854,7 +1858,7 @@ print "v3:", v3
     ]
 
 
-@pytest.mark.parametrize("target", ["python", "rust", "cpp"])
+@pytest.mark.parametrize("target", TARGETS)
 def test_optional_strict_unwrap_fail_parity(target: TargetLang):
     from memelang.analyzer.verifier import verify_synthesis
     from memelang.llm.heuristic import HeuristicProvider
@@ -1957,6 +1961,25 @@ def test_optional_static_verifier_rules():
         verify_synthesis(
             prov.synthesize("define x: Int as 10\nif x is nothing:\n    print 1")
         )
+
+
+def test_go_emitted_code_is_gofmt_clean():
+    import subprocess
+    adv_dir = Path("examples/advanced")
+    scripts = sorted(adv_dir.glob("*.meme"))
+    assert len(scripts) >= 20, f"Expected at least 20 advanced scripts, found {len(scripts)}"
+
+    for script in scripts:
+        lock_path = script.with_suffix(".meme.lock")
+        mgr = LockfileManager(lock_path)
+        src = script.read_text(encoding="utf-8")
+        prog = mgr.get_cached_program(str(script), src)
+        assert prog is not None
+        go_code = generate_code(prog, "go")
+        res = subprocess.run(["gofmt", "-l"], input=go_code, capture_output=True, text=True)
+        assert res.returncode == 0, res.stderr
+        assert res.stdout.strip() == "", f"Emitted Go code for {script.name} is not gofmt-clean: {res.stdout.strip()}"
+
 
 
 

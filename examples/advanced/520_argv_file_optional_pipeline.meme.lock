@@ -1,0 +1,896 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/520_argv_file_optional_pipeline.meme": {
+      "source_sha256": "de8fc7adeecb67f6bca2f4748f7e5664e575bfe026d5bf5141fdbbf56de3e8e0",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "PipelineConfig",
+          "fields": [
+            {
+              "name": "run_name",
+              "field_type": "String"
+            },
+            {
+              "name": "max_retries",
+              "field_type": "Int"
+            },
+            {
+              "name": "output_path",
+              "field_type": "String"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "func_def",
+          "name": "resolve_output_path",
+          "params": [
+            {
+              "name": "cli_override",
+              "param_type": "Optional<String>"
+            },
+            {
+              "name": "fallback",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "optional_unwrap_or_default",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "cli_override"
+                },
+                "default_val": {
+                  "expr_type": "var_ref",
+                  "name": "fallback"
+                }
+              },
+              "source_line": 7
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "func_def",
+          "name": "make_config",
+          "params": [
+            {
+              "name": "argc",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "PipelineConfig",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "name",
+              "var_type": "String",
+              "value": {
+                "expr_type": "literal",
+                "value": "pipeline_run",
+                "data_type": "String"
+              },
+              "source_line": 10
+            },
+            {
+              "op": "var_decl",
+              "name": "cli_path",
+              "var_type": "Optional<String>",
+              "value": {
+                "expr_type": "optional_none"
+              },
+              "source_line": 11
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": ">",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "argc"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "cli_path",
+                  "value": {
+                    "expr_type": "optional_wrap",
+                    "value": {
+                      "expr_type": "arg_at",
+                      "index": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  },
+                  "source_line": 13
+                }
+              ],
+              "else_body": [],
+              "source_line": 12
+            },
+            {
+              "op": "var_decl",
+              "name": "out_file",
+              "var_type": "String",
+              "value": {
+                "expr_type": "call",
+                "func_name": "resolve_output_path",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "cli_path"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "pipeline_default.txt",
+                    "data_type": "String"
+                  }
+                ]
+              },
+              "source_line": 14
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "record_literal",
+                "record_name": "PipelineConfig",
+                "fields": [
+                  {
+                    "name": "run_name",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "name"
+                    }
+                  },
+                  {
+                    "name": "max_retries",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    }
+                  },
+                  {
+                    "name": "output_path",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "out_file"
+                    }
+                  }
+                ]
+              },
+              "source_line": 15
+            }
+          ],
+          "source_line": 9
+        },
+        {
+          "op": "var_decl",
+          "name": "cfg",
+          "var_type": "PipelineConfig",
+          "value": {
+            "expr_type": "call",
+            "func_name": "make_config",
+            "args": [
+              {
+                "expr_type": "arg_count"
+              }
+            ]
+          },
+          "source_line": 17
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "run_name:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "cfg"
+              },
+              "field_name": "run_name"
+            }
+          ],
+          "source_line": 18
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "max_retries:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "cfg"
+              },
+              "field_name": "max_retries"
+            }
+          ],
+          "source_line": 19
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "output_path:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "cfg"
+              },
+              "field_name": "output_path"
+            }
+          ],
+          "source_line": 20
+        },
+        {
+          "op": "write_file",
+          "filepath": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "cfg"
+            },
+            "field_name": "output_path"
+          },
+          "content": {
+            "expr_type": "literal",
+            "value": "STATUS=INITIALIZED\n",
+            "data_type": "String"
+          },
+          "source_line": 22
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "file_exists_before:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "file_exists",
+              "filepath": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "cfg"
+                },
+                "field_name": "output_path"
+              }
+            }
+          ],
+          "source_line": 23
+        },
+        {
+          "op": "append_file",
+          "filepath": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "cfg"
+            },
+            "field_name": "output_path"
+          },
+          "content": {
+            "expr_type": "literal",
+            "value": "STATUS=COMPLETED\n",
+            "data_type": "String"
+          },
+          "source_line": 25
+        },
+        {
+          "op": "var_decl",
+          "name": "contents",
+          "var_type": "String",
+          "value": {
+            "expr_type": "read_file_string",
+            "filepath": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "cfg"
+              },
+              "field_name": "output_path"
+            }
+          },
+          "source_line": 26
+        },
+        {
+          "op": "var_decl",
+          "name": "trimmed",
+          "var_type": "String",
+          "value": {
+            "expr_type": "string_trim",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "contents"
+            }
+          },
+          "source_line": 27
+        },
+        {
+          "op": "var_decl",
+          "name": "lines",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "string_split",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "trimmed"
+            },
+            "separator": {
+              "expr_type": "literal",
+              "value": "\n",
+              "data_type": "String"
+            }
+          },
+          "source_line": 28
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "lines_count:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "lines"
+              }
+            }
+          ],
+          "source_line": 29
+        },
+        {
+          "op": "for_each",
+          "item_var": "line",
+          "index_var": "i",
+          "collection": "lines",
+          "body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "i"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "line"
+                }
+              ],
+              "source_line": 32
+            }
+          ],
+          "source_line": 31
+        },
+        {
+          "op": "var_decl",
+          "name": "clean_opt",
+          "var_type": "Optional<String>",
+          "value": {
+            "expr_type": "optional_wrap",
+            "value": {
+              "expr_type": "literal",
+              "value": "success",
+              "data_type": "String"
+            }
+          },
+          "source_line": 34
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "clean_opt"
+            },
+            "negated": true
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "final_status:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "optional_unwrap",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "clean_opt"
+                  }
+                }
+              ],
+              "source_line": 36
+            }
+          ],
+          "else_body": [],
+          "source_line": 35
+        }
+      ],
+      "canonical_meme": "record PipelineConfig:\n    run_name: String\n    max_retries: Int\n    output_path: String\nfunction resolve_output_path(cli_override: Optional<String>, fallback: String) -> String:\n    return value of cli_override or else fallback\nfunction make_config(argc: Int) -> PipelineConfig:\n    define name: String as \"pipeline_run\"\n    define cli_path: Optional<String> as nothing\n    if argc > 1:\n        set cli_path to optional (argument 1)\n    define out_file: String as resolve_output_path(cli_path, \"pipeline_default.txt\")\n    return PipelineConfig(run_name=name, max_retries=3, output_path=out_file)\ndefine cfg: PipelineConfig as make_config(argument count)\nprint \"run_name:\", cfg.run_name\nprint \"max_retries:\", cfg.max_retries\nprint \"output_path:\", cfg.output_path\nwrite file cfg.output_path with \"STATUS=INITIALIZED\\n\"\nprint \"file_exists_before:\", file exists cfg.output_path\nappend \"STATUS=COMPLETED\\n\" to file cfg.output_path\ndefine contents: String as read string from file cfg.output_path\ndefine trimmed: String as trim contents\ndefine list lines as split trimmed by \"\\n\"\nprint \"lines_count:\", length of lines\nfor each index i item line in lines:\n    print i, line\ndefine clean_opt: Optional<String> as optional \"success\"\nif clean_opt is not nothing:\n    print \"final_status:\", value of clean_opt",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "PipelineConfig",
+            "fields": [
+              {
+                "name": "run_name",
+                "field_type": "String"
+              },
+              {
+                "name": "max_retries",
+                "field_type": "Int"
+              },
+              {
+                "name": "output_path",
+                "field_type": "String"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "resolve_output_path",
+            "params": [
+              {
+                "name": "cli_override",
+                "param_type": "Optional<String>"
+              },
+              {
+                "name": "fallback",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "optional_unwrap_or_default",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "cli_override"
+                  },
+                  "default_val": {
+                    "expr_type": "var_ref",
+                    "name": "fallback"
+                  }
+                },
+                "source_line": 7
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "func_def",
+            "name": "make_config",
+            "params": [
+              {
+                "name": "argc",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "PipelineConfig",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "name",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "pipeline_run",
+                  "data_type": "String"
+                },
+                "source_line": 10
+              },
+              {
+                "op": "var_decl",
+                "name": "cli_path",
+                "var_type": "Optional<String>",
+                "value": {
+                  "expr_type": "optional_none"
+                },
+                "source_line": 11
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": ">",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "argc"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "cli_path",
+                    "value": {
+                      "expr_type": "optional_wrap",
+                      "value": {
+                        "expr_type": "arg_at",
+                        "index": {
+                          "expr_type": "literal",
+                          "value": 1,
+                          "data_type": "Int"
+                        }
+                      }
+                    },
+                    "source_line": 13
+                  }
+                ],
+                "else_body": [],
+                "source_line": 12
+              },
+              {
+                "op": "var_decl",
+                "name": "out_file",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "call",
+                  "func_name": "resolve_output_path",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "cli_path"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "pipeline_default.txt",
+                      "data_type": "String"
+                    }
+                  ]
+                },
+                "source_line": 14
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "record_literal",
+                  "record_name": "PipelineConfig",
+                  "fields": [
+                    {
+                      "name": "run_name",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "name"
+                      }
+                    },
+                    {
+                      "name": "max_retries",
+                      "value": {
+                        "expr_type": "literal",
+                        "value": 3,
+                        "data_type": "Int"
+                      }
+                    },
+                    {
+                      "name": "output_path",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "out_file"
+                      }
+                    }
+                  ]
+                },
+                "source_line": 15
+              }
+            ],
+            "source_line": 9
+          },
+          {
+            "op": "var_decl",
+            "name": "cfg",
+            "var_type": "PipelineConfig",
+            "value": {
+              "expr_type": "call",
+              "func_name": "make_config",
+              "args": [
+                {
+                  "expr_type": "arg_count"
+                }
+              ]
+            },
+            "source_line": 17
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "run_name:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "cfg"
+                },
+                "field_name": "run_name"
+              }
+            ],
+            "source_line": 18
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "max_retries:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "cfg"
+                },
+                "field_name": "max_retries"
+              }
+            ],
+            "source_line": 19
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "output_path:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "cfg"
+                },
+                "field_name": "output_path"
+              }
+            ],
+            "source_line": 20
+          },
+          {
+            "op": "write_file",
+            "filepath": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "cfg"
+              },
+              "field_name": "output_path"
+            },
+            "content": {
+              "expr_type": "literal",
+              "value": "STATUS=INITIALIZED\n",
+              "data_type": "String"
+            },
+            "source_line": 22
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "file_exists_before:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "file_exists",
+                "filepath": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "cfg"
+                  },
+                  "field_name": "output_path"
+                }
+              }
+            ],
+            "source_line": 23
+          },
+          {
+            "op": "append_file",
+            "filepath": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "cfg"
+              },
+              "field_name": "output_path"
+            },
+            "content": {
+              "expr_type": "literal",
+              "value": "STATUS=COMPLETED\n",
+              "data_type": "String"
+            },
+            "source_line": 25
+          },
+          {
+            "op": "var_decl",
+            "name": "contents",
+            "var_type": "String",
+            "value": {
+              "expr_type": "read_file_string",
+              "filepath": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "cfg"
+                },
+                "field_name": "output_path"
+              }
+            },
+            "source_line": 26
+          },
+          {
+            "op": "var_decl",
+            "name": "trimmed",
+            "var_type": "String",
+            "value": {
+              "expr_type": "string_trim",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "contents"
+              }
+            },
+            "source_line": 27
+          },
+          {
+            "op": "var_decl",
+            "name": "lines",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "string_split",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "trimmed"
+              },
+              "separator": {
+                "expr_type": "literal",
+                "value": "\n",
+                "data_type": "String"
+              }
+            },
+            "source_line": 28
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "lines_count:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "lines"
+                }
+              }
+            ],
+            "source_line": 29
+          },
+          {
+            "op": "for_each",
+            "item_var": "line",
+            "index_var": "i",
+            "collection": "lines",
+            "body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "line"
+                  }
+                ],
+                "source_line": 32
+              }
+            ],
+            "source_line": 31
+          },
+          {
+            "op": "var_decl",
+            "name": "clean_opt",
+            "var_type": "Optional<String>",
+            "value": {
+              "expr_type": "optional_wrap",
+              "value": {
+                "expr_type": "literal",
+                "value": "success",
+                "data_type": "String"
+              }
+            },
+            "source_line": 34
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "clean_opt"
+              },
+              "negated": true
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "final_status:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "optional_unwrap",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "clean_opt"
+                    }
+                  }
+                ],
+                "source_line": 36
+              }
+            ],
+            "else_body": [],
+            "source_line": 35
+          }
+        ]
+      }
+    }
+  }
+}
