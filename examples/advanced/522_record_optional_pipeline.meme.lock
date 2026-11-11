@@ -1,0 +1,1243 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/522_record_optional_pipeline.meme": {
+      "source_sha256": "0ded70565e5daac2b6512dfbb61d2fbc937865b0128959ae787a1aa08a847102",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "Job",
+          "fields": [
+            {
+              "name": "id",
+              "field_type": "Int"
+            },
+            {
+              "name": "name",
+              "field_type": "String"
+            },
+            {
+              "name": "priority",
+              "field_type": "Int"
+            },
+            {
+              "name": "active",
+              "field_type": "Bool"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "func_def",
+          "name": "find_job_name",
+          "params": [
+            {
+              "name": "jobs",
+              "param_type": "List<Job>"
+            },
+            {
+              "name": "target_id",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Optional<String>",
+          "body": [
+            {
+              "op": "for_each",
+              "item_var": "j",
+              "index_var": null,
+              "collection": "jobs",
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": "==",
+                    "left": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "j"
+                      },
+                      "field_name": "id"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "target_id"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "return_stmt",
+                      "value": {
+                        "expr_type": "optional_wrap",
+                        "value": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "j"
+                          },
+                          "field_name": "name"
+                        }
+                      },
+                      "source_line": 10
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 9
+                }
+              ],
+              "source_line": 8
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "optional_none"
+              },
+              "source_line": 11
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "func_def",
+          "name": "build_priority_map",
+          "params": [
+            {
+              "name": "jobs",
+              "param_type": "List<Job>"
+            }
+          ],
+          "return_type": "Map<String, Int>",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "m",
+              "var_type": "Map<String, Int>",
+              "value": {
+                "expr_type": "map_literal",
+                "key_type": "String",
+                "value_type": "Int",
+                "entries": []
+              },
+              "source_line": 14
+            },
+            {
+              "op": "for_each",
+              "item_var": "j",
+              "index_var": null,
+              "collection": "jobs",
+              "body": [
+                {
+                  "op": "map_set",
+                  "target": "m",
+                  "key": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "j"
+                    },
+                    "field_name": "name"
+                  },
+                  "value": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "j"
+                    },
+                    "field_name": "priority"
+                  },
+                  "source_line": 16
+                }
+              ],
+              "source_line": 15
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "m"
+              },
+              "source_line": 17
+            }
+          ],
+          "source_line": 13
+        },
+        {
+          "op": "var_decl",
+          "name": "jobs",
+          "var_type": "List<Job>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "Job"
+          },
+          "source_line": 19
+        },
+        {
+          "op": "list_append",
+          "target": "jobs",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Job",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "worker-deploy",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "priority",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 90,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "active",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              }
+            ]
+          },
+          "source_line": 20
+        },
+        {
+          "op": "list_append",
+          "target": "jobs",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Job",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "cache-purge",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "priority",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 45,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "active",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                }
+              }
+            ]
+          },
+          "source_line": 21
+        },
+        {
+          "op": "list_append",
+          "target": "jobs",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Job",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "audit-report",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "priority",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 75,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "active",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              }
+            ]
+          },
+          "source_line": 22
+        },
+        {
+          "op": "list_append",
+          "target": "jobs",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Job",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "backup-archive",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "priority",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 60,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "active",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              }
+            ]
+          },
+          "source_line": 23
+        },
+        {
+          "op": "var_decl",
+          "name": "prio_map",
+          "var_type": "Map<String, Int>",
+          "value": {
+            "expr_type": "call",
+            "func_name": "build_priority_map",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "jobs"
+              }
+            ]
+          },
+          "source_line": 25
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Priority map entries:",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 26
+        },
+        {
+          "op": "for_each",
+          "item_var": "name",
+          "index_var": null,
+          "collection": "prio_map",
+          "body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "name"
+                },
+                {
+                  "expr_type": "map_get",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "prio_map"
+                  },
+                  "key": {
+                    "expr_type": "var_ref",
+                    "name": "name"
+                  },
+                  "default_val": null
+                }
+              ],
+              "source_line": 28
+            }
+          ],
+          "source_line": 27
+        },
+        {
+          "op": "var_decl",
+          "name": "found_opt",
+          "var_type": "Optional<String>",
+          "value": {
+            "expr_type": "call",
+            "func_name": "find_job_name",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "jobs"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 30
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "found_opt"
+            },
+            "negated": true
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "Found job 3:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "optional_unwrap",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "found_opt"
+                  }
+                }
+              ],
+              "source_line": 32
+            }
+          ],
+          "else_body": [],
+          "source_line": 31
+        },
+        {
+          "op": "var_decl",
+          "name": "missing_opt",
+          "var_type": "Optional<String>",
+          "value": {
+            "expr_type": "call",
+            "func_name": "find_job_name",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "jobs"
+              },
+              {
+                "expr_type": "literal",
+                "value": 99,
+                "data_type": "Int"
+              }
+            ]
+          },
+          "source_line": 34
+        },
+        {
+          "op": "var_decl",
+          "name": "fallback_name",
+          "var_type": "String",
+          "value": {
+            "expr_type": "optional_unwrap_or_default",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "missing_opt"
+            },
+            "default_val": {
+              "expr_type": "literal",
+              "value": "unassigned",
+              "data_type": "String"
+            }
+          },
+          "source_line": 35
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Missing job 99:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "fallback_name"
+            }
+          ],
+          "source_line": 36
+        },
+        {
+          "op": "var_decl",
+          "name": "active_jobs",
+          "var_type": "List<Job>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "Job"
+          },
+          "source_line": 38
+        },
+        {
+          "op": "for_each",
+          "item_var": "j",
+          "index_var": null,
+          "collection": "jobs",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "j"
+                },
+                "field_name": "active"
+              },
+              "then_body": [
+                {
+                  "op": "list_append",
+                  "target": "active_jobs",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "j"
+                  },
+                  "source_line": 41
+                }
+              ],
+              "else_body": [],
+              "source_line": 40
+            }
+          ],
+          "source_line": 39
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Active jobs count:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "active_jobs"
+              }
+            }
+          ],
+          "source_line": 42
+        },
+        {
+          "op": "for_each",
+          "item_var": "j",
+          "index_var": null,
+          "collection": "active_jobs",
+          "body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "Active job:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "j"
+                  },
+                  "field_name": "name"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": "priority:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "j"
+                  },
+                  "field_name": "priority"
+                }
+              ],
+              "source_line": 44
+            }
+          ],
+          "source_line": 43
+        }
+      ],
+      "canonical_meme": "record Job:\n    id: Int\n    name: String\n    priority: Int\n    active: Bool\nfunction find_job_name(jobs: List<Job>, target_id: Int) -> Optional<String>:\n    for each j in jobs:\n        if j.id == target_id:\n            return optional j.name\n    return nothing\nfunction build_priority_map(jobs: List<Job>) -> Map<String, Int>:\n    define m: Map<String, Int> as empty Map<String, Int>\n    for each j in jobs:\n        set m[j.name] to j.priority\n    return m\ndefine list jobs as empty List<Job>\nappend Job(id=1, name=\"worker-deploy\", priority=90, active=true) to jobs\nappend Job(id=2, name=\"cache-purge\", priority=45, active=false) to jobs\nappend Job(id=3, name=\"audit-report\", priority=75, active=true) to jobs\nappend Job(id=4, name=\"backup-archive\", priority=60, active=true) to jobs\ndefine prio_map: Map<String, Int> as build_priority_map(jobs)\nprint \"Priority map entries:\"\nfor each name in prio_map:\n    print name, prio_map[name]\ndefine found_opt: Optional<String> as find_job_name(jobs, 3)\nif found_opt is not nothing:\n    print \"Found job 3:\", value of found_opt\ndefine missing_opt: Optional<String> as find_job_name(jobs, 99)\ndefine fallback_name: String as value of missing_opt or else \"unassigned\"\nprint \"Missing job 99:\", fallback_name\ndefine list active_jobs as empty List<Job>\nfor each j in jobs:\n    if j.active:\n        append j to active_jobs\nprint \"Active jobs count:\", length of active_jobs\nfor each j in active_jobs:\n    print \"Active job:\", j.name, \"priority:\", j.priority",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "Job",
+            "fields": [
+              {
+                "name": "id",
+                "field_type": "Int"
+              },
+              {
+                "name": "name",
+                "field_type": "String"
+              },
+              {
+                "name": "priority",
+                "field_type": "Int"
+              },
+              {
+                "name": "active",
+                "field_type": "Bool"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "find_job_name",
+            "params": [
+              {
+                "name": "jobs",
+                "param_type": "List<Job>"
+              },
+              {
+                "name": "target_id",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Optional<String>",
+            "body": [
+              {
+                "op": "for_each",
+                "item_var": "j",
+                "index_var": null,
+                "collection": "jobs",
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": "==",
+                      "left": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "j"
+                        },
+                        "field_name": "id"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "target_id"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "return_stmt",
+                        "value": {
+                          "expr_type": "optional_wrap",
+                          "value": {
+                            "expr_type": "record_field",
+                            "target": {
+                              "expr_type": "var_ref",
+                              "name": "j"
+                            },
+                            "field_name": "name"
+                          }
+                        },
+                        "source_line": 10
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 9
+                  }
+                ],
+                "source_line": 8
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "optional_none"
+                },
+                "source_line": 11
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "func_def",
+            "name": "build_priority_map",
+            "params": [
+              {
+                "name": "jobs",
+                "param_type": "List<Job>"
+              }
+            ],
+            "return_type": "Map<String, Int>",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "m",
+                "var_type": "Map<String, Int>",
+                "value": {
+                  "expr_type": "map_literal",
+                  "key_type": "String",
+                  "value_type": "Int",
+                  "entries": []
+                },
+                "source_line": 14
+              },
+              {
+                "op": "for_each",
+                "item_var": "j",
+                "index_var": null,
+                "collection": "jobs",
+                "body": [
+                  {
+                    "op": "map_set",
+                    "target": "m",
+                    "key": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "j"
+                      },
+                      "field_name": "name"
+                    },
+                    "value": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "j"
+                      },
+                      "field_name": "priority"
+                    },
+                    "source_line": 16
+                  }
+                ],
+                "source_line": 15
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "m"
+                },
+                "source_line": 17
+              }
+            ],
+            "source_line": 13
+          },
+          {
+            "op": "var_decl",
+            "name": "jobs",
+            "var_type": "List<Job>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "Job"
+            },
+            "source_line": 19
+          },
+          {
+            "op": "list_append",
+            "target": "jobs",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Job",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "worker-deploy",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "priority",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 90,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "active",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                }
+              ]
+            },
+            "source_line": 20
+          },
+          {
+            "op": "list_append",
+            "target": "jobs",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Job",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "cache-purge",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "priority",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 45,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "active",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": false,
+                    "data_type": "Bool"
+                  }
+                }
+              ]
+            },
+            "source_line": 21
+          },
+          {
+            "op": "list_append",
+            "target": "jobs",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Job",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "audit-report",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "priority",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 75,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "active",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                }
+              ]
+            },
+            "source_line": 22
+          },
+          {
+            "op": "list_append",
+            "target": "jobs",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Job",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "backup-archive",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "priority",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 60,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "active",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                }
+              ]
+            },
+            "source_line": 23
+          },
+          {
+            "op": "var_decl",
+            "name": "prio_map",
+            "var_type": "Map<String, Int>",
+            "value": {
+              "expr_type": "call",
+              "func_name": "build_priority_map",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "jobs"
+                }
+              ]
+            },
+            "source_line": 25
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Priority map entries:",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 26
+          },
+          {
+            "op": "for_each",
+            "item_var": "name",
+            "index_var": null,
+            "collection": "prio_map",
+            "body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "name"
+                  },
+                  {
+                    "expr_type": "map_get",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "prio_map"
+                    },
+                    "key": {
+                      "expr_type": "var_ref",
+                      "name": "name"
+                    },
+                    "default_val": null
+                  }
+                ],
+                "source_line": 28
+              }
+            ],
+            "source_line": 27
+          },
+          {
+            "op": "var_decl",
+            "name": "found_opt",
+            "var_type": "Optional<String>",
+            "value": {
+              "expr_type": "call",
+              "func_name": "find_job_name",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "jobs"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 30
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "found_opt"
+              },
+              "negated": true
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "Found job 3:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "optional_unwrap",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "found_opt"
+                    }
+                  }
+                ],
+                "source_line": 32
+              }
+            ],
+            "else_body": [],
+            "source_line": 31
+          },
+          {
+            "op": "var_decl",
+            "name": "missing_opt",
+            "var_type": "Optional<String>",
+            "value": {
+              "expr_type": "call",
+              "func_name": "find_job_name",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "jobs"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 99,
+                  "data_type": "Int"
+                }
+              ]
+            },
+            "source_line": 34
+          },
+          {
+            "op": "var_decl",
+            "name": "fallback_name",
+            "var_type": "String",
+            "value": {
+              "expr_type": "optional_unwrap_or_default",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "missing_opt"
+              },
+              "default_val": {
+                "expr_type": "literal",
+                "value": "unassigned",
+                "data_type": "String"
+              }
+            },
+            "source_line": 35
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Missing job 99:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "fallback_name"
+              }
+            ],
+            "source_line": 36
+          },
+          {
+            "op": "var_decl",
+            "name": "active_jobs",
+            "var_type": "List<Job>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "Job"
+            },
+            "source_line": 38
+          },
+          {
+            "op": "for_each",
+            "item_var": "j",
+            "index_var": null,
+            "collection": "jobs",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "j"
+                  },
+                  "field_name": "active"
+                },
+                "then_body": [
+                  {
+                    "op": "list_append",
+                    "target": "active_jobs",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "j"
+                    },
+                    "source_line": 41
+                  }
+                ],
+                "else_body": [],
+                "source_line": 40
+              }
+            ],
+            "source_line": 39
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Active jobs count:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "active_jobs"
+                }
+              }
+            ],
+            "source_line": 42
+          },
+          {
+            "op": "for_each",
+            "item_var": "j",
+            "index_var": null,
+            "collection": "active_jobs",
+            "body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "Active job:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "j"
+                    },
+                    "field_name": "name"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": "priority:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "j"
+                    },
+                    "field_name": "priority"
+                  }
+                ],
+                "source_line": 44
+              }
+            ],
+            "source_line": 43
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

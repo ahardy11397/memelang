@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -378,6 +379,61 @@ def execute_ir(
                     )
                 return _run_target_cmd(
                     [str(bin_path), *extra_args],
+                    code=code,
+                    timeout_sec=timeout_sec,
+                    stdin_text=stdin_text,
+                    interactive_io=interactive_io,
+                    env=run_env,
+                    cwd=exec_cwd,
+                )
+
+            if target == "c":
+                src_path = tmp / "main.c"
+                bin_path = tmp / "app"
+                src_path.write_text(code, encoding="utf-8")
+                comp = subprocess.run(
+                    ["gcc", "-std=c11", "-O2", str(src_path), "-o", str(bin_path), "-lm"],
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout_sec,
+                )
+                if comp.returncode != 0:
+                    return ExecutionResult(
+                        stdout=comp.stdout,
+                        stderr=comp.stderr,
+                        returncode=comp.returncode,
+                        generated_code=code,
+                    )
+                return _run_target_cmd(
+                    [str(bin_path), *extra_args],
+                    code=code,
+                    timeout_sec=timeout_sec,
+                    stdin_text=stdin_text,
+                    interactive_io=interactive_io,
+                    env=run_env,
+                    cwd=exec_cwd,
+                )
+
+            if target == "ts":
+                src_path = tmp / "main.ts"
+                js_path = tmp / "main.js"
+                src_path.write_text(code, encoding="utf-8")
+                tsc_bin = shutil.which("tsc") or str(Path.home() / ".local" / "bin" / "tsc")
+                comp = subprocess.run(
+                    [tsc_bin, str(src_path), "--outDir", str(tmp), "--target", "es2022", "--module", "node16"],
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout_sec,
+                )
+                if comp.returncode != 0:
+                    return ExecutionResult(
+                        stdout=comp.stdout,
+                        stderr=comp.stderr,
+                        returncode=comp.returncode,
+                        generated_code=code,
+                    )
+                return _run_target_cmd(
+                    ["node", str(js_path), *extra_args],
                     code=code,
                     timeout_sec=timeout_sec,
                     stdin_text=stdin_text,

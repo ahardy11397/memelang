@@ -384,5 +384,11 @@ def test_multi_file_parity_fixture_521():
     go_res = execute_ir(prog, "go")
     assert go_res.returncode == 0, f"Go failed: {go_res.stderr}"
 
-    assert py_res.stdout == rust_res.stdout == cpp_res.stdout == go_res.stdout == "25\n7\n169\n17\n"
+    c_res = execute_ir(prog, "c")
+    assert c_res.returncode == 0, f"C failed: {c_res.stderr}"
+
+    ts_res = execute_ir(prog, "ts")
+    assert ts_res.returncode == 0, f"TypeScript failed: {ts_res.stderr}"
+
+    assert py_res.stdout == rust_res.stdout == cpp_res.stdout == go_res.stdout == c_res.stdout == ts_res.stdout == "25\n7\n169\n17\n"
 

@@ -3,7 +3,7 @@
 Memelang (`meme`) is a programming language written in plain English. You write a `.meme`
 file, the compiler turns your English into a strictly-typed Intermediate Representation
 (IR), verifies it for type errors and ambiguity, locks it into `build.lock` for
-deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, or **Go**.
+deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, **Go**, **C (C11)**, or **TypeScript (Node.js)**.
 
 Designing software still takes someone who knows how to design software. Memelang just
 removes the ceremony between your design and running code.
@@ -17,6 +17,18 @@ uv run meme run my_program.meme --target go
 # Or compile standalone Go (package main, func main):
 uv run meme compile my_program.meme --target go -o app.go
 go build -o app app.go && ./app
+
+# Run across C and TypeScript:
+uv run meme run my_program.meme --target c
+uv run meme run my_program.meme --target ts
+
+# Compile standalone C11 source and run:
+uv run meme compile my_program.meme --target c -o app.c
+gcc -std=c11 -O2 app.c -o app -lm && ./app
+
+# Compile standalone TypeScript source and run:
+uv run meme compile my_program.meme --target ts -o app.ts
+tsc app.ts --outDir dist --target es2022 --module node16 && node dist/app.js
 ```
 
 ---
@@ -383,9 +395,9 @@ define joined as join parts with "|"               # join List<String> with sepa
 define pos as index of "bar" in joined             # 0-based first index, or -1 when absent
 ```
 
-### String Verb Semantics (Python, Rust, C++, and Go Parity)
+### String Verb Semantics (Cross-Target Parity: Python, Rust, C++, Go, C, and TypeScript)
 
-- **Byte / ASCII code-unit indexing:** `length of string`, `slice ... from ... to ...`, `char at <index> of <target>`, and `index of <sub-expr> in <target>` operate on 0-based byte / ASCII code-unit positions across all three backends (UTF-8 multi-byte codepoint grapheme indexing is out of scope).
+- **Byte / ASCII code-unit indexing:** `length of string`, `slice ... from ... to ...`, `char at <index> of <target>`, and `index of <sub-expr> in <target>` operate on 0-based byte / ASCII code-unit positions across all backends. Note: TypeScript operates on UTF-16 code units whereas C, Rust, Go, C++, and Python operate on byte / ASCII semantics; for ASCII parity across the benchmark fixtures all six targets produce identical outputs.
 - **`<target> contains <substring>` (`str_contains`)** and **`<target> starts with <prefix>` (`str_starts_with`)**: case-sensitive boolean checks (`Bool`). Note that `<target> ends with <suffix>` (`str_ends_with`) remains case-insensitive for backward compatibility with file-extension checks.
 - **`replace <old> with <new> in <target>` (`string_replace`)**: replaces all non-overlapping occurrences of `<old>` with `<new>` in `<target>`. If `<old>` is `""`, returns `<target>` unchanged across all three targets.
 - **`upper <target>` (`string_upper`)** and **`lower <target>` (`string_lower`)**: return an uppercase or lowercase copy of `<target>`.
@@ -800,6 +812,8 @@ uv run meme run exam-scorer.meme --target python
 uv run meme run exam-scorer.meme --target rust
 uv run meme run exam-scorer.meme --target cpp
 uv run meme run exam-scorer.meme --target go
+uv run meme run exam-scorer.meme --target c
+uv run meme run exam-scorer.meme --target ts
 ```
 
 **Type-matching tip:** untyped function parameters default to `Float`, so pass `Float`

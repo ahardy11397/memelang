@@ -66,7 +66,7 @@ from memelang.ir.schema import (
 )
 from memelang.runner.executor import execute_ir
 
-TARGETS: list[TargetLang] = ["python", "rust", "cpp", "go"]
+TARGETS: list[TargetLang] = ["python", "rust", "cpp", "go", "c", "ts"]
 
 
 @pytest.mark.parametrize("target", TARGETS)
@@ -912,12 +912,20 @@ def test_advanced_examples_output_parity():
         go_res = execute_ir(prog, "go")
         assert go_res.returncode == 0, f"Go failed on {script.name}: {go_res.stderr}"
 
-        assert py_res.stdout == rust_res.stdout == cpp_res.stdout == go_res.stdout, (
+        c_res = execute_ir(prog, "c")
+        assert c_res.returncode == 0, f"C failed on {script.name}: {c_res.stderr}"
+
+        ts_res = execute_ir(prog, "ts")
+        assert ts_res.returncode == 0, f"TypeScript failed on {script.name}: {ts_res.stderr}"
+
+        assert py_res.stdout == rust_res.stdout == cpp_res.stdout == go_res.stdout == c_res.stdout == ts_res.stdout, (
             f"Output parity mismatch on {script.name}:\n"
             f"Python:\n{py_res.stdout}\n"
             f"Rust:\n{rust_res.stdout}\n"
             f"C++:\n{cpp_res.stdout}\n"
-            f"Go:\n{go_res.stdout}"
+            f"Go:\n{go_res.stdout}\n"
+            f"C:\n{c_res.stdout}\n"
+            f"TypeScript:\n{ts_res.stdout}"
         )
 
 
@@ -1979,6 +1987,82 @@ def test_go_emitted_code_is_gofmt_clean():
         res = subprocess.run(["gofmt", "-l"], input=go_code, capture_output=True, text=True)
         assert res.returncode == 0, res.stderr
         assert res.stdout.strip() == "", f"Emitted Go code for {script.name} is not gofmt-clean: {res.stdout.strip()}"
+
+
+def test_c_emitted_code_is_gcc_wall_clean(tmp_path: Path):
+    import subprocess
+    adv_dir = Path("examples/advanced")
+    scripts = sorted(adv_dir.glob("*.meme")) + sorted(adv_dir.glob("*/main.meme"))
+    assert len(scripts) >= 21
+
+    for script in scripts:
+        lock_path = Path(str(script) + ".lock") if script.name != "main.meme" else script.parent / "main.meme.lock"
+        mgr = LockfileManager(lock_path)
+        src = script.read_text(encoding="utf-8")
+        prog = mgr.get_cached_program(str(script), src)
+        assert prog is not None, f"Failed to load cached program for {script}"
+        c_code = generate_code(prog, "c")
+        c_file = tmp_path / f"{script.stem}.c"
+        c_file.write_text(c_code, encoding="utf-8")
+        res = subprocess.run(
+            ["gcc", "-std=c11", "-fsyntax-only", "-Wall", str(c_file)],
+            capture_output=True,
+            text=True,
+        )
+        assert res.returncode == 0, f"gcc failed on {script.name}:\n{res.stderr}"
+        assert res.stderr.strip() == "", f"gcc emitted warnings on {script.name}:\n{res.stderr}"
+
+
+def test_ts_emitted_code_is_tsc_no_emit_clean(tmp_path: Path):
+    import shutil
+    import subprocess
+    tsc_bin = shutil.which("tsc") or str(Path.home() / ".local" / "bin" / "tsc")
+    adv_dir = Path("examples/advanced")
+    scripts = sorted(adv_dir.glob("*.meme")) + sorted(adv_dir.glob("*/main.meme"))
+    assert len(scripts) >= 21
+
+    for script in scripts:
+        lock_path = Path(str(script) + ".lock") if script.name != "main.meme" else script.parent / "main.meme.lock"
+        mgr = LockfileManager(lock_path)
+        src = script.read_text(encoding="utf-8")
+        prog = mgr.get_cached_program(str(script), src)
+        assert prog is not None, f"Failed to load cached program for {script}"
+        ts_code = generate_code(prog, "ts")
+        ts_file = tmp_path / f"{script.stem}.ts"
+        ts_file.write_text(ts_code, encoding="utf-8")
+        res = subprocess.run(
+            [tsc_bin, "--noEmit", "--target", "es2022", "--module", "node16", str(ts_file)],
+            capture_output=True,
+            text=True,
+        )
+        assert res.returncode == 0, f"tsc failed on {script.name}:\n{res.stdout}\n{res.stderr}"
+        assert res.stdout.strip() == "", f"tsc emitted diagnostics on {script.name}:\n{res.stdout}"
+
+
+ADVANCED_PARITY_SCRIPTS = [
+    f.name for f in sorted(Path("examples/advanced").glob("[5][0-2][0-9]_*.meme"))
+]
+
+
+@pytest.mark.parametrize("script_name", ADVANCED_PARITY_SCRIPTS)
+@pytest.mark.parametrize("target", TARGETS)
+def test_advanced_examples_501_to_522_parity(script_name: str, target: TargetLang):
+    script_path = Path("examples/advanced") / script_name
+    lock_path = Path(str(script_path) + ".lock")
+    assert script_path.is_file()
+    assert lock_path.is_file()
+
+    mgr = LockfileManager(lock_path)
+    src = script_path.read_text(encoding="utf-8")
+    prog = mgr.get_cached_program(str(script_path), src)
+    assert prog is not None
+
+    res = execute_ir(prog, target)
+    assert res.returncode == 0, f"{target} failed on {script_name}:\n{res.stderr}"
+
+    py_res = execute_ir(prog, "python")
+    assert res.stdout == py_res.stdout, f"{target} parity mismatch on {script_name}"
+
 
 
 

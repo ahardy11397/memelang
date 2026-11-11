@@ -1,0 +1,44 @@
+record Job:
+    id: Int
+    name: String
+    priority: Int
+    active: Bool
+
+function find_job_name(jobs: List<Job>, target_id: Int) -> Optional<String>:
+    for each j in jobs:
+        if j.id == target_id:
+            return optional j.name
+    return nothing
+
+function build_priority_map(jobs: List<Job>) -> Map<String, Int>:
+    define m as empty Map<String, Int>
+    for each j in jobs:
+        set m[j.name] to j.priority
+    return m
+
+define jobs as empty List<Job>
+append Job(id=1, name="worker-deploy", priority=90, active=true) to jobs
+append Job(id=2, name="cache-purge", priority=45, active=false) to jobs
+append Job(id=3, name="audit-report", priority=75, active=true) to jobs
+append Job(id=4, name="backup-archive", priority=60, active=true) to jobs
+
+define prio_map as build_priority_map(jobs)
+print "Priority map entries:"
+for each name in prio_map:
+    print name, prio_map[name]
+
+define found_opt as find_job_name(jobs, 3)
+if found_opt is not nothing:
+    print "Found job 3:", value of found_opt
+
+define missing_opt as find_job_name(jobs, 99)
+define fallback_name as value of missing_opt or else "unassigned"
+print "Missing job 99:", fallback_name
+
+define active_jobs as empty List<Job>
+for each j in jobs:
+    if j.active:
+        append j to active_jobs
+print "Active jobs count:", length of active_jobs
+for each j in active_jobs:
+    print "Active job:", j.name, "priority:", j.priority
