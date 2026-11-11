@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import cast
+import hashlib
+from pathlib import Path
+from typing import Callable, cast
 
 from memelang.ir.canonical import format_expr, to_canonical_meme
 from memelang.ir.schema import (
@@ -29,6 +31,7 @@ from memelang.ir.schema import (
     IRExpr,
     IRStatement,
     IfStmt,
+    ImportStmt,
     ListAppendStmt,
     ListIndexExpr,
     ListInsertStmt,
@@ -1108,6 +1111,7 @@ class _StaticChecker:
         stmt_idx: int | None,
         expected_return: MemeType | None = None,
         in_loop: bool = False,
+        is_top_level: bool = True,
     ) -> bool:
         """Validates `stmt`; returns True iff statement guarantees a return on all paths."""
         if isinstance(stmt, VarDeclStmt):
@@ -1341,7 +1345,14 @@ class _StaticChecker:
             then_ret = False
             for child in stmt.then_body:
                 then_ret = (
-                    self.check_stmt(child, then_scope, stmt_idx, expected_return, in_loop=in_loop)
+                    self.check_stmt(
+                        child,
+                        then_scope,
+                        stmt_idx,
+                        expected_return,
+                        in_loop=in_loop,
+                        is_top_level=False,
+                    )
                     or then_ret
                 )
             else_ret = False
@@ -1350,7 +1361,12 @@ class _StaticChecker:
                 for child in stmt.else_body:
                     else_ret = (
                         self.check_stmt(
-                            child, else_scope, stmt_idx, expected_return, in_loop=in_loop
+                            child,
+                            else_scope,
+                            stmt_idx,
+                            expected_return,
+                            in_loop=in_loop,
+                            is_top_level=False,
                         )
                         or else_ret
                     )
@@ -1392,7 +1408,12 @@ class _StaticChecker:
                 for child in case.body:
                     c_ret = (
                         self.check_stmt(
-                            child, case_scope, stmt_idx, expected_return, in_loop=in_loop
+                            child,
+                            case_scope,
+                            stmt_idx,
+                            expected_return,
+                            in_loop=in_loop,
+                            is_top_level=False,
                         )
                         or c_ret
                     )
@@ -1404,7 +1425,12 @@ class _StaticChecker:
                 for child in stmt.default_body:
                     default_ret = (
                         self.check_stmt(
-                            child, def_scope, stmt_idx, expected_return, in_loop=in_loop
+                            child,
+                            def_scope,
+                            stmt_idx,
+                            expected_return,
+                            in_loop=in_loop,
+                            is_top_level=False,
                         )
                         or default_ret
                     )
@@ -1438,7 +1464,14 @@ class _StaticChecker:
                 loop_scope.define(stmt.index_var, "Int")
             loop_scope.define(stmt.item_var, item_t)
             for child in stmt.body:
-                self.check_stmt(child, loop_scope, stmt_idx, expected_return, in_loop=True)
+                self.check_stmt(
+                    child,
+                    loop_scope,
+                    stmt_idx,
+                    expected_return,
+                    in_loop=True,
+                    is_top_level=False,
+                )
             return False
 
         if isinstance(stmt, ForRangeStmt):
@@ -1451,7 +1484,14 @@ class _StaticChecker:
             loop_scope = _Scope(parent=scope)
             loop_scope.define(stmt.loop_var, "Int")
             for child in stmt.body:
-                self.check_stmt(child, loop_scope, stmt_idx, expected_return, in_loop=True)
+                self.check_stmt(
+                    child,
+                    loop_scope,
+                    stmt_idx,
+                    expected_return,
+                    in_loop=True,
+                    is_top_level=False,
+                )
             return False
 
         if isinstance(stmt, WhileStmt):
@@ -1462,7 +1502,14 @@ class _StaticChecker:
                 )
             loop_scope = _Scope(parent=scope)
             for child in stmt.body:
-                self.check_stmt(child, loop_scope, stmt_idx, expected_return, in_loop=True)
+                self.check_stmt(
+                    child,
+                    loop_scope,
+                    stmt_idx,
+                    expected_return,
+                    in_loop=True,
+                    is_top_level=False,
+                )
             return False
 
         # Loop-control Scope Policy (Phase 2 Task 11):
@@ -1487,7 +1534,9 @@ class _StaticChecker:
 
         if isinstance(stmt, FuncDefStmt):
             if expected_return is not None:
-                raise StaticVerificationError("Nested function definitions are not supported", stmt_idx)
+                raise StaticVerificationError(
+                    "Nested function definitions are not supported", stmt_idx
+                )
             if stmt.name in self.functions:
                 raise StaticVerificationError(
                     f"Duplicate function definition `{stmt.name}`", stmt_idx
@@ -1512,7 +1561,14 @@ class _StaticChecker:
             saw_return = False
             for child in stmt.body:
                 saw_return = (
-                    self.check_stmt(child, fn_scope, stmt_idx, stmt.return_type, in_loop=False)
+                    self.check_stmt(
+                        child,
+                        fn_scope,
+                        stmt_idx,
+                        stmt.return_type,
+                        in_loop=False,
+                        is_top_level=False,
+                    )
                     or saw_return
                 )
             if stmt.return_type != "Void" and not saw_return:
@@ -1548,7 +1604,8 @@ class _StaticChecker:
         if isinstance(stmt, RecordDefStmt):
             if expected_return is not None:
                 raise StaticVerificationError(
-                    "Nested record definitions inside functions are not supported", stmt_idx
+                    "Nested record definitions inside functions are not supported",
+                    stmt_idx,
                 )
             if stmt.name in self.records:
                 raise StaticVerificationError(
@@ -1639,6 +1696,13 @@ class _StaticChecker:
             if c_t != "String":
                 raise StaticVerificationError(
                     f"`append_file` requires String content, got {c_t}", stmt_idx
+                )
+            return False
+
+        if isinstance(stmt, ImportStmt):
+            if not is_top_level:
+                raise StaticVerificationError(
+                    "`use` statement is only allowed at the top level", stmt_idx
                 )
             return False
 
@@ -1924,24 +1988,231 @@ def _normalize_sort_into_empty(stmts: list[IRStatement]) -> list[IRStatement]:
     return out
 
 
-def verify_program(program: ProgramIR) -> ProgramIR:
+@dataclass
+class _ModuleData:
+    name: str
+    path: Path
+    rel_path: str
+    sha256: str
+    imports: list[str]
+    records: list[RecordDefStmt]
+    functions: list[FuncDefStmt]
+    record_defs: dict[str, dict[str, MemeType]] = field(default_factory=dict)
+    func_defs: dict[str, tuple[list[MemeType], MemeType]] = field(default_factory=dict)
+
+
+def _resolve_and_verify_modules(
+    root_statements: list[IRStatement],
+    source_path: Path | str | None = None,
+) -> tuple[
+    list[IRStatement],
+    dict[str, str],
+    dict[str, tuple[list[MemeType], MemeType]],
+    dict[str, dict[str, MemeType]],
+]:
+    root_imports: list[str] = [
+        s.module for s in root_statements if isinstance(s, ImportStmt)
+    ]
+    if not root_imports:
+        return [], {}, {}, {}
+
+    root_path = Path(source_path).resolve() if source_path else Path.cwd().resolve()
+    root_dir = root_path.parent if (root_path.is_file() or root_path.suffix == ".meme") else root_path
+    root_name = root_path.stem if (root_path.is_file() or root_path.suffix == ".meme") else "main"
+
+    module_map: dict[str, _ModuleData] = {}
+    visited: set[str] = set()
+    topo_order: list[str] = []
+
+    def _load_and_traverse(mod_name: str, importing_dir: Path, stack: list[str]) -> None:
+        if mod_name in stack:
+            cycle_start = stack.index(mod_name)
+            cycle = [*stack[cycle_start:], mod_name]
+            raise StaticVerificationError(f"Circular import detected: {' -> '.join(cycle)}")
+        if mod_name in visited:
+            return
+
+        target_path = importing_dir / f"{mod_name}.meme"
+        if not target_path.is_file():
+            raise StaticVerificationError(f"Module file not found: {target_path}")
+
+        text = target_path.read_text(encoding="utf-8")
+        normalized = text.replace("\r\n", "\n").replace("\r", "\n").rstrip("\n")
+        sha256 = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+        try:
+            rel_path = target_path.relative_to(root_dir).as_posix()
+        except ValueError:
+            rel_path = target_path.as_posix()
+
+        from memelang.llm.heuristic import HeuristicProvider
+
+        syn = HeuristicProvider().synthesize(text, source_path=target_path)
+        mod_imports: list[str] = []
+        mod_records: list[RecordDefStmt] = []
+        mod_funcs: list[FuncDefStmt] = []
+        for it in syn.items:
+            if isinstance(it, ImportStmt):
+                mod_imports.append(it.module)
+            elif isinstance(it, RecordDefStmt):
+                mod_records.append(it)
+            elif isinstance(it, FuncDefStmt):
+                mod_funcs.append(it)
+            elif isinstance(it, AmbiguityDiagnostic):
+                raise StaticVerificationError(f"Ambiguity in module `{mod_name}`: {it.reason}")
+            else:
+                op_name = getattr(it, "op", type(it).__name__)
+                raise StaticVerificationError(
+                    f"Module `{mod_name}` may only contain functions, records, and `use` statements, found `{op_name}`"
+                )
+
+        mod_data = _ModuleData(
+            name=mod_name,
+            path=target_path,
+            rel_path=rel_path,
+            sha256=sha256,
+            imports=mod_imports,
+            records=mod_records,
+            functions=mod_funcs,
+        )
+        module_map[mod_name] = mod_data
+
+        stack.append(mod_name)
+        mod_dir = target_path.parent
+        for dep in mod_imports:
+            _load_and_traverse(dep, mod_dir, stack)
+        stack.pop()
+
+        visited.add(mod_name)
+        topo_order.append(mod_name)
+
+    initial_stack = [root_name]
+    for mod in root_imports:
+        _load_and_traverse(mod, root_dir, initial_stack)
+
+    # Global collision check across modules in topological order
+    all_def_origins: dict[str, str] = {}
+    for mod_name in topo_order:
+        m = module_map[mod_name]
+        for r in m.records:
+            if r.name in all_def_origins:
+                prev_mod = all_def_origins[r.name]
+                if prev_mod != mod_name:
+                    raise StaticVerificationError(
+                        f"Collision: `{r.name}` is defined in both module `{mod_name}` and module `{prev_mod}`"
+                    )
+            all_def_origins[r.name] = mod_name
+        for f in m.functions:
+            if f.name in all_def_origins:
+                prev_mod = all_def_origins[f.name]
+                if prev_mod != mod_name:
+                    raise StaticVerificationError(
+                        f"Collision: `{f.name}` is defined in both module `{mod_name}` and module `{prev_mod}`"
+                    )
+            all_def_origins[f.name] = mod_name
+
+    # Collision check with root definitions
+    for s in root_statements:
+        if isinstance(s, (RecordDefStmt, FuncDefStmt)) and s.name in all_def_origins:
+            raise StaticVerificationError(
+                f"Collision: imported `{s.name}` from module `{all_def_origins[s.name]}` collides with local definition"
+            )
+        if isinstance(s, VarDeclStmt) and s.name in all_def_origins:
+            raise StaticVerificationError(
+                f"Collision: local variable `{s.name}` collides with imported definition from module `{all_def_origins[s.name]}`"
+            )
+
+    # Verify each module in topological order (deps verified before dependents)
+    for mod_name in topo_order:
+        m = module_map[mod_name]
+        mod_checker = _StaticChecker()
+        # Direct imports only (no transitive re-export!)
+        for dep_name in m.imports:
+            dep_mod = module_map[dep_name]
+            for r in dep_mod.records:
+                mod_checker.records[r.name] = {f.name: f.field_type for f in r.fields}
+            for f in dep_mod.functions:
+                mod_checker.functions[f.name] = ([p.param_type for p in f.params], f.return_type)
+
+        # Check records
+        for r in m.records:
+            mod_checker.check_stmt(r, _Scope(), stmt_idx=None, is_top_level=True)
+            m.record_defs[r.name] = mod_checker.records[r.name]
+
+        # Check functions
+        for f in m.functions:
+            mod_checker.check_stmt(f, _Scope(), stmt_idx=None, is_top_level=True)
+            m.func_defs[f.name] = mod_checker.functions[f.name]
+
+    # Collect symbols visible to root (from root's direct imports only!)
+    root_imported_funcs: dict[str, tuple[list[MemeType], MemeType]] = {}
+    root_imported_records: dict[str, dict[str, MemeType]] = {}
+    for mod_name in root_imports:
+        m = module_map[mod_name]
+        for r_name, r_fields in m.record_defs.items():
+            root_imported_records[r_name] = r_fields
+        for f_name, f_sig in m.func_defs.items():
+            root_imported_funcs[f_name] = f_sig
+
+    imported_definitions: list[IRStatement] = []
+    module_files: dict[str, str] = {}
+    for mod_name in topo_order:
+        m = module_map[mod_name]
+        imported_definitions.extend(m.records)
+        imported_definitions.extend(m.functions)
+        module_files[m.rel_path] = m.sha256
+
+    return imported_definitions, module_files, root_imported_funcs, root_imported_records
+
+
+def verify_program(program: ProgramIR, source_path: Path | str | None = None) -> ProgramIR:
+    has_imports = any(isinstance(s, ImportStmt) for s in program.statements)
     checker = _StaticChecker()
     root_scope = _Scope()
+
+    if has_imports:
+        root_path = Path(source_path).resolve() if source_path else Path.cwd().resolve()
+        root_dir = root_path.parent if (root_path.is_file() or root_path.suffix == ".meme") else root_path
+        first_mod = next(s.module for s in program.statements if isinstance(s, ImportStmt))
+        first_mod_path = root_dir / f"{first_mod}.meme"
+
+        if source_path is not None or first_mod_path.is_file() or not program.imported_definitions:
+            imported_defs, mod_files, imp_funcs, imp_recs = _resolve_and_verify_modules(
+                program.statements, source_path=source_path
+            )
+            program.imported_definitions = imported_defs
+            program.module_files = mod_files
+            checker.functions.update(imp_funcs)
+            checker.records.update(imp_recs)
+        else:
+            for d in program.imported_definitions:
+                if isinstance(d, RecordDefStmt):
+                    checker.records[d.name] = {f.name: f.field_type for f in d.fields}
+                elif isinstance(d, FuncDefStmt):
+                    checker.functions[d.name] = ([p.param_type for p in d.params], d.return_type)
+    elif program.imported_definitions:
+        for d in program.imported_definitions:
+            if isinstance(d, RecordDefStmt):
+                checker.records[d.name] = {f.name: f.field_type for f in d.fields}
+            elif isinstance(d, FuncDefStmt):
+                checker.functions[d.name] = ([p.param_type for p in d.params], d.return_type)
+
     for idx, stmt in enumerate(program.statements, start=1):
-        checker.check_stmt(stmt, root_scope, stmt_idx=idx)
+        checker.check_stmt(stmt, root_scope, stmt_idx=idx, is_top_level=True)
     return program
 
 
 def verify_synthesis(
     result: SynthesisResult | ProgramIR,
     detect_implicit_ambiguities: bool = True,
+    source_path: Path | str | None = None,
 ) -> VerificationOutcome:
     if isinstance(result, ProgramIR):
         result = SynthesisResult(items=cast(list[SynthesisItem], result.statements))
 
     # Unwrap `FuncDefStmt(name="main", params=[], return_type="Void")` if no top-level main statements exist
     has_top_exec = any(
-        not isinstance(it, (FuncDefStmt, RecordDefStmt, AmbiguityDiagnostic)) for it in result.items
+        not isinstance(it, (FuncDefStmt, RecordDefStmt, AmbiguityDiagnostic, ImportStmt))
+        for it in result.items
     )
     items_in: list[SynthesisItem] = []
     for it in result.items:
@@ -2004,7 +2275,7 @@ def verify_synthesis(
 
     # Pass 2: Normalize `sort A into B` when `B` is an unmutated empty list, then verify
     concrete_stmts = _normalize_sort_into_empty([cast(IRStatement, x) for x in normalized])
-    prog = verify_program(ProgramIR(statements=concrete_stmts))
+    prog = verify_program(ProgramIR(statements=concrete_stmts), source_path=source_path)
     return VerificationOutcome(
         program=prog,
         ambiguities=[],

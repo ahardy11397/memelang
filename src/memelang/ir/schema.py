@@ -569,6 +569,18 @@ class AppendFileStmt(IRNode):
     source_line: int | None = None
 
 
+class ImportStmt(IRNode):
+    op: Literal["import_stmt"] = "import_stmt"
+    module: str
+    source_line: int | None = None
+
+    @model_validator(mode="after")
+    def _validate_module(self) -> ImportStmt:
+        if not self.module.isidentifier() or not self.module.isascii():
+            raise ValueError(f"Module name must be a bare identifier, got {self.module!r}")
+        return self
+
+
 IRStatement = Annotated[
     VarDeclStmt
     | AssignStmt
@@ -595,7 +607,8 @@ IRStatement = Annotated[
     | RecordSetFieldStmt
     | MapSetStmt
     | WriteFileStmt
-    | AppendFileStmt,
+    | AppendFileStmt
+    | ImportStmt,
     Field(discriminator="op"),
 ]
 
@@ -632,6 +645,8 @@ class SynthesisResult(IRNode):
 
 class ProgramIR(IRNode):
     statements: list[IRStatement] = Field(default_factory=list)
+    imported_definitions: list[IRStatement] = Field(default_factory=list)
+    module_files: dict[str, str] = Field(default_factory=dict)
 
     @model_validator(mode="before")
     @classmethod
@@ -710,6 +725,7 @@ RecordSetFieldStmt.model_rebuild()
 MapSetStmt.model_rebuild()
 WriteFileStmt.model_rebuild()
 AppendFileStmt.model_rebuild()
+ImportStmt.model_rebuild()
 AmbiguityCandidate.model_rebuild()
 AmbiguityDiagnostic.model_rebuild()
 SynthesisResult.model_rebuild()

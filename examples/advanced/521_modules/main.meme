@@ -1,0 +1,14 @@
+use geometry
+
+define pt1: Point as make_point(3, 4)
+define pt2: Point as make_point(5, 12)
+
+define d1: Int as distance_squared(pt1)
+define d2: Int as distance_squared(pt2)
+define m1: Int as manhattan_distance(pt1)
+define m2: Int as manhattan_distance(pt2)
+
+print d1
+print m1
+print d2
+print m2

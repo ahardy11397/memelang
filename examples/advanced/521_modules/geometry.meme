@@ -1,0 +1,16 @@
+use math_ops
+
+record Point:
+    x: Int
+    y: Int
+
+function make_point(x: Int, y: Int) -> Point:
+    return Point(x=x, y=y)
+
+function distance_squared(p: Point) -> Int:
+    define sx as square(p.x)
+    define sy as square(p.y)
+    return add(sx, sy)
+
+function manhattan_distance(p: Point) -> Int:
+    return add(p.x, p.y)

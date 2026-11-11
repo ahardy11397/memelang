@@ -1,0 +1,8 @@
+function square(n: Int) -> Int:
+    return n * n
+
+function add(a: Int, b: Int) -> Int:
+    return a + b
+
+function cube(n: Int) -> Int:
+    return square(n) * n

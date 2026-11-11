@@ -25,6 +25,7 @@ from memelang.ir.schema import (
     IRExpr,
     IRStatement,
     IfStmt,
+    ImportStmt,
     ListAppendStmt,
     ListIndexExpr,
     ListInsertStmt,
@@ -620,12 +621,15 @@ class _PyGen:
                 f"{pad}_meme_append_file({self.gen_expr(stmt.filepath, scope)}, {self.gen_expr(stmt.content, scope)})"
             ]
 
+        if isinstance(stmt, ImportStmt):
+            return []
+
         raise TypeError(f"Unsupported IRStatement: {type(stmt)!r}")
 
 
 def generate_python(ir: ProgramIR) -> str:
     gen = _PyGen()
-    for stmt in ir.statements:
+    for stmt in [*ir.imported_definitions, *ir.statements]:
         if isinstance(stmt, RecordDefStmt):
             gen.records[stmt.name] = {f.name: f.field_type for f in stmt.fields}
             gen.uses_dataclass = True
@@ -634,10 +638,12 @@ def generate_python(ir: ProgramIR) -> str:
 
     record_lines: list[str] = []
     body_lines: list[str] = []
-    for stmt in ir.statements:
+    for stmt in [*ir.imported_definitions, *ir.statements]:
         if isinstance(stmt, RecordDefStmt):
             record_lines.extend(gen.gen_stmt(stmt, gen.symbols, indent=0))
             record_lines.append("")
+        elif isinstance(stmt, ImportStmt):
+            continue
         else:
             body_lines.extend(gen.gen_stmt(stmt, gen.symbols, indent=1))
     if not body_lines:

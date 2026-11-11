@@ -60,6 +60,9 @@ printf "examples/numbers.json\n" | uv run meme run examples/find-largest.meme --
 
 # Run FizzBuzz compiled to native C++20:
 uv run meme run examples/fizzbuzz.meme --target cpp
+
+# Run multi-file module example with transitive lockfile verification:
+uv run meme run examples/advanced/521_modules/main.meme --target go
 ```
 
 ### Handling Ambiguous English

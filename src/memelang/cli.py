@@ -144,7 +144,7 @@ def _load_or_synthesize_program(
             synthesis = provider.synthesize(source_text, source_path=source_path)  # type: ignore[call-arg]
         except TypeError:
             synthesis = provider.synthesize(source_text)
-        initial_outcome = verify_synthesis(synthesis)
+        initial_outcome = verify_synthesis(synthesis, source_path=source_path)
         outcome = lock_mgr.record_outcome(
             source_key=source_key,
             source_text=source_text,

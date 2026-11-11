@@ -38,6 +38,7 @@ class LockEntry(BaseModel):
     draft_items: list[SynthesisItem] = Field(default_factory=list)
     canonical_meme: str | None = None
     ir: ProgramIR | None = None
+    module_files: dict[str, str] = Field(default_factory=dict)
 
 
 class LockFileDocument(BaseModel):
@@ -78,13 +79,41 @@ class LockfileManager:
         doc = self._load_doc()
         return doc.entries.get(source_key)
 
+    def _resolve_source_path(self, source_key: str) -> Path:
+        source_path = Path(source_key)
+        if not source_path.is_absolute():
+            cand1 = (self.lockfile_path.parent / source_key).resolve()
+            cand2 = (Path.cwd() / source_key).resolve()
+            source_path = cand1 if cand1.exists() else cand2
+        return source_path
+
+    def _check_module_files(self, entry: LockEntry, source_key: str) -> bool:
+        mod_files = entry.module_files or (entry.ir.module_files if entry.ir else {})
+        if not mod_files:
+            return True
+        source_path = self._resolve_source_path(source_key)
+        source_dir = source_path.parent if (source_path.is_file() or source_path.suffix == ".meme") else source_path
+        for rel_path, expected_hash in mod_files.items():
+            mod_path = source_dir / rel_path
+            if not mod_path.is_file():
+                return False
+            try:
+                mod_text = mod_path.read_text(encoding="utf-8")
+                if self.compute_source_hash(mod_text) != expected_hash:
+                    return False
+            except OSError:
+                return False
+        return True
+
     def has_matching_draft(self, source_key: str, source_text: str) -> bool:
         entry = self.get_entry(source_key)
         if entry is None:
             return False
-        return entry.source_sha256 == self.compute_source_hash(source_text) and bool(
-            entry.draft_items
-        )
+        if entry.source_sha256 != self.compute_source_hash(source_text):
+            return False
+        if not self._check_module_files(entry, source_key):
+            return False
+        return bool(entry.draft_items)
 
     def get_cached_program(
         self,
@@ -99,6 +128,8 @@ class LockfileManager:
             return None
         if entry.pending_ambiguities or entry.ir is None:
             return None
+        if not self._check_module_files(entry, source_key):
+            return None
         if requested_resolutions:
             req_str = {str(k): v for k, v in requested_resolutions.items()}
             merged = dict(entry.resolutions)
@@ -106,7 +137,8 @@ class LockfileManager:
             if merged != entry.resolutions:
                 return None
         try:
-            verify_program(entry.ir)
+            source_path = self._resolve_source_path(source_key)
+            verify_program(entry.ir, source_path=source_path)
         except StaticVerificationError:
             return None
         return entry.ir
@@ -178,11 +210,14 @@ class LockfileManager:
         applied_res: dict[str, int] = {}
         active_outcome = outcome
 
+        source_path = self._resolve_source_path(source_key)
+
         if requested_resolutions:
             spliced_items = self._splice_resolutions(draft_items, requested_resolutions)
             active_outcome = verify_synthesis(
                 SynthesisResult(items=spliced_items),
                 detect_implicit_ambiguities=False,
+                source_path=source_path,
             )
             applied_res = {str(k): v for k, v in requested_resolutions.items()}
 
@@ -192,6 +227,8 @@ class LockfileManager:
             else None
         )
 
+        mod_files = dict(active_outcome.program.module_files) if active_outcome.program is not None else {}
+
         doc.entries[source_key] = LockEntry(
             source_sha256=sha,
             provider=provider_name,
@@ -200,6 +237,7 @@ class LockfileManager:
             draft_items=draft_items,
             canonical_meme=canonical,
             ir=active_outcome.program,
+            module_files=mod_files,
         )
         self._save_doc(doc)
         return active_outcome
@@ -221,15 +259,18 @@ class LockfileManager:
         merged_res: dict[int, int] = {int(k): v for k, v in entry.resolutions.items()}
         merged_res.update(resolutions)
 
+        source_path = self._resolve_source_path(source_key)
         spliced_items = self._splice_resolutions(entry.draft_items, merged_res)
         new_outcome = verify_synthesis(
             SynthesisResult(items=spliced_items),
             detect_implicit_ambiguities=False,
+            source_path=source_path,
         )
 
         entry.resolutions = {str(k): v for k, v in sorted(merged_res.items())}
         entry.pending_ambiguities = list(new_outcome.ambiguities)
         entry.ir = new_outcome.program
+        entry.module_files = dict(new_outcome.program.module_files) if new_outcome.program is not None else {}
         entry.canonical_meme = (
             to_canonical_meme(new_outcome.program) if new_outcome.program is not None else None
         )

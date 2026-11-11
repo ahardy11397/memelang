@@ -6,6 +6,7 @@ import ast
 import json
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal, cast
 
 from memelang.ir.canonical import to_canonical_meme
@@ -34,6 +35,7 @@ from memelang.ir.schema import (
     IRExpr,
     IRStatement,
     IfStmt,
+    ImportStmt,
     ListAppendStmt,
     ListIndexExpr,
     ListInsertStmt,
@@ -1178,6 +1180,16 @@ class HeuristicProvider:
         if not has_executable_content(source_text):
             return SynthesisResult(items=[])
 
+        self._source_path = Path(source_path) if source_path else None
+        if self._source_path:
+            self._source_dir = (
+                self._source_path.parent
+                if (self._source_path.is_file() or self._source_path.suffix == ".meme")
+                else self._source_path
+            )
+        else:
+            self._source_dir = Path.cwd()
+
         lines: list[_SourceLine] = []
         for idx, raw in enumerate(source_text.splitlines(), start=1):
             expanded = raw.expandtabs(4)
@@ -1875,6 +1887,19 @@ class HeuristicProvider:
         if m_ret:
             return ReturnStmt(value=_pe(m_ret.group(1)), source_line=line.lineno)
 
+        # `use <module>`
+        m_use = re.fullmatch(r"use\s+([A-Za-z_]\w*)", text, flags=re.IGNORECASE)
+        if m_use:
+            mod_name = m_use.group(1)
+            self._load_module_symbols(mod_name)
+            return ImportStmt(module=mod_name, source_line=line.lineno)
+        m_use_invalid = re.fullmatch(r"use\s+(.+)", text, flags=re.IGNORECASE)
+        if m_use_invalid:
+            raw_mod = m_use_invalid.group(1).strip()
+            raise LLMProviderError(
+                f"Invalid module name {raw_mod!r} at line {line.lineno}: module name must be a bare identifier (no quotes, paths, or dots)"
+            )
+
         # Freeform `<name> = <expr>`
         m_eq = re.fullmatch(r"([A-Za-z_]\w*)\s*=\s*(.+)", text)
         if m_eq:
@@ -1892,6 +1917,47 @@ class HeuristicProvider:
             f"Heuristic frontend could not parse line {line.lineno}: {text!r}. "
             "Configure a local LLM (`--provider ollama`) or use Canonical Structured English."
         )
+
+    def _load_module_symbols(self, mod_name: str) -> None:
+        source_dir = getattr(self, "_source_dir", Path.cwd())
+        mod_file = source_dir / f"{mod_name}.meme"
+        if not mod_file.is_file():
+            return
+        try:
+            content = mod_file.read_text(encoding="utf-8")
+        except OSError:
+            return
+        lines = [_strip_inline_comment(l).strip() for l in content.splitlines()]
+        i = 0
+        while i < len(lines):
+            l = lines[i]
+            if not l:
+                i += 1
+                continue
+            m_fn = re.fullmatch(
+                r"function\s+([A-Za-z_]\w*)\s*\((.*?)\)(?:\s*->\s*([A-Za-z0-9_<>,\s]+))?\s*:?",
+                l,
+            )
+            if m_fn:
+                fn_name = m_fn.group(1)
+                ret_str = _normalize_type((m_fn.group(3) or "Void").strip())
+                self._func_returns[fn_name] = cast(MemeType, ret_str)
+                i += 1
+                continue
+            m_rec = re.fullmatch(r"record\s+([A-Za-z_]\w*)\s*:?", l, flags=re.IGNORECASE)
+            if m_rec:
+                rec_name = m_rec.group(1)
+                fields: dict[str, MemeType] = {}
+                i += 1
+                while i < len(lines) and lines[i] and not lines[i].startswith(("function ", "record ", "use ", "define ", "print ")):
+                    fl = lines[i]
+                    if ":" in fl:
+                        fn, _, ft = fl.partition(":")
+                        fields[fn.strip()] = cast(MemeType, _normalize_type(ft.strip()))
+                    i += 1
+                self._records[rec_name] = fields
+                continue
+            i += 1
 
     @staticmethod
     def _find_free_var(expr: IRExpr, symbols: dict[str, MemeType]) -> str | None:

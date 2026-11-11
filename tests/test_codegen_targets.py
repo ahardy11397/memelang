@@ -888,7 +888,7 @@ def test_codegen_function_with_records_and_maps(target: TargetLang):
 
 def test_advanced_examples_output_parity():
     adv_dir = Path("examples/advanced")
-    scripts = sorted(adv_dir.glob("*.meme"))
+    scripts = sorted(adv_dir.glob("*.meme")) + sorted(adv_dir.glob("*/main.meme"))
     assert len(scripts) >= 9, f"Expected at least 9 advanced scripts, found {len(scripts)}"
 
     for script in scripts:
@@ -1966,7 +1966,7 @@ def test_optional_static_verifier_rules():
 def test_go_emitted_code_is_gofmt_clean():
     import subprocess
     adv_dir = Path("examples/advanced")
-    scripts = sorted(adv_dir.glob("*.meme"))
+    scripts = sorted(adv_dir.glob("*.meme")) + sorted(adv_dir.glob("*/main.meme"))
     assert len(scripts) >= 20, f"Expected at least 20 advanced scripts, found {len(scripts)}"
 
     for script in scripts:

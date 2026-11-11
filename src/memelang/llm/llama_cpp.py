@@ -98,7 +98,7 @@ optional-unwrap-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"optional_unwrap\"" 
 optional-unwrap-or-default-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"optional_unwrap_or_default\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"default_val\"" ws ":" ws ir-expr ws "}"
 
 body-stmt ::= var-decl-stmt | assign-stmt | compound-assign-stmt | sort-stmt | clamp-stmt | filter-stmt | append-stmt | insert-stmt | set-index-stmt | record-set-field-stmt | map-set-stmt | write-file-stmt | append-file-stmt | fail-stmt | exit-stmt | print-stmt | if-stmt | switch-stmt | for-each-stmt | for-range-stmt | while-stmt | loop-break-stmt | loop-continue-stmt | return-stmt
-ir-stmt ::= body-stmt | func-def-stmt | record-def-stmt
+ir-stmt ::= body-stmt | func-def-stmt | record-def-stmt | import-stmt
 stmt-list ::= "[" ws (body-stmt (ws "," ws body-stmt)*)? ws "]"
 func-param ::= "{" ws "\"name\"" ws ":" ws ident-str ws "," ws "\"param_type\"" ws ":" ws non-void-type ws "}"
 param-list ::= "[" ws (func-param (ws "," ws func-param)*)? ws "]"
@@ -133,6 +133,7 @@ loop-continue-stmt ::= "{" ws "\"op\"" ws ":" ws "\"loop_continue\"" opt-source-
 
 record-def-stmt ::= "{" ws "\"op\"" ws ":" ws "\"record_def\"" ws "," ws "\"name\"" ws ":" ws ident-str (ws "," ws "\"fields\"" ws ":" ws record-field-def-list)? opt-source-line ws "}"
 func-def-stmt ::= "{" ws "\"op\"" ws ":" ws "\"func_def\"" ws "," ws "\"name\"" ws ":" ws ident-str (ws "," ws "\"params\"" ws ":" ws param-list)? (ws "," ws "\"return_type\"" ws ":" ws meme-type)? ws "," ws "\"body\"" ws ":" ws stmt-list opt-source-line ws "}"
+import-stmt ::= "{" ws "\"op\"" ws ":" ws "\"import_stmt\"" ws "," ws "\"module\"" ws ":" ws ident-str opt-source-line ws "}"
 return-stmt ::= "{" ws "\"op\"" ws ":" ws "\"return_stmt\"" (ws "," ws "\"value\"" ws ":" ws (ir-expr | "null"))? opt-source-line ws "}"
 
 ident-str ::= "\"" [a-zA-Z_] [a-zA-Z0-9_]* "\""

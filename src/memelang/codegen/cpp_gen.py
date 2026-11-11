@@ -23,6 +23,7 @@ from memelang.ir.schema import (
     IRExpr,
     IRStatement,
     IfStmt,
+    ImportStmt,
     ListAppendStmt,
     ListIndexExpr,
     ListInsertStmt,
@@ -724,6 +725,9 @@ class _CppGen:
                 f"{pad}_meme_append_file({self.gen_expr(stmt.filepath, scope)}, {self.gen_expr(stmt.content, scope)});"
             ]
 
+        if isinstance(stmt, ImportStmt):
+            return []
+
         raise TypeError(f"Unsupported statement inside block: {type(stmt)!r}")
 
     def gen_func(self, fn: FuncDefStmt) -> list[str]:
@@ -742,13 +746,15 @@ def generate_cpp(ir: ProgramIR) -> str:
     records: list[RecordDefStmt] = []
     funcs: list[FuncDefStmt] = []
     main_stmts: list[IRStatement] = []
-    for stmt in ir.statements:
+    for stmt in [*ir.imported_definitions, *ir.statements]:
         if isinstance(stmt, RecordDefStmt):
             gen.records[stmt.name] = {f.name: f.field_type for f in stmt.fields}
             records.append(stmt)
         elif isinstance(stmt, FuncDefStmt):
             gen.func_returns[stmt.name] = stmt.return_type
             funcs.append(stmt)
+        elif isinstance(stmt, ImportStmt):
+            continue
         else:
             main_stmts.append(stmt)
 

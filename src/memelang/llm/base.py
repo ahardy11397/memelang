@@ -104,6 +104,7 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "map_set", "target": "m", "key": <expr>, "value": <expr>}`
 - `{"op": "write_file", "filepath": <String expr>, "content": <String expr>}` (`write file <path> with <content>`, overwrites/creates file)
 - `{"op": "append_file", "filepath": <String expr>, "content": <String expr>}` (`append <content> to file <path>`, appends/creates file)
+- `{"op": "import_stmt", "module": "math_utils"}` (`use <module-name>`, bare identifier, top-level only)
 
 ### Rules
 1. Ignore ONLY `#` comment lines, pure narrative header lines (`this runs in the shell`), and the `class <name>` header line itself. You MUST emit EVERY helper `define function <name>` inside a `class` as a top-level `{"op": "func_def", ...}` BEFORE the main statements, and inline `define function main`'s body as top-level statements at the end!

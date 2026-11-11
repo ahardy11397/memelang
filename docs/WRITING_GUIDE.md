@@ -689,6 +689,44 @@ print unwrapped  # prints 42
 
 ---
 
+## 11d. Modules and Imports (use <module>)
+
+Memelang supports multi-file program decomposition via `use <module>` (**offline** and **LLM-voice**).
+
+```meme
+# geometry.meme
+use math_ops
+
+record Point:
+    x: Int
+    y: Int
+
+function make_point(x: Int, y: Int) -> Point:
+    return Point(x=x, y=y)
+
+function distance_squared(p: Point) -> Int:
+    return add(square(p.x), square(p.y))
+
+# main.meme
+use geometry
+
+define p: Point as make_point(3, 4)
+define dist: Int as distance_squared(p)
+print dist
+```
+
+### Static Rules & Parity Semantics
+- **Surface Syntax:** `use <module>` must be a top-level statement. The `<module>` specifier is a bare identifier (no quotes, no path separators `/`, and no `.meme` extension). The compiler resolves `<module>.meme`.
+- **Relative Resolution:** Modules are resolved relative to the importing file's directory **only**. Missing module files produce a static verifier error explicitly naming the expected path.
+- **Importable Items:** Only top-level function declarations (`function ...`) and record definitions (`record ...`) (plus nested `use` statements) are permitted inside modules. Modules cannot contain top-level executable statements (`print`, loops, assignments); attempting to do so triggers a static verifier error.
+- **Flat Namespace & Hard Collisions:** All imported functions and records enter the importing file's flat namespace. If an imported symbol name collides with another imported symbol, a local definition, or a local variable, the static verifier halts with a clear collision error (no silent shadowing).
+- **No Re-export:** Imports are strictly non-transitive. If module `B` imports module `A`, another file `C` that imports `B` does not gain access to `A`'s symbols; `C` must write `use A` itself to use `A` directly.
+- **Cycle Detection:** Circular module imports (`A -> B -> A`) are detected at compile-time and reported with the full cycle path.
+- **Deterministic Topological Codegen:** Single-binary codegen is preserved across all four targets (**Python**, **Rust**, **C++**, **Go**). Imported definitions are topologically sorted (dependencies first) and concatenated before the root program's items.
+- **Transitive Lockfile Hashing:** Deterministic lockfiles record the SHA-256 hashes of the root file and all transitively imported module files. Any change or removal in any module file in the dependency closure invalidates the lock and forces re-verification.
+
+---
+
 ---
 
 ## 12. CLI Cheat Sheet
@@ -778,6 +816,7 @@ Each construct is labeled **offline** (supported by the zero-dependency `heurist
 
 | I want to... | Write | Voice |
 |---|---|---|
+| Import module | `use <module>` *(bare identifier, top-level only)* | **offline** |
 | Interactive header | `this runs in the shell` | **LLM-voice only** |
 | Declare a variable | `define x as <expr>` / `define x: <Type> as <expr>` | **offline** |
 | Reassign a variable | `set x to <expr>` *(always `set ... to`, never `set ... as`)* | **offline** |

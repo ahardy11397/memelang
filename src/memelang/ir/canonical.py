@@ -24,6 +24,7 @@ from memelang.ir.schema import (
     IRExpr,
     IRStatement,
     IfStmt,
+    ImportStmt,
     ListAppendStmt,
     ListIndexExpr,
     ListInsertStmt,
@@ -406,6 +407,9 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
 
     if isinstance(stmt, AppendFileStmt):
         return [f"{pad}append {format_expr(stmt.content)} to file {format_expr(stmt.filepath)}"]
+
+    if isinstance(stmt, ImportStmt):
+        return [f"{pad}use {stmt.module}"]
 
     raise TypeError(f"Unsupported statement node: {type(stmt)!r}")
 
