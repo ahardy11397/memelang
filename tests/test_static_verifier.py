@@ -1335,6 +1335,68 @@ def test_typed_read_json_list_verification_and_canonical_roundtrip():
         )
 
 
+def test_conversion_builtins_static_verifier_rules():
+    from memelang.analyzer.verifier import StaticVerificationError, verify_synthesis
+    from memelang.ir.schema import FormatIntExpr, LiteralExpr, ParseIntExpr, ProgramIR, VarDeclStmt
+
+    # 1. parse_int on non-String raises
+    with pytest.raises(StaticVerificationError, match=r"`parse_int` requires String target, got Int"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    VarDeclStmt(
+                        name="n",
+                        var_type="Int",
+                        value=ParseIntExpr(target=LiteralExpr(value=10, data_type="Int")),
+                    )
+                ]
+            )
+        )
+
+    # 2. format_int on non-Int raises
+    with pytest.raises(StaticVerificationError, match=r"`format_int` requires Int target, got String"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    VarDeclStmt(
+                        name="s",
+                        var_type="String",
+                        value=FormatIntExpr(target=LiteralExpr(value="hello", data_type="String")),
+                    )
+                ]
+            )
+        )
+
+    # 3. parse_int assigned to String raises type mismatch
+    with pytest.raises(StaticVerificationError, match=r"declared as String but initialized with Int"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    VarDeclStmt(
+                        name="s",
+                        var_type="String",
+                        value=ParseIntExpr(target=LiteralExpr(value="123", data_type="String")),
+                    )
+                ]
+            )
+        )
+
+    # 4. format_int assigned to Int raises type mismatch
+    with pytest.raises(StaticVerificationError, match=r"declared as Int but initialized with String"):
+        verify_synthesis(
+            ProgramIR(
+                items=[
+                    VarDeclStmt(
+                        name="n",
+                        var_type="Int",
+                        value=FormatIntExpr(target=LiteralExpr(value=123, data_type="Int")),
+                    )
+                ]
+            )
+        )
+
+
+
 
 
 

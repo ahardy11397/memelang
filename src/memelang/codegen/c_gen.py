@@ -32,6 +32,7 @@ from memelang.ir.schema import (
     FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
+    FormatIntExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -56,6 +57,7 @@ from memelang.ir.schema import (
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
+    ParseIntExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -240,7 +242,7 @@ def _collect_types_from_expr(expr: IRExpr, out: set[str]) -> None:
                            StringUpperExpr, StringLowerExpr, StringTrimExpr,
                            StringJoinExpr, StringIndexOfExpr, StringCharAtExpr,
                            StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr,
-                           FileExistsExpr, ReadFileStringExpr)):
+                           FileExistsExpr, ReadFileStringExpr, ParseIntExpr, FormatIntExpr)):
         for attr in ("target", "substring", "prefix", "suffix", "old", "new",
                      "start", "end", "filepath", "index", "separator", "items"):
             if hasattr(expr, attr):
@@ -355,7 +357,7 @@ class _CGen:
             return "Bool"
         if isinstance(
             expr,
-            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr),
+            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr),
         ):
             return "Int"
         if isinstance(
@@ -370,6 +372,7 @@ class _CGen:
                 StringCharAtExpr,
                 ReadFileStringExpr,
                 ArgAtExpr,
+                FormatIntExpr,
             ),
         ):
             return "String"
@@ -600,6 +603,14 @@ class _CGen:
             start = self.gen_expr(expr.start, scope)
             end = self.gen_expr(expr.end, scope)
             return f"_meme_str_slice({tgt}, {start}, {end})"
+
+        if isinstance(expr, ParseIntExpr):
+            self.uses_input_helpers = True
+            self.uses_str_helpers = True
+            return f"_meme_parse_int({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, FormatIntExpr):
+            return f"_meme_fmt_int({self.gen_expr(expr.target, scope)})"
 
         if isinstance(expr, ReadJsonListExpr):
             self.uses_str_helpers = True
@@ -1454,6 +1465,7 @@ def generate_c(ir: ProgramIR) -> str:
         "#include <string.h>",
         "#include <math.h>",
         "#include <ctype.h>",
+        "#include <errno.h>",
         "#include <sys/stat.h>",
         "",
     ]
@@ -1827,9 +1839,23 @@ def generate_c(ir: ProgramIR) -> str:
         "    return res;",
         "}",
         "static inline int64_t _meme_parse_int(const char* s) {",
-        "    if (!s) return 0LL;",
+        "    if (!s) {",
+        "        printf(\"Error parsing integer: \\n\");",
+        "        exit(1);",
+        "    }",
+        "    const char* ts = _meme_trim(s);",
+        "    if (!ts || !*ts) {",
+        "        printf(\"Error parsing integer: %s\\n\", s);",
+        "        exit(1);",
+        "    }",
         "    char* end = NULL;",
-        "    return strtoll(s, &end, 10);",
+        "    errno = 0;",
+        "    long long v = strtoll(ts, &end, 10);",
+        "    if (errno != 0 || end == ts || *end != '\\0') {",
+        "        printf(\"Error parsing integer: %s\\n\", s);",
+        "        exit(1);",
+        "    }",
+        "    return (int64_t)v;",
         "}",
         "static inline double _meme_parse_float(const char* s) {",
         "    if (!s) return 0.0;",

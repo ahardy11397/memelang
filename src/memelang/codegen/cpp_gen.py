@@ -18,6 +18,7 @@ from memelang.ir.schema import (
     FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
+    FormatIntExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -42,6 +43,7 @@ from memelang.ir.schema import (
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
+    ParseIntExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -192,7 +194,7 @@ class _CppGen:
             return "Bool"
         if isinstance(
             expr,
-            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr),
+            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr),
         ):
             return "Int"
         if isinstance(
@@ -207,6 +209,7 @@ class _CppGen:
                 StringCharAtExpr,
                 ReadFileStringExpr,
                 ArgAtExpr,
+                FormatIntExpr,
             ),
         ):
             return "String"
@@ -384,6 +387,13 @@ class _CppGen:
             start = self.gen_expr(expr.start, scope)
             end = self.gen_expr(expr.end, scope)
             return f"_meme_str_slice({tgt}, {start}, {end})"
+
+        if isinstance(expr, ParseIntExpr):
+            self.uses_input = True
+            return f"_meme_parse_int({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, FormatIntExpr):
+            return f"std::to_string({self.gen_expr(expr.target, scope)})"
 
         if isinstance(expr, ReadJsonListExpr):
             self.uses_str_helpers = True
@@ -947,11 +957,26 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    return line;",
                 "}",
                 "inline long long _meme_parse_int(const std::string& s) {",
+                "    std::size_t a = 0;",
+                "    while (a < s.size() && std::isspace(static_cast<unsigned char>(s[a]))) ++a;",
+                "    std::size_t b = s.size();",
+                "    while (b > a && std::isspace(static_cast<unsigned char>(s[b - 1]))) --b;",
+                "    std::string ts = s.substr(a, b - a);",
+                "    if (ts.empty()) {",
+                "        std::cout << \"Error parsing integer: \" << s << \"\\n\";",
+                "        std::exit(1);",
+                "    }",
                 "    try {",
                 "        std::size_t idx = 0;",
-                "        return std::stoll(s, &idx);",
+                "        long long v = std::stoll(ts, &idx);",
+                "        if (idx != ts.size()) {",
+                "            std::cout << \"Error parsing integer: \" << s << \"\\n\";",
+                "            std::exit(1);",
+                "        }",
+                "        return v;",
                 "    } catch (...) {",
-                "        return 0LL;",
+                "        std::cout << \"Error parsing integer: \" << s << \"\\n\";",
+                "        std::exit(1);",
                 "    }",
                 "}",
                 "inline double _meme_parse_float(const std::string& s) {",

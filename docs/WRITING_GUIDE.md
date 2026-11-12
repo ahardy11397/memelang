@@ -393,6 +393,8 @@ define patched as replace "foo" with "bar" in lo   # replace all occurrences of 
 define parts: List<String> as split patched by "," # split on non-empty separator -> List<String>
 define joined as join parts with "|"               # join List<String> with separator -> String
 define pos as index of "bar" in joined             # 0-based first index, or -1 when absent
+define qty: Int as integer value of "42"           # parse String -> Int (trims whitespace, handles negative numbers)
+define label: String as text of qty                # format Int -> String (plain decimal)
 ```
 
 ### String Verb Semantics (Cross-Target Parity: Python, Rust, C++, Go, C, and TypeScript)
@@ -406,6 +408,8 @@ define pos as index of "bar" in joined             # 0-based first index, or -1 
 - **`join <items> with <separator>` (`string_join`)**: joins a `List<String>` with `<separator>` between adjacent elements, returning `String`.
 - **`index of <substring> in <target>` (`string_index_of`)**: returns the 0-based `Int` index of the first occurrence of `<substring>` in `<target>`, or `-1` when `<substring>` is not found.
 - **`char at <index> of <target>` (`string_char_at`)**: returns a single-character `String` at 0-based `<index>`. Out-of-range indices print `Error: string index <index> out of range` to stdout and exit immediately with status code `1` across all three targets.
+- **`integer value of <string-expr>` (`parse_int`)**: parses a signed 64-bit decimal integer (`Int`) from `<string-expr>` after trimming leading and trailing ASCII whitespace. Negative numbers (`-`) and positive numbers are supported. If `<string-expr>` contains invalid text or is empty after trimming, execution terminates immediately with exit code `1` and outputs `Error parsing integer: <original-string>` to stdout across all six targets (deterministic fail-style runtime error consistent with missing-file reads and unwrap on absent Optionals). Offline heuristic synonyms: `integer of <expr>`.
+- **`text of <int-expr>` (`format_int`)**: formats an `Int` expression into its plain decimal string representation (`String`), matching `_meme_fmt` integral rendering exactly across all six targets. Offline heuristic synonyms: `string of <expr>`, `text from <expr>`, `string from <expr>`.
 
 ---
 

@@ -61,6 +61,8 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"expr_type": "string_join", "items": <List<String> expr>, "separator": <String expr>}` (`join <items> with <separator>`, returns `"String"`)
 - `{"expr_type": "string_index_of", "target": <String expr>, "substring": <String expr>}` (`index of <substring> in <target>`, returns 0-based `"Int"` or `-1` when absent)
 - `{"expr_type": "string_char_at", "target": <String expr>, "index": <Int expr>}` (`char at <index> of <target>`, 0-based single-char `"String"`, fails exit 1 on out-of-range)
+- `{"expr_type": "parse_int", "target": <String expr>}` (`integer value of <target>`, parses integer from text after trimming ASCII whitespace; fails exit 1 on invalid text, returns `"Int"`)
+- `{"expr_type": "format_int", "target": <Int expr>}` (`text of <target>`, formats integer as plain decimal text, returns `"String"`)
 - `{"expr_type": "file_exists", "filepath": <String expr>}` (`file exists <path>`, returns `"Bool"`, never errors)
 - `{"expr_type": "read_file_string", "filepath": <String expr>}` (`read string from file <path>`, returns `"String"`)
 - `{"expr_type": "arg_count"}` (`argument count`, returns `"Int"`, argc including program name at index 0)

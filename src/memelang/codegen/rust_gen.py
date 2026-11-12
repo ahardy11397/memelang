@@ -18,6 +18,7 @@ from memelang.ir.schema import (
     FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
+    FormatIntExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -42,6 +43,7 @@ from memelang.ir.schema import (
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
+    ParseIntExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -164,6 +166,7 @@ class _RustGen:
         self.uses_argv = False
         self.uses_str_split = False
         self.uses_char_at = False
+        self.uses_parse_int = False
         self.uses_optional_helpers = False
         self._match_counter = 0
         self.func_returns: dict[str, MemeType] = {}
@@ -186,7 +189,7 @@ class _RustGen:
             return "Bool"
         if isinstance(
             expr,
-            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr),
+            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr),
         ):
             return "Int"
         if isinstance(
@@ -201,6 +204,7 @@ class _RustGen:
                 StringCharAtExpr,
                 ReadFileStringExpr,
                 ArgAtExpr,
+                FormatIntExpr,
             ),
         ):
             return "String"
@@ -388,6 +392,13 @@ class _RustGen:
             start = self.gen_expr(expr.start, scope)
             end = self.gen_expr(expr.end, scope)
             return f"(({tgt}).chars().skip(({start}) as usize).take((({end}).saturating_sub({start})).max(0) as usize).collect::<String>())"
+
+        if isinstance(expr, ParseIntExpr):
+            self.uses_parse_int = True
+            return f"_meme_parse_int(&({self.gen_expr(expr.target, scope)}))"
+
+        if isinstance(expr, FormatIntExpr):
+            return f"({self.gen_expr(expr.target, scope)}).to_string()"
 
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True
@@ -889,6 +900,23 @@ def generate_rust(ir: ProgramIR) -> str:
                 "        std::process::exit(1);",
                 "    }",
                 "    (bytes[idx as usize] as char).to_string()",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_parse_int:
+        preamble.extend(
+            [
+                "fn _meme_parse_int(s: &str) -> i64 {",
+                "    let ts = s.trim();",
+                "    match ts.parse::<i64>() {",
+                "        Ok(v) => v,",
+                "        Err(_) => {",
+                "            println!(\"Error parsing integer: {}\", s);",
+                "            std::process::exit(1);",
+                "        }",
+                "    }",
                 "}",
                 "",
             ]

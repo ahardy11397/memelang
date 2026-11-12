@@ -2064,6 +2064,133 @@ def test_advanced_examples_501_to_522_parity(script_name: str, target: TargetLan
     assert res.stdout == py_res.stdout, f"{target} parity mismatch on {script_name}"
 
 
+@pytest.mark.parametrize("target", TARGETS)
+def test_conversion_valid_parse_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """
+define s1: String as "42"
+define n1: Int as integer value of s1
+define s2: String as "0"
+define n2: Int as integer value of s2
+define s3: String as "1000000"
+define n3: Int as integer value of s3
+print n1, n2, n3, n1 + n2 + n3
+"""
+    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.strip() == "42 0 1000000 1000042"
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_conversion_negative_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """
+define s1: String as "-42"
+define n1: Int as integer value of s1
+define s2: String as "-1"
+define n2: Int as integer value of s2
+define s3: String as "-99999"
+define n3: Int as integer value of s3
+print n1, n2, n3, n1 + 10
+"""
+    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.strip() == "-42 -1 -99999 -32"
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_conversion_whitespace_padded_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """
+define s1: String as "   123   "
+define n1: Int as integer value of s1
+define s2: String as "   -456   "
+define n2: Int as integer value of s2
+print n1, n2, n1 + n2
+"""
+    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.strip() == "123 -456 -333"
+
+
+@pytest.mark.parametrize("bad_str", ["not_a_number", "12a", "12.34", ""])
+@pytest.mark.parametrize("target", TARGETS)
+def test_conversion_invalid_text_fail_parity(bad_str: str, target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = f"""
+define bad: String as {repr(bad_str)}
+define parsed: Int as integer value of bad
+print parsed
+"""
+    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
+    res = execute_ir(outcome.program, target)
+    assert res.returncode != 0
+    assert f"Error parsing integer: {bad_str}" in res.stdout
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_conversion_roundtrip_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """
+define orig_int: Int as -789
+define str_val: String as text of orig_int
+define back_int: Int as integer value of str_val
+
+define orig_str: String as "12345"
+define int_val: Int as integer value of orig_str
+define back_str: String as text of int_val
+
+print orig_int, str_val, back_int, orig_str, int_val, back_str
+"""
+    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.strip() == "-789 -789 -789 12345 12345 12345"
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_conversion_zero_padding_pipeline_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """
+function pad_zero(num: Int, width: Int) -> String:
+    define raw as text of num
+    define padded as raw
+    while length of string padded < width:
+        set padded to "0" + padded
+    return padded
+
+define p1 as pad_zero(7, 4)
+define p2 as pad_zero(42, 6)
+define p3 as pad_zero(1234, 4)
+define p4 as pad_zero(98765, 3)
+
+define n1 as integer value of p1
+define n2 as integer value of p2
+
+print p1, p2, p3, p4, n1, n2
+"""
+    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.strip() == "0007 000042 1234 98765 7 42"
+
+
+
 
 
 

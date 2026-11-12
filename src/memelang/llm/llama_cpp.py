@@ -35,13 +35,13 @@ un-op ::= "\"-\"" | "\"not\""
 sort-dir ::= "\"ascending\"" | "\"descending\""
 opt-source-line ::= (ws "," ws "\"source_line\"" ws ":" ws (pos-int | "null"))?
 
-ir-expr ::= literal-expr | list-literal-expr | var-ref-expr | random-int-expr | random-list-expr | binary-op-expr | unary-op-expr | list-length-expr | list-index-expr | string-length-expr | string-slice-expr | call-expr | read-input-expr | str-ends-with-expr | str-contains-expr | str-starts-with-expr | string-replace-expr | string-upper-expr | string-lower-expr | string-trim-expr | string-split-expr | string-join-expr | string-index-of-expr | string-char-at-expr | file-exists-expr | read-file-string-expr | arg-count-expr | arg-at-expr | read-json-list-expr | record-literal-expr | record-field-expr | map-literal-expr | map-get-expr | map-has-key-expr | optional-none-expr | optional-wrap-expr | optional-is-nothing-expr | optional-unwrap-expr | optional-unwrap-or-default-expr
+ir-expr ::= literal-expr | list-literal-expr | var-ref-expr | random-int-expr | random-list-expr | binary-op-expr | unary-op-expr | list-length-expr | list-index-expr | string-length-expr | string-slice-expr | parse-int-expr | format-int-expr | call-expr | read-input-expr | str-ends-with-expr | str-contains-expr | str-starts-with-expr | string-replace-expr | string-upper-expr | string-lower-expr | string-trim-expr | string-split-expr | string-join-expr | string-index-of-expr | string-char-at-expr | file-exists-expr | read-file-string-expr | arg-count-expr | arg-at-expr | read-json-list-expr | record-literal-expr | record-field-expr | map-literal-expr | map-get-expr | map-has-key-expr | optional-none-expr | optional-wrap-expr | optional-is-nothing-expr | optional-unwrap-expr | optional-unwrap-or-default-expr
 expr-list ::= "[" ws (ir-expr (ws "," ws ir-expr)*)? ws "]"
 
 int-lit-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws "\"value\"" ws ":" ws integer ws "," ws "\"data_type\"" ws ":" ws "\"Int\"" ws "}"
 int-bin-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"binary_op\"" ws "," ws "\"op\"" ws ":" ws int-bin-op ws "," ws "\"left\"" ws ":" ws int-expr ws "," ws "\"right\"" ws ":" ws int-expr ws "}"
 int-un-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"unary_op\"" ws "," ws "\"op\"" ws ":" ws "\"-\"" ws "," ws "\"operand\"" ws ":" ws int-expr ws "}"
-int-expr ::= int-lit-expr | var-ref-expr | random-int-expr | int-bin-expr | int-un-expr | list-length-expr | list-index-expr | string-length-expr | string-index-of-expr | arg-count-expr | call-expr | read-input-expr | record-field-expr | map-get-expr
+int-expr ::= int-lit-expr | var-ref-expr | random-int-expr | int-bin-expr | int-un-expr | list-length-expr | list-index-expr | string-length-expr | string-index-of-expr | parse-int-expr | arg-count-expr | call-expr | read-input-expr | record-field-expr | map-get-expr
 
 bool-lit-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws "\"value\"" ws ":" ws boolean ws "," ws "\"data_type\"" ws ":" ws "\"Bool\"" ws "}"
 bool-bin-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"binary_op\"" ws "," ws "\"op\"" ws ":" ws bool-cmp-op ws "," ws "\"left\"" ws ":" ws ir-expr ws "," ws "\"right\"" ws ":" ws ir-expr ws "}"
@@ -64,6 +64,8 @@ list-length-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_length\"" ws "," w
 list-index-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_index\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"index\"" ws ":" ws int-expr ws "}"
 string-length-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"string_length\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
 string-slice-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"string_slice\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"start\"" ws ":" ws int-expr ws "," ws "\"end\"" ws ":" ws int-expr ws "}"
+parse-int-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"parse_int\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
+format-int-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"format_int\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
 call-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"call\"" ws "," ws "\"func_name\"" ws ":" ws ident-str (ws "," ws "\"args\"" ws ":" ws expr-list)? ws "}"
 read-input-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"read_input\"" (ws "," ws "\"prompt\"" ws ":" ws string)? (ws "," ws "\"target_type\"" ws ":" ws scalar-type)? ws "}"
 str-ends-with-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"str_ends_with\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"suffix\"" ws ":" ws ir-expr ws "}"

@@ -19,6 +19,7 @@ from memelang.ir.schema import (
     FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
+    FormatIntExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -42,6 +43,7 @@ from memelang.ir.schema import (
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
+    ParseIntExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -221,6 +223,14 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
 
     if isinstance(expr, StringSliceExpr):
         return f"slice {format_expr(expr.target)} from {format_expr(expr.start)} to {format_expr(expr.end)}"
+
+    if isinstance(expr, ParseIntExpr):
+        res = f"integer value of {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, FormatIntExpr):
+        res = f"text of {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
 
     if isinstance(expr, RecordLiteralExpr):
         fields_str = ", ".join(f"{f.name}={format_expr(f.value)}" for f in expr.fields)

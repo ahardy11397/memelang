@@ -1,0 +1,1371 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/523_csv_inventory_conversion_pipeline.meme": {
+      "source_sha256": "a5539a59e75268ac808fe8ad09d20bec4057ca23644d270911fecc58086740b9",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "InventoryItem",
+          "fields": [
+            {
+              "name": "sku",
+              "field_type": "String"
+            },
+            {
+              "name": "name",
+              "field_type": "String"
+            },
+            {
+              "name": "quantity",
+              "field_type": "Int"
+            },
+            {
+              "name": "reorder_threshold",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "func_def",
+          "name": "format_item_id",
+          "params": [
+            {
+              "name": "id_num",
+              "param_type": "Int"
+            },
+            {
+              "name": "width",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "raw",
+              "var_type": "String",
+              "value": {
+                "expr_type": "format_int",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "id_num"
+                }
+              },
+              "source_line": 8
+            },
+            {
+              "op": "var_decl",
+              "name": "padded",
+              "var_type": "String",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "raw"
+              },
+              "source_line": 9
+            },
+            {
+              "op": "while_loop",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "<",
+                "left": {
+                  "expr_type": "string_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "padded"
+                  }
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "width"
+                }
+              },
+              "body": [
+                {
+                  "op": "assign",
+                  "name": "padded",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "literal",
+                      "value": "0",
+                      "data_type": "String"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "padded"
+                    }
+                  },
+                  "source_line": 11
+                }
+              ],
+              "source_line": 10
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "padded"
+              },
+              "source_line": 12
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "func_def",
+          "name": "parse_csv_row",
+          "params": [
+            {
+              "name": "row",
+              "param_type": "String"
+            }
+          ],
+          "return_type": "InventoryItem",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "parts",
+              "var_type": "List<String>",
+              "value": {
+                "expr_type": "string_split",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "row"
+                },
+                "separator": {
+                  "expr_type": "literal",
+                  "value": ",",
+                  "data_type": "String"
+                }
+              },
+              "source_line": 15
+            },
+            {
+              "op": "var_decl",
+              "name": "sku",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_trim",
+                "target": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "parts"
+                  },
+                  "index": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                }
+              },
+              "source_line": 16
+            },
+            {
+              "op": "var_decl",
+              "name": "name",
+              "var_type": "String",
+              "value": {
+                "expr_type": "string_trim",
+                "target": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "parts"
+                  },
+                  "index": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                }
+              },
+              "source_line": 17
+            },
+            {
+              "op": "var_decl",
+              "name": "qty",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "parse_int",
+                "target": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "parts"
+                  },
+                  "index": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                }
+              },
+              "source_line": 18
+            },
+            {
+              "op": "var_decl",
+              "name": "threshold",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "parse_int",
+                "target": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "parts"
+                  },
+                  "index": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                }
+              },
+              "source_line": 19
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "record_literal",
+                "record_name": "InventoryItem",
+                "fields": [
+                  {
+                    "name": "sku",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "sku"
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "name"
+                    }
+                  },
+                  {
+                    "name": "quantity",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "qty"
+                    }
+                  },
+                  {
+                    "name": "reorder_threshold",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "threshold"
+                    }
+                  }
+                ]
+              },
+              "source_line": 20
+            }
+          ],
+          "source_line": 14
+        },
+        {
+          "op": "var_decl",
+          "name": "rows",
+          "var_type": "List<String>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "String"
+          },
+          "source_line": 22
+        },
+        {
+          "op": "list_append",
+          "target": "rows",
+          "value": {
+            "expr_type": "literal",
+            "value": "SKU-101, Widget A, 42, 50",
+            "data_type": "String"
+          },
+          "source_line": 23
+        },
+        {
+          "op": "list_append",
+          "target": "rows",
+          "value": {
+            "expr_type": "literal",
+            "value": "SKU-102, Gadget B, 15, 10",
+            "data_type": "String"
+          },
+          "source_line": 24
+        },
+        {
+          "op": "list_append",
+          "target": "rows",
+          "value": {
+            "expr_type": "literal",
+            "value": "SKU-103, Cable C, 8, 25",
+            "data_type": "String"
+          },
+          "source_line": 25
+        },
+        {
+          "op": "list_append",
+          "target": "rows",
+          "value": {
+            "expr_type": "literal",
+            "value": "SKU-104, Adapter D, 120, 100",
+            "data_type": "String"
+          },
+          "source_line": 26
+        },
+        {
+          "op": "var_decl",
+          "name": "total_received",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 28
+        },
+        {
+          "op": "var_decl",
+          "name": "reorder_count",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 29
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "--- Processing Inventory Batch ---",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 31
+        },
+        {
+          "op": "for_each",
+          "item_var": "row",
+          "index_var": null,
+          "collection": "rows",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "item",
+              "var_type": "InventoryItem",
+              "value": {
+                "expr_type": "call",
+                "func_name": "parse_csv_row",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "row"
+                  }
+                ]
+              },
+              "source_line": 33
+            },
+            {
+              "op": "var_decl",
+              "name": "tag",
+              "var_type": "String",
+              "value": {
+                "expr_type": "call",
+                "func_name": "format_item_id",
+                "args": [
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "item"
+                    },
+                    "field_name": "quantity"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  }
+                ]
+              },
+              "source_line": 34
+            },
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "<",
+                "left": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "item"
+                  },
+                  "field_name": "quantity"
+                },
+                "right": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "item"
+                  },
+                  "field_name": "reorder_threshold"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "assign",
+                  "name": "reorder_count",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "reorder_count"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  "source_line": 36
+                },
+                {
+                  "op": "var_decl",
+                  "name": "restock_qty",
+                  "var_type": "Int",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 25,
+                    "data_type": "Int"
+                  },
+                  "source_line": 37
+                },
+                {
+                  "op": "var_decl",
+                  "name": "new_qty",
+                  "var_type": "Int",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "item"
+                      },
+                      "field_name": "quantity"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "restock_qty"
+                    }
+                  },
+                  "source_line": 38
+                },
+                {
+                  "op": "assign",
+                  "name": "total_received",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "total_received"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "restock_qty"
+                    }
+                  },
+                  "source_line": 39
+                },
+                {
+                  "op": "var_decl",
+                  "name": "new_tag",
+                  "var_type": "String",
+                  "value": {
+                    "expr_type": "call",
+                    "func_name": "format_item_id",
+                    "args": [
+                      {
+                        "expr_type": "var_ref",
+                        "name": "new_qty"
+                      },
+                      {
+                        "expr_type": "literal",
+                        "value": 4,
+                        "data_type": "Int"
+                      }
+                    ]
+                  },
+                  "source_line": 40
+                },
+                {
+                  "op": "print_stmt",
+                  "expressions": [
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "item"
+                      },
+                      "field_name": "sku"
+                    },
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "item"
+                      },
+                      "field_name": "name"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "LOW:",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "tag"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "-> restocked to:",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "format_int",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "new_qty"
+                      }
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "code:",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "new_tag"
+                    }
+                  ],
+                  "source_line": 41
+                }
+              ],
+              "else_body": [
+                {
+                  "op": "print_stmt",
+                  "expressions": [
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "item"
+                      },
+                      "field_name": "sku"
+                    },
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "item"
+                      },
+                      "field_name": "name"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "OK :",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "tag"
+                    }
+                  ],
+                  "source_line": 43
+                }
+              ],
+              "source_line": 35
+            }
+          ],
+          "source_line": 32
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "--- Summary ---",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 45
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Reordered items:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "reorder_count"
+            }
+          ],
+          "source_line": 46
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Total units added:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "total_received"
+            }
+          ],
+          "source_line": 47
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Final batch ID:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "binary_op",
+              "op": "+",
+              "left": {
+                "expr_type": "literal",
+                "value": "BATCH-",
+                "data_type": "String"
+              },
+              "right": {
+                "expr_type": "call",
+                "func_name": "format_item_id",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "total_received"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 6,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            }
+          ],
+          "source_line": 48
+        }
+      ],
+      "canonical_meme": "record InventoryItem:\n    sku: String\n    name: String\n    quantity: Int\n    reorder_threshold: Int\nfunction format_item_id(id_num: Int, width: Int) -> String:\n    define raw: String as text of id_num\n    define padded: String as raw\n    while length of string padded < width:\n        set padded to \"0\" + padded\n    return padded\nfunction parse_csv_row(row: String) -> InventoryItem:\n    define list parts as split row by \",\"\n    define sku: String as trim parts[0]\n    define name: String as trim parts[1]\n    define qty: Int as integer value of parts[2]\n    define threshold: Int as integer value of parts[3]\n    return InventoryItem(sku=sku, name=name, quantity=qty, reorder_threshold=threshold)\ndefine list rows as empty List<String>\nappend \"SKU-101, Widget A, 42, 50\" to rows\nappend \"SKU-102, Gadget B, 15, 10\" to rows\nappend \"SKU-103, Cable C, 8, 25\" to rows\nappend \"SKU-104, Adapter D, 120, 100\" to rows\ndefine total_received: Int as 0\ndefine reorder_count: Int as 0\nprint \"--- Processing Inventory Batch ---\"\nfor each row in rows:\n    define item: InventoryItem as parse_csv_row(row)\n    define tag: String as format_item_id(item.quantity, 4)\n    if item.quantity < item.reorder_threshold:\n        set reorder_count to reorder_count + 1\n        define restock_qty: Int as 25\n        define new_qty: Int as item.quantity + restock_qty\n        set total_received to total_received + restock_qty\n        define new_tag: String as format_item_id(new_qty, 4)\n        print item.sku, item.name, \"LOW:\", tag, \"-> restocked to:\", text of new_qty, \"code:\", new_tag\n    else:\n        print item.sku, item.name, \"OK :\", tag\nprint \"--- Summary ---\"\nprint \"Reordered items:\", reorder_count\nprint \"Total units added:\", total_received\nprint \"Final batch ID:\", \"BATCH-\" + format_item_id(total_received, 6)",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "InventoryItem",
+            "fields": [
+              {
+                "name": "sku",
+                "field_type": "String"
+              },
+              {
+                "name": "name",
+                "field_type": "String"
+              },
+              {
+                "name": "quantity",
+                "field_type": "Int"
+              },
+              {
+                "name": "reorder_threshold",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "format_item_id",
+            "params": [
+              {
+                "name": "id_num",
+                "param_type": "Int"
+              },
+              {
+                "name": "width",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "raw",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "format_int",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "id_num"
+                  }
+                },
+                "source_line": 8
+              },
+              {
+                "op": "var_decl",
+                "name": "padded",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "raw"
+                },
+                "source_line": 9
+              },
+              {
+                "op": "while_loop",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "<",
+                  "left": {
+                    "expr_type": "string_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "padded"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "width"
+                  }
+                },
+                "body": [
+                  {
+                    "op": "assign",
+                    "name": "padded",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "literal",
+                        "value": "0",
+                        "data_type": "String"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "padded"
+                      }
+                    },
+                    "source_line": 11
+                  }
+                ],
+                "source_line": 10
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "padded"
+                },
+                "source_line": 12
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "func_def",
+            "name": "parse_csv_row",
+            "params": [
+              {
+                "name": "row",
+                "param_type": "String"
+              }
+            ],
+            "return_type": "InventoryItem",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "parts",
+                "var_type": "List<String>",
+                "value": {
+                  "expr_type": "string_split",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "row"
+                  },
+                  "separator": {
+                    "expr_type": "literal",
+                    "value": ",",
+                    "data_type": "String"
+                  }
+                },
+                "source_line": 15
+              },
+              {
+                "op": "var_decl",
+                "name": "sku",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_trim",
+                  "target": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "parts"
+                    },
+                    "index": {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  }
+                },
+                "source_line": 16
+              },
+              {
+                "op": "var_decl",
+                "name": "name",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "string_trim",
+                  "target": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "parts"
+                    },
+                    "index": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  }
+                },
+                "source_line": 17
+              },
+              {
+                "op": "var_decl",
+                "name": "qty",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "parse_int",
+                  "target": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "parts"
+                    },
+                    "index": {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    }
+                  }
+                },
+                "source_line": 18
+              },
+              {
+                "op": "var_decl",
+                "name": "threshold",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "parse_int",
+                  "target": {
+                    "expr_type": "list_index",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "parts"
+                    },
+                    "index": {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    }
+                  }
+                },
+                "source_line": 19
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "record_literal",
+                  "record_name": "InventoryItem",
+                  "fields": [
+                    {
+                      "name": "sku",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "sku"
+                      }
+                    },
+                    {
+                      "name": "name",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "name"
+                      }
+                    },
+                    {
+                      "name": "quantity",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "qty"
+                      }
+                    },
+                    {
+                      "name": "reorder_threshold",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "threshold"
+                      }
+                    }
+                  ]
+                },
+                "source_line": 20
+              }
+            ],
+            "source_line": 14
+          },
+          {
+            "op": "var_decl",
+            "name": "rows",
+            "var_type": "List<String>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "String"
+            },
+            "source_line": 22
+          },
+          {
+            "op": "list_append",
+            "target": "rows",
+            "value": {
+              "expr_type": "literal",
+              "value": "SKU-101, Widget A, 42, 50",
+              "data_type": "String"
+            },
+            "source_line": 23
+          },
+          {
+            "op": "list_append",
+            "target": "rows",
+            "value": {
+              "expr_type": "literal",
+              "value": "SKU-102, Gadget B, 15, 10",
+              "data_type": "String"
+            },
+            "source_line": 24
+          },
+          {
+            "op": "list_append",
+            "target": "rows",
+            "value": {
+              "expr_type": "literal",
+              "value": "SKU-103, Cable C, 8, 25",
+              "data_type": "String"
+            },
+            "source_line": 25
+          },
+          {
+            "op": "list_append",
+            "target": "rows",
+            "value": {
+              "expr_type": "literal",
+              "value": "SKU-104, Adapter D, 120, 100",
+              "data_type": "String"
+            },
+            "source_line": 26
+          },
+          {
+            "op": "var_decl",
+            "name": "total_received",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 28
+          },
+          {
+            "op": "var_decl",
+            "name": "reorder_count",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 29
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "--- Processing Inventory Batch ---",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 31
+          },
+          {
+            "op": "for_each",
+            "item_var": "row",
+            "index_var": null,
+            "collection": "rows",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "item",
+                "var_type": "InventoryItem",
+                "value": {
+                  "expr_type": "call",
+                  "func_name": "parse_csv_row",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "row"
+                    }
+                  ]
+                },
+                "source_line": 33
+              },
+              {
+                "op": "var_decl",
+                "name": "tag",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "call",
+                  "func_name": "format_item_id",
+                  "args": [
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "item"
+                      },
+                      "field_name": "quantity"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 4,
+                      "data_type": "Int"
+                    }
+                  ]
+                },
+                "source_line": 34
+              },
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "<",
+                  "left": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "item"
+                    },
+                    "field_name": "quantity"
+                  },
+                  "right": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "item"
+                    },
+                    "field_name": "reorder_threshold"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "assign",
+                    "name": "reorder_count",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "reorder_count"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    },
+                    "source_line": 36
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "restock_qty",
+                    "var_type": "Int",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 25,
+                      "data_type": "Int"
+                    },
+                    "source_line": 37
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "new_qty",
+                    "var_type": "Int",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "item"
+                        },
+                        "field_name": "quantity"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "restock_qty"
+                      }
+                    },
+                    "source_line": 38
+                  },
+                  {
+                    "op": "assign",
+                    "name": "total_received",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "total_received"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "restock_qty"
+                      }
+                    },
+                    "source_line": 39
+                  },
+                  {
+                    "op": "var_decl",
+                    "name": "new_tag",
+                    "var_type": "String",
+                    "value": {
+                      "expr_type": "call",
+                      "func_name": "format_item_id",
+                      "args": [
+                        {
+                          "expr_type": "var_ref",
+                          "name": "new_qty"
+                        },
+                        {
+                          "expr_type": "literal",
+                          "value": 4,
+                          "data_type": "Int"
+                        }
+                      ]
+                    },
+                    "source_line": 40
+                  },
+                  {
+                    "op": "print_stmt",
+                    "expressions": [
+                      {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "item"
+                        },
+                        "field_name": "sku"
+                      },
+                      {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "item"
+                        },
+                        "field_name": "name"
+                      },
+                      {
+                        "expr_type": "literal",
+                        "value": "LOW:",
+                        "data_type": "String"
+                      },
+                      {
+                        "expr_type": "var_ref",
+                        "name": "tag"
+                      },
+                      {
+                        "expr_type": "literal",
+                        "value": "-> restocked to:",
+                        "data_type": "String"
+                      },
+                      {
+                        "expr_type": "format_int",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "new_qty"
+                        }
+                      },
+                      {
+                        "expr_type": "literal",
+                        "value": "code:",
+                        "data_type": "String"
+                      },
+                      {
+                        "expr_type": "var_ref",
+                        "name": "new_tag"
+                      }
+                    ],
+                    "source_line": 41
+                  }
+                ],
+                "else_body": [
+                  {
+                    "op": "print_stmt",
+                    "expressions": [
+                      {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "item"
+                        },
+                        "field_name": "sku"
+                      },
+                      {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "item"
+                        },
+                        "field_name": "name"
+                      },
+                      {
+                        "expr_type": "literal",
+                        "value": "OK :",
+                        "data_type": "String"
+                      },
+                      {
+                        "expr_type": "var_ref",
+                        "name": "tag"
+                      }
+                    ],
+                    "source_line": 43
+                  }
+                ],
+                "source_line": 35
+              }
+            ],
+            "source_line": 32
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "--- Summary ---",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 45
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Reordered items:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "reorder_count"
+              }
+            ],
+            "source_line": 46
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Total units added:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "total_received"
+              }
+            ],
+            "source_line": 47
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Final batch ID:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "literal",
+                  "value": "BATCH-",
+                  "data_type": "String"
+                },
+                "right": {
+                  "expr_type": "call",
+                  "func_name": "format_item_id",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "total_received"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 6,
+                      "data_type": "Int"
+                    }
+                  ]
+                }
+              }
+            ],
+            "source_line": 48
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

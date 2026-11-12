@@ -19,6 +19,7 @@ from memelang.ir.schema import (
     FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
+    FormatIntExpr,
     ForRangeStmt,
     FuncDefStmt,
     FuncParam,
@@ -44,6 +45,7 @@ from memelang.ir.schema import (
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
+    ParseIntExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -214,7 +216,7 @@ class _GoGen:
             return "Bool"
         if isinstance(
             expr,
-            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr),
+            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr),
         ):
             return "Int"
         if isinstance(
@@ -229,6 +231,7 @@ class _GoGen:
                 StringCharAtExpr,
                 ReadFileStringExpr,
                 ArgAtExpr,
+                FormatIntExpr,
             ),
         ):
             return "String"
@@ -436,6 +439,18 @@ class _GoGen:
             start = self.gen_expr(expr.start, scope)
             end = self.gen_expr(expr.end, scope)
             return f"_meme_str_slice({tgt}, {start}, {end})"
+
+        if isinstance(expr, ParseIntExpr):
+            self.uses_input_helpers = True
+            self.uses_strconv = True
+            self.uses_strings = True
+            self.uses_os = True
+            self.uses_fmt = True
+            return f"_meme_parse_int({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, FormatIntExpr):
+            self.uses_strconv = True
+            return f"strconv.FormatInt({self.gen_expr(expr.target, scope)}, 10)"
 
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True
@@ -1088,7 +1103,8 @@ def generate_go(ir: ProgramIR) -> str:
                 "func _meme_parse_int(s string) int64 {",
                 "    v, err := strconv.ParseInt(strings.TrimSpace(s), 10, 64)",
                 "    if err != nil {",
-                "        return 0",
+                '        fmt.Printf("Error parsing integer: %s\\n", s)',
+                "        os.Exit(1)",
                 "    }",
                 "    return v",
                 "}",

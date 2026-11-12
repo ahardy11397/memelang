@@ -34,6 +34,7 @@ from memelang.ir.schema import (
     FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
+    FormatIntExpr,
     ForRangeStmt,
     FuncDefStmt,
     FuncParam,
@@ -59,6 +60,7 @@ from memelang.ir.schema import (
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
+    ParseIntExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -197,10 +199,10 @@ class _TSGen:
             return "Int"
         if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr)):
             return "Bool"
-        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr)):
+        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr)):
             return "Int"
         if isinstance(expr, (StringSliceExpr, StringReplaceExpr, StringUpperExpr, StringLowerExpr,
-                             StringTrimExpr, StringJoinExpr, StringCharAtExpr, ReadFileStringExpr, ArgAtExpr)):
+                             StringTrimExpr, StringJoinExpr, StringCharAtExpr, ReadFileStringExpr, ArgAtExpr, FormatIntExpr)):
             return "String"
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
@@ -412,6 +414,12 @@ class _TSGen:
 
         if isinstance(expr, StringSliceExpr):
             return f"_meme_str_slice({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.start, scope)}, {self.gen_expr(expr.end, scope)})"
+
+        if isinstance(expr, ParseIntExpr):
+            return f"_meme_parse_int({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, FormatIntExpr):
+            return f"String({self.gen_expr(expr.target, scope)})"
 
         if isinstance(expr, FileExistsExpr):
             return f"_meme_file_exists({self.gen_expr(expr.filepath, scope)})"
@@ -1011,8 +1019,22 @@ def generate_ts(ir: ProgramIR) -> str:
         "}",
         "",
         "function _meme_parse_int(s: string): number {",
-        "    const v = parseInt(s.trim(), 10);",
-        "    return Number.isNaN(v) ? 0 : v;",
+        "    const ts = s.trim();",
+        "    if (!/^[+-]?\\d+$/.test(ts)) {",
+        "        console.log(`Error parsing integer: ${s}`);",
+        "        process.exit(1);",
+        "    }",
+        "    try {",
+        "        const b = BigInt(ts);",
+        "        if (b < -9223372036854775808n || b > 9223372036854775807n) {",
+        "            console.log(`Error parsing integer: ${s}`);",
+        "            process.exit(1);",
+        "        }",
+        "        return Number(b);",
+        "    } catch {",
+        "        console.log(`Error parsing integer: ${s}`);",
+        "        process.exit(1);",
+        "    }",
         "}",
         "",
         "function _meme_parse_float(s: string): number {",

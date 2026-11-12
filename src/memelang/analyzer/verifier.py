@@ -26,6 +26,7 @@ from memelang.ir.schema import (
     FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
+    FormatIntExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -50,6 +51,7 @@ from memelang.ir.schema import (
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
+    ParseIntExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -961,6 +963,22 @@ class _StaticChecker:
             _check_literal_bounds(expr.start, expr.end, stmt_idx)
             return "String"
 
+        if isinstance(expr, ParseIntExpr):
+            t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if t_t != "String":
+                raise StaticVerificationError(
+                    f"`parse_int` requires String target, got {t_t}", stmt_idx
+                )
+            return "Int"
+
+        if isinstance(expr, FormatIntExpr):
+            t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if t_t != "Int":
+                raise StaticVerificationError(
+                    f"`format_int` requires Int target, got {t_t}", stmt_idx
+                )
+            return "String"
+
         if isinstance(expr, RecordLiteralExpr):
             if expr.record_name not in self.records:
                 raise StaticVerificationError(
@@ -1744,7 +1762,16 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
             or _expr_references_var(expr.old, name)
             or _expr_references_var(expr.new, name)
         )
-    if isinstance(expr, (StringUpperExpr, StringLowerExpr, StringTrimExpr)):
+    if isinstance(
+        expr,
+        (
+            StringUpperExpr,
+            StringLowerExpr,
+            StringTrimExpr,
+            ParseIntExpr,
+            FormatIntExpr,
+        ),
+    ):
         return _expr_references_var(expr.target, name)
     if isinstance(expr, StringSplitExpr):
         return _expr_references_var(expr.target, name) or _expr_references_var(expr.separator, name)

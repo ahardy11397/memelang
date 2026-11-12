@@ -1,0 +1,48 @@
+record InventoryItem:
+    sku: String
+    name: String
+    quantity: Int
+    reorder_threshold: Int
+
+function format_item_id(id_num: Int, width: Int) -> String:
+    define raw as text of id_num
+    define padded as raw
+    while length of string padded < width:
+        set padded to "0" + padded
+    return padded
+
+function parse_csv_row(row: String) -> InventoryItem:
+    define parts as split row by ","
+    define sku as trim parts[0]
+    define name as trim parts[1]
+    define qty as integer value of parts[2]
+    define threshold as integer value of parts[3]
+    return InventoryItem(sku=sku, name=name, quantity=qty, reorder_threshold=threshold)
+
+define rows as empty List<String>
+append "SKU-101, Widget A, 42, 50" to rows
+append "SKU-102, Gadget B, 15, 10" to rows
+append "SKU-103, Cable C, 8, 25" to rows
+append "SKU-104, Adapter D, 120, 100" to rows
+
+define total_received as 0
+define reorder_count as 0
+
+print "--- Processing Inventory Batch ---"
+for each row in rows:
+    define item as parse_csv_row(row)
+    define tag as format_item_id(item.quantity, 4)
+    if item.quantity < item.reorder_threshold:
+        set reorder_count to reorder_count + 1
+        define restock_qty as 25
+        define new_qty as item.quantity + restock_qty
+        set total_received to total_received + restock_qty
+        define new_tag as format_item_id(new_qty, 4)
+        print item.sku, item.name, "LOW:", tag, "-> restocked to:", text of new_qty, "code:", new_tag
+    else:
+        print item.sku, item.name, "OK :", tag
+
+print "--- Summary ---"
+print "Reordered items:", reorder_count
+print "Total units added:", total_received
+print "Final batch ID:", "BATCH-" + format_item_id(total_received, 6)

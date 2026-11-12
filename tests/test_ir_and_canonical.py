@@ -406,6 +406,8 @@ def test_exhaustive_ir_synchronization_across_canonical_heuristic_verifier_gbnf_
         "fail_stmt",
         "string_length",
         "string_slice",
+        "parse_int",
+        "format_int",
         "str_ends_with",
         "read_json_list",
         "record_def",
@@ -540,6 +542,45 @@ if scores has key "Alice" and x > 0:
     canonical = to_canonical_meme(out.program)
     roundtrip = verify_synthesis(HeuristicProvider().synthesize(canonical))
     assert roundtrip.is_unambiguous and roundtrip.program == out.program
+
+
+def test_conversion_builtins_canonical_and_roundtrip():
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.ir.schema import FormatIntExpr, ParseIntExpr
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """define s: String as "123"
+define n: Int as integer value of s
+define back: String as text of n
+define n2: Int as integer value of "  -42  "
+define s2: String as text of (n + 10)
+print n, back, n2, s2
+"""
+    syn = HeuristicProvider().synthesize(src)
+    out = verify_synthesis(syn)
+    assert out.is_unambiguous and out.program is not None
+    canonical = to_canonical_meme(out.program)
+    assert "integer value of s" in canonical
+    assert "text of n" in canonical
+    roundtrip = verify_synthesis(HeuristicProvider().synthesize(canonical))
+    assert roundtrip.is_unambiguous and roundtrip.program is not None
+    assert to_canonical_meme(roundtrip.program) == canonical
+
+    # Also test alternative heuristic syntax synonyms: "string of", "text from", "integer of"
+    syn_alt = HeuristicProvider().synthesize("""define a: Int as integer of "77"
+define b: String as string of a
+define c: String as text from 99
+define d: String as string from 100
+print a, b, c, d
+""")
+    out_alt = verify_synthesis(syn_alt)
+    assert out_alt.is_unambiguous and out_alt.program is not None
+    can_alt = to_canonical_meme(out_alt.program)
+    assert "integer value of \"77\"" in can_alt
+    assert "text of a" in can_alt
+    assert "text of 99" in can_alt
+    assert "text of 100" in can_alt
+
 
 
 

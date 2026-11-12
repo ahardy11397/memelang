@@ -29,6 +29,7 @@ from memelang.ir.schema import (
     FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
+    FormatIntExpr,
     ForRangeStmt,
     FuncDefStmt,
     FuncParam,
@@ -54,6 +55,7 @@ from memelang.ir.schema import (
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
+    ParseIntExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -578,6 +580,45 @@ class _ExprParser:
                     dflt_e = self.parse_add()
                     return OptionalUnwrapOrDefaultExpr(target=tgt_e, default_val=dflt_e)
                 return OptionalUnwrapExpr(target=tgt_e)
+            if (
+                t.val.lower() == "integer"
+                and t.val not in self.symbols
+                and self.pos + 2 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "value"
+                and self.tokens[self.pos + 2].kind == "IDENT"
+                and self.tokens[self.pos + 2].val.lower() == "of"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                self.consume("IDENT")
+                tgt_e = self.parse_unary()
+                return ParseIntExpr(target=tgt_e)
+
+            if (
+                t.val.lower() == "integer"
+                and t.val not in self.symbols
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "of"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                tgt_e = self.parse_unary()
+                return ParseIntExpr(target=tgt_e)
+
+            if (
+                t.val.lower() in ("text", "string")
+                and t.val not in self.symbols
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() in ("of", "from")
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                tgt_e = self.parse_unary()
+                return FormatIntExpr(target=tgt_e)
+
             if t.val in ("true", "True"):
                 self.consume()
                 return LiteralExpr(value=True, data_type="Bool")
@@ -1069,12 +1110,13 @@ def _guess_expr_type(
             StringCharAtExpr,
             ReadFileStringExpr,
             ArgAtExpr,
+            FormatIntExpr,
         ),
     ):
         return "String"
     if isinstance(
         expr,
-        (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr),
+        (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr),
     ):
         return "Int"
     if isinstance(expr, ReadInputExpr):
@@ -2002,7 +2044,16 @@ class HeuristicProvider:
                 or HeuristicProvider._find_free_var(expr.old, symbols)
                 or HeuristicProvider._find_free_var(expr.new, symbols)
             )
-        if isinstance(expr, (StringUpperExpr, StringLowerExpr, StringTrimExpr)):
+        if isinstance(
+            expr,
+            (
+                StringUpperExpr,
+                StringLowerExpr,
+                StringTrimExpr,
+                ParseIntExpr,
+                FormatIntExpr,
+            ),
+        ):
             return HeuristicProvider._find_free_var(expr.target, symbols)
         if isinstance(expr, StringSplitExpr):
             return HeuristicProvider._find_free_var(

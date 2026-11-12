@@ -20,6 +20,7 @@ from memelang.ir.schema import (
     FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
+    FormatIntExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -44,6 +45,7 @@ from memelang.ir.schema import (
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
+    ParseIntExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -322,6 +324,13 @@ class _PyGen:
             s = self.gen_expr(expr.start, scope)
             e = self.gen_expr(expr.end, scope)
             return f"{tgt}[_meme_builtins.int({s}):_meme_builtins.int({e})]"
+
+        if isinstance(expr, ParseIntExpr):
+            self.uses_input_helpers = True
+            return f"_meme_parse_int({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, FormatIntExpr):
+            return f"_meme_builtins.str({self.gen_expr(expr.target, scope)})"
 
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True
@@ -822,10 +831,15 @@ def generate_python(ir: ProgramIR) -> str:
         header.extend(
             [
                 "def _meme_parse_int(s: str) -> int:",
+                "    ts = s.strip()",
                 "    try:",
-                "        return _meme_builtins.int(s.strip())",
+                "        v = _meme_builtins.int(ts)",
+                "        if v < -9223372036854775808 or v > 9223372036854775807:",
+                "            raise _meme_builtins.ValueError",
+                "        return v",
                 "    except _meme_builtins.ValueError:",
-                "        return 0",
+                "        _meme_builtins.print(f'Error parsing integer: {s}')",
+                "        raise _meme_builtins.SystemExit(1)",
                 "",
                 "def _meme_parse_float(s: str) -> float:",
                 "    try:",

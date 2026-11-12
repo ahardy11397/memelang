@@ -25,6 +25,7 @@ from memelang.ir.schema import (
     FileExistsExpr,
     FilterCollectionStmt,
     ForEachStmt,
+    FormatIntExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -45,6 +46,7 @@ from memelang.ir.schema import (
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
+    ParseIntExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -120,7 +122,16 @@ def _expr_uses_input(expr: IRExpr) -> bool:
             or _expr_uses_input(expr.old)
             or _expr_uses_input(expr.new)
         )
-    if isinstance(expr, (StringUpperExpr, StringLowerExpr, StringTrimExpr)):
+    if isinstance(
+        expr,
+        (
+            StringUpperExpr,
+            StringLowerExpr,
+            StringTrimExpr,
+            ParseIntExpr,
+            FormatIntExpr,
+        ),
+    ):
         return _expr_uses_input(expr.target)
     if isinstance(expr, StringSplitExpr):
         return _expr_uses_input(expr.target) or _expr_uses_input(expr.separator)

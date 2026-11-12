@@ -249,6 +249,16 @@ class StringSliceExpr(IRNode):
     end: IRExpr
 
 
+class ParseIntExpr(IRNode):
+    expr_type: Literal["parse_int"] = "parse_int"
+    target: IRExpr
+
+
+class FormatIntExpr(IRNode):
+    expr_type: Literal["format_int"] = "format_int"
+    target: IRExpr
+
+
 class RecordFieldInit(IRNode):
     name: str
     value: IRExpr
@@ -347,6 +357,8 @@ IRExpr = Annotated[
     | ReadJsonListExpr
     | StringLengthExpr
     | StringSliceExpr
+    | ParseIntExpr
+    | FormatIntExpr
     | RecordLiteralExpr
     | RecordFieldExpr
     | MapLiteralExpr
@@ -689,6 +701,8 @@ ArgAtExpr.model_rebuild()
 ReadJsonListExpr.model_rebuild()
 StringLengthExpr.model_rebuild()
 StringSliceExpr.model_rebuild()
+ParseIntExpr.model_rebuild()
+FormatIntExpr.model_rebuild()
 RecordLiteralExpr.model_rebuild()
 RecordFieldExpr.model_rebuild()
 MapLiteralExpr.model_rebuild()
