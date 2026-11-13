@@ -14,6 +14,9 @@ from memelang.ir.schema import (
     CallExpr,
     ClampCollectionStmt,
     ContinueStmt,
+    CopyFileStmt,
+    CreateDirectoryStmt,
+    DeleteFileStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -22,10 +25,13 @@ from memelang.ir.schema import (
     ForRangeStmt,
     FuncDefStmt,
     FuncParam,
+    IsDigitExpr,
     ListAppendStmt,
+    ListFilesExpr,
     ListIndexExpr,
     ListLengthExpr,
     ListLiteralExpr,
+    ListRemoveStmt,
     ListSetIndexStmt,
     LiteralExpr,
     MapEntry,
@@ -33,12 +39,15 @@ from memelang.ir.schema import (
     MapHasKeyExpr,
     MapLiteralExpr,
     MapSetStmt,
+    MoveFileStmt,
+    ParseIntOrDefaultExpr,
     PrintStmt,
     ProgramIR,
     RandomListExpr,
     ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
     RecordFieldExpr,
@@ -1068,6 +1077,291 @@ def test_file_io_write_append_read_exists_and_missing_error_parity(target: Targe
     missing_res = execute_ir(missing_prog, target)
     assert missing_res.returncode == 1
     assert missing_res.stdout.strip() == "Error reading file: does_not_exist.txt"
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_file_management_builtins_parity(target: TargetLang):
+    prog = ProgramIR(
+        items=[
+            # 1. create directory
+            CreateDirectoryStmt(path=LiteralExpr(value="test_dir/subdir", data_type="String")),
+            # 2. write a file inside test_dir/subdir
+            WriteFileStmt(
+                filepath=LiteralExpr(value="test_dir/subdir/orig.txt", data_type="String"),
+                content=LiteralExpr(value="hello world", data_type="String"),
+            ),
+            # 3. copy file
+            CopyFileStmt(
+                src=LiteralExpr(value="test_dir/subdir/orig.txt", data_type="String"),
+                dst=LiteralExpr(value="test_dir/subdir/copied.txt", data_type="String"),
+            ),
+            PrintStmt(expressions=[ReadFileStringExpr(filepath=LiteralExpr(value="test_dir/subdir/copied.txt", data_type="String"))]),
+            # 4. rename file (same directory)
+            RenameFileStmt(
+                path=LiteralExpr(value="test_dir/subdir/copied.txt", data_type="String"),
+                new_name=LiteralExpr(value="renamed.txt", data_type="String"),
+            ),
+            PrintStmt(expressions=[FileExistsExpr(filepath=LiteralExpr(value="test_dir/subdir/copied.txt", data_type="String"))]),
+            PrintStmt(expressions=[FileExistsExpr(filepath=LiteralExpr(value="test_dir/subdir/renamed.txt", data_type="String"))]),
+            # 5. move file
+            MoveFileStmt(
+                src=LiteralExpr(value="test_dir/subdir/renamed.txt", data_type="String"),
+                dst=LiteralExpr(value="test_dir/moved.txt", data_type="String"),
+            ),
+            PrintStmt(expressions=[FileExistsExpr(filepath=LiteralExpr(value="test_dir/subdir/renamed.txt", data_type="String"))]),
+            PrintStmt(expressions=[FileExistsExpr(filepath=LiteralExpr(value="test_dir/moved.txt", data_type="String"))]),
+            # 6. write another file in test_dir
+            WriteFileStmt(
+                filepath=LiteralExpr(value="test_dir/a.txt", data_type="String"),
+                content=LiteralExpr(value="aaa", data_type="String"),
+            ),
+            # 7. list files in test_dir (contains: a.txt, moved.txt, subdir)
+            VarDeclStmt(
+                name="entries",
+                var_type="List<String>",
+                value=ListFilesExpr(path=LiteralExpr(value="test_dir", data_type="String")),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="entries")]),
+            # 8. delete file
+            DeleteFileStmt(path=LiteralExpr(value="test_dir/a.txt", data_type="String")),
+            PrintStmt(expressions=[FileExistsExpr(filepath=LiteralExpr(value="test_dir/a.txt", data_type="String"))]),
+        ]
+    )
+    res = execute_ir(prog, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.splitlines() == [
+        "hello world",
+        "false",
+        "true",
+        "false",
+        "true",
+        "[a.txt, moved.txt, subdir]",
+        "false",
+    ]
+
+    # Error parity tests: missing file for copy, move, rename, delete, list_files
+    for stmt_name, stmt, expected_msg in [
+        (
+            "copy",
+            CopyFileStmt(src=LiteralExpr(value="nonexistent.txt", data_type="String"), dst=LiteralExpr(value="out.txt", data_type="String")),
+            "Error copying file: nonexistent.txt",
+        ),
+        (
+            "move",
+            MoveFileStmt(src=LiteralExpr(value="nonexistent.txt", data_type="String"), dst=LiteralExpr(value="out.txt", data_type="String")),
+            "Error moving file: nonexistent.txt",
+        ),
+        (
+            "rename",
+            RenameFileStmt(path=LiteralExpr(value="nonexistent.txt", data_type="String"), new_name=LiteralExpr(value="out.txt", data_type="String")),
+            "Error renaming file: nonexistent.txt",
+        ),
+        (
+            "delete",
+            DeleteFileStmt(path=LiteralExpr(value="nonexistent.txt", data_type="String")),
+            "Error deleting file: nonexistent.txt",
+        ),
+    ]:
+        err_prog = ProgramIR(items=[stmt])
+        err_res = execute_ir(err_prog, target)
+        assert err_res.returncode == 1, f"Expected rc 1 for {stmt_name} on {target}, got {err_res.returncode}"
+        assert err_res.stdout.strip() == expected_msg, f"Unexpected message for {stmt_name} on {target}: {err_res.stdout.strip()}"
+
+    list_err_prog = ProgramIR(items=[PrintStmt(expressions=[ListFilesExpr(path=LiteralExpr(value="nonexistent_dir", data_type="String"))])])
+    list_err_res = execute_ir(list_err_prog, target)
+    assert list_err_res.returncode == 1
+    assert list_err_res.stdout.strip() == "Error listing directory: nonexistent_dir"
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_list_removal_builtins_parity(target: TargetLang):
+    prog = ProgramIR(
+        items=[
+            VarDeclStmt(
+                name="nums",
+                var_type="List<Int>",
+                value=ListLiteralExpr(
+                    elements=[
+                        LiteralExpr(value=10, data_type="Int"),
+                        LiteralExpr(value=20, data_type="Int"),
+                        LiteralExpr(value=30, data_type="Int"),
+                        LiteralExpr(value=40, data_type="Int"),
+                        LiteralExpr(value=50, data_type="Int"),
+                    ],
+                    element_type="Int",
+                ),
+            ),
+            # Remove item 1 (value 20) -> [10, 30, 40, 50]
+            ListRemoveStmt(target="nums", index=LiteralExpr(value=1, data_type="Int")),
+            # Remove last item (value 50) -> [10, 30, 40]
+            ListRemoveStmt(target="nums", index=None),
+            # Remove item 0 (value 10) -> [30, 40]
+            ListRemoveStmt(target="nums", index=LiteralExpr(value=0, data_type="Int")),
+            PrintStmt(expressions=[VarRefExpr(name="nums")]),
+            # String list removal
+            VarDeclStmt(
+                name="words",
+                var_type="List<String>",
+                value=ListLiteralExpr(
+                    elements=[
+                        LiteralExpr(value="hello", data_type="String"),
+                        LiteralExpr(value="brave", data_type="String"),
+                        LiteralExpr(value="new", data_type="String"),
+                        LiteralExpr(value="world", data_type="String"),
+                    ],
+                    element_type="String",
+                ),
+            ),
+            ListRemoveStmt(target="words", index=LiteralExpr(value=2, data_type="Int")),
+            ListRemoveStmt(target="words", index=None),
+            PrintStmt(expressions=[VarRefExpr(name="words")]),
+        ]
+    )
+    res = execute_ir(prog, target)
+    assert res.returncode == 0
+    lines = res.stdout.strip().splitlines()
+    assert lines == ["[30, 40]", "[hello, brave]"]
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_list_removal_out_of_range_error_parity(target: TargetLang):
+    # 1. Out of range indexed removal
+    prog_oob = ProgramIR(
+        items=[
+            VarDeclStmt(
+                name="lst",
+                var_type="List<Int>",
+                value=ListLiteralExpr(
+                    elements=[LiteralExpr(value=1, data_type="Int")],
+                    element_type="Int",
+                ),
+            ),
+            ListRemoveStmt(target="lst", index=LiteralExpr(value=5, data_type="Int")),
+        ]
+    )
+    res_oob = execute_ir(prog_oob, target)
+    assert res_oob.returncode == 1
+    assert "Error: list index out of range" in res_oob.stdout
+
+    # 2. Remove last item from empty list
+    prog_empty = ProgramIR(
+        items=[
+            VarDeclStmt(
+                name="empty",
+                var_type="List<Int>",
+                value=ListLiteralExpr(
+                    elements=[],
+                    element_type="Int",
+                ),
+            ),
+            ListRemoveStmt(target="empty", index=None),
+        ]
+    )
+    res_empty = execute_ir(prog_empty, target)
+    assert res_empty.returncode == 1
+    assert "Error: list index out of range" in res_empty.stdout
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_safe_parse_and_is_digit_parity(target: TargetLang):
+    prog = ProgramIR(
+        items=[
+            # Helper function to prove lazy evaluation of default_val
+            FuncDefStmt(
+                name="get_fallback",
+                params=[],
+                return_type="Int",
+                body=[
+                    PrintStmt(expressions=[LiteralExpr(value="FALLBACK_CALLED", data_type="String")]),
+                    ReturnStmt(value=LiteralExpr(value=999, data_type="Int")),
+                ],
+            ),
+            # 1. Valid parse (lazy: get_fallback should NOT be called)
+            VarDeclStmt(
+                name="v1",
+                var_type="Int",
+                value=ParseIntOrDefaultExpr(
+                    target=LiteralExpr(value="  42  ", data_type="String"),
+                    default_val=CallExpr(func_name="get_fallback", args=[]),
+                ),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="v1")]),
+            # 2. Invalid parse (lazy: get_fallback SHOULD be called)
+            VarDeclStmt(
+                name="v2",
+                var_type="Int",
+                value=ParseIntOrDefaultExpr(
+                    target=LiteralExpr(value="not_a_number", data_type="String"),
+                    default_val=CallExpr(func_name="get_fallback", args=[]),
+                ),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="v2")]),
+            # 3. Empty string fallback without calling function
+            VarDeclStmt(
+                name="v3",
+                var_type="Int",
+                value=ParseIntOrDefaultExpr(
+                    target=LiteralExpr(value="", data_type="String"),
+                    default_val=LiteralExpr(value=-1, data_type="Int"),
+                ),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="v3")]),
+            # 4. Negative integer parse
+            VarDeclStmt(
+                name="v4",
+                var_type="Int",
+                value=ParseIntOrDefaultExpr(
+                    target=LiteralExpr(value="-100", data_type="String"),
+                    default_val=LiteralExpr(value=0, data_type="Int"),
+                ),
+            ),
+            PrintStmt(expressions=[VarRefExpr(name="v4")]),
+            # 5. IsDigit tests
+            PrintStmt(expressions=[IsDigitExpr(target=LiteralExpr(value="0", data_type="String"))]),
+            PrintStmt(expressions=[IsDigitExpr(target=LiteralExpr(value="9", data_type="String"))]),
+            PrintStmt(expressions=[IsDigitExpr(target=LiteralExpr(value="a", data_type="String"))]),
+            PrintStmt(expressions=[IsDigitExpr(target=LiteralExpr(value="", data_type="String"))]),
+            PrintStmt(expressions=[IsDigitExpr(target=LiteralExpr(value="12", data_type="String"))]),
+            PrintStmt(expressions=[IsDigitExpr(target=LiteralExpr(value=" ", data_type="String"))]),
+        ]
+    )
+    res = execute_ir(prog, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.splitlines() == [
+        "42",
+        "FALLBACK_CALLED",
+        "999",
+        "-1",
+        "-100",
+        "true",
+        "true",
+        "false",
+        "false",
+        "false",
+        "false",
+    ]
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_safe_parse_and_is_digit_heuristic_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """
+define a: String as "123"
+define b: String as "bad"
+define n1: Int as integer value of a or else 0
+define n2: Int as integer value of b or else -5
+define d1: Bool as is digit "7"
+define d2: Bool as is digit "x"
+print n1, n2, d1, d2
+"""
+    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.strip() == "123 -5 true false"
+
+
 
 
 @pytest.mark.parametrize("target", TARGETS)

@@ -15,6 +15,9 @@ from memelang.ir.schema import (
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
+    CopyFileStmt,
+    CreateDirectoryStmt,
+    DeleteFileStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -27,11 +30,14 @@ from memelang.ir.schema import (
     IRStatement,
     IfStmt,
     ImportStmt,
+    IsDigitExpr,
     ListAppendStmt,
+    ListFilesExpr,
     ListIndexExpr,
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListRemoveStmt,
     ListSetIndexStmt,
     LiteralExpr,
     MapEntry,
@@ -40,12 +46,14 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MemeType,
+    MoveFileStmt,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
     ParseIntExpr,
+    ParseIntOrDefaultExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -53,6 +61,7 @@ from memelang.ir.schema import (
     ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
     RecordFieldExpr,
@@ -112,6 +121,9 @@ class _PyGen:
         self.uses_math = False
         self.uses_json_io = False
         self.uses_file_io = False
+        self.uses_list_remove = False
+        self.uses_parse_int_or_else = False
+        self.uses_is_digit = False
         self.uses_argv = False
         self.uses_input = False
         self.uses_input_helpers = False
@@ -137,11 +149,13 @@ class _PyGen:
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
-        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr)):
+        if isinstance(expr, ListFilesExpr):
+            return "List<String>"
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr)):
             return "Bool"
         if isinstance(
             expr,
-            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr),
+            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr),
         ):
             return "Int"
         if isinstance(
@@ -329,6 +343,16 @@ class _PyGen:
             self.uses_input_helpers = True
             return f"_meme_parse_int({self.gen_expr(expr.target, scope)})"
 
+        if isinstance(expr, ParseIntOrDefaultExpr):
+            self.uses_parse_int_or_else = True
+            tgt = self.gen_expr(expr.target, scope)
+            dflt = self.gen_expr(expr.default_val, scope)
+            return f"_meme_parse_int_or_else({tgt}, lambda: {dflt})"
+
+        if isinstance(expr, IsDigitExpr):
+            self.uses_is_digit = True
+            return f"_meme_is_digit({self.gen_expr(expr.target, scope)})"
+
         if isinstance(expr, FormatIntExpr):
             return f"_meme_builtins.str({self.gen_expr(expr.target, scope)})"
 
@@ -343,6 +367,10 @@ class _PyGen:
         if isinstance(expr, ReadFileStringExpr):
             self.uses_file_io = True
             return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ListFilesExpr):
+            self.uses_file_io = True
+            return f"_meme_list_files({self.gen_expr(expr.path, scope)})"
 
         if isinstance(expr, ArgCountExpr):
             self.uses_argv = True
@@ -469,6 +497,14 @@ class _PyGen:
             idx = self.gen_expr(stmt.index, scope)
             val = self.gen_expr(stmt.value, scope)
             return [f"{pad}{tgt}[_meme_builtins.int({idx})] = {val}"]
+
+        if isinstance(stmt, ListRemoveStmt):
+            self.uses_list_remove = True
+            tgt = _py_ident(stmt.target)
+            if stmt.index is not None:
+                idx = self.gen_expr(stmt.index, scope)
+                return [f"{pad}_meme_list_remove({tgt}, {idx})"]
+            return [f"{pad}_meme_list_remove_last({tgt})"]
 
         if isinstance(stmt, FailStmt):
             return [
@@ -630,6 +666,36 @@ class _PyGen:
                 f"{pad}_meme_append_file({self.gen_expr(stmt.filepath, scope)}, {self.gen_expr(stmt.content, scope)})"
             ]
 
+        if isinstance(stmt, CopyFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_copy_file({self.gen_expr(stmt.src, scope)}, {self.gen_expr(stmt.dst, scope)})"
+            ]
+
+        if isinstance(stmt, MoveFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_move_file({self.gen_expr(stmt.src, scope)}, {self.gen_expr(stmt.dst, scope)})"
+            ]
+
+        if isinstance(stmt, RenameFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_rename_file({self.gen_expr(stmt.path, scope)}, {self.gen_expr(stmt.new_name, scope)})"
+            ]
+
+        if isinstance(stmt, DeleteFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_delete_file({self.gen_expr(stmt.path, scope)})"
+            ]
+
+        if isinstance(stmt, CreateDirectoryStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_create_directory({self.gen_expr(stmt.path, scope)})"
+            ]
+
         if isinstance(stmt, ImportStmt):
             return []
 
@@ -667,6 +733,8 @@ def generate_python(ir: ProgramIR) -> str:
         header.append("import os as _meme_os")
     if gen.uses_json_io or gen.uses_file_io or gen.uses_argv:
         header.append("import sys as _meme_sys")
+    if gen.uses_file_io:
+        header.append("import shutil as _shutil")
     if gen.uses_math:
         header.append("import math as _meme_math")
     if gen.uses_random:
@@ -682,6 +750,25 @@ def generate_python(ir: ProgramIR) -> str:
                 "        _meme_builtins.print(f'Error: argument index {_i} out of range')",
                 "        raise _meme_builtins.SystemExit(1)",
                 "    return _meme_sys.argv[_i]",
+                "",
+            ]
+        )
+
+    if gen.uses_list_remove:
+        header.extend(
+            [
+                "def _meme_list_remove(lst: list, idx: int) -> None:",
+                "    _i = _meme_builtins.int(idx)",
+                "    if _i < 0 or _i >= _meme_builtins.len(lst):",
+                "        _meme_builtins.print('Error: list index out of range')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    lst.pop(_i)",
+                "",
+                "def _meme_list_remove_last(lst: list) -> None:",
+                "    if not lst:",
+                "        _meme_builtins.print('Error: list index out of range')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    lst.pop()",
                 "",
             ]
         )
@@ -771,6 +858,77 @@ def generate_python(ir: ProgramIR) -> str:
                 "            _f.write(content)",
                 "    except _meme_builtins.Exception:",
                 "        _meme_builtins.print(f'Error writing file: {path}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "",
+                "def _meme_copy_file(src: str, dst: str) -> None:",
+                "    _sp = _meme_resolve_path(src)",
+                "    if not _meme_os.path.isfile(_sp):",
+                "        _meme_builtins.print(f'Error copying file: {src}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    try:",
+                "        _shutil.copyfile(_sp, dst.strip())",
+                "    except _meme_builtins.Exception:",
+                "        _meme_builtins.print(f'Error copying file: {src}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "",
+                "def _meme_move_file(src: str, dst: str) -> None:",
+                "    _sp = _meme_resolve_path(src)",
+                "    if not _meme_os.path.isfile(_sp):",
+                "        _meme_builtins.print(f'Error moving file: {src}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    try:",
+                "        _target = dst.strip()",
+                "        if _meme_os.path.exists(_target):",
+                "            _meme_os.remove(_target)",
+                "        _shutil.move(_sp, _target)",
+                "    except _meme_builtins.Exception:",
+                "        _meme_builtins.print(f'Error moving file: {src}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "",
+                "def _meme_rename_file(path: str, new_name: str) -> None:",
+                "    _sp = _meme_resolve_path(path)",
+                "    if not _meme_os.path.isfile(_sp):",
+                "        _meme_builtins.print(f'Error renaming file: {path}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    try:",
+                "        _dir = _meme_os.path.dirname(path.strip())",
+                "        _nn = _meme_os.path.basename(new_name.strip())",
+                "        _target = _meme_os.path.join(_dir, _nn) if _dir else _nn",
+                "        if _meme_os.path.exists(_target) and _meme_os.path.abspath(_sp) != _meme_os.path.abspath(_target):",
+                "            _meme_os.remove(_target)",
+                "        _shutil.move(_sp, _target)",
+                "    except _meme_builtins.Exception:",
+                "        _meme_builtins.print(f'Error renaming file: {path}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "",
+                "def _meme_delete_file(path: str) -> None:",
+                "    _sp = _meme_resolve_path(path)",
+                "    if not _meme_os.path.isfile(_sp):",
+                "        _meme_builtins.print(f'Error deleting file: {path}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    try:",
+                "        _meme_os.remove(_sp)",
+                "    except _meme_builtins.Exception:",
+                "        _meme_builtins.print(f'Error deleting file: {path}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "",
+                "def _meme_create_directory(path: str) -> None:",
+                "    try:",
+                "        _meme_os.makedirs(path.strip(), exist_ok=True)",
+                "    except _meme_builtins.Exception:",
+                "        _meme_builtins.print(f'Error creating directory: {path}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "",
+                "def _meme_list_files(path: str) -> list[str]:",
+                "    _rp = _meme_resolve_path(path)",
+                "    if not _meme_os.path.isdir(_rp):",
+                "        _meme_builtins.print(f'Error listing directory: {path}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    try:",
+                "        entries = _meme_os.listdir(_rp)",
+                "        return _meme_builtins.sorted(entries)",
+                "    except _meme_builtins.Exception:",
+                "        _meme_builtins.print(f'Error listing directory: {path}')",
                 "        raise _meme_builtins.SystemExit(1)",
                 "",
             ]
@@ -872,6 +1030,31 @@ def generate_python(ir: ProgramIR) -> str:
                 "    if opt is None:",
                 "        return default_fn()",
                 "    return opt",
+                "",
+            ]
+        )
+
+    if gen.uses_parse_int_or_else:
+        header.extend(
+            [
+                "def _meme_parse_int_or_else(s: str, default_fn) -> int:",
+                "    ts = s.strip()",
+                "    try:",
+                "        v = _meme_builtins.int(ts)",
+                "        if v < -9223372036854775808 or v > 9223372036854775807:",
+                "            return default_fn()",
+                "        return v",
+                "    except _meme_builtins.ValueError:",
+                "        return default_fn()",
+                "",
+            ]
+        )
+
+    if gen.uses_is_digit:
+        header.extend(
+            [
+                "def _meme_is_digit(s: str) -> bool:",
+                "    return _meme_builtins.len(s) == 1 and '0' <= s <= '9'",
                 "",
             ]
         )

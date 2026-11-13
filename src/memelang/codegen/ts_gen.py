@@ -29,6 +29,9 @@ from memelang.ir.schema import (
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
+    CopyFileStmt,
+    CreateDirectoryStmt,
+    DeleteFileStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -42,11 +45,14 @@ from memelang.ir.schema import (
     IRStatement,
     IfStmt,
     ImportStmt,
+    IsDigitExpr,
     ListAppendStmt,
+    ListFilesExpr,
     ListIndexExpr,
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListRemoveStmt,
     ListSetIndexStmt,
     LiteralExpr,
     MapEntry,
@@ -55,12 +61,14 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MemeType,
+    MoveFileStmt,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
     ParseIntExpr,
+    ParseIntOrDefaultExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -68,6 +76,7 @@ from memelang.ir.schema import (
     ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
     RecordFieldExpr,
@@ -197,14 +206,14 @@ class _TSGen:
             if isinstance(expr, OptionalUnwrapOrDefaultExpr):
                 return self.infer_type(expr.default_val, scope)
             return "Int"
-        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr)):
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr)):
             return "Bool"
-        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr)):
+        if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr)):
             return "Int"
         if isinstance(expr, (StringSliceExpr, StringReplaceExpr, StringUpperExpr, StringLowerExpr,
                              StringTrimExpr, StringJoinExpr, StringCharAtExpr, ReadFileStringExpr, ArgAtExpr, FormatIntExpr)):
             return "String"
-        if isinstance(expr, StringSplitExpr):
+        if isinstance(expr, (StringSplitExpr, ListFilesExpr)):
             return "List<String>"
         if isinstance(expr, ReadJsonListExpr):
             return f"List<{expr.element_type}>"
@@ -418,6 +427,14 @@ class _TSGen:
         if isinstance(expr, ParseIntExpr):
             return f"_meme_parse_int({self.gen_expr(expr.target, scope)})"
 
+        if isinstance(expr, ParseIntOrDefaultExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            dflt = self.gen_expr(expr.default_val, scope)
+            return f"_meme_parse_int_or_else({tgt}, () => {dflt})"
+
+        if isinstance(expr, IsDigitExpr):
+            return f"_meme_is_digit({self.gen_expr(expr.target, scope)})"
+
         if isinstance(expr, FormatIntExpr):
             return f"String({self.gen_expr(expr.target, scope)})"
 
@@ -426,6 +443,9 @@ class _TSGen:
 
         if isinstance(expr, ReadFileStringExpr):
             return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ListFilesExpr):
+            return f"_meme_list_files({self.gen_expr(expr.path, scope)})"
 
         if isinstance(expr, ReadJsonListExpr):
             return f"_meme_read_json_list_{expr.element_type.lower()}({self.gen_expr(expr.filepath, scope)})"
@@ -643,6 +663,13 @@ class _TSGen:
             val = self.gen_expr(stmt.value, scope, el_t)
             return [f"{pad}_meme_list_set({tgt}, {idx}, {val});"]
 
+        if isinstance(stmt, ListRemoveStmt):
+            tgt = _ts_ident(stmt.target)
+            if stmt.index is not None:
+                idx = self.gen_expr(stmt.index, scope)
+                return [f"{pad}_meme_list_remove({tgt}, {idx});"]
+            return [f"{pad}_meme_list_remove_last({tgt});"]
+
         if isinstance(stmt, FilterCollectionStmt):
             tgt = _ts_ident(stmt.target)
             iv = _ts_ident(stmt.item_var)
@@ -689,6 +716,29 @@ class _TSGen:
             p = self.gen_expr(stmt.filepath, scope)
             c = self.gen_expr(stmt.content, scope)
             return [f"{pad}_meme_append_file({p}, {c});"]
+
+        if isinstance(stmt, CopyFileStmt):
+            s = self.gen_expr(stmt.src, scope)
+            d = self.gen_expr(stmt.dst, scope)
+            return [f"{pad}_meme_copy_file({s}, {d});"]
+
+        if isinstance(stmt, MoveFileStmt):
+            s = self.gen_expr(stmt.src, scope)
+            d = self.gen_expr(stmt.dst, scope)
+            return [f"{pad}_meme_move_file({s}, {d});"]
+
+        if isinstance(stmt, RenameFileStmt):
+            p = self.gen_expr(stmt.path, scope)
+            nn = self.gen_expr(stmt.new_name, scope)
+            return [f"{pad}_meme_rename_file({p}, {nn});"]
+
+        if isinstance(stmt, DeleteFileStmt):
+            p = self.gen_expr(stmt.path, scope)
+            return [f"{pad}_meme_delete_file({p});"]
+
+        if isinstance(stmt, CreateDirectoryStmt):
+            p = self.gen_expr(stmt.path, scope)
+            return [f"{pad}_meme_create_directory({p});"]
 
         if isinstance(stmt, (RecordDefStmt, FuncDefStmt, ImportStmt)):
             return []
@@ -747,6 +797,7 @@ def generate_ts(ir: ProgramIR) -> str:
         "declare const Buffer: any;",
         "declare function require(name: string): any;",
         "const _fs = require(\"node:fs\");",
+        "const _path = require(\"node:path\");",
         "",
         "const _meme_argv: string[] = process.argv.slice(1);",
         "function _meme_arg_at(idx: number): string {",
@@ -846,6 +897,22 @@ def generate_ts(ir: ProgramIR) -> str:
         "    if (idx < 0) idx = 0;",
         "    if (idx > arr.length) idx = arr.length;",
         "    arr.splice(idx, 0, val);",
+        "}",
+        "",
+        "function _meme_list_remove<T>(arr: T[], idx: number): void {",
+        "    if (idx < 0 || idx >= arr.length) {",
+        "        console.log(\"Error: list index out of range\");",
+        "        process.exit(1);",
+        "    }",
+        "    arr.splice(idx, 1);",
+        "}",
+        "",
+        "function _meme_list_remove_last<T>(arr: T[]): void {",
+        "    if (arr.length === 0) {",
+        "        console.log(\"Error: list index out of range\");",
+        "        process.exit(1);",
+        "    }",
+        "    arr.pop();",
         "}",
         "",
         "function _meme_sort<T>(arr: T[], desc: boolean): void {",
@@ -994,6 +1061,102 @@ def generate_ts(ir: ProgramIR) -> str:
         "    }",
         "}",
         "",
+        "function _meme_copy_file(src: string, dst: string): void {",
+        "    const sp = _meme_resolve_path(src);",
+        "    try {",
+        "        if (!_fs.statSync(sp).isFile()) {",
+        "            console.log(`Error copying file: ${src}`);",
+        "            process.exit(1);",
+        "        }",
+        "        _fs.copyFileSync(sp, dst.trim());",
+        "    } catch {",
+        "        console.log(`Error copying file: ${src}`);",
+        "        process.exit(1);",
+        "    }",
+        "}",
+        "",
+        "function _meme_move_file(src: string, dst: string): void {",
+        "    const sp = _meme_resolve_path(src);",
+        "    try {",
+        "        if (!_fs.statSync(sp).isFile()) {",
+        "            console.log(`Error moving file: ${src}`);",
+        "            process.exit(1);",
+        "        }",
+        "        const target = dst.trim();",
+        "        try {",
+        "            _fs.renameSync(sp, target);",
+        "        } catch {",
+        "            _fs.copyFileSync(sp, target);",
+        "            _fs.unlinkSync(sp);",
+        "        }",
+        "    } catch {",
+        "        console.log(`Error moving file: ${src}`);",
+        "        process.exit(1);",
+        "    }",
+        "}",
+        "",
+        "function _meme_rename_file(filePath: string, newName: string): void {",
+        "    const sp = _meme_resolve_path(filePath);",
+        "    try {",
+        "        if (!_fs.statSync(sp).isFile()) {",
+        "            console.log(`Error renaming file: ${filePath}`);",
+        "            process.exit(1);",
+        "        }",
+        "        const p = filePath.trim();",
+        "        const dir = _path.dirname(p);",
+        "        const nn = _path.basename(newName.trim());",
+        "        const target = dir === \".\" || dir === \"\" ? nn : _path.join(dir, nn);",
+        "        try {",
+        "            _fs.renameSync(sp, target);",
+        "        } catch {",
+        "            _fs.copyFileSync(sp, target);",
+        "            _fs.unlinkSync(sp);",
+        "        }",
+        "    } catch {",
+        "        console.log(`Error renaming file: ${filePath}`);",
+        "        process.exit(1);",
+        "    }",
+        "}",
+        "",
+        "function _meme_delete_file(filePath: string): void {",
+        "    const sp = _meme_resolve_path(filePath);",
+        "    try {",
+        "        if (!_fs.statSync(sp).isFile()) {",
+        "            console.log(`Error deleting file: ${filePath}`);",
+        "            process.exit(1);",
+        "        }",
+        "        _fs.unlinkSync(sp);",
+        "    } catch {",
+        "        console.log(`Error deleting file: ${filePath}`);",
+        "        process.exit(1);",
+        "    }",
+        "}",
+        "",
+        "function _meme_create_directory(dirPath: string): void {",
+        "    try {",
+        "        _fs.mkdirSync(dirPath.trim(), { recursive: true });",
+        "    } catch {",
+        "        console.log(`Error creating directory: ${dirPath}`);",
+        "        process.exit(1);",
+        "    }",
+        "}",
+        "",
+        "function _meme_list_files(dirPath: string): string[] {",
+        "    const rp = _meme_resolve_path(dirPath);",
+        "    try {",
+        "        if (!_fs.statSync(rp).isDirectory()) {",
+        "            console.log(`Error listing directory: ${dirPath}`);",
+        "            process.exit(1);",
+        "        }",
+        "        const entries: string[] = _fs.readdirSync(rp);",
+        "        entries.sort();",
+        "        return entries;",
+        "    } catch {",
+        "        console.log(`Error listing directory: ${dirPath}`);",
+        "        process.exit(1);",
+        "    }",
+        "}",
+        "",
         "function _meme_read_line(prompt: string): string {",
         "    const q = process.env[\"MEME_QUIET_PROMPTS\"] || \"\";",
         "    const quiet = q === \"1\" || q.toLowerCase() === \"true\" || q.toLowerCase() === \"yes\";",
@@ -1035,6 +1198,26 @@ def generate_ts(ir: ProgramIR) -> str:
         "        console.log(`Error parsing integer: ${s}`);",
         "        process.exit(1);",
         "    }",
+        "}",
+        "",
+        "function _meme_parse_int_or_else(s: string, defaultFn: () => number): number {",
+        "    const ts = s.trim();",
+        "    if (!/^[+-]?\\d+$/.test(ts)) {",
+        "        return defaultFn();",
+        "    }",
+        "    try {",
+        "        const b = BigInt(ts);",
+        "        if (b < -9223372036854775808n || b > 9223372036854775807n) {",
+        "            return defaultFn();",
+        "        }",
+        "        return Number(b);",
+        "    } catch {",
+        "        return defaultFn();",
+        "    }",
+        "}",
+        "",
+        "function _meme_is_digit(s: string): boolean {",
+        "    return s.length === 1 && s >= \"0\" && s <= \"9\";",
         "}",
         "",
         "function _meme_parse_float(s: string): number {",

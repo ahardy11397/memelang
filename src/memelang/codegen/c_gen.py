@@ -27,6 +27,9 @@ from memelang.ir.schema import (
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
+    CopyFileStmt,
+    CreateDirectoryStmt,
+    DeleteFileStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -39,11 +42,14 @@ from memelang.ir.schema import (
     IRStatement,
     IfStmt,
     ImportStmt,
+    IsDigitExpr,
     ListAppendStmt,
+    ListFilesExpr,
     ListIndexExpr,
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListRemoveStmt,
     ListSetIndexStmt,
     LiteralExpr,
     MapEntry,
@@ -52,12 +58,14 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MemeType,
+    MoveFileStmt,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
     ParseIntExpr,
+    ParseIntOrDefaultExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -71,6 +79,7 @@ from memelang.ir.schema import (
     RecordFieldInit,
     RecordLiteralExpr,
     RecordSetFieldStmt,
+    RenameFileStmt,
     ReturnStmt,
     SortCollectionStmt,
     StrContainsExpr,
@@ -235,14 +244,17 @@ def _collect_types_from_expr(expr: IRExpr, out: set[str]) -> None:
         _collect_types_from_expr(expr.target, out)
     elif isinstance(expr, OptionalUnwrapExpr):
         _collect_types_from_expr(expr.target, out)
-    elif isinstance(expr, OptionalUnwrapOrDefaultExpr):
+    elif isinstance(expr, (OptionalUnwrapOrDefaultExpr, ParseIntOrDefaultExpr)):
         _collect_types_from_expr(expr.target, out)
         _collect_types_from_expr(expr.default_val, out)
+    elif isinstance(expr, ListFilesExpr):
+        out.add("List<String>")
+        _collect_types_from_expr(expr.path, out)
     elif isinstance(expr, (StringLengthExpr, StringSliceExpr, StringReplaceExpr,
                            StringUpperExpr, StringLowerExpr, StringTrimExpr,
                            StringJoinExpr, StringIndexOfExpr, StringCharAtExpr,
                            StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr,
-                           FileExistsExpr, ReadFileStringExpr, ParseIntExpr, FormatIntExpr)):
+                           FileExistsExpr, ReadFileStringExpr, ParseIntExpr, FormatIntExpr, IsDigitExpr)):
         for attr in ("target", "substring", "prefix", "suffix", "old", "new",
                      "start", "end", "filepath", "index", "separator", "items"):
             if hasattr(expr, attr):
@@ -309,6 +321,9 @@ def _collect_types_from_stmt(stmt: IRStatement, out: set[str]) -> None:
         _collect_types_from_expr(stmt.value, out)
         if hasattr(stmt, "index"):
             _collect_types_from_expr(stmt.index, out)
+    elif isinstance(stmt, ListRemoveStmt):
+        if stmt.index is not None:
+            _collect_types_from_expr(stmt.index, out)
     elif isinstance(stmt, ClampCollectionStmt):
         _collect_types_from_expr(stmt.min_val, out)
         _collect_types_from_expr(stmt.max_val, out)
@@ -322,6 +337,14 @@ def _collect_types_from_stmt(stmt: IRStatement, out: set[str]) -> None:
     elif isinstance(stmt, (WriteFileStmt, AppendFileStmt)):
         _collect_types_from_expr(stmt.filepath, out)
         _collect_types_from_expr(stmt.content, out)
+    elif isinstance(stmt, (CopyFileStmt, MoveFileStmt)):
+        _collect_types_from_expr(stmt.src, out)
+        _collect_types_from_expr(stmt.dst, out)
+    elif isinstance(stmt, RenameFileStmt):
+        _collect_types_from_expr(stmt.path, out)
+        _collect_types_from_expr(stmt.new_name, out)
+    elif isinstance(stmt, (DeleteFileStmt, CreateDirectoryStmt)):
+        _collect_types_from_expr(stmt.path, out)
 
 
 class _CGen:
@@ -331,6 +354,7 @@ class _CGen:
         self.uses_str_helpers = False
         self.uses_json_io = False
         self.uses_file_io = False
+        self.uses_list_files = False
         self.uses_argv = False
         self.uses_int_div = False
         self.uses_int_mod = False
@@ -353,11 +377,13 @@ class _CGen:
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
-        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr)):
+        if isinstance(expr, ListFilesExpr):
+            return "List<String>"
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr)):
             return "Bool"
         if isinstance(
             expr,
-            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr),
+            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr),
         ):
             return "Int"
         if isinstance(
@@ -609,6 +635,16 @@ class _CGen:
             self.uses_str_helpers = True
             return f"_meme_parse_int({self.gen_expr(expr.target, scope)})"
 
+        if isinstance(expr, ParseIntOrDefaultExpr):
+            self.uses_str_helpers = True
+            tgt = self.gen_expr(expr.target, scope)
+            dflt = self.gen_expr(expr.default_val, scope)
+            return f"__extension__ ({{ int64_t _val; _meme_try_parse_int({tgt}, &_val) ? _val : ({dflt}); }})"
+
+        if isinstance(expr, IsDigitExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_is_digit({tgt})"
+
         if isinstance(expr, FormatIntExpr):
             return f"_meme_fmt_int({self.gen_expr(expr.target, scope)})"
 
@@ -626,6 +662,12 @@ class _CGen:
             self.uses_str_helpers = True
             self.uses_file_io = True
             return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ListFilesExpr):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            self.uses_list_files = True
+            return f"_meme_list_files({self.gen_expr(expr.path, scope)})"
 
         if isinstance(expr, ArgCountExpr):
             self.uses_argv = True
@@ -819,6 +861,16 @@ class _CGen:
             val = self.gen_expr(stmt.value, scope, el_t)
             return [f"{pad}_meme_list_{m_type}_set(&{tgt}, {idx}, {val});"]
 
+        if isinstance(stmt, ListRemoveStmt):
+            tgt = _c_ident(stmt.target)
+            col_t = scope.get(stmt.target, "List<Int>")
+            el_t = col_t[5:-1] if col_t.startswith("List<") else "Int"
+            m_type = _mangle_type(el_t)
+            if stmt.index is not None:
+                idx = self.gen_expr(stmt.index, scope)
+                return [f"{pad}_meme_list_{m_type}_remove(&{tgt}, {idx});"]
+            return [f"{pad}_meme_list_{m_type}_remove_last(&{tgt});"]
+
         if isinstance(stmt, FailStmt):
             msg = self.gen_expr(stmt.message, scope)
             return [
@@ -1008,6 +1060,39 @@ class _CGen:
             content = self.gen_expr(stmt.content, scope)
             return [f"{pad}_meme_append_file({path}, {content});"]
 
+        if isinstance(stmt, CopyFileStmt):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            src = self.gen_expr(stmt.src, scope)
+            dst = self.gen_expr(stmt.dst, scope)
+            return [f"{pad}_meme_copy_file({src}, {dst});"]
+
+        if isinstance(stmt, MoveFileStmt):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            src = self.gen_expr(stmt.src, scope)
+            dst = self.gen_expr(stmt.dst, scope)
+            return [f"{pad}_meme_move_file({src}, {dst});"]
+
+        if isinstance(stmt, RenameFileStmt):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            path = self.gen_expr(stmt.path, scope)
+            new_name = self.gen_expr(stmt.new_name, scope)
+            return [f"{pad}_meme_rename_file({path}, {new_name});"]
+
+        if isinstance(stmt, DeleteFileStmt):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            path = self.gen_expr(stmt.path, scope)
+            return [f"{pad}_meme_delete_file({path});"]
+
+        if isinstance(stmt, CreateDirectoryStmt):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            path = self.gen_expr(stmt.path, scope)
+            return [f"{pad}_meme_create_directory({path});"]
+
         raise NotImplementedError(f"Unsupported statement: {type(stmt).__name__}")
 
     def _fmt_function_name(self, meme_type: str) -> str:
@@ -1130,6 +1215,21 @@ def _emit_list_type(el_t: str, gen: _CGen) -> list[str]:
         f"        exit(1);",
         f"    }}",
         f"    l->data[idx] = val;",
+        f"}}",
+        f"static inline void _meme_list_{m_type}_remove(meme_list_{m_type}* l, int64_t idx) {{",
+        f"    if (idx < 0 || idx >= l->len) {{",
+        f"        printf(\"Error: list index out of range\\n\");",
+        f"        exit(1);",
+        f"    }}",
+        f"    for (int64_t i = idx; i < l->len - 1; ++i) l->data[i] = l->data[i + 1];",
+        f"    l->len--;",
+        f"}}",
+        f"static inline void _meme_list_{m_type}_remove_last(meme_list_{m_type}* l) {{",
+        f"    if (l->len <= 0) {{",
+        f"        printf(\"Error: list index out of range\\n\");",
+        f"        exit(1);",
+        f"    }}",
+        f"    l->len--;",
         f"}}",
         f"static inline const char* _meme_fmt_list_{m_type}(meme_list_{m_type} l) {{",
         f"    _MemeSB sb = _meme_sb_new();",
@@ -1467,6 +1567,8 @@ def generate_c(ir: ProgramIR) -> str:
         "#include <ctype.h>",
         "#include <errno.h>",
         "#include <sys/stat.h>",
+        "#include <dirent.h>",
+        "#include <unistd.h>",
         "",
     ]
 
@@ -1799,6 +1901,145 @@ def generate_c(ir: ProgramIR) -> str:
         "    }",
         "    fclose(f);",
         "}",
+        "static inline void _meme_copy_file(const char* src, const char* dst) {",
+        "    const char* rsrc = _meme_resolve_path(src);",
+        "    struct stat st;",
+        "    if (stat(rsrc, &st) != 0 || !S_ISREG(st.st_mode)) {",
+        "        printf(\"Error copying file: %s\\n\", src);",
+        "        exit(1);",
+        "    }",
+        "    FILE* fin = fopen(rsrc, \"rb\");",
+        "    if (!fin) {",
+        "        printf(\"Error copying file: %s\\n\", src);",
+        "        exit(1);",
+        "    }",
+        "    FILE* fout = fopen(_meme_trim(dst), \"wb\");",
+        "    if (!fout) {",
+        "        fclose(fin);",
+        "        printf(\"Error copying file: %s\\n\", src);",
+        "        exit(1);",
+        "    }",
+        "    char buf[8192];",
+        "    size_t n;",
+        "    while ((n = fread(buf, 1, sizeof(buf), fin)) > 0) {",
+        "        if (fwrite(buf, 1, n, fout) != n) {",
+        "            fclose(fin);",
+        "            fclose(fout);",
+        "            printf(\"Error copying file: %s\\n\", src);",
+        "            exit(1);",
+        "        }",
+        "    }",
+        "    fclose(fin);",
+        "    fclose(fout);",
+        "}",
+        "static inline void _meme_move_file(const char* src, const char* dst) {",
+        "    const char* rsrc = _meme_resolve_path(src);",
+        "    struct stat st;",
+        "    if (stat(rsrc, &st) != 0 || !S_ISREG(st.st_mode)) {",
+        "        printf(\"Error moving file: %s\\n\", src);",
+        "        exit(1);",
+        "    }",
+        "    const char* target = _meme_trim(dst);",
+        "    if (rename(rsrc, target) != 0) {",
+        "        _meme_copy_file(src, dst);",
+        "        unlink(rsrc);",
+        "    }",
+        "}",
+        "static inline void _meme_rename_file(const char* path, const char* new_name) {",
+        "    const char* rsrc = _meme_resolve_path(path);",
+        "    struct stat st;",
+        "    if (stat(rsrc, &st) != 0 || !S_ISREG(st.st_mode)) {",
+        "        printf(\"Error renaming file: %s\\n\", path);",
+        "        exit(1);",
+        "    }",
+        "    const char* p = _meme_trim(path);",
+        "    const char* nn = _meme_trim(new_name);",
+        "    const char* last_slash_nn = strrchr(nn, '/');",
+        "    if (last_slash_nn) nn = last_slash_nn + 1;",
+        "    const char* last_slash_p = strrchr(p, '/');",
+        "    char target[4096];",
+        "    if (last_slash_p) {",
+        "        size_t dir_len = (size_t)(last_slash_p - p);",
+        "        snprintf(target, sizeof(target), \"%.*s/%s\", (int)dir_len, p, nn);",
+        "    } else {",
+        "        snprintf(target, sizeof(target), \"%s\", nn);",
+        "    }",
+        "    if (rename(rsrc, target) != 0) {",
+        "        _meme_copy_file(path, target);",
+        "        unlink(rsrc);",
+        "    }",
+        "}",
+        "static inline void _meme_delete_file(const char* path) {",
+        "    const char* rsrc = _meme_resolve_path(path);",
+        "    struct stat st;",
+        "    if (stat(rsrc, &st) != 0 || !S_ISREG(st.st_mode)) {",
+        "        printf(\"Error deleting file: %s\\n\", path);",
+        "        exit(1);",
+        "    }",
+        "    if (unlink(rsrc) != 0) {",
+        "        printf(\"Error deleting file: %s\\n\", path);",
+        "        exit(1);",
+        "    }",
+        "}",
+        "static inline void _meme_create_directory(const char* path) {",
+        "    const char* p = _meme_trim(path);",
+        "    char tmp[4096];",
+        "    snprintf(tmp, sizeof(tmp), \"%s\", p);",
+        "    size_t len = strlen(tmp);",
+        "    if (len == 0) return;",
+        "    if (tmp[len - 1] == '/') tmp[len - 1] = '\\0';",
+        "    for (char* s = tmp + 1; *s; s++) {",
+        "        if (*s == '/') {",
+        "            *s = '\\0';",
+        "            mkdir(tmp, 0777);",
+        "            *s = '/';",
+        "        }",
+        "    }",
+        "    if (mkdir(tmp, 0777) != 0 && errno != EEXIST) {",
+        "        struct stat st;",
+        "        if (stat(tmp, &st) != 0 || !S_ISDIR(st.st_mode)) {",
+        "            printf(\"Error creating directory: %s\\n\", path);",
+        "            exit(1);",
+        "        }",
+        "    }",
+        "}",
+        "",
+    ]
+
+    # File container helpers
+    file_container_helpers = [
+        "static inline int _meme_strcmp_qsort(const void* a, const void* b) {",
+        "    const char* const* sa = (const char* const*)a;",
+        "    const char* const* sb = (const char* const*)b;",
+        "    return strcmp(*sa, *sb);",
+        "}",
+        "static inline meme_list_String _meme_list_files(const char* path) {",
+        "    const char* rpath = _meme_resolve_path(path);",
+        "    struct stat st;",
+        "    if (stat(rpath, &st) != 0 || !S_ISDIR(st.st_mode)) {",
+        "        printf(\"Error listing directory: %s\\n\", path);",
+        "        exit(1);",
+        "    }",
+        "    DIR* d = opendir(rpath);",
+        "    if (!d) {",
+        "        printf(\"Error listing directory: %s\\n\", path);",
+        "        exit(1);",
+        "    }",
+        "    meme_list_String res = _meme_list_String_new();",
+        "    struct dirent* ent;",
+        "    while ((ent = readdir(d)) != NULL) {",
+        "        if (strcmp(ent->d_name, \".\") == 0 || strcmp(ent->d_name, \"..\") == 0) continue;",
+        "        size_t elen = strlen(ent->d_name);",
+        "        char* item = (char*)malloc(elen + 1);",
+        "        memcpy(item, ent->d_name, elen + 1);",
+        "        _meme_list_String_append(&res, item);",
+        "    }",
+        "    closedir(d);",
+        "    if (res.len > 1) {",
+        "        qsort(res.data, (size_t)res.len, sizeof(const char*), _meme_strcmp_qsort);",
+        "    }",
+        "    return res;",
+        "}",
         "",
     ]
 
@@ -1856,6 +2097,20 @@ def generate_c(ir: ProgramIR) -> str:
         "        exit(1);",
         "    }",
         "    return (int64_t)v;",
+        "}",
+        "static inline bool _meme_try_parse_int(const char* s, int64_t* out) {",
+        "    if (!s) return false;",
+        "    const char* ts = _meme_trim(s);",
+        "    if (!ts || !*ts) return false;",
+        "    char* end = NULL;",
+        "    errno = 0;",
+        "    long long v = strtoll(ts, &end, 10);",
+        "    if (errno != 0 || end == ts || *end != '\\0') return false;",
+        "    *out = (int64_t)v;",
+        "    return true;",
+        "}",
+        "static inline bool _meme_is_digit(const char* s) {",
+        "    return (s != NULL && strlen(s) == 1 && s[0] >= '0' && s[0] <= '9');",
         "}",
         "static inline double _meme_parse_float(const char* s) {",
         "    if (!s) return 0.0;",
@@ -2227,6 +2482,7 @@ def generate_c(ir: ProgramIR) -> str:
         + primitive_lists
         + json_readers
         + str_container_helpers
+        + file_container_helpers
         + primitive_maps
         + primitive_opts
         + record_blocks

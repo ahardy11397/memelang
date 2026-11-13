@@ -14,6 +14,9 @@ from memelang.ir.schema import (
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
+    CopyFileStmt,
+    CreateDirectoryStmt,
+    DeleteFileStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -27,11 +30,14 @@ from memelang.ir.schema import (
     IRStatement,
     IfStmt,
     ImportStmt,
+    IsDigitExpr,
     ListAppendStmt,
+    ListFilesExpr,
     ListIndexExpr,
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListRemoveStmt,
     ListSetIndexStmt,
     LiteralExpr,
     MapEntry,
@@ -40,12 +46,14 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MemeType,
+    MoveFileStmt,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
     ParseIntExpr,
+    ParseIntOrDefaultExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -53,6 +61,7 @@ from memelang.ir.schema import (
     ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
     RecordFieldExpr,
@@ -180,6 +189,9 @@ class _GoGen:
         self.uses_json = False
         self.uses_rand = False
         self.uses_slices = False
+        self.uses_list_remove = False
+        self.uses_parse_int_or_else = False
+        self.uses_is_digit = False
 
         self.uses_meme_fmt = False
         self.uses_int_div = False
@@ -212,11 +224,13 @@ class _GoGen:
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
-        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr)):
+        if isinstance(expr, ListFilesExpr):
+            return "List<String>"
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr)):
             return "Bool"
         if isinstance(
             expr,
-            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr),
+            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr),
         ):
             return "Int"
         if isinstance(
@@ -448,6 +462,18 @@ class _GoGen:
             self.uses_fmt = True
             return f"_meme_parse_int({self.gen_expr(expr.target, scope)})"
 
+        if isinstance(expr, ParseIntOrDefaultExpr):
+            self.uses_parse_int_or_else = True
+            self.uses_strconv = True
+            self.uses_strings = True
+            tgt = self.gen_expr(expr.target, scope)
+            dflt = self.gen_expr(expr.default_val, scope)
+            return f"_meme_parse_int_or_else({tgt}, func() int64 {{ return {dflt} }})"
+
+        if isinstance(expr, IsDigitExpr):
+            self.uses_is_digit = True
+            return f"_meme_is_digit({self.gen_expr(expr.target, scope)})"
+
         if isinstance(expr, FormatIntExpr):
             self.uses_strconv = True
             return f"strconv.FormatInt({self.gen_expr(expr.target, scope)}, 10)"
@@ -464,6 +490,10 @@ class _GoGen:
         if isinstance(expr, ReadFileStringExpr):
             self.uses_file_io = True
             return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ListFilesExpr):
+            self.uses_file_io = True
+            return f"_meme_list_files({self.gen_expr(expr.path, scope)})"
 
         if isinstance(expr, ArgCountExpr):
             self.uses_os = True
@@ -627,6 +657,17 @@ class _GoGen:
             idx = self.gen_expr(stmt.index, scope)
             val = self.gen_expr(stmt.value, scope)
             return [f"{pad}{tgt}[{idx}] = {val}"]
+
+        if isinstance(stmt, ListRemoveStmt):
+            self.uses_slices = True
+            self.uses_list_remove = True
+            self.uses_fmt = True
+            self.uses_os = True
+            tgt = _go_ident(stmt.target)
+            if stmt.index is not None:
+                idx = self.gen_expr(stmt.index, scope)
+                return [f"{pad}{tgt} = _meme_list_remove({tgt}, {idx})"]
+            return [f"{pad}{tgt} = _meme_list_remove_last({tgt})"]
 
         if isinstance(stmt, FailStmt):
             self.uses_fmt = True
@@ -803,6 +844,36 @@ class _GoGen:
             self.uses_file_io = True
             return [
                 f"{pad}_meme_append_file({self.gen_expr(stmt.filepath, scope)}, {self.gen_expr(stmt.content, scope)})"
+            ]
+
+        if isinstance(stmt, CopyFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_copy_file({self.gen_expr(stmt.src, scope)}, {self.gen_expr(stmt.dst, scope)})"
+            ]
+
+        if isinstance(stmt, MoveFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_move_file({self.gen_expr(stmt.src, scope)}, {self.gen_expr(stmt.dst, scope)})"
+            ]
+
+        if isinstance(stmt, RenameFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_rename_file({self.gen_expr(stmt.path, scope)}, {self.gen_expr(stmt.new_name, scope)})"
+            ]
+
+        if isinstance(stmt, DeleteFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_delete_file({self.gen_expr(stmt.path, scope)})"
+            ]
+
+        if isinstance(stmt, CreateDirectoryStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_create_directory({self.gen_expr(stmt.path, scope)})"
             ]
 
         if isinstance(stmt, ImportStmt):
@@ -1024,6 +1095,31 @@ def generate_go(ir: ProgramIR) -> str:
             ]
         )
 
+    if gen.uses_list_remove:
+        gen.uses_fmt = True
+        gen.uses_os = True
+        gen.uses_slices = True
+        helpers.extend(
+            [
+                "func _meme_list_remove[T any](s []T, idx int64) []T {",
+                "    if idx < 0 || int(idx) >= len(s) {",
+                '        fmt.Printf("Error: list index out of range\\n")',
+                "        os.Exit(1)",
+                "    }",
+                "    return slices.Delete(s, int(idx), int(idx)+1)",
+                "}",
+                "",
+                "func _meme_list_remove_last[T any](s []T) []T {",
+                "    if len(s) == 0 {",
+                '        fmt.Printf("Error: list index out of range\\n")',
+                "        os.Exit(1)",
+                "    }",
+                "    return s[:len(s)-1]",
+                "}",
+                "",
+            ]
+        )
+
     if gen.uses_str_split:
         gen.uses_fmt = True
         gen.uses_os = True
@@ -1120,6 +1216,32 @@ def generate_go(ir: ProgramIR) -> str:
             ]
         )
 
+    if gen.uses_parse_int_or_else:
+        gen.uses_strconv = True
+        gen.uses_strings = True
+        helpers.extend(
+            [
+                "func _meme_parse_int_or_else(s string, default_fn func() int64) int64 {",
+                "    v, err := strconv.ParseInt(strings.TrimSpace(s), 10, 64)",
+                "    if err != nil {",
+                "        return default_fn()",
+                "    }",
+                "    return v",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_is_digit:
+        helpers.extend(
+            [
+                "func _meme_is_digit(s string) bool {",
+                "    return len(s) == 1 && s[0] >= '0' && s[0] <= '9'",
+                "}",
+                "",
+            ]
+        )
+
     if gen.uses_file_io or gen.uses_json_io:
         gen.uses_filepath = True
         gen.uses_os = True
@@ -1146,6 +1268,9 @@ def generate_go(ir: ProgramIR) -> str:
     if gen.uses_file_io:
         gen.uses_fmt = True
         gen.uses_os = True
+        gen.uses_sort = True
+        gen.uses_filepath = True
+        gen.uses_strings = True
         helpers.extend(
             [
                 "func _meme_file_exists(path string) bool {",
@@ -1188,6 +1313,121 @@ def generate_go(ir: ProgramIR) -> str:
                 '        fmt.Printf("Error writing file: %s\\n", path)',
                 "        os.Exit(1)",
                 "    }",
+                "}",
+                "",
+                "func _meme_copy_file(src string, dst string) {",
+                "    rsrc := _meme_resolve_path(src)",
+                "    info, err := os.Stat(rsrc)",
+                "    if err != nil || info.IsDir() {",
+                '        fmt.Printf("Error copying file: %s\\n", src)',
+                "        os.Exit(1)",
+                "    }",
+                "    data, err := os.ReadFile(rsrc)",
+                "    if err != nil {",
+                '        fmt.Printf("Error copying file: %s\\n", src)',
+                "        os.Exit(1)",
+                "    }",
+                "    err = os.WriteFile(strings.TrimSpace(dst), data, 0644)",
+                "    if err != nil {",
+                '        fmt.Printf("Error copying file: %s\\n", src)',
+                "        os.Exit(1)",
+                "    }",
+                "}",
+                "",
+                "func _meme_move_file(src string, dst string) {",
+                "    rsrc := _meme_resolve_path(src)",
+                "    info, err := os.Stat(rsrc)",
+                "    if err != nil || info.IsDir() {",
+                '        fmt.Printf("Error moving file: %s\\n", src)',
+                "        os.Exit(1)",
+                "    }",
+                "    target := strings.TrimSpace(dst)",
+                "    err = os.Rename(rsrc, target)",
+                "    if err != nil {",
+                "        data, rerr := os.ReadFile(rsrc)",
+                "        if rerr != nil {",
+                '            fmt.Printf("Error moving file: %s\\n", src)',
+                "            os.Exit(1)",
+                "        }",
+                "        werr := os.WriteFile(target, data, 0644)",
+                "        if werr != nil {",
+                '            fmt.Printf("Error moving file: %s\\n", src)',
+                "            os.Exit(1)",
+                "        }",
+                "        _ = os.Remove(rsrc)",
+                "    }",
+                "}",
+                "",
+                "func _meme_rename_file(path string, newName string) {",
+                "    rsrc := _meme_resolve_path(path)",
+                "    info, err := os.Stat(rsrc)",
+                "    if err != nil || info.IsDir() {",
+                '        fmt.Printf("Error renaming file: %s\\n", path)',
+                "        os.Exit(1)",
+                "    }",
+                "    p := strings.TrimSpace(path)",
+                "    dir := filepath.Dir(p)",
+                "    nn := filepath.Base(strings.TrimSpace(newName))",
+                '    target := nn',
+                '    if dir != "." && dir != "" {',
+                "        target = filepath.Join(dir, nn)",
+                "    }",
+                "    err = os.Rename(rsrc, target)",
+                "    if err != nil {",
+                "        data, rerr := os.ReadFile(rsrc)",
+                "        if rerr != nil {",
+                '            fmt.Printf("Error renaming file: %s\\n", path)',
+                "            os.Exit(1)",
+                "        }",
+                "        werr := os.WriteFile(target, data, 0644)",
+                "        if werr != nil {",
+                '            fmt.Printf("Error renaming file: %s\\n", path)',
+                "            os.Exit(1)",
+                "        }",
+                "        _ = os.Remove(rsrc)",
+                "    }",
+                "}",
+                "",
+                "func _meme_delete_file(path string) {",
+                "    rsrc := _meme_resolve_path(path)",
+                "    info, err := os.Stat(rsrc)",
+                "    if err != nil || info.IsDir() {",
+                '        fmt.Printf("Error deleting file: %s\\n", path)',
+                "        os.Exit(1)",
+                "    }",
+                "    err = os.Remove(rsrc)",
+                "    if err != nil {",
+                '        fmt.Printf("Error deleting file: %s\\n", path)',
+                "        os.Exit(1)",
+                "    }",
+                "}",
+                "",
+                "func _meme_create_directory(path string) {",
+                "    err := os.MkdirAll(strings.TrimSpace(path), 0755)",
+                "    if err != nil {",
+                '        fmt.Printf("Error creating directory: %s\\n", path)',
+                "        os.Exit(1)",
+                "    }",
+                "}",
+                "",
+                "func _meme_list_files(path string) []string {",
+                "    rpath := _meme_resolve_path(path)",
+                "    info, err := os.Stat(rpath)",
+                "    if err != nil || !info.IsDir() {",
+                '        fmt.Printf("Error listing directory: %s\\n", path)',
+                "        os.Exit(1)",
+                "    }",
+                "    entries, err := os.ReadDir(rpath)",
+                "    if err != nil {",
+                '        fmt.Printf("Error listing directory: %s\\n", path)',
+                "        os.Exit(1)",
+                "    }",
+                "    res := make([]string, 0, len(entries))",
+                "    for _, e := range entries {",
+                "        res = append(res, e.Name())",
+                "    }",
+                "    sort.Strings(res)",
+                "    return res",
                 "}",
                 "",
             ]

@@ -62,9 +62,12 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"expr_type": "string_index_of", "target": <String expr>, "substring": <String expr>}` (`index of <substring> in <target>`, returns 0-based `"Int"` or `-1` when absent)
 - `{"expr_type": "string_char_at", "target": <String expr>, "index": <Int expr>}` (`char at <index> of <target>`, 0-based single-char `"String"`, fails exit 1 on out-of-range)
 - `{"expr_type": "parse_int", "target": <String expr>}` (`integer value of <target>`, parses integer from text after trimming ASCII whitespace; fails exit 1 on invalid text, returns `"Int"`)
+- `{"expr_type": "parse_int_or_default", "target": <String expr>, "default_val": <Int expr>}` (`integer value of <target> or else <default>`, lazily evaluates `<default>` only when parse fails, returns `"Int"`)
 - `{"expr_type": "format_int", "target": <Int expr>}` (`text of <target>`, formats integer as plain decimal text, returns `"String"`)
+- `{"expr_type": "is_digit", "target": <String expr>}` (`is digit <target>`, returns `"Bool"`, true if single ASCII digit '0'..'9', false for empty or non-digit)
 - `{"expr_type": "file_exists", "filepath": <String expr>}` (`file exists <path>`, returns `"Bool"`, never errors)
 - `{"expr_type": "read_file_string", "filepath": <String expr>}` (`read string from file <path>`, returns `"String"`)
+- `{"expr_type": "list_files", "path": <String expr>}` (`list files in <path>`, returns `"List<String>"`)
 - `{"expr_type": "arg_count"}` (`argument count`, returns `"Int"`, argc including program name at index 0)
 - `{"expr_type": "arg_at", "index": <Int expr>}` (`argument <n>`, returns `"String"`, 1-based for user CLI args where 0 is program name)
 - `{"expr_type": "read_json_list", "filepath": <String expr>, "element_type": "Float"}` (`read json file <path> as List<T>` where `element_type` is `"Int"`, `"Float"`, `"String"`, or `"Bool"`, or `read JSON number list from <path>` defaulting to `"Float"`)
@@ -89,6 +92,7 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "list_append", "target": "nums", "value": <expr>}`
 - `{"op": "list_insert", "target": "nums", "index": <Int expr>, "value": <expr>}` (inserts at 0-based `index`, shifting elements right)
 - `{"op": "list_set_index", "target": "nums", "index": <Int expr>, "value": <expr>}` (sets element at 0-based `index` in-place)
+- `{"op": "list_remove", "target": "nums", "index": <Int expr> | null}` (removes element at 0-based `index` shifting elements left, or removes last element when `index` is null)
 - `{"op": "fail_stmt", "message": <String expr>}` (prints error message and exits cleanly; counts as returning on that branch!)
 - `{"op": "exit_stmt", "code": <Int expr>}` (`exit with code <int-expr>`, exits immediately with status code `code & 0xFF`; counts as returning on that branch!)
 - `{"op": "print_stmt", "expressions": [<expr>, ...]}`
@@ -106,6 +110,11 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "map_set", "target": "m", "key": <expr>, "value": <expr>}`
 - `{"op": "write_file", "filepath": <String expr>, "content": <String expr>}` (`write file <path> with <content>`, overwrites/creates file)
 - `{"op": "append_file", "filepath": <String expr>, "content": <String expr>}` (`append <content> to file <path>`, appends/creates file)
+- `{"op": "copy_file", "src": <String expr>, "dst": <String expr>}` (`copy file <src> to <dst>`, overwrites dst)
+- `{"op": "move_file", "src": <String expr>, "dst": <String expr>}` (`move file <src> to <dst>`, overwrites dst)
+- `{"op": "rename_file", "path": <String expr>, "new_name": <String expr>}` (`rename file <path> to <new-name>`)
+- `{"op": "delete_file", "path": <String expr>}` (`delete file <path>`)
+- `{"op": "create_directory", "path": <String expr>}` (`create directory <path>`, idempotent mkdir -p)
 - `{"op": "import_stmt", "module": "math_utils"}` (`use <module-name>`, bare identifier, top-level only)
 
 ### Rules

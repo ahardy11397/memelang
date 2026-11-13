@@ -13,6 +13,9 @@ from memelang.ir.schema import (
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
+    CopyFileStmt,
+    CreateDirectoryStmt,
+    DeleteFileStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -25,11 +28,14 @@ from memelang.ir.schema import (
     IRStatement,
     IfStmt,
     ImportStmt,
+    IsDigitExpr,
     ListAppendStmt,
+    ListFilesExpr,
     ListIndexExpr,
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListRemoveStmt,
     ListSetIndexStmt,
     LiteralExpr,
     MapEntry,
@@ -38,12 +44,14 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MemeType,
+    MoveFileStmt,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
     ParseIntExpr,
+    ParseIntOrDefaultExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -51,6 +59,7 @@ from memelang.ir.schema import (
     ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
     RecordFieldExpr,
@@ -163,10 +172,13 @@ class _RustGen:
         self.uses_input = False
         self.uses_json_io = False
         self.uses_file_io = False
+        self.uses_list_remove = False
         self.uses_argv = False
         self.uses_str_split = False
         self.uses_char_at = False
         self.uses_parse_int = False
+        self.uses_parse_int_or_else = False
+        self.uses_is_digit = False
         self.uses_optional_helpers = False
         self._match_counter = 0
         self.func_returns: dict[str, MemeType] = {}
@@ -185,11 +197,13 @@ class _RustGen:
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
-        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr)):
+        if isinstance(expr, ListFilesExpr):
+            return "List<String>"
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr)):
             return "Bool"
         if isinstance(
             expr,
-            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr),
+            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr),
         ):
             return "Int"
         if isinstance(
@@ -397,6 +411,17 @@ class _RustGen:
             self.uses_parse_int = True
             return f"_meme_parse_int(&({self.gen_expr(expr.target, scope)}))"
 
+        if isinstance(expr, ParseIntOrDefaultExpr):
+            self.uses_parse_int_or_else = True
+            tgt = self.gen_expr(expr.target, scope)
+            dflt = self.gen_expr(expr.default_val, scope)
+            return f"_meme_parse_int_or_else(&({tgt}), || {dflt})"
+
+        if isinstance(expr, IsDigitExpr):
+            self.uses_is_digit = True
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_is_digit(&({tgt}))"
+
         if isinstance(expr, FormatIntExpr):
             return f"({self.gen_expr(expr.target, scope)}).to_string()"
 
@@ -411,6 +436,10 @@ class _RustGen:
         if isinstance(expr, ReadFileStringExpr):
             self.uses_file_io = True
             return f"_meme_read_file_string(&({self.gen_expr(expr.filepath, scope)}))"
+
+        if isinstance(expr, ListFilesExpr):
+            self.uses_file_io = True
+            return f"_meme_list_files(&({self.gen_expr(expr.path, scope)}))"
 
         if isinstance(expr, ArgCountExpr):
             self.uses_argv = True
@@ -547,6 +576,14 @@ class _RustGen:
             idx = self.gen_expr(stmt.index, scope)
             val = self.gen_expr(stmt.value, scope)
             return [f"{pad}{tgt}[({idx}) as usize] = {val};"]
+
+        if isinstance(stmt, ListRemoveStmt):
+            self.uses_list_remove = True
+            tgt = _rust_ident(stmt.target)
+            if stmt.index is not None:
+                idx = self.gen_expr(stmt.index, scope)
+                return [f"{pad}_meme_list_remove(&mut {tgt}, {idx});"]
+            return [f"{pad}_meme_list_remove_last(&mut {tgt});"]
 
         if isinstance(stmt, FailStmt):
             return [
@@ -705,6 +742,36 @@ class _RustGen:
             self.uses_file_io = True
             return [
                 f"{pad}_meme_append_file(&({self.gen_expr(stmt.filepath, scope)}), &({self.gen_expr(stmt.content, scope)}));"
+            ]
+
+        if isinstance(stmt, CopyFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_copy_file(&({self.gen_expr(stmt.src, scope)}), &({self.gen_expr(stmt.dst, scope)}));"
+            ]
+
+        if isinstance(stmt, MoveFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_move_file(&({self.gen_expr(stmt.src, scope)}), &({self.gen_expr(stmt.dst, scope)}));"
+            ]
+
+        if isinstance(stmt, RenameFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_rename_file(&({self.gen_expr(stmt.path, scope)}), &({self.gen_expr(stmt.new_name, scope)}));"
+            ]
+
+        if isinstance(stmt, DeleteFileStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_delete_file(&({self.gen_expr(stmt.path, scope)}));"
+            ]
+
+        if isinstance(stmt, CreateDirectoryStmt):
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_create_directory(&({self.gen_expr(stmt.path, scope)}));"
             ]
 
         if isinstance(stmt, ImportStmt):
@@ -876,6 +943,27 @@ def generate_rust(ir: ProgramIR) -> str:
             ]
         )
 
+    if gen.uses_list_remove:
+        preamble.extend(
+            [
+                "fn _meme_list_remove<T>(vec: &mut Vec<T>, idx: i64) {",
+                "    if idx < 0 || (idx as usize) >= vec.len() {",
+                "        println!(\"Error: list index out of range\");",
+                "        std::process::exit(1);",
+                "    }",
+                "    vec.remove(idx as usize);",
+                "}",
+                "fn _meme_list_remove_last<T>(vec: &mut Vec<T>) {",
+                "    if vec.is_empty() {",
+                "        println!(\"Error: list index out of range\");",
+                "        std::process::exit(1);",
+                "    }",
+                "    vec.pop();",
+                "}",
+                "",
+            ]
+        )
+
     if gen.uses_str_split:
         preamble.extend(
             [
@@ -917,6 +1005,30 @@ def generate_rust(ir: ProgramIR) -> str:
                 "            std::process::exit(1);",
                 "        }",
                 "    }",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_parse_int_or_else:
+        preamble.extend(
+            [
+                "fn _meme_parse_int_or_else<F: FnOnce() -> i64>(s: &str, default_fn: F) -> i64 {",
+                "    let ts = s.trim();",
+                "    match ts.parse::<i64>() {",
+                "        Ok(v) => v,",
+                "        Err(_) => default_fn(),",
+                "    }",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_is_digit:
+        preamble.extend(
+            [
+                "fn _meme_is_digit(s: &str) -> bool {",
+                "    s.len() == 1 && s.as_bytes()[0] >= b'0' && s.as_bytes()[0] <= b'9'",
                 "}",
                 "",
             ]
@@ -1005,6 +1117,96 @@ def generate_rust(ir: ProgramIR) -> str:
                 "        }",
                 "        Err(_) => {",
                 "            println!(\"Error writing file: {}\", path);",
+                "            std::process::exit(1);",
+                "        }",
+                "    }",
+                "}",
+                "",
+                "fn _meme_copy_file(src: &str, dst: &str) {",
+                "    let rsrc = _meme_resolve_path(src);",
+                "    if !rsrc.is_file() {",
+                "        println!(\"Error copying file: {}\", src);",
+                "        std::process::exit(1);",
+                "    }",
+                "    if std::fs::copy(&rsrc, dst.trim()).is_err() {",
+                "        println!(\"Error copying file: {}\", src);",
+                "        std::process::exit(1);",
+                "    }",
+                "}",
+                "",
+                "fn _meme_move_file(src: &str, dst: &str) {",
+                "    let rsrc = _meme_resolve_path(src);",
+                "    if !rsrc.is_file() {",
+                "        println!(\"Error moving file: {}\", src);",
+                "        std::process::exit(1);",
+                "    }",
+                "    let target = dst.trim();",
+                "    if std::fs::rename(&rsrc, target).is_err() {",
+                "        if std::fs::copy(&rsrc, target).is_err() || std::fs::remove_file(&rsrc).is_err() {",
+                "            println!(\"Error moving file: {}\", src);",
+                "            std::process::exit(1);",
+                "        }",
+                "    }",
+                "}",
+                "",
+                "fn _meme_rename_file(path: &str, new_name: &str) {",
+                "    let rsrc = _meme_resolve_path(path);",
+                "    if !rsrc.is_file() {",
+                "        println!(\"Error renaming file: {}\", path);",
+                "        std::process::exit(1);",
+                "    }",
+                "    let p = std::path::Path::new(path.trim());",
+                "    let parent = p.parent().unwrap_or(std::path::Path::new(\"\"));",
+                "    let nn = std::path::Path::new(new_name.trim()).file_name().unwrap_or(std::ffi::OsStr::new(new_name.trim()));",
+                "    let target = if parent.as_os_str().is_empty() {",
+                "        std::path::PathBuf::from(nn)",
+                "    } else {",
+                "        parent.join(nn)",
+                "    };",
+                "    if std::fs::rename(&rsrc, &target).is_err() {",
+                "        if std::fs::copy(&rsrc, &target).is_err() || std::fs::remove_file(&rsrc).is_err() {",
+                "            println!(\"Error renaming file: {}\", path);",
+                "            std::process::exit(1);",
+                "        }",
+                "    }",
+                "}",
+                "",
+                "fn _meme_delete_file(path: &str) {",
+                "    let rsrc = _meme_resolve_path(path);",
+                "    if !rsrc.is_file() {",
+                "        println!(\"Error deleting file: {}\", path);",
+                "        std::process::exit(1);",
+                "    }",
+                "    if std::fs::remove_file(&rsrc).is_err() {",
+                "        println!(\"Error deleting file: {}\", path);",
+                "        std::process::exit(1);",
+                "    }",
+                "}",
+                "",
+                "fn _meme_create_directory(path: &str) {",
+                "    if std::fs::create_dir_all(path.trim()).is_err() {",
+                "        println!(\"Error creating directory: {}\", path);",
+                "        std::process::exit(1);",
+                "    }",
+                "}",
+                "",
+                "fn _meme_list_files(path: &str) -> Vec<String> {",
+                "    let rpath = _meme_resolve_path(path);",
+                "    if !rpath.is_dir() {",
+                "        println!(\"Error listing directory: {}\", path);",
+                "        std::process::exit(1);",
+                "    }",
+                "    match std::fs::read_dir(&rpath) {",
+                "        Ok(entries) => {",
+                "            let mut res: Vec<String> = entries",
+                "                .filter_map(|e| e.ok())",
+                "                .map(|e| e.file_name().to_string_lossy().into_owned())",
+                "                .collect();",
+                "            res.sort();",
+                "            res",
+                "        }",
+                "        Err(_) => {",
+                "            println!(\"Error listing directory: {}\", path);",
                 "            std::process::exit(1);",
                 "        }",
                 "    }",

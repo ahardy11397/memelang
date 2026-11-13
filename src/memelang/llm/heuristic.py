@@ -24,6 +24,9 @@ from memelang.ir.schema import (
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
+    CopyFileStmt,
+    CreateDirectoryStmt,
+    DeleteFileStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -37,11 +40,14 @@ from memelang.ir.schema import (
     IRStatement,
     IfStmt,
     ImportStmt,
+    IsDigitExpr,
     ListAppendStmt,
+    ListFilesExpr,
     ListIndexExpr,
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListRemoveStmt,
     ListSetIndexStmt,
     LiteralExpr,
     MapEntry,
@@ -50,12 +56,14 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MemeType,
+    MoveFileStmt,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
     ParseIntExpr,
+    ParseIntOrDefaultExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -63,6 +71,7 @@ from memelang.ir.schema import (
     ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
     RecordFieldExpr,
@@ -593,6 +602,18 @@ class _ExprParser:
                 self.consume("IDENT")
                 self.consume("IDENT")
                 tgt_e = self.parse_unary()
+                if (
+                    (nxt := self.peek())
+                    and nxt.kind == "IDENT"
+                    and nxt.val.lower() == "or"
+                    and self.pos + 1 < len(self.tokens)
+                    and self.tokens[self.pos + 1].kind == "IDENT"
+                    and self.tokens[self.pos + 1].val.lower() == "else"
+                ):
+                    self.consume("IDENT")
+                    self.consume("IDENT")
+                    dflt_e = self.parse_add()
+                    return ParseIntOrDefaultExpr(target=tgt_e, default_val=dflt_e)
                 return ParseIntExpr(target=tgt_e)
 
             if (
@@ -605,7 +626,31 @@ class _ExprParser:
                 self.consume("IDENT")
                 self.consume("IDENT")
                 tgt_e = self.parse_unary()
+                if (
+                    (nxt := self.peek())
+                    and nxt.kind == "IDENT"
+                    and nxt.val.lower() == "or"
+                    and self.pos + 1 < len(self.tokens)
+                    and self.tokens[self.pos + 1].kind == "IDENT"
+                    and self.tokens[self.pos + 1].val.lower() == "else"
+                ):
+                    self.consume("IDENT")
+                    self.consume("IDENT")
+                    dflt_e = self.parse_add()
+                    return ParseIntOrDefaultExpr(target=tgt_e, default_val=dflt_e)
                 return ParseIntExpr(target=tgt_e)
+
+            if (
+                t.val.lower() == "is"
+                and t.val not in self.symbols
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "digit"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                tgt_e = self.parse_unary()
+                return IsDigitExpr(target=tgt_e)
 
             if (
                 t.val.lower() in ("text", "string")
@@ -831,6 +876,20 @@ class _ExprParser:
                 return ReadFileStringExpr(filepath=fp)
 
             if (
+                t.val == "list"
+                and self.pos + 2 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val == "files"
+                and self.tokens[self.pos + 2].kind == "IDENT"
+                and self.tokens[self.pos + 2].val == "in"
+            ):
+                self.consume("IDENT", "list")
+                self.consume("IDENT", "files")
+                self.consume("IDENT", "in")
+                p = self.parse_postfix()
+                return ListFilesExpr(path=p)
+
+            if (
                 t.val == "argument"
                 and self.pos + 1 < len(self.tokens)
             ):
@@ -952,6 +1011,16 @@ def _parse_expr(
     if m_read_file_str:
         return ReadFileStringExpr(
             filepath=_parse_expr(m_read_file_str.group(1), symbols, func_returns, records)
+        )
+
+    m_list_files = re.fullmatch(
+        r"list\s+files\s+in\s+(.+)",
+        s,
+        flags=re.IGNORECASE,
+    )
+    if m_list_files:
+        return ListFilesExpr(
+            path=_parse_expr(m_list_files.group(1), symbols, func_returns, records)
         )
 
     m_file_exists = re.fullmatch(
@@ -1094,9 +1163,9 @@ def _guess_expr_type(
         return "List<Int>"
     if isinstance(expr, ReadJsonListExpr):
         return cast(MemeType, f"List<{expr.element_type}>")
-    if isinstance(expr, StringSplitExpr):
+    if isinstance(expr, (StringSplitExpr, ListFilesExpr)):
         return "List<String>"
-    if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr)):
+    if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr)):
         return "Bool"
     if isinstance(
         expr,
@@ -1116,7 +1185,7 @@ def _guess_expr_type(
         return "String"
     if isinstance(
         expr,
-        (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr),
+        (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr),
     ):
         return "Int"
     if isinstance(expr, ReadInputExpr):
@@ -1811,6 +1880,59 @@ class HeuristicProvider:
                 source_line=line.lineno,
             )
 
+        # `copy file <src> to <dst>`
+        m_copy_file = re.fullmatch(
+            r"copy\s+file\s+(.+?)\s+to\s+(.+)", text, flags=re.IGNORECASE
+        )
+        if m_copy_file:
+            return CopyFileStmt(
+                src=_pe(m_copy_file.group(1)),
+                dst=_pe(m_copy_file.group(2)),
+                source_line=line.lineno,
+            )
+
+        # `move file <src> to <dst>`
+        m_move_file = re.fullmatch(
+            r"move\s+file\s+(.+?)\s+to\s+(.+)", text, flags=re.IGNORECASE
+        )
+        if m_move_file:
+            return MoveFileStmt(
+                src=_pe(m_move_file.group(1)),
+                dst=_pe(m_move_file.group(2)),
+                source_line=line.lineno,
+            )
+
+        # `rename file <path> to <new-name>`
+        m_rename_file = re.fullmatch(
+            r"rename\s+file\s+(.+?)\s+to\s+(.+)", text, flags=re.IGNORECASE
+        )
+        if m_rename_file:
+            return RenameFileStmt(
+                path=_pe(m_rename_file.group(1)),
+                new_name=_pe(m_rename_file.group(2)),
+                source_line=line.lineno,
+            )
+
+        # `delete file <path>`
+        m_delete_file = re.fullmatch(
+            r"delete\s+file\s+(.+)", text, flags=re.IGNORECASE
+        )
+        if m_delete_file:
+            return DeleteFileStmt(
+                path=_pe(m_delete_file.group(1)),
+                source_line=line.lineno,
+            )
+
+        # `create directory <path>`
+        m_create_dir = re.fullmatch(
+            r"create\s+directory\s+(.+)", text, flags=re.IGNORECASE
+        )
+        if m_create_dir:
+            return CreateDirectoryStmt(
+                path=_pe(m_create_dir.group(1)),
+                source_line=line.lineno,
+            )
+
         # `append <expr> to <target>`
         m_append = re.fullmatch(
             r"append\s+(.+?)\s+to\s+([A-Za-z_]\w*)", text, flags=re.IGNORECASE
@@ -1889,6 +2011,32 @@ class HeuristicProvider:
                 target=m_insert.group(2),
                 index=_pe(m_insert.group(3)),
                 value=_pe(m_insert.group(1)),
+                source_line=line.lineno,
+            )
+
+        # `remove last item from <target>`
+        m_remove_last = re.fullmatch(
+            r"remove\s+last\s+(?:item|element)\s+from\s+([A-Za-z_]\w*)",
+            text,
+            flags=re.IGNORECASE,
+        )
+        if m_remove_last:
+            return ListRemoveStmt(
+                target=m_remove_last.group(1),
+                index=None,
+                source_line=line.lineno,
+            )
+
+        # `remove item <index> from <target>` or `remove item at <index> from <target>`
+        m_remove = re.fullmatch(
+            r"remove\s+(?:item|element)(?:\s+at)?\s+(.+?)\s+from\s+([A-Za-z_]\w*)",
+            text,
+            flags=re.IGNORECASE,
+        )
+        if m_remove:
+            return ListRemoveStmt(
+                target=m_remove.group(2),
+                index=_pe(m_remove.group(1)),
                 source_line=line.lineno,
             )
 
@@ -2052,9 +2200,15 @@ class HeuristicProvider:
                 StringTrimExpr,
                 ParseIntExpr,
                 FormatIntExpr,
+                IsDigitExpr,
             ),
         ):
             return HeuristicProvider._find_free_var(expr.target, symbols)
+        if isinstance(expr, ParseIntOrDefaultExpr):
+            return (
+                HeuristicProvider._find_free_var(expr.target, symbols)
+                or HeuristicProvider._find_free_var(expr.default_val, symbols)
+            )
         if isinstance(expr, StringSplitExpr):
             return HeuristicProvider._find_free_var(
                 expr.target, symbols
@@ -2071,6 +2225,8 @@ class HeuristicProvider:
             return HeuristicProvider._find_free_var(expr.filepath, symbols)
         if isinstance(expr, (FileExistsExpr, ReadFileStringExpr)):
             return HeuristicProvider._find_free_var(expr.filepath, symbols)
+        if isinstance(expr, ListFilesExpr):
+            return HeuristicProvider._find_free_var(expr.path, symbols)
         if isinstance(expr, ArgAtExpr):
             return HeuristicProvider._find_free_var(expr.index, symbols)
         if isinstance(expr, ListIndexExpr):

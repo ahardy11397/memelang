@@ -20,6 +20,9 @@ from memelang.ir.schema import (
     CallExpr,
     ClampCollectionStmt,
     CompoundAssignStmt,
+    CopyFileStmt,
+    CreateDirectoryStmt,
+    DeleteFileStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -31,22 +34,27 @@ from memelang.ir.schema import (
     IRExpr,
     IRStatement,
     IfStmt,
+    IsDigitExpr,
     ListAppendStmt,
+    ListFilesExpr,
     ListIndexExpr,
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListRemoveStmt,
     ListSetIndexStmt,
     MapGetExpr,
     MapHasKeyExpr,
     MapLiteralExpr,
     MapSetStmt,
+    MoveFileStmt,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
     ParseIntExpr,
+    ParseIntOrDefaultExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -54,6 +62,7 @@ from memelang.ir.schema import (
     ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RenameFileStmt,
     RecordFieldExpr,
     RecordLiteralExpr,
     RecordSetFieldStmt,
@@ -130,9 +139,12 @@ def _expr_uses_input(expr: IRExpr) -> bool:
             StringTrimExpr,
             ParseIntExpr,
             FormatIntExpr,
+            IsDigitExpr,
         ),
     ):
         return _expr_uses_input(expr.target)
+    if isinstance(expr, ParseIntOrDefaultExpr):
+        return _expr_uses_input(expr.target) or _expr_uses_input(expr.default_val)
     if isinstance(expr, StringSplitExpr):
         return _expr_uses_input(expr.target) or _expr_uses_input(expr.separator)
     if isinstance(expr, StringJoinExpr):
@@ -141,6 +153,8 @@ def _expr_uses_input(expr: IRExpr) -> bool:
         return _expr_uses_input(expr.target) or _expr_uses_input(expr.index)
     if isinstance(expr, (FileExistsExpr, ReadFileStringExpr)):
         return _expr_uses_input(expr.filepath)
+    if isinstance(expr, ListFilesExpr):
+        return _expr_uses_input(expr.path)
     if isinstance(expr, ArgAtExpr):
         return _expr_uses_input(expr.index)
     if isinstance(expr, ReadJsonListExpr):
@@ -186,12 +200,26 @@ def _stmts_use_input(stmts: list[IRStatement]) -> bool:
             _expr_uses_input(s.index) or _expr_uses_input(s.value)
         ):
             return True
+        if isinstance(s, ListRemoveStmt) and s.index is not None and _expr_uses_input(s.index):
+            return True
         if isinstance(s, MapSetStmt) and (
             _expr_uses_input(s.key) or _expr_uses_input(s.value)
         ):
             return True
         if isinstance(s, (WriteFileStmt, AppendFileStmt)) and (
             _expr_uses_input(s.filepath) or _expr_uses_input(s.content)
+        ):
+            return True
+        if isinstance(s, (CopyFileStmt, MoveFileStmt)) and (
+            _expr_uses_input(s.src) or _expr_uses_input(s.dst)
+        ):
+            return True
+        if isinstance(s, RenameFileStmt) and (
+            _expr_uses_input(s.path) or _expr_uses_input(s.new_name)
+        ):
+            return True
+        if isinstance(s, (DeleteFileStmt, CreateDirectoryStmt)) and (
+            _expr_uses_input(s.path)
         ):
             return True
         if isinstance(s, FailStmt) and _expr_uses_input(s.message):

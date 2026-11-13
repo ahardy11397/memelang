@@ -221,6 +221,11 @@ class ReadFileStringExpr(IRNode):
     filepath: IRExpr
 
 
+class ListFilesExpr(IRNode):
+    expr_type: Literal["list_files"] = "list_files"
+    path: IRExpr
+
+
 class ArgCountExpr(IRNode):
     expr_type: Literal["arg_count"] = "arg_count"
 
@@ -251,6 +256,17 @@ class StringSliceExpr(IRNode):
 
 class ParseIntExpr(IRNode):
     expr_type: Literal["parse_int"] = "parse_int"
+    target: IRExpr
+
+
+class ParseIntOrDefaultExpr(IRNode):
+    expr_type: Literal["parse_int_or_default"] = "parse_int_or_default"
+    target: IRExpr
+    default_val: IRExpr
+
+
+class IsDigitExpr(IRNode):
+    expr_type: Literal["is_digit"] = "is_digit"
     target: IRExpr
 
 
@@ -352,13 +368,16 @@ IRExpr = Annotated[
     | StringCharAtExpr
     | FileExistsExpr
     | ReadFileStringExpr
+    | ListFilesExpr
     | ArgCountExpr
     | ArgAtExpr
     | ReadJsonListExpr
     | StringLengthExpr
     | StringSliceExpr
     | ParseIntExpr
+    | ParseIntOrDefaultExpr
     | FormatIntExpr
+    | IsDigitExpr
     | RecordLiteralExpr
     | RecordFieldExpr
     | MapLiteralExpr
@@ -447,6 +466,13 @@ class ListSetIndexStmt(IRNode):
     target: str
     index: IRExpr
     value: IRExpr
+    source_line: int | None = None
+
+
+class ListRemoveStmt(IRNode):
+    op: Literal["list_remove"] = "list_remove"
+    target: str
+    index: IRExpr | None = None
     source_line: int | None = None
 
 
@@ -581,6 +607,39 @@ class AppendFileStmt(IRNode):
     source_line: int | None = None
 
 
+class CopyFileStmt(IRNode):
+    op: Literal["copy_file"] = "copy_file"
+    src: IRExpr
+    dst: IRExpr
+    source_line: int | None = None
+
+
+class MoveFileStmt(IRNode):
+    op: Literal["move_file"] = "move_file"
+    src: IRExpr
+    dst: IRExpr
+    source_line: int | None = None
+
+
+class RenameFileStmt(IRNode):
+    op: Literal["rename_file"] = "rename_file"
+    path: IRExpr
+    new_name: IRExpr
+    source_line: int | None = None
+
+
+class DeleteFileStmt(IRNode):
+    op: Literal["delete_file"] = "delete_file"
+    path: IRExpr
+    source_line: int | None = None
+
+
+class CreateDirectoryStmt(IRNode):
+    op: Literal["create_directory"] = "create_directory"
+    path: IRExpr
+    source_line: int | None = None
+
+
 class ImportStmt(IRNode):
     op: Literal["import_stmt"] = "import_stmt"
     module: str
@@ -603,6 +662,7 @@ IRStatement = Annotated[
     | ListAppendStmt
     | ListInsertStmt
     | ListSetIndexStmt
+    | ListRemoveStmt
     | FailStmt
     | ExitStmt
     | PrintStmt
@@ -620,6 +680,11 @@ IRStatement = Annotated[
     | MapSetStmt
     | WriteFileStmt
     | AppendFileStmt
+    | CopyFileStmt
+    | MoveFileStmt
+    | RenameFileStmt
+    | DeleteFileStmt
+    | CreateDirectoryStmt
     | ImportStmt,
     Field(discriminator="op"),
 ]
@@ -696,13 +761,16 @@ StringIndexOfExpr.model_rebuild()
 StringCharAtExpr.model_rebuild()
 FileExistsExpr.model_rebuild()
 ReadFileStringExpr.model_rebuild()
+ListFilesExpr.model_rebuild()
 ArgCountExpr.model_rebuild()
 ArgAtExpr.model_rebuild()
 ReadJsonListExpr.model_rebuild()
 StringLengthExpr.model_rebuild()
 StringSliceExpr.model_rebuild()
 ParseIntExpr.model_rebuild()
+ParseIntOrDefaultExpr.model_rebuild()
 FormatIntExpr.model_rebuild()
+IsDigitExpr.model_rebuild()
 RecordLiteralExpr.model_rebuild()
 RecordFieldExpr.model_rebuild()
 MapLiteralExpr.model_rebuild()
@@ -721,6 +789,7 @@ FilterCollectionStmt.model_rebuild()
 ListAppendStmt.model_rebuild()
 ListInsertStmt.model_rebuild()
 ListSetIndexStmt.model_rebuild()
+ListRemoveStmt.model_rebuild()
 FailStmt.model_rebuild()
 ExitStmt.model_rebuild()
 PrintStmt.model_rebuild()
@@ -739,6 +808,11 @@ RecordSetFieldStmt.model_rebuild()
 MapSetStmt.model_rebuild()
 WriteFileStmt.model_rebuild()
 AppendFileStmt.model_rebuild()
+CopyFileStmt.model_rebuild()
+MoveFileStmt.model_rebuild()
+RenameFileStmt.model_rebuild()
+DeleteFileStmt.model_rebuild()
+CreateDirectoryStmt.model_rebuild()
 ImportStmt.model_rebuild()
 AmbiguityCandidate.model_rebuild()
 AmbiguityDiagnostic.model_rebuild()

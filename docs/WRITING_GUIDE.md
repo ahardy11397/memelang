@@ -652,6 +652,42 @@ print contents
 - **`file exists <path>`** — returns `Bool` (`true` if `<path>` exists and is a regular file, `false` otherwise). Never raises a runtime error.
 - **`read json file <path> as List<T>`** — reads a JSON array from `<path>` as `List<Int>`, `List<Float>`, `List<String>`, or `List<Bool>` (**offline** & **LLM-voice**). Handles arbitrary whitespace between tokens, quoted strings with JSON escapes (`\"`, `\\`, `\n`, `\t`, `\uXXXX`), and `true`/`false` booleans. JSON `null` or element type mismatches (e.g., booleans inside an `Int`/`Float` list) fail deterministically with exit code `1` across Python, Rust, C++, and Go. The legacy alias `read JSON number list from <path>` remains supported for `List<Float>`.
 
+### File Management (11b.1)
+
+Six filesystem-management builtins (**offline** & **LLM-voice**, all six targets):
+
+```meme
+copy file "raw/card.jpg" to "photos/card.jpg"
+move file "old.csv" to "archive.csv"
+rename file "draft.txt" to "final.txt"
+delete file "temp.txt"
+create directory "photos/2026"
+define names: List<String> as list files in "photos"
+```
+
+- **`copy file <src> to <dst>`** — copies, overwriting an existing destination; creates parent directories if needed. Missing source: prints `Error copying file: <src>`, exits 1.
+- **`move file <src> to <dst>`** — moves (overwrites destination). Missing source: `Error moving file: <src>`, exit 1.
+- **`rename file <path> to <new-name>`** — renames (relocates if `<new-name>` is a path). Missing source: `Error renaming file: <path>`, exit 1.
+- **`delete file <path>`** — removes the file. Missing file: `Error deleting file: <path>`, exit 1.
+- **`create directory <path>`** — recursive, idempotent (`mkdir -p` semantics).
+- **`list files in <path>`** — returns `List<String>` of entry names (files and subdirectories, plain names not paths), **sorted lexicographically** for deterministic parity. Invalid path: `Error listing directory: <path>`, exit 1.
+
+### Safe Conversion & Character Checks (11b.2)
+
+```meme
+define qty: Int as integer value of text or else 0
+if is digit first_char:
+    print "numeric"
+```
+
+- **`integer value of <s> or else <d>`** — safe parse: returns the parsed Int, or `<d>` when `<s>` is not valid integer text. The default is **lazy** — evaluated only when parsing fails (mirrors `value of x or else`). Synonym forms follow `integer value of`.
+- **`is digit <c>`** — `Bool`: true when `<c>` is a single character `0`-`9`. Empty string or multi-character input is `false`.
+
+### List Removal (11b.3)
+
+- **`remove item <index> from <list-var>`** — statement; removes the element at `<index>` in place, shifting later elements left. Out-of-range index: deterministic `Error: list index out of range`, exit 1.
+- **`remove last item from <list-var>`** — statement; removes the final element (out-of-range on an empty list uses the same error).
+
 ### Command-Line Arguments (`argv`)
 
 Memelang programs can inspect command-line arguments using two built-in expressions (**offline** & **LLM-voice**):

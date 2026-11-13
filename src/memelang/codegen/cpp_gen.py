@@ -13,6 +13,9 @@ from memelang.ir.schema import (
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
+    CopyFileStmt,
+    CreateDirectoryStmt,
+    DeleteFileStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -25,11 +28,14 @@ from memelang.ir.schema import (
     IRStatement,
     IfStmt,
     ImportStmt,
+    IsDigitExpr,
     ListAppendStmt,
+    ListFilesExpr,
     ListIndexExpr,
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListRemoveStmt,
     ListSetIndexStmt,
     LiteralExpr,
     MapEntry,
@@ -38,12 +44,14 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MemeType,
+    MoveFileStmt,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
     ParseIntExpr,
+    ParseIntOrDefaultExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -51,6 +59,7 @@ from memelang.ir.schema import (
     ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
     RecordFieldExpr,
@@ -171,6 +180,9 @@ class _CppGen:
         self.uses_str_helpers = False
         self.uses_json_io = False
         self.uses_file_io = False
+        self.uses_list_remove = False
+        self.uses_parse_int_or_else = False
+        self.uses_is_digit = False
         self.uses_argv = False
         self.uses_optional_helpers = False
         self._match_counter = 0
@@ -190,11 +202,13 @@ class _CppGen:
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
-        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr)):
+        if isinstance(expr, ListFilesExpr):
+            return "List<String>"
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr)):
             return "Bool"
         if isinstance(
             expr,
-            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr),
+            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr),
         ):
             return "Int"
         if isinstance(
@@ -392,6 +406,16 @@ class _CppGen:
             self.uses_input = True
             return f"_meme_parse_int({self.gen_expr(expr.target, scope)})"
 
+        if isinstance(expr, ParseIntOrDefaultExpr):
+            self.uses_parse_int_or_else = True
+            tgt = self.gen_expr(expr.target, scope)
+            dflt = self.gen_expr(expr.default_val, scope)
+            return f"_meme_parse_int_or_else({tgt}, [&]() -> long long {{ return {dflt}; }})"
+
+        if isinstance(expr, IsDigitExpr):
+            self.uses_is_digit = True
+            return f"_meme_is_digit({self.gen_expr(expr.target, scope)})"
+
         if isinstance(expr, FormatIntExpr):
             return f"std::to_string({self.gen_expr(expr.target, scope)})"
 
@@ -409,6 +433,11 @@ class _CppGen:
             self.uses_str_helpers = True
             self.uses_file_io = True
             return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ListFilesExpr):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            return f"_meme_list_files({self.gen_expr(expr.path, scope)})"
 
         if isinstance(expr, ArgCountExpr):
             self.uses_argv = True
@@ -551,6 +580,14 @@ class _CppGen:
             idx = self.gen_expr(stmt.index, scope)
             val = self.gen_expr(stmt.value, scope)
             return [f"{pad}{tgt}.at(static_cast<std::size_t>({idx})) = {val};"]
+
+        if isinstance(stmt, ListRemoveStmt):
+            self.uses_list_remove = True
+            tgt = _cpp_ident(stmt.target)
+            if stmt.index is not None:
+                idx = self.gen_expr(stmt.index, scope)
+                return [f"{pad}_meme_list_remove({tgt}, {idx});"]
+            return [f"{pad}_meme_list_remove_last({tgt});"]
 
         if isinstance(stmt, FailStmt):
             return [
@@ -735,6 +772,41 @@ class _CppGen:
                 f"{pad}_meme_append_file({self.gen_expr(stmt.filepath, scope)}, {self.gen_expr(stmt.content, scope)});"
             ]
 
+        if isinstance(stmt, CopyFileStmt):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_copy_file({self.gen_expr(stmt.src, scope)}, {self.gen_expr(stmt.dst, scope)});"
+            ]
+
+        if isinstance(stmt, MoveFileStmt):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_move_file({self.gen_expr(stmt.src, scope)}, {self.gen_expr(stmt.dst, scope)});"
+            ]
+
+        if isinstance(stmt, RenameFileStmt):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_rename_file({self.gen_expr(stmt.path, scope)}, {self.gen_expr(stmt.new_name, scope)});"
+            ]
+
+        if isinstance(stmt, DeleteFileStmt):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_delete_file({self.gen_expr(stmt.path, scope)});"
+            ]
+
+        if isinstance(stmt, CreateDirectoryStmt):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            return [
+                f"{pad}_meme_create_directory({self.gen_expr(stmt.path, scope)});"
+            ]
+
         if isinstance(stmt, ImportStmt):
             return []
 
@@ -889,6 +961,67 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        std::exit(1);",
                 "    }",
                 "    return args[static_cast<std::size_t>(idx)];",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_list_remove:
+        helpers.extend(
+            [
+                "template <typename T>",
+                "inline void _meme_list_remove(std::vector<T>& vec, int64_t idx) {",
+                "    if (idx < 0 || static_cast<std::size_t>(idx) >= vec.size()) {",
+                "        std::cout << \"Error: list index out of range\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    vec.erase(vec.begin() + static_cast<std::ptrdiff_t>(idx));",
+                "}",
+                "template <typename T>",
+                "inline void _meme_list_remove_last(std::vector<T>& vec) {",
+                "    if (vec.empty()) {",
+                "        std::cout << \"Error: list index out of range\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    vec.pop_back();",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_parse_int_or_else:
+        helpers.extend(
+            [
+                "template <typename F>",
+                "inline long long _meme_parse_int_or_else(const std::string& s, F default_fn) {",
+                "    std::size_t a = 0;",
+                "    while (a < s.size() && std::isspace(static_cast<unsigned char>(s[a]))) ++a;",
+                "    std::size_t b = s.size();",
+                "    while (b > a && std::isspace(static_cast<unsigned char>(s[b - 1]))) --b;",
+                "    std::string ts = s.substr(a, b - a);",
+                "    if (ts.empty()) {",
+                "        return default_fn();",
+                "    }",
+                "    try {",
+                "        std::size_t idx = 0;",
+                "        long long v = std::stoll(ts, &idx);",
+                "        if (idx != ts.size()) {",
+                "            return default_fn();",
+                "        }",
+                "        return v;",
+                "    } catch (...) {",
+                "        return default_fn();",
+                "    }",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_is_digit:
+        helpers.extend(
+            [
+                "inline bool _meme_is_digit(const std::string& s) {",
+                "    return s.size() == 1 && s[0] >= '0' && s[0] <= '9';",
                 "}",
                 "",
             ]
@@ -1189,6 +1322,103 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        std::cout << \"Error writing file: \" << path << \"\\n\";",
                 "        std::exit(1);",
                 "    }",
+                "}",
+                "inline void _meme_copy_file(const std::string& src, const std::string& dst) {",
+                "    std::string rsrc = _meme_resolve_path(src).string();",
+                "    std::error_code ec;",
+                "    if (!std::filesystem::is_regular_file(rsrc, ec)) {",
+                "        std::cout << \"Error copying file: \" << src << \"\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    std::filesystem::copy_file(rsrc, _meme_trim(dst), std::filesystem::copy_options::overwrite_existing, ec);",
+                "    if (ec) {",
+                "        std::cout << \"Error copying file: \" << src << \"\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "}",
+                "inline void _meme_move_file(const std::string& src, const std::string& dst) {",
+                "    std::string rsrc = _meme_resolve_path(src).string();",
+                "    std::error_code ec;",
+                "    if (!std::filesystem::is_regular_file(rsrc, ec)) {",
+                "        std::cout << \"Error moving file: \" << src << \"\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    std::string target = _meme_trim(dst);",
+                "    std::filesystem::rename(rsrc, target, ec);",
+                "    if (ec) {",
+                "        std::error_code ec2, ec3;",
+                "        std::filesystem::copy_file(rsrc, target, std::filesystem::copy_options::overwrite_existing, ec2);",
+                "        if (!ec2) {",
+                "            std::filesystem::remove(rsrc, ec3);",
+                "        }",
+                "        if (ec2 || ec3) {",
+                "            std::cout << \"Error moving file: \" << src << \"\\n\";",
+                "            std::exit(1);",
+                "        }",
+                "    }",
+                "}",
+                "inline void _meme_rename_file(const std::string& path, const std::string& new_name) {",
+                "    std::string rsrc = _meme_resolve_path(path).string();",
+                "    std::error_code ec;",
+                "    if (!std::filesystem::is_regular_file(rsrc, ec)) {",
+                "        std::cout << \"Error renaming file: \" << path << \"\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    std::filesystem::path p(_meme_trim(path));",
+                "    std::filesystem::path parent = p.parent_path();",
+                "    std::filesystem::path nn = std::filesystem::path(_meme_trim(new_name)).filename();",
+                "    std::filesystem::path target = parent.empty() ? nn : (parent / nn);",
+                "    std::filesystem::rename(rsrc, target, ec);",
+                "    if (ec) {",
+                "        std::error_code ec2, ec3;",
+                "        std::filesystem::copy_file(rsrc, target, std::filesystem::copy_options::overwrite_existing, ec2);",
+                "        if (!ec2) {",
+                "            std::filesystem::remove(rsrc, ec3);",
+                "        }",
+                "        if (ec2 || ec3) {",
+                "            std::cout << \"Error renaming file: \" << path << \"\\n\";",
+                "            std::exit(1);",
+                "        }",
+                "    }",
+                "}",
+                "inline void _meme_delete_file(const std::string& path) {",
+                "    std::string rsrc = _meme_resolve_path(path).string();",
+                "    std::error_code ec;",
+                "    if (!std::filesystem::is_regular_file(rsrc, ec)) {",
+                "        std::cout << \"Error deleting file: \" << path << \"\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    if (!std::filesystem::remove(rsrc, ec) || ec) {",
+                "        std::cout << \"Error deleting file: \" << path << \"\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "}",
+                "inline void _meme_create_directory(const std::string& path) {",
+                "    std::error_code ec;",
+                "    std::filesystem::create_directories(_meme_trim(path), ec);",
+                "    if (ec) {",
+                "        std::cout << \"Error creating directory: \" << path << \"\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "}",
+                "inline std::vector<std::string> _meme_list_files(const std::string& path) {",
+                "    std::string rpath = _meme_resolve_path(path).string();",
+                "    std::error_code ec;",
+                "    if (!std::filesystem::is_directory(rpath, ec)) {",
+                "        std::cout << \"Error listing directory: \" << path << \"\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    std::vector<std::string> res;",
+                "    for (const auto& entry : std::filesystem::directory_iterator(rpath, ec)) {",
+                "        if (ec) break;",
+                "        res.push_back(entry.path().filename().string());",
+                "    }",
+                "    if (ec) {",
+                "        std::cout << \"Error listing directory: \" << path << \"\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    std::sort(res.begin(), res.end());",
+                "    return res;",
                 "}",
                 "",
             ]

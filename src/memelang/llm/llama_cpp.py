@@ -35,18 +35,18 @@ un-op ::= "\"-\"" | "\"not\""
 sort-dir ::= "\"ascending\"" | "\"descending\""
 opt-source-line ::= (ws "," ws "\"source_line\"" ws ":" ws (pos-int | "null"))?
 
-ir-expr ::= literal-expr | list-literal-expr | var-ref-expr | random-int-expr | random-list-expr | binary-op-expr | unary-op-expr | list-length-expr | list-index-expr | string-length-expr | string-slice-expr | parse-int-expr | format-int-expr | call-expr | read-input-expr | str-ends-with-expr | str-contains-expr | str-starts-with-expr | string-replace-expr | string-upper-expr | string-lower-expr | string-trim-expr | string-split-expr | string-join-expr | string-index-of-expr | string-char-at-expr | file-exists-expr | read-file-string-expr | arg-count-expr | arg-at-expr | read-json-list-expr | record-literal-expr | record-field-expr | map-literal-expr | map-get-expr | map-has-key-expr | optional-none-expr | optional-wrap-expr | optional-is-nothing-expr | optional-unwrap-expr | optional-unwrap-or-default-expr
+ir-expr ::= literal-expr | list-literal-expr | var-ref-expr | random-int-expr | random-list-expr | binary-op-expr | unary-op-expr | list-length-expr | list-index-expr | string-length-expr | string-slice-expr | parse-int-expr | parse-int-or-default-expr | format-int-expr | is-digit-expr | call-expr | read-input-expr | str-ends-with-expr | str-contains-expr | str-starts-with-expr | string-replace-expr | string-upper-expr | string-lower-expr | string-trim-expr | string-split-expr | string-join-expr | string-index-of-expr | string-char-at-expr | file-exists-expr | read-file-string-expr | list-files-expr | arg-count-expr | arg-at-expr | read-json-list-expr | record-literal-expr | record-field-expr | map-literal-expr | map-get-expr | map-has-key-expr | optional-none-expr | optional-wrap-expr | optional-is-nothing-expr | optional-unwrap-expr | optional-unwrap-or-default-expr
 expr-list ::= "[" ws (ir-expr (ws "," ws ir-expr)*)? ws "]"
 
 int-lit-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws "\"value\"" ws ":" ws integer ws "," ws "\"data_type\"" ws ":" ws "\"Int\"" ws "}"
 int-bin-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"binary_op\"" ws "," ws "\"op\"" ws ":" ws int-bin-op ws "," ws "\"left\"" ws ":" ws int-expr ws "," ws "\"right\"" ws ":" ws int-expr ws "}"
 int-un-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"unary_op\"" ws "," ws "\"op\"" ws ":" ws "\"-\"" ws "," ws "\"operand\"" ws ":" ws int-expr ws "}"
-int-expr ::= int-lit-expr | var-ref-expr | random-int-expr | int-bin-expr | int-un-expr | list-length-expr | list-index-expr | string-length-expr | string-index-of-expr | parse-int-expr | arg-count-expr | call-expr | read-input-expr | record-field-expr | map-get-expr
+int-expr ::= int-lit-expr | var-ref-expr | random-int-expr | int-bin-expr | int-un-expr | list-length-expr | list-index-expr | string-length-expr | string-index-of-expr | parse-int-expr | parse-int-or-default-expr | arg-count-expr | call-expr | read-input-expr | record-field-expr | map-get-expr
 
 bool-lit-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws "\"value\"" ws ":" ws boolean ws "," ws "\"data_type\"" ws ":" ws "\"Bool\"" ws "}"
 bool-bin-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"binary_op\"" ws "," ws "\"op\"" ws ":" ws bool-cmp-op ws "," ws "\"left\"" ws ":" ws ir-expr ws "," ws "\"right\"" ws ":" ws ir-expr ws "}"
 bool-un-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"unary_op\"" ws "," ws "\"op\"" ws ":" ws "\"not\"" ws "," ws "\"operand\"" ws ":" ws bool-expr ws "}"
-bool-expr ::= bool-lit-expr | var-ref-expr | bool-bin-expr | bool-un-expr | list-index-expr | call-expr | str-ends-with-expr | str-contains-expr | str-starts-with-expr | file-exists-expr | read-input-expr | record-field-expr | map-get-expr | map-has-key-expr | optional-is-nothing-expr
+bool-expr ::= bool-lit-expr | var-ref-expr | bool-bin-expr | bool-un-expr | list-index-expr | is-digit-expr | call-expr | str-ends-with-expr | str-contains-expr | str-starts-with-expr | file-exists-expr | read-input-expr | record-field-expr | map-get-expr | map-has-key-expr | optional-is-nothing-expr
 
 literal-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws (
     "\"value\"" ws ":" ws integer ws "," ws "\"data_type\"" ws ":" ws ("\"Int\"" | "\"Float\"")
@@ -65,7 +65,9 @@ list-index-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_index\"" ws "," ws 
 string-length-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"string_length\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
 string-slice-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"string_slice\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"start\"" ws ":" ws int-expr ws "," ws "\"end\"" ws ":" ws int-expr ws "}"
 parse-int-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"parse_int\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
+parse-int-or-default-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"parse_int_or_default\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"default_val\"" ws ":" ws int-expr ws "}"
 format-int-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"format_int\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
+is-digit-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"is_digit\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
 call-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"call\"" ws "," ws "\"func_name\"" ws ":" ws ident-str (ws "," ws "\"args\"" ws ":" ws expr-list)? ws "}"
 read-input-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"read_input\"" (ws "," ws "\"prompt\"" ws ":" ws string)? (ws "," ws "\"target_type\"" ws ":" ws scalar-type)? ws "}"
 str-ends-with-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"str_ends_with\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"suffix\"" ws ":" ws ir-expr ws "}"
@@ -81,6 +83,7 @@ string-index-of-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"string_index_of\"" 
 string-char-at-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"string_char_at\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"index\"" ws ":" ws int-expr ws "}"
 file-exists-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"file_exists\"" ws "," ws "\"filepath\"" ws ":" ws ir-expr ws "}"
 read-file-string-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"read_file_string\"" ws "," ws "\"filepath\"" ws ":" ws ir-expr ws "}"
+list-files-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"list_files\"" ws "," ws "\"path\"" ws ":" ws ir-expr ws "}"
 arg-count-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"arg_count\"" ws "}"
 arg-at-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"arg_at\"" ws "," ws "\"index\"" ws ":" ws int-expr ws "}"
 read-json-list-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"read_json_list\"" ws "," ws "\"filepath\"" ws ":" ws ir-expr (ws "," ws "\"element_type\"" ws ":" ws scalar-type)? (ws "," ws "\"explicit_type\"" ws ":" ws boolean)? ws "}"
@@ -99,7 +102,7 @@ optional-is-nothing-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"optional_is_not
 optional-unwrap-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"optional_unwrap\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
 optional-unwrap-or-default-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"optional_unwrap_or_default\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"default_val\"" ws ":" ws ir-expr ws "}"
 
-body-stmt ::= var-decl-stmt | assign-stmt | compound-assign-stmt | sort-stmt | clamp-stmt | filter-stmt | append-stmt | insert-stmt | set-index-stmt | record-set-field-stmt | map-set-stmt | write-file-stmt | append-file-stmt | fail-stmt | exit-stmt | print-stmt | if-stmt | switch-stmt | for-each-stmt | for-range-stmt | while-stmt | loop-break-stmt | loop-continue-stmt | return-stmt
+body-stmt ::= var-decl-stmt | assign-stmt | compound-assign-stmt | sort-stmt | clamp-stmt | filter-stmt | append-stmt | insert-stmt | set-index-stmt | remove-stmt | record-set-field-stmt | map-set-stmt | write-file-stmt | append-file-stmt | copy-file-stmt | move-file-stmt | rename-file-stmt | delete-file-stmt | create-directory-stmt | fail-stmt | exit-stmt | print-stmt | if-stmt | switch-stmt | for-each-stmt | for-range-stmt | while-stmt | loop-break-stmt | loop-continue-stmt | return-stmt
 ir-stmt ::= body-stmt | func-def-stmt | record-def-stmt | import-stmt
 stmt-list ::= "[" ws (body-stmt (ws "," ws body-stmt)*)? ws "]"
 func-param ::= "{" ws "\"name\"" ws ":" ws ident-str ws "," ws "\"param_type\"" ws ":" ws non-void-type ws "}"
@@ -116,10 +119,16 @@ filter-stmt ::= "{" ws "\"op\"" ws ":" ws "\"filter_collection\"" ws "," ws "\"t
 append-stmt ::= "{" ws "\"op\"" ws ":" ws "\"list_append\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
 insert-stmt ::= "{" ws "\"op\"" ws ":" ws "\"list_insert\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"index\"" ws ":" ws int-expr ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
 set-index-stmt ::= "{" ws "\"op\"" ws ":" ws "\"list_set_index\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"index\"" ws ":" ws int-expr ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
+remove-stmt ::= "{" ws "\"op\"" ws ":" ws "\"list_remove\"" ws "," ws "\"target\"" ws ":" ws ident-str (ws "," ws "\"index\"" ws ":" ws (int-expr | "null"))? opt-source-line ws "}"
 record-set-field-stmt ::= "{" ws "\"op\"" ws ":" ws "\"record_set_field\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"field_name\"" ws ":" ws ident-str ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
 map-set-stmt ::= "{" ws "\"op\"" ws ":" ws "\"map_set\"" ws "," ws "\"target\"" ws ":" ws ident-str ws "," ws "\"key\"" ws ":" ws ir-expr ws "," ws "\"value\"" ws ":" ws ir-expr opt-source-line ws "}"
 write-file-stmt ::= "{" ws "\"op\"" ws ":" ws "\"write_file\"" ws "," ws "\"filepath\"" ws ":" ws ir-expr ws "," ws "\"content\"" ws ":" ws ir-expr opt-source-line ws "}"
 append-file-stmt ::= "{" ws "\"op\"" ws ":" ws "\"append_file\"" ws "," ws "\"filepath\"" ws ":" ws ir-expr ws "," ws "\"content\"" ws ":" ws ir-expr opt-source-line ws "}"
+copy-file-stmt ::= "{" ws "\"op\"" ws ":" ws "\"copy_file\"" ws "," ws "\"src\"" ws ":" ws ir-expr ws "," ws "\"dst\"" ws ":" ws ir-expr opt-source-line ws "}"
+move-file-stmt ::= "{" ws "\"op\"" ws ":" ws "\"move_file\"" ws "," ws "\"src\"" ws ":" ws ir-expr ws "," ws "\"dst\"" ws ":" ws ir-expr opt-source-line ws "}"
+rename-file-stmt ::= "{" ws "\"op\"" ws ":" ws "\"rename_file\"" ws "," ws "\"path\"" ws ":" ws ir-expr ws "," ws "\"new_name\"" ws ":" ws ir-expr opt-source-line ws "}"
+delete-file-stmt ::= "{" ws "\"op\"" ws ":" ws "\"delete_file\"" ws "," ws "\"path\"" ws ":" ws ir-expr opt-source-line ws "}"
+create-directory-stmt ::= "{" ws "\"op\"" ws ":" ws "\"create_directory\"" ws "," ws "\"path\"" ws ":" ws ir-expr opt-source-line ws "}"
 fail-stmt ::= "{" ws "\"op\"" ws ":" ws "\"fail_stmt\"" ws "," ws "\"message\"" ws ":" ws ir-expr opt-source-line ws "}"
 exit-stmt ::= "{" ws "\"op\"" ws ":" ws "\"exit_stmt\"" ws "," ws "\"code\"" ws ":" ws int-expr opt-source-line ws "}"
 print-stmt ::= "{" ws "\"op\"" ws ":" ws "\"print_stmt\"" ws "," ws "\"expressions\"" ws ":" ws "[" ws ir-expr (ws "," ws ir-expr)* ws "]" opt-source-line ws "}"

@@ -21,6 +21,9 @@ from memelang.ir.schema import (
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
+    CopyFileStmt,
+    CreateDirectoryStmt,
+    DeleteFileStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -33,11 +36,14 @@ from memelang.ir.schema import (
     IRStatement,
     IfStmt,
     ImportStmt,
+    IsDigitExpr,
     ListAppendStmt,
+    ListFilesExpr,
     ListIndexExpr,
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListRemoveStmt,
     ListSetIndexStmt,
     LiteralExpr,
     MapEntry,
@@ -46,12 +52,14 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MemeType,
+    MoveFileStmt,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
     ParseIntExpr,
+    ParseIntOrDefaultExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -65,6 +73,7 @@ from memelang.ir.schema import (
     RecordFieldInit,
     RecordLiteralExpr,
     RecordSetFieldStmt,
+    RenameFileStmt,
     ReturnStmt,
     SortCollectionStmt,
     StrContainsExpr,
@@ -192,6 +201,7 @@ def _find_collection_mutations(stmts: list[IRStatement], collection: str) -> lis
                 ListAppendStmt,
                 ListInsertStmt,
                 ListSetIndexStmt,
+                ListRemoveStmt,
             ),
         ) and s.target == collection:
             hits.append(s)
@@ -897,6 +907,14 @@ class _StaticChecker:
                 )
             return "String"
 
+        if isinstance(expr, ListFilesExpr):
+            pt = self.infer_expr_type(expr.path, scope, stmt_idx)
+            if pt != "String":
+                raise StaticVerificationError(
+                    f"`list_files` requires String path, got {pt}", stmt_idx
+                )
+            return "List<String>"
+
         if isinstance(expr, ArgCountExpr):
             return "Int"
 
@@ -970,6 +988,27 @@ class _StaticChecker:
                     f"`parse_int` requires String target, got {t_t}", stmt_idx
                 )
             return "Int"
+
+        if isinstance(expr, ParseIntOrDefaultExpr):
+            t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if t_t != "String":
+                raise StaticVerificationError(
+                    f"`parse_int_or_default` requires String target, got {t_t}", stmt_idx
+                )
+            d_t = self.infer_expr_type(expr.default_val, scope, stmt_idx)
+            if d_t != "Int":
+                raise StaticVerificationError(
+                    f"`parse_int_or_default` default value must be Int, got {d_t}", stmt_idx
+                )
+            return "Int"
+
+        if isinstance(expr, IsDigitExpr):
+            t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if t_t != "String":
+                raise StaticVerificationError(
+                    f"`is_digit` requires String target, got {t_t}", stmt_idx
+                )
+            return "Bool"
 
         if isinstance(expr, FormatIntExpr):
             t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
@@ -1328,6 +1367,31 @@ class _StaticChecker:
                     f"Cannot assign {val_t} to element of {target_t}", stmt_idx
                 )
             scope.mark_populated(stmt.target)
+            return False
+
+        if isinstance(stmt, ListRemoveStmt):
+            target_t = scope.lookup(stmt.target)
+            if target_t is None:
+                raise StaticVerificationError(
+                    f"Cannot remove item from undeclared variable `{stmt.target}`", stmt_idx
+                )
+            elem_t = _element_type_of(target_t)
+            if elem_t is None:
+                raise StaticVerificationError(
+                    f"`list_remove` requires a List variable, got {target_t}", stmt_idx
+                )
+            if stmt.index is not None:
+                idx_t = self.infer_expr_type(stmt.index, scope, stmt_idx)
+                if idx_t != "Int":
+                    raise StaticVerificationError(
+                        f"`list_remove` index must be Int, got {idx_t}", stmt_idx
+                    )
+                neg_idx = _extract_negative_int_literal(stmt.index)
+                if neg_idx is not None:
+                    raise StaticVerificationError(
+                        f"Negative list remove index ({neg_idx}) is not allowed; use `remove last item from {stmt.target}` or positive index `remove item (length of {stmt.target} - {-neg_idx}) from {stmt.target}` instead",
+                        stmt_idx,
+                    )
             return False
 
         if isinstance(stmt, FailStmt):
@@ -1717,6 +1781,40 @@ class _StaticChecker:
                 )
             return False
 
+        if isinstance(stmt, (CopyFileStmt, MoveFileStmt)):
+            st = self.infer_expr_type(stmt.src, scope, stmt_idx)
+            if st != "String":
+                raise StaticVerificationError(
+                    f"`{stmt.op}` requires String src, got {st}", stmt_idx
+                )
+            dt = self.infer_expr_type(stmt.dst, scope, stmt_idx)
+            if dt != "String":
+                raise StaticVerificationError(
+                    f"`{stmt.op}` requires String dst, got {dt}", stmt_idx
+                )
+            return False
+
+        if isinstance(stmt, RenameFileStmt):
+            pt = self.infer_expr_type(stmt.path, scope, stmt_idx)
+            if pt != "String":
+                raise StaticVerificationError(
+                    f"`rename_file` requires String path, got {pt}", stmt_idx
+                )
+            nt = self.infer_expr_type(stmt.new_name, scope, stmt_idx)
+            if nt != "String":
+                raise StaticVerificationError(
+                    f"`rename_file` requires String new_name, got {nt}", stmt_idx
+                )
+            return False
+
+        if isinstance(stmt, (DeleteFileStmt, CreateDirectoryStmt)):
+            pt = self.infer_expr_type(stmt.path, scope, stmt_idx)
+            if pt != "String":
+                raise StaticVerificationError(
+                    f"`{stmt.op}` requires String path, got {pt}", stmt_idx
+                )
+            return False
+
         if isinstance(stmt, ImportStmt):
             if not is_top_level:
                 raise StaticVerificationError(
@@ -1770,9 +1868,12 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
             StringTrimExpr,
             ParseIntExpr,
             FormatIntExpr,
+            IsDigitExpr,
         ),
     ):
         return _expr_references_var(expr.target, name)
+    if isinstance(expr, ParseIntOrDefaultExpr):
+        return _expr_references_var(expr.target, name) or _expr_references_var(expr.default_val, name)
     if isinstance(expr, StringSplitExpr):
         return _expr_references_var(expr.target, name) or _expr_references_var(expr.separator, name)
     if isinstance(expr, StringJoinExpr):
@@ -1781,6 +1882,8 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
         return _expr_references_var(expr.target, name) or _expr_references_var(expr.index, name)
     if isinstance(expr, (FileExistsExpr, ReadFileStringExpr)):
         return _expr_references_var(expr.filepath, name)
+    if isinstance(expr, ListFilesExpr):
+        return _expr_references_var(expr.path, name)
     if isinstance(expr, ArgAtExpr):
         return _expr_references_var(expr.index, name)
     if isinstance(expr, ReadJsonListExpr):
@@ -1845,6 +1948,11 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
             or _expr_references_var(s.value, name)
         ):
             return True
+        if isinstance(s, ListRemoveStmt) and (
+            s.target == name
+            or (s.index is not None and _expr_references_var(s.index, name))
+        ):
+            return True
         if isinstance(s, RecordSetFieldStmt) and (
             s.target == name or _expr_references_var(s.value, name)
         ):
@@ -1857,6 +1965,18 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
             return True
         if isinstance(s, (WriteFileStmt, AppendFileStmt)) and (
             _expr_references_var(s.filepath, name) or _expr_references_var(s.content, name)
+        ):
+            return True
+        if isinstance(s, (CopyFileStmt, MoveFileStmt)) and (
+            _expr_references_var(s.src, name) or _expr_references_var(s.dst, name)
+        ):
+            return True
+        if isinstance(s, RenameFileStmt) and (
+            _expr_references_var(s.path, name) or _expr_references_var(s.new_name, name)
+        ):
+            return True
+        if isinstance(s, (DeleteFileStmt, CreateDirectoryStmt)) and (
+            _expr_references_var(s.path, name)
         ):
             return True
         if isinstance(s, (SortCollectionStmt, ClampCollectionStmt, FilterCollectionStmt)) and (
@@ -1924,6 +2044,7 @@ def _stmts_mutate_var(stmts: list[IRStatement], name: str) -> bool:
                 ListAppendStmt,
                 ListInsertStmt,
                 ListSetIndexStmt,
+                ListRemoveStmt,
                 SortCollectionStmt,
                 ClampCollectionStmt,
                 FilterCollectionStmt,

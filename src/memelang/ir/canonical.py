@@ -14,6 +14,9 @@ from memelang.ir.schema import (
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
+    CopyFileStmt,
+    CreateDirectoryStmt,
+    DeleteFileStmt,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -26,11 +29,14 @@ from memelang.ir.schema import (
     IRStatement,
     IfStmt,
     ImportStmt,
+    IsDigitExpr,
     ListAppendStmt,
+    ListFilesExpr,
     ListIndexExpr,
     ListInsertStmt,
     ListLengthExpr,
     ListLiteralExpr,
+    ListRemoveStmt,
     ListSetIndexStmt,
     LiteralExpr,
     MapEntry,
@@ -38,12 +44,14 @@ from memelang.ir.schema import (
     MapHasKeyExpr,
     MapLiteralExpr,
     MapSetStmt,
+    MoveFileStmt,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
     OptionalUnwrapOrDefaultExpr,
     OptionalWrapExpr,
     ParseIntExpr,
+    ParseIntOrDefaultExpr,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -51,6 +59,7 @@ from memelang.ir.schema import (
     ReadFileStringExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
     RecordFieldExpr,
@@ -205,6 +214,10 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
         res = f"read string from file {format_expr(expr.filepath, 6)}"
         return f"({res})" if parent_prec > 5 else res
 
+    if isinstance(expr, ListFilesExpr):
+        res = f"list files in {format_expr(expr.path, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
     if isinstance(expr, ArgCountExpr):
         return "argument count"
 
@@ -226,6 +239,14 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
 
     if isinstance(expr, ParseIntExpr):
         res = f"integer value of {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, ParseIntOrDefaultExpr):
+        res = f"integer value of {format_expr(expr.target, 6)} or else {format_expr(expr.default_val, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, IsDigitExpr):
+        res = f"is digit {format_expr(expr.target, 6)}"
         return f"({res})" if parent_prec > 5 else res
 
     if isinstance(expr, FormatIntExpr):
@@ -323,6 +344,11 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
     if isinstance(stmt, ListSetIndexStmt):
         return [f"{pad}set {stmt.target}[{format_expr(stmt.index)}] to {format_expr(stmt.value)}"]
 
+    if isinstance(stmt, ListRemoveStmt):
+        if stmt.index is not None:
+            return [f"{pad}remove item {format_expr(stmt.index)} from {stmt.target}"]
+        return [f"{pad}remove last item from {stmt.target}"]
+
     if isinstance(stmt, FailStmt):
         return [f"{pad}fail with {format_expr(stmt.message)}"]
 
@@ -417,6 +443,21 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
 
     if isinstance(stmt, AppendFileStmt):
         return [f"{pad}append {format_expr(stmt.content)} to file {format_expr(stmt.filepath)}"]
+
+    if isinstance(stmt, CopyFileStmt):
+        return [f"{pad}copy file {format_expr(stmt.src)} to {format_expr(stmt.dst)}"]
+
+    if isinstance(stmt, MoveFileStmt):
+        return [f"{pad}move file {format_expr(stmt.src)} to {format_expr(stmt.dst)}"]
+
+    if isinstance(stmt, RenameFileStmt):
+        return [f"{pad}rename file {format_expr(stmt.path)} to {format_expr(stmt.new_name)}"]
+
+    if isinstance(stmt, DeleteFileStmt):
+        return [f"{pad}delete file {format_expr(stmt.path)}"]
+
+    if isinstance(stmt, CreateDirectoryStmt):
+        return [f"{pad}create directory {format_expr(stmt.path)}"]
 
     if isinstance(stmt, ImportStmt):
         return [f"{pad}use {stmt.module}"]

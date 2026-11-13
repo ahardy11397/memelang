@@ -582,6 +582,81 @@ print a, b, c, d
     assert "text of 100" in can_alt
 
 
+def test_file_management_canonical_and_roundtrip():
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """create directory "sub"
+copy file "a.txt" to "sub/b.txt"
+rename file "sub/b.txt" to "c.txt"
+define files: List<String> as list files in "sub"
+move file "sub/c.txt" to "d.txt"
+delete file "d.txt"
+print files
+"""
+    syn = HeuristicProvider().synthesize(src)
+    out = verify_synthesis(syn)
+    assert out.is_unambiguous and out.program is not None
+    canonical = to_canonical_meme(out.program)
+    assert 'create directory "sub"' in canonical
+    assert 'copy file "a.txt" to "sub/b.txt"' in canonical
+    assert 'rename file "sub/b.txt" to "c.txt"' in canonical
+    assert 'list files in "sub"' in canonical
+    assert 'move file "sub/c.txt" to "d.txt"' in canonical
+    assert 'delete file "d.txt"' in canonical
+
+    roundtrip = verify_synthesis(HeuristicProvider().synthesize(canonical))
+    assert roundtrip.is_unambiguous and roundtrip.program is not None
+    assert to_canonical_meme(roundtrip.program) == canonical
 
 
+def test_list_removal_canonical_and_roundtrip():
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """define nums: List<Int> as [1, 2, 3, 4, 5]
+remove item 1 from nums
+remove last item from nums
+remove item 0 from nums
+print nums
+"""
+    syn = HeuristicProvider().synthesize(src)
+    out = verify_synthesis(syn)
+    assert out.is_unambiguous and out.program is not None
+    canonical = to_canonical_meme(out.program)
+    assert "remove item 1 from nums" in canonical
+    assert "remove last item from nums" in canonical
+    assert "remove item 0 from nums" in canonical
+
+    roundtrip = verify_synthesis(HeuristicProvider().synthesize(canonical))
+    assert roundtrip.is_unambiguous and roundtrip.program is not None
+    assert to_canonical_meme(roundtrip.program) == canonical
+
+
+def test_safe_parse_and_is_digit_canonical_and_roundtrip():
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """define val: Int as integer value of "123" or else 0
+define bad: Int as integer value of "xyz" or else -1
+define d1: Bool as is digit "5"
+define d2: Bool as is digit "x"
+define d3: Bool as is digit ""
+define d4: Bool as is digit "12"
+print val, bad, d1, d2, d3, d4
+"""
+    syn = HeuristicProvider().synthesize(src)
+    out = verify_synthesis(syn)
+    assert out.is_unambiguous and out.program is not None
+    canonical = to_canonical_meme(out.program)
+    assert 'integer value of "123" or else 0' in canonical
+    assert 'integer value of "xyz" or else -1' in canonical
+    assert 'is digit "5"' in canonical
+    assert 'is digit "x"' in canonical
+    assert 'is digit ""' in canonical
+    assert 'is digit "12"' in canonical
+
+    roundtrip = verify_synthesis(HeuristicProvider().synthesize(canonical))
+    assert roundtrip.is_unambiguous and roundtrip.program is not None
+    assert to_canonical_meme(roundtrip.program) == canonical
 
