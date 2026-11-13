@@ -12,6 +12,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     BreakStmt,
     CallExpr,
+    CallStmt,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -31,6 +32,9 @@ from memelang.ir.schema import (
     IfStmt,
     ImportStmt,
     IsDigitExpr,
+    IsLetterExpr,
+    IsUpperExpr,
+    IsLowerExpr,
     ListAppendStmt,
     ListFilesExpr,
     ListIndexExpr,
@@ -59,6 +63,7 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadFileStringExpr,
+    ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RenameFileStmt,
@@ -124,6 +129,9 @@ class _PyGen:
         self.uses_list_remove = False
         self.uses_parse_int_or_else = False
         self.uses_is_digit = False
+        self.uses_is_letter = False
+        self.uses_is_upper = False
+        self.uses_is_lower = False
         self.uses_argv = False
         self.uses_input = False
         self.uses_input_helpers = False
@@ -151,7 +159,7 @@ class _PyGen:
             return "List<String>"
         if isinstance(expr, ListFilesExpr):
             return "List<String>"
-        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr)):
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr, IsLetterExpr, IsUpperExpr, IsLowerExpr)):
             return "Bool"
         if isinstance(
             expr,
@@ -173,6 +181,8 @@ class _PyGen:
             ),
         ):
             return "String"
+        if isinstance(expr, ReadFileLinesExpr):
+            return "List<String>"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
             if col_t.startswith("List<"):
@@ -353,6 +363,18 @@ class _PyGen:
             self.uses_is_digit = True
             return f"_meme_is_digit({self.gen_expr(expr.target, scope)})"
 
+        if isinstance(expr, IsLetterExpr):
+            self.uses_is_letter = True
+            return f"_meme_is_letter({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, IsUpperExpr):
+            self.uses_is_upper = True
+            return f"_meme_is_upper({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, IsLowerExpr):
+            self.uses_is_lower = True
+            return f"_meme_is_lower({self.gen_expr(expr.target, scope)})"
+
         if isinstance(expr, FormatIntExpr):
             return f"_meme_builtins.str({self.gen_expr(expr.target, scope)})"
 
@@ -367,6 +389,10 @@ class _PyGen:
         if isinstance(expr, ReadFileStringExpr):
             self.uses_file_io = True
             return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ReadFileLinesExpr):
+            self.uses_file_io = True
+            return f"_meme_read_file_lines({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ListFilesExpr):
             self.uses_file_io = True
@@ -699,6 +725,10 @@ class _PyGen:
         if isinstance(stmt, ImportStmt):
             return []
 
+        if isinstance(stmt, CallStmt):
+            args = ", ".join(self.gen_expr(a, scope) for a in stmt.args)
+            return [f"{pad}{_py_ident(stmt.func_name)}({args})"]
+
         raise TypeError(f"Unsupported IRStatement: {type(stmt)!r}")
 
 
@@ -838,11 +868,19 @@ def generate_python(ir: ProgramIR) -> str:
                 "        _meme_builtins.print(f'Error reading file: {path}')",
                 "        raise _meme_builtins.SystemExit(1)",
                 "    try:",
-                "        with _meme_builtins.open(_rp, 'r', encoding='utf-8') as _f:",
+                "        with _meme_builtins.open(_rp, 'r', encoding='utf-8', newline='') as _f:",
                 "            return _f.read()",
                 "    except _meme_builtins.Exception:",
                 "        _meme_builtins.print(f'Error reading file: {path}')",
                 "        raise _meme_builtins.SystemExit(1)",
+                "",
+                "def _meme_read_file_lines(path: str) -> list[str]:",
+                "    raw = _meme_read_file_string(path)",
+                "    if not raw:",
+                "        return []",
+                "    if raw.endswith('\\n'):",
+                "        raw = raw[:-1]",
+                "    return raw.split('\\n')",
                 "",
                 "def _meme_write_file(path: str, content: str) -> None:",
                 "    try:",
@@ -1055,6 +1093,33 @@ def generate_python(ir: ProgramIR) -> str:
             [
                 "def _meme_is_digit(s: str) -> bool:",
                 "    return _meme_builtins.len(s) == 1 and '0' <= s <= '9'",
+                "",
+            ]
+        )
+
+    if gen.uses_is_letter:
+        header.extend(
+            [
+                "def _meme_is_letter(s: str) -> bool:",
+                "    return _meme_builtins.len(s) == 1 and (('A' <= s <= 'Z') or ('a' <= s <= 'z'))",
+                "",
+            ]
+        )
+
+    if gen.uses_is_upper:
+        header.extend(
+            [
+                "def _meme_is_upper(s: str) -> bool:",
+                "    return _meme_builtins.len(s) == 1 and 'A' <= s <= 'Z'",
+                "",
+            ]
+        )
+
+    if gen.uses_is_lower:
+        header.extend(
+            [
+                "def _meme_is_lower(s: str) -> bool:",
+                "    return _meme_builtins.len(s) == 1 and 'a' <= s <= 'z'",
                 "",
             ]
         )

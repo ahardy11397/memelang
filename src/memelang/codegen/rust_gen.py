@@ -10,6 +10,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     BreakStmt,
     CallExpr,
+    CallStmt,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -29,6 +30,9 @@ from memelang.ir.schema import (
     IfStmt,
     ImportStmt,
     IsDigitExpr,
+    IsLetterExpr,
+    IsUpperExpr,
+    IsLowerExpr,
     ListAppendStmt,
     ListFilesExpr,
     ListIndexExpr,
@@ -57,6 +61,7 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadFileStringExpr,
+    ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RenameFileStmt,
@@ -179,6 +184,9 @@ class _RustGen:
         self.uses_parse_int = False
         self.uses_parse_int_or_else = False
         self.uses_is_digit = False
+        self.uses_is_letter = False
+        self.uses_is_upper = False
+        self.uses_is_lower = False
         self.uses_optional_helpers = False
         self._match_counter = 0
         self.func_returns: dict[str, MemeType] = {}
@@ -199,7 +207,7 @@ class _RustGen:
             return "List<String>"
         if isinstance(expr, ListFilesExpr):
             return "List<String>"
-        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr)):
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr, IsLetterExpr, IsUpperExpr, IsLowerExpr)):
             return "Bool"
         if isinstance(
             expr,
@@ -222,6 +230,8 @@ class _RustGen:
             ),
         ):
             return "String"
+        if isinstance(expr, ReadFileLinesExpr):
+            return "List<String>"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
             if col_t.startswith("List<"):
@@ -422,6 +432,21 @@ class _RustGen:
             tgt = self.gen_expr(expr.target, scope)
             return f"_meme_is_digit(&({tgt}))"
 
+        if isinstance(expr, IsLetterExpr):
+            self.uses_is_letter = True
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_is_letter(&({tgt}))"
+
+        if isinstance(expr, IsUpperExpr):
+            self.uses_is_upper = True
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_is_upper(&({tgt}))"
+
+        if isinstance(expr, IsLowerExpr):
+            self.uses_is_lower = True
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_is_lower(&({tgt}))"
+
         if isinstance(expr, FormatIntExpr):
             return f"({self.gen_expr(expr.target, scope)}).to_string()"
 
@@ -436,6 +461,10 @@ class _RustGen:
         if isinstance(expr, ReadFileStringExpr):
             self.uses_file_io = True
             return f"_meme_read_file_string(&({self.gen_expr(expr.filepath, scope)}))"
+
+        if isinstance(expr, ReadFileLinesExpr):
+            self.uses_file_io = True
+            return f"_meme_read_file_lines(&({self.gen_expr(expr.filepath, scope)}))"
 
         if isinstance(expr, ListFilesExpr):
             self.uses_file_io = True
@@ -777,6 +806,10 @@ class _RustGen:
         if isinstance(stmt, ImportStmt):
             return []
 
+        if isinstance(stmt, CallStmt):
+            args = ", ".join(self.gen_expr(a, scope) for a in stmt.args)
+            return [f"{pad}{_rust_ident(stmt.func_name)}({args});"]
+
         raise TypeError(f"Unsupported statement inside block: {type(stmt)!r}")
 
     def gen_func(self, fn: FuncDefStmt) -> list[str]:
@@ -1034,6 +1067,36 @@ def generate_rust(ir: ProgramIR) -> str:
             ]
         )
 
+    if gen.uses_is_letter:
+        preamble.extend(
+            [
+                "fn _meme_is_letter(s: &str) -> bool {",
+                "    s.len() == 1 && ((s.as_bytes()[0] >= b'A' && s.as_bytes()[0] <= b'Z') || (s.as_bytes()[0] >= b'a' && s.as_bytes()[0] <= b'z'))",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_is_upper:
+        preamble.extend(
+            [
+                "fn _meme_is_upper(s: &str) -> bool {",
+                "    s.len() == 1 && s.as_bytes()[0] >= b'A' && s.as_bytes()[0] <= b'Z'",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_is_lower:
+        preamble.extend(
+            [
+                "fn _meme_is_lower(s: &str) -> bool {",
+                "    s.len() == 1 && s.as_bytes()[0] >= b'a' && s.as_bytes()[0] <= b'z'",
+                "}",
+                "",
+            ]
+        )
+
     if gen.uses_input:
         preamble.extend(
             [
@@ -1097,6 +1160,19 @@ def generate_rust(ir: ProgramIR) -> str:
                 "            std::process::exit(1);",
                 "        }",
                 "    }",
+                "}",
+                "",
+                "fn _meme_read_file_lines(path: &str) -> Vec<String> {",
+                "    let raw = _meme_read_file_string(path);",
+                "    if raw.is_empty() {",
+                "        return Vec::new();",
+                "    }",
+                "    let s = if raw.ends_with('\\n') {",
+                "        &raw[..raw.len() - 1]",
+                "    } else {",
+                "        &raw[..]",
+                "    };",
+                "    s.split('\\n').map(|line| line.to_string()).collect()",
                 "}",
                 "",
                 "fn _meme_write_file(path: &str, content: &str) {",

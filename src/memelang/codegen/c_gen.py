@@ -24,6 +24,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     BreakStmt,
     CallExpr,
+    CallStmt,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -43,6 +44,9 @@ from memelang.ir.schema import (
     IfStmt,
     ImportStmt,
     IsDigitExpr,
+    IsLetterExpr,
+    IsUpperExpr,
+    IsLowerExpr,
     ListAppendStmt,
     ListFilesExpr,
     ListIndexExpr,
@@ -71,6 +75,7 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadFileStringExpr,
+    ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RecordDefStmt,
@@ -250,11 +255,15 @@ def _collect_types_from_expr(expr: IRExpr, out: set[str]) -> None:
     elif isinstance(expr, ListFilesExpr):
         out.add("List<String>")
         _collect_types_from_expr(expr.path, out)
+    elif isinstance(expr, ReadFileLinesExpr):
+        out.add("List<String>")
+        _collect_types_from_expr(expr.filepath, out)
     elif isinstance(expr, (StringLengthExpr, StringSliceExpr, StringReplaceExpr,
                            StringUpperExpr, StringLowerExpr, StringTrimExpr,
                            StringJoinExpr, StringIndexOfExpr, StringCharAtExpr,
                            StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr,
-                           FileExistsExpr, ReadFileStringExpr, ParseIntExpr, FormatIntExpr, IsDigitExpr)):
+                           FileExistsExpr, ReadFileStringExpr, ParseIntExpr, FormatIntExpr,
+                           IsDigitExpr, IsLetterExpr, IsUpperExpr, IsLowerExpr)):
         for attr in ("target", "substring", "prefix", "suffix", "old", "new",
                      "start", "end", "filepath", "index", "separator", "items"):
             if hasattr(expr, attr):
@@ -345,6 +354,9 @@ def _collect_types_from_stmt(stmt: IRStatement, out: set[str]) -> None:
         _collect_types_from_expr(stmt.new_name, out)
     elif isinstance(stmt, (DeleteFileStmt, CreateDirectoryStmt)):
         _collect_types_from_expr(stmt.path, out)
+    elif isinstance(stmt, CallStmt):
+        for a in stmt.args:
+            _collect_types_from_expr(a, out)
 
 
 class _CGen:
@@ -379,7 +391,7 @@ class _CGen:
             return "List<String>"
         if isinstance(expr, ListFilesExpr):
             return "List<String>"
-        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr)):
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr, IsLetterExpr, IsUpperExpr, IsLowerExpr)):
             return "Bool"
         if isinstance(
             expr,
@@ -402,6 +414,8 @@ class _CGen:
             ),
         ):
             return "String"
+        if isinstance(expr, ReadFileLinesExpr):
+            return "List<String>"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
             if col_t.startswith("List<"):
@@ -645,6 +659,18 @@ class _CGen:
             tgt = self.gen_expr(expr.target, scope)
             return f"_meme_is_digit({tgt})"
 
+        if isinstance(expr, IsLetterExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_is_letter({tgt})"
+
+        if isinstance(expr, IsUpperExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_is_upper({tgt})"
+
+        if isinstance(expr, IsLowerExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_is_lower({tgt})"
+
         if isinstance(expr, FormatIntExpr):
             return f"_meme_fmt_int({self.gen_expr(expr.target, scope)})"
 
@@ -662,6 +688,11 @@ class _CGen:
             self.uses_str_helpers = True
             self.uses_file_io = True
             return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ReadFileLinesExpr):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            return f"_meme_read_file_lines({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ListFilesExpr):
             self.uses_str_helpers = True
@@ -1092,6 +1123,14 @@ class _CGen:
             self.uses_file_io = True
             path = self.gen_expr(stmt.path, scope)
             return [f"{pad}_meme_create_directory({path});"]
+
+        if isinstance(stmt, CallStmt):
+            param_types = [p.param_type for p in self.func_params.get(stmt.func_name, [])]
+            args: list[str] = []
+            for i, a in enumerate(stmt.args):
+                expected = param_types[i] if i < len(param_types) else None
+                args.append(self.gen_expr(a, scope, expected))
+            return [f"{pad}{_c_ident(stmt.func_name)}({', '.join(args)});"]
 
         raise NotImplementedError(f"Unsupported statement: {type(stmt).__name__}")
 
@@ -2040,6 +2079,30 @@ def generate_c(ir: ProgramIR) -> str:
         "    }",
         "    return res;",
         "}",
+        "static inline meme_list_String _meme_read_file_lines(const char* path) {",
+        "    const char* raw = _meme_read_file_string(path);",
+        "    meme_list_String res = _meme_list_String_new();",
+        "    if (!raw || strlen(raw) == 0) {",
+        "        return res;",
+        "    }",
+        "    size_t len = strlen(raw);",
+        "    if (len > 0 && raw[len - 1] == '\\n') {",
+        "        len--;",
+        "    }",
+        "    const char* p = raw;",
+        "    const char* end = raw + len;",
+        "    while (p <= end) {",
+        "        const char* next_nl = (const char*)memchr(p, '\\n', (size_t)(end - p));",
+        "        size_t part_len = next_nl ? (size_t)(next_nl - p) : (size_t)(end - p);",
+        "        char* part = (char*)malloc(part_len + 1);",
+        "        memcpy(part, p, part_len);",
+        "        part[part_len] = '\\0';",
+        "        _meme_list_String_append(&res, part);",
+        "        if (!next_nl) break;",
+        "        p = next_nl + 1;",
+        "    }",
+        "    return res;",
+        "}",
         "",
     ]
 
@@ -2111,6 +2174,15 @@ def generate_c(ir: ProgramIR) -> str:
         "}",
         "static inline bool _meme_is_digit(const char* s) {",
         "    return (s != NULL && strlen(s) == 1 && s[0] >= '0' && s[0] <= '9');",
+        "}",
+        "static inline bool _meme_is_letter(const char* s) {",
+        "    return (s != NULL && strlen(s) == 1 && ((s[0] >= 'A' && s[0] <= 'Z') || (s[0] >= 'a' && s[0] <= 'z')));",
+        "}",
+        "static inline bool _meme_is_upper(const char* s) {",
+        "    return (s != NULL && strlen(s) == 1 && s[0] >= 'A' && s[0] <= 'Z');",
+        "}",
+        "static inline bool _meme_is_lower(const char* s) {",
+        "    return (s != NULL && strlen(s) == 1 && s[0] >= 'a' && s[0] <= 'z');",
         "}",
         "static inline double _meme_parse_float(const char* s) {",
         "    if (!s) return 0.0;",

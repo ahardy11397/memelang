@@ -11,6 +11,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     BreakStmt,
     CallExpr,
+    CallStmt,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -30,6 +31,9 @@ from memelang.ir.schema import (
     IfStmt,
     ImportStmt,
     IsDigitExpr,
+    IsLetterExpr,
+    IsUpperExpr,
+    IsLowerExpr,
     ListAppendStmt,
     ListFilesExpr,
     ListIndexExpr,
@@ -57,6 +61,7 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadFileStringExpr,
+    ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RenameFileStmt,
@@ -214,6 +219,10 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
         res = f"read string from file {format_expr(expr.filepath, 6)}"
         return f"({res})" if parent_prec > 5 else res
 
+    if isinstance(expr, ReadFileLinesExpr):
+        res = f"read lines from file {format_expr(expr.filepath, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
     if isinstance(expr, ListFilesExpr):
         res = f"list files in {format_expr(expr.path, 6)}"
         return f"({res})" if parent_prec > 5 else res
@@ -247,6 +256,18 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
 
     if isinstance(expr, IsDigitExpr):
         res = f"is digit {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, IsLetterExpr):
+        res = f"is letter {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, IsUpperExpr):
+        res = f"is upper {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, IsLowerExpr):
+        res = f"is lower {format_expr(expr.target, 6)}"
         return f"({res})" if parent_prec > 5 else res
 
     if isinstance(expr, FormatIntExpr):
@@ -461,6 +482,10 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
 
     if isinstance(stmt, ImportStmt):
         return [f"{pad}use {stmt.module}"]
+
+    if isinstance(stmt, CallStmt):
+        args_s = ", ".join(format_expr(a) for a in stmt.args)
+        return [f"{pad}call {stmt.func_name}({args_s})"]
 
     raise TypeError(f"Unsupported statement node: {type(stmt)!r}")
 

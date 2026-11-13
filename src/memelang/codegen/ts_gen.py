@@ -26,6 +26,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     BreakStmt,
     CallExpr,
+    CallStmt,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -46,6 +47,9 @@ from memelang.ir.schema import (
     IfStmt,
     ImportStmt,
     IsDigitExpr,
+    IsLetterExpr,
+    IsUpperExpr,
+    IsLowerExpr,
     ListAppendStmt,
     ListFilesExpr,
     ListIndexExpr,
@@ -74,6 +78,7 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadFileStringExpr,
+    ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RenameFileStmt,
@@ -206,14 +211,14 @@ class _TSGen:
             if isinstance(expr, OptionalUnwrapOrDefaultExpr):
                 return self.infer_type(expr.default_val, scope)
             return "Int"
-        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr)):
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr, IsLetterExpr, IsUpperExpr, IsLowerExpr)):
             return "Bool"
         if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr)):
             return "Int"
         if isinstance(expr, (StringSliceExpr, StringReplaceExpr, StringUpperExpr, StringLowerExpr,
                              StringTrimExpr, StringJoinExpr, StringCharAtExpr, ReadFileStringExpr, ArgAtExpr, FormatIntExpr)):
             return "String"
-        if isinstance(expr, (StringSplitExpr, ListFilesExpr)):
+        if isinstance(expr, (StringSplitExpr, ListFilesExpr, ReadFileLinesExpr)):
             return "List<String>"
         if isinstance(expr, ReadJsonListExpr):
             return f"List<{expr.element_type}>"
@@ -435,6 +440,15 @@ class _TSGen:
         if isinstance(expr, IsDigitExpr):
             return f"_meme_is_digit({self.gen_expr(expr.target, scope)})"
 
+        if isinstance(expr, IsLetterExpr):
+            return f"_meme_is_letter({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, IsUpperExpr):
+            return f"_meme_is_upper({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, IsLowerExpr):
+            return f"_meme_is_lower({self.gen_expr(expr.target, scope)})"
+
         if isinstance(expr, FormatIntExpr):
             return f"String({self.gen_expr(expr.target, scope)})"
 
@@ -443,6 +457,9 @@ class _TSGen:
 
         if isinstance(expr, ReadFileStringExpr):
             return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ReadFileLinesExpr):
+            return f"_meme_read_file_lines({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ListFilesExpr):
             return f"_meme_list_files({self.gen_expr(expr.path, scope)})"
@@ -743,6 +760,10 @@ class _TSGen:
         if isinstance(stmt, (RecordDefStmt, FuncDefStmt, ImportStmt)):
             return []
 
+        if isinstance(stmt, CallStmt):
+            args = ", ".join(self.gen_expr(a, scope) for a in stmt.args)
+            return [f"{pad}{_ts_ident(stmt.func_name)}({args});"]
+
         raise TypeError(f"Unsupported IRStatement: {type(stmt)!r}")
 
     def gen_func(self, fn: FuncDefStmt) -> list[str]:
@@ -1041,6 +1062,15 @@ def generate_ts(ir: ProgramIR) -> str:
         "    }",
         "}",
         "",
+        "function _meme_read_file_lines(filePath: string): string[] {",
+        "    const raw = _meme_read_file_string(filePath);",
+        "    if (raw.length === 0) {",
+        "        return [];",
+        "    }",
+        "    const s = raw.endsWith(\"\\n\") ? raw.slice(0, -1) : raw;",
+        "    return s.split(\"\\n\");",
+        "}",
+        "",
         "function _meme_write_file(filePath: string, content: string): void {",
         "    const p = filePath.trim();",
         "    try {",
@@ -1218,6 +1248,15 @@ def generate_ts(ir: ProgramIR) -> str:
         "",
         "function _meme_is_digit(s: string): boolean {",
         "    return s.length === 1 && s >= \"0\" && s <= \"9\";",
+        "}",
+        "function _meme_is_letter(s: string): boolean {",
+        "    return s.length === 1 && ((s >= \"A\" && s <= \"Z\") || (s >= \"a\" && s <= \"z\"));",
+        "}",
+        "function _meme_is_upper(s: string): boolean {",
+        "    return s.length === 1 && s >= \"A\" && s <= \"Z\";",
+        "}",
+        "function _meme_is_lower(s: string): boolean {",
+        "    return s.length === 1 && s >= \"a\" && s <= \"z\";",
         "}",
         "",
         "function _meme_parse_float(s: string): number {",

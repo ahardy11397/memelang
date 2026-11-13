@@ -18,6 +18,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     BreakStmt,
     CallExpr,
+    CallStmt,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -37,6 +38,9 @@ from memelang.ir.schema import (
     IfStmt,
     ImportStmt,
     IsDigitExpr,
+    IsLetterExpr,
+    IsUpperExpr,
+    IsLowerExpr,
     ListAppendStmt,
     ListFilesExpr,
     ListIndexExpr,
@@ -65,6 +69,7 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadFileStringExpr,
+    ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RecordDefStmt,
@@ -907,6 +912,14 @@ class _StaticChecker:
                 )
             return "String"
 
+        if isinstance(expr, ReadFileLinesExpr):
+            fp_t = self.infer_expr_type(expr.filepath, scope, stmt_idx)
+            if fp_t != "String":
+                raise StaticVerificationError(
+                    f"`read_file_lines` requires String filepath, got {fp_t}", stmt_idx
+                )
+            return "List<String>"
+
         if isinstance(expr, ListFilesExpr):
             pt = self.infer_expr_type(expr.path, scope, stmt_idx)
             if pt != "String":
@@ -1002,11 +1015,11 @@ class _StaticChecker:
                 )
             return "Int"
 
-        if isinstance(expr, IsDigitExpr):
+        if isinstance(expr, (IsDigitExpr, IsLetterExpr, IsUpperExpr, IsLowerExpr)):
             t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
             if t_t != "String":
                 raise StaticVerificationError(
-                    f"`is_digit` requires String target, got {t_t}", stmt_idx
+                    f"`{expr.expr_type}` requires String target, got {t_t}", stmt_idx
                 )
             return "Bool"
 
@@ -1822,6 +1835,29 @@ class _StaticChecker:
                 )
             return False
 
+        if isinstance(stmt, CallStmt):
+            if stmt.func_name not in self.functions:
+                raise StaticVerificationError(
+                    f"Call to undeclared function `{stmt.func_name}`", stmt_idx
+                )
+            param_types, _ = self.functions[stmt.func_name]
+            if len(stmt.args) != len(param_types):
+                raise StaticVerificationError(
+                    f"Function `{stmt.func_name}` expects {len(param_types)} args, got {len(stmt.args)}",
+                    stmt_idx,
+                )
+            for arg_e, expected_t in zip(stmt.args, param_types, strict=True):
+                actual_t = self.infer_expr_type(arg_e, scope, stmt_idx)
+                if actual_t != expected_t:
+                    if actual_t == "Optional<Void>" and expected_t.startswith("Optional<"):
+                        pass
+                    else:
+                        raise StaticVerificationError(
+                            f"Argument to `{stmt.func_name}` expected {expected_t}, got {actual_t}",
+                            stmt_idx,
+                        )
+            return False
+
         raise StaticVerificationError(f"Unsupported statement node: {type(stmt)!r}", stmt_idx)
 
 
@@ -1869,6 +1905,9 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
             ParseIntExpr,
             FormatIntExpr,
             IsDigitExpr,
+            IsLetterExpr,
+            IsUpperExpr,
+            IsLowerExpr,
         ),
     ):
         return _expr_references_var(expr.target, name)
@@ -1880,7 +1919,7 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
         return _expr_references_var(expr.items, name) or _expr_references_var(expr.separator, name)
     if isinstance(expr, StringCharAtExpr):
         return _expr_references_var(expr.target, name) or _expr_references_var(expr.index, name)
-    if isinstance(expr, (FileExistsExpr, ReadFileStringExpr)):
+    if isinstance(expr, (FileExistsExpr, ReadFileStringExpr, ReadFileLinesExpr)):
         return _expr_references_var(expr.filepath, name)
     if isinstance(expr, ListFilesExpr):
         return _expr_references_var(expr.path, name)
@@ -1995,6 +2034,10 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
             return True
         if isinstance(s, PrintStmt) and any(
             _expr_references_var(e, name) for e in s.expressions
+        ):
+            return True
+        if isinstance(s, CallStmt) and any(
+            _expr_references_var(a, name) for a in s.args
         ):
             return True
         if isinstance(s, ReturnStmt) and s.value is not None and _expr_references_var(

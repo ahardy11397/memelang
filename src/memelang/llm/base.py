@@ -65,8 +65,12 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"expr_type": "parse_int_or_default", "target": <String expr>, "default_val": <Int expr>}` (`integer value of <target> or else <default>`, lazily evaluates `<default>` only when parse fails, returns `"Int"`)
 - `{"expr_type": "format_int", "target": <Int expr>}` (`text of <target>`, formats integer as plain decimal text, returns `"String"`)
 - `{"expr_type": "is_digit", "target": <String expr>}` (`is digit <target>`, returns `"Bool"`, true if single ASCII digit '0'..'9', false for empty or non-digit)
+- `{"expr_type": "is_letter", "target": <String expr>}` (`is letter <target>`, returns `"Bool"`, true if single ASCII letter 'A'..'Z' or 'a'..'z', false for empty or non-letter)
+- `{"expr_type": "is_upper", "target": <String expr>}` (`is upper <target>`, returns `"Bool"`, true if single ASCII uppercase letter 'A'..'Z', false otherwise)
+- `{"expr_type": "is_lower", "target": <String expr>}` (`is lower <target>`, returns `"Bool"`, true if single ASCII lowercase letter 'a'..'z', false otherwise)
 - `{"expr_type": "file_exists", "filepath": <String expr>}` (`file exists <path>`, returns `"Bool"`, never errors)
 - `{"expr_type": "read_file_string", "filepath": <String expr>}` (`read string from file <path>`, returns `"String"`)
+- `{"expr_type": "read_file_lines", "filepath": <String expr>}` (`read lines from file <path>`, returns `"List<String>"`)
 - `{"expr_type": "list_files", "path": <String expr>}` (`list files in <path>`, returns `"List<String>"`)
 - `{"expr_type": "arg_count"}` (`argument count`, returns `"Int"`, argc including program name at index 0)
 - `{"expr_type": "arg_at", "index": <Int expr>}` (`argument <n>`, returns `"String"`, 1-based for user CLI args where 0 is program name)
@@ -105,6 +109,7 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "loop_continue"}` (`continue`, skips to the next iteration of the innermost enclosing loop)
 - `{"op": "func_def", "name": "f", "params": [{"name": "a", "param_type": "Int"}], "return_type": "Int", "body": [...]}`
 - `{"op": "return_stmt", "value": <expr>}`
+- `{"op": "call_stmt", "func_name": "process", "args": [<expr>, ...]}` (`call <function-name>(<args>)`, calls a function for side effects and discards any return value)
 - `{"op": "record_def", "name": "User", "fields": [{"name": "id", "field_type": "Int"}, ...]}`
 - `{"op": "record_set_field", "target": "u", "field_name": "id", "value": <expr>}`
 - `{"op": "map_set", "target": "m", "key": <expr>, "value": <expr>}`

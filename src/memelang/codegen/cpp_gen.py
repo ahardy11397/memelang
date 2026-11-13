@@ -10,6 +10,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     BreakStmt,
     CallExpr,
+    CallStmt,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -29,6 +30,9 @@ from memelang.ir.schema import (
     IfStmt,
     ImportStmt,
     IsDigitExpr,
+    IsLetterExpr,
+    IsUpperExpr,
+    IsLowerExpr,
     ListAppendStmt,
     ListFilesExpr,
     ListIndexExpr,
@@ -57,6 +61,7 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadFileStringExpr,
+    ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RenameFileStmt,
@@ -183,6 +188,9 @@ class _CppGen:
         self.uses_list_remove = False
         self.uses_parse_int_or_else = False
         self.uses_is_digit = False
+        self.uses_is_letter = False
+        self.uses_is_upper = False
+        self.uses_is_lower = False
         self.uses_argv = False
         self.uses_optional_helpers = False
         self._match_counter = 0
@@ -204,7 +212,7 @@ class _CppGen:
             return "List<String>"
         if isinstance(expr, ListFilesExpr):
             return "List<String>"
-        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr)):
+        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr, IsLetterExpr, IsUpperExpr, IsLowerExpr)):
             return "Bool"
         if isinstance(
             expr,
@@ -227,6 +235,8 @@ class _CppGen:
             ),
         ):
             return "String"
+        if isinstance(expr, ReadFileLinesExpr):
+            return "List<String>"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
             if col_t.startswith("List<"):
@@ -416,6 +426,18 @@ class _CppGen:
             self.uses_is_digit = True
             return f"_meme_is_digit({self.gen_expr(expr.target, scope)})"
 
+        if isinstance(expr, IsLetterExpr):
+            self.uses_is_letter = True
+            return f"_meme_is_letter({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, IsUpperExpr):
+            self.uses_is_upper = True
+            return f"_meme_is_upper({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, IsLowerExpr):
+            self.uses_is_lower = True
+            return f"_meme_is_lower({self.gen_expr(expr.target, scope)})"
+
         if isinstance(expr, FormatIntExpr):
             return f"std::to_string({self.gen_expr(expr.target, scope)})"
 
@@ -433,6 +455,11 @@ class _CppGen:
             self.uses_str_helpers = True
             self.uses_file_io = True
             return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ReadFileLinesExpr):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            return f"_meme_read_file_lines({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ListFilesExpr):
             self.uses_str_helpers = True
@@ -810,6 +837,10 @@ class _CppGen:
         if isinstance(stmt, ImportStmt):
             return []
 
+        if isinstance(stmt, CallStmt):
+            args = ", ".join(self.gen_expr(a, scope) for a in stmt.args)
+            return [f"{pad}{_cpp_ident(stmt.func_name)}({args});"]
+
         raise TypeError(f"Unsupported statement inside block: {type(stmt)!r}")
 
     def gen_func(self, fn: FuncDefStmt) -> list[str]:
@@ -1022,6 +1053,36 @@ def generate_cpp(ir: ProgramIR) -> str:
             [
                 "inline bool _meme_is_digit(const std::string& s) {",
                 "    return s.size() == 1 && s[0] >= '0' && s[0] <= '9';",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_is_letter:
+        helpers.extend(
+            [
+                "inline bool _meme_is_letter(const std::string& s) {",
+                "    return s.size() == 1 && ((s[0] >= 'A' && s[0] <= 'Z') || (s[0] >= 'a' && s[0] <= 'z'));",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_is_upper:
+        helpers.extend(
+            [
+                "inline bool _meme_is_upper(const std::string& s) {",
+                "    return s.size() == 1 && s[0] >= 'A' && s[0] <= 'Z';",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_is_lower:
+        helpers.extend(
+            [
+                "inline bool _meme_is_lower(const std::string& s) {",
+                "    return s.size() == 1 && s[0] >= 'a' && s[0] <= 'z';",
                 "}",
                 "",
             ]
@@ -1298,6 +1359,27 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    std::ostringstream ss;",
                 "    ss << ifs.rdbuf();",
                 "    return ss.str();",
+                "}",
+                "inline std::vector<std::string> _meme_read_file_lines(const std::string& path) {",
+                "    std::string raw = _meme_read_file_string(path);",
+                "    if (raw.empty()) {",
+                "        return {};",
+                "    }",
+                "    if (raw.back() == '\\n') {",
+                "        raw.pop_back();",
+                "    }",
+                "    std::vector<std::string> res;",
+                "    size_t start = 0;",
+                "    while (start <= raw.size()) {",
+                "        size_t pos = raw.find('\\n', start);",
+                "        if (pos == std::string::npos) {",
+                "            res.push_back(raw.substr(start));",
+                "            break;",
+                "        }",
+                "        res.push_back(raw.substr(start, pos - start));",
+                "        start = pos + 1;",
+                "    }",
+                "    return res;",
                 "}",
                 "inline void _meme_write_file(const std::string& path, const std::string& content) {",
                 "    std::ofstream ofs(_meme_trim(path), std::ios::out | std::ios::trunc | std::ios::binary);",

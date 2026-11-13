@@ -660,3 +660,80 @@ print val, bad, d1, d2, d3, d4
     assert roundtrip.is_unambiguous and roundtrip.program is not None
     assert to_canonical_meme(roundtrip.program) == canonical
 
+
+def test_read_file_lines_canonical_and_roundtrip():
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """define lines: List<String> as read lines from file "data.txt"
+print lines
+"""
+    syn = HeuristicProvider().synthesize(src)
+    out = verify_synthesis(syn)
+    assert out.is_unambiguous and out.program is not None
+    canonical = to_canonical_meme(out.program)
+    assert 'read lines from file "data.txt"' in canonical
+
+    roundtrip = verify_synthesis(HeuristicProvider().synthesize(canonical))
+    assert roundtrip.is_unambiguous and roundtrip.program is not None
+    assert to_canonical_meme(roundtrip.program) == canonical
+
+
+def test_call_stmt_canonical_and_roundtrip():
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """function add_log(msg: String) -> Void:
+    print msg
+
+function get_code(n: Int) -> Int:
+    return n + 1
+
+call add_log("hello")
+call get_code(10)
+"""
+    syn = HeuristicProvider().synthesize(src)
+    out = verify_synthesis(syn)
+    assert out.is_unambiguous and out.program is not None
+    canonical = to_canonical_meme(out.program)
+    assert 'call add_log("hello")' in canonical
+    assert 'call get_code(10)' in canonical
+
+    roundtrip = verify_synthesis(HeuristicProvider().synthesize(canonical))
+    assert roundtrip.is_unambiguous and roundtrip.program is not None
+    assert to_canonical_meme(roundtrip.program) == canonical
+
+
+def test_character_predicates_canonical_and_roundtrip():
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """define b1: Bool as is letter "A"
+define b2: Bool as is letter "z"
+define b3: Bool as is letter "1"
+define b4: Bool as is letter ""
+define b5: Bool as is letter "hello"
+define b6: Bool as is upper "A"
+define b7: Bool as is upper "a"
+define b8: Bool as is lower "a"
+define b9: Bool as is lower "A"
+print b1, b2, b3, b4, b5, b6, b7, b8, b9
+"""
+    syn = HeuristicProvider().synthesize(src)
+    out = verify_synthesis(syn)
+    assert out.is_unambiguous and out.program is not None
+    canonical = to_canonical_meme(out.program)
+    assert 'is letter "A"' in canonical
+    assert 'is letter "z"' in canonical
+    assert 'is letter "1"' in canonical
+    assert 'is letter ""' in canonical
+    assert 'is letter "hello"' in canonical
+    assert 'is upper "A"' in canonical
+    assert 'is upper "a"' in canonical
+    assert 'is lower "a"' in canonical
+    assert 'is lower "A"' in canonical
+
+    roundtrip = verify_synthesis(HeuristicProvider().synthesize(canonical))
+    assert roundtrip.is_unambiguous and roundtrip.program is not None
+    assert to_canonical_meme(roundtrip.program) == canonical
+

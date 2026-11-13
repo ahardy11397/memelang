@@ -221,6 +221,11 @@ class ReadFileStringExpr(IRNode):
     filepath: IRExpr
 
 
+class ReadFileLinesExpr(IRNode):
+    expr_type: Literal["read_file_lines"] = "read_file_lines"
+    filepath: IRExpr
+
+
 class ListFilesExpr(IRNode):
     expr_type: Literal["list_files"] = "list_files"
     path: IRExpr
@@ -267,6 +272,21 @@ class ParseIntOrDefaultExpr(IRNode):
 
 class IsDigitExpr(IRNode):
     expr_type: Literal["is_digit"] = "is_digit"
+    target: IRExpr
+
+
+class IsLetterExpr(IRNode):
+    expr_type: Literal["is_letter"] = "is_letter"
+    target: IRExpr
+
+
+class IsUpperExpr(IRNode):
+    expr_type: Literal["is_upper"] = "is_upper"
+    target: IRExpr
+
+
+class IsLowerExpr(IRNode):
+    expr_type: Literal["is_lower"] = "is_lower"
     target: IRExpr
 
 
@@ -368,6 +388,7 @@ IRExpr = Annotated[
     | StringCharAtExpr
     | FileExistsExpr
     | ReadFileStringExpr
+    | ReadFileLinesExpr
     | ListFilesExpr
     | ArgCountExpr
     | ArgAtExpr
@@ -378,6 +399,9 @@ IRExpr = Annotated[
     | ParseIntOrDefaultExpr
     | FormatIntExpr
     | IsDigitExpr
+    | IsLetterExpr
+    | IsUpperExpr
+    | IsLowerExpr
     | RecordLiteralExpr
     | RecordFieldExpr
     | MapLiteralExpr
@@ -652,6 +676,13 @@ class ImportStmt(IRNode):
         return self
 
 
+class CallStmt(IRNode):
+    op: Literal["call_stmt"] = "call_stmt"
+    func_name: str
+    args: list[IRExpr] = Field(default_factory=list)
+    source_line: int | None = None
+
+
 IRStatement = Annotated[
     VarDeclStmt
     | AssignStmt
@@ -685,7 +716,8 @@ IRStatement = Annotated[
     | RenameFileStmt
     | DeleteFileStmt
     | CreateDirectoryStmt
-    | ImportStmt,
+    | ImportStmt
+    | CallStmt,
     Field(discriminator="op"),
 ]
 
@@ -761,6 +793,7 @@ StringIndexOfExpr.model_rebuild()
 StringCharAtExpr.model_rebuild()
 FileExistsExpr.model_rebuild()
 ReadFileStringExpr.model_rebuild()
+ReadFileLinesExpr.model_rebuild()
 ListFilesExpr.model_rebuild()
 ArgCountExpr.model_rebuild()
 ArgAtExpr.model_rebuild()
@@ -771,6 +804,9 @@ ParseIntExpr.model_rebuild()
 ParseIntOrDefaultExpr.model_rebuild()
 FormatIntExpr.model_rebuild()
 IsDigitExpr.model_rebuild()
+IsLetterExpr.model_rebuild()
+IsUpperExpr.model_rebuild()
+IsLowerExpr.model_rebuild()
 RecordLiteralExpr.model_rebuild()
 RecordFieldExpr.model_rebuild()
 MapLiteralExpr.model_rebuild()
@@ -814,6 +850,7 @@ RenameFileStmt.model_rebuild()
 DeleteFileStmt.model_rebuild()
 CreateDirectoryStmt.model_rebuild()
 ImportStmt.model_rebuild()
+CallStmt.model_rebuild()
 AmbiguityCandidate.model_rebuild()
 AmbiguityDiagnostic.model_rebuild()
 SynthesisResult.model_rebuild()

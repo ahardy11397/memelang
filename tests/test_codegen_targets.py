@@ -12,6 +12,7 @@ from memelang.ir.schema import (
     BinaryOpExpr,
     BreakStmt,
     CallExpr,
+    CallStmt,
     ClampCollectionStmt,
     ContinueStmt,
     CopyFileStmt,
@@ -45,6 +46,7 @@ from memelang.ir.schema import (
     ProgramIR,
     RandomListExpr,
     ReadFileStringExpr,
+    ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RenameFileStmt,
@@ -2482,6 +2484,119 @@ print p1, p2, p3, p4, n1, n2
     res = execute_ir(outcome.program, target)
     assert res.returncode == 0, res.stderr
     assert res.stdout.strip() == "0007 000042 1234 98765 7 42"
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_read_file_lines_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """
+write file "test_lines_1.txt" with "alpha\\nbeta\\ngamma\\n"
+define l1: List<String> as read lines from file "test_lines_1.txt"
+print l1
+
+write file "test_lines_2.txt" with "one\\ntwo"
+define l2: List<String> as read lines from file "test_lines_2.txt"
+print l2
+
+write file "test_lines_empty.txt" with ""
+define l3: List<String> as read lines from file "test_lines_empty.txt"
+print l3
+
+write file "test_lines_crlf.txt" with "line1\\r\\nline2\\r\\n"
+define l4: List<String> as read lines from file "test_lines_crlf.txt"
+print trim l4[0], length of string l4[0], trim l4[1], length of string l4[1]
+"""
+    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.splitlines() == [
+        "[alpha, beta, gamma]",
+        "[one, two]",
+        "[]",
+        "line1 6 line2 6",
+    ]
+
+    # Error parity on missing file: exit 1, same error message shape
+    err_src = """
+define missing: List<String> as read lines from file "nonexistent_file_lines.txt"
+print missing
+"""
+    err_out = verify_synthesis(HeuristicProvider().synthesize(err_src))
+    err_res = execute_ir(err_out.program, target)
+    assert err_res.returncode == 1
+    assert "Error reading file: nonexistent_file_lines.txt" in err_res.stdout
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_call_stmt_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """
+function greet(name: String) -> Void:
+    print "Hello", name
+
+function compute(x: Int, y: Int) -> Int:
+    print "computing", x, y
+    return x + y
+
+function ping() -> Void:
+    print "pong"
+
+call greet("Alice")
+call compute(3, 4)
+call ping()
+"""
+    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.splitlines() == [
+        "Hello Alice",
+        "computing 3 4",
+        "pong",
+    ]
+
+
+@pytest.mark.parametrize("target", TARGETS)
+def test_character_predicates_parity(target: TargetLang):
+    from memelang.analyzer.verifier import verify_synthesis
+    from memelang.llm.heuristic import HeuristicProvider
+
+    src = """
+define l_a: Bool as is letter "a"
+define l_Z: Bool as is letter "Z"
+define l_0: Bool as is letter "0"
+define l_empty: Bool as is letter ""
+define l_multi: Bool as is letter "ab"
+define l_punct: Bool as is letter "!"
+
+define u_A: Bool as is upper "A"
+define u_a: Bool as is upper "a"
+define u_0: Bool as is upper "0"
+define u_empty: Bool as is upper ""
+define u_multi: Bool as is upper "AB"
+
+define low_a: Bool as is lower "a"
+define low_A: Bool as is lower "A"
+define low_0: Bool as is lower "0"
+define low_empty: Bool as is lower ""
+define low_multi: Bool as is lower "ab"
+
+print l_a, l_Z, l_0, l_empty, l_multi, l_punct
+print u_A, u_a, u_0, u_empty, u_multi
+print low_a, low_A, low_0, low_empty, low_multi
+"""
+    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
+    res = execute_ir(outcome.program, target)
+    assert res.returncode == 0, res.stderr
+    assert res.stdout.splitlines() == [
+        "true true false false false false",
+        "true false false false false",
+        "true false false false false",
+    ]
+
 
 
 

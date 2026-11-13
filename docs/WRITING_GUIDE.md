@@ -474,6 +474,18 @@ function withdraw(balance: Float, amount: Float) -> Float:
         return balance - amount - 10
 ```
 
+**Calling functions as statements (`call`):**
+To invoke a function for its side effects without assigning its return value, use the `call` statement (**offline** & **LLM-voice**, all six targets):
+
+```meme
+function log_message(msg: String) -> Void:
+    print "[LOG]", msg
+
+call log_message("system initialized")
+```
+
+For `Void` functions, `call` is the natural way to execute procedures. If the called function returns a non-`Void` value (such as a status code), its return value is safely discarded. This retires the earlier `define rc as func(...)` workaround idiom (though assigning the return value still works).
+
 ---
 
 ## 9. Writing Unambiguous English
@@ -687,6 +699,56 @@ if is digit first_char:
 
 - **`remove item <index> from <list-var>`** — statement; removes the element at `<index>` in place, shifting later elements left. Out-of-range index: deterministic `Error: list index out of range`, exit 1.
 - **`remove last item from <list-var>`** — statement; removes the final element (out-of-range on an empty list uses the same error).
+
+### Line-by-Line File Reading (11b.4)
+
+```meme
+define lines: List<String> as read lines from file "cards.csv"
+for each line in lines:
+    print line
+```
+
+- **`read lines from file <path>`** — returns `List<String>` containing the lines of `<path>` without newline characters (`\n`), and without a trailing empty element for a final newline (e.g. `"a\nb\n"` and `"a\nb"` both yield `["a", "b"]`). An empty file returns an empty list (`[]`).
+- **Implementation Note:** This is an ergonomic builtin implemented as a whole-file read followed by splitting in a single runtime helper call, rather than a streaming runtime iterator. It is lightweight and suited for personal-collection scale data.
+- **Line Ending Semantics:** `read lines from file` splits strictly on `\n`. On CRLF files (`\r\n`), `\r` is treated as an ordinary character and preserved on each line (e.g. `"a\r"`). Callers dealing with CRLF inputs can use `trim` to strip carriage returns.
+- **Error Behavior:** Missing or unreadable files fail deterministically with `Error reading file: <path>` and exit code 1 across all six targets, identical to `read string from file`.
+
+### Expression Statements (11b.5)
+
+```meme
+function greet(name: String) -> Void:
+    print "Hello", name
+
+call greet("world")
+```
+
+- **`call <function-name>(<args>)`** — invokes `<function-name>` as a statement. If the function returns a value (e.g. `Int` or `String`), the return value is discarded. The function may return `Void` or any data type.
+- **Verification:** The target function must exist and its parameter count and argument types must match the function signature, checked identically to call expressions.
+- **Retires Workaround:** Retires the `define rc as func(...)` workaround pattern; capturing the return value in a variable remains valid.
+
+### Character Predicates (11b.6)
+
+```meme
+if is letter c:
+    print "Alphabetic character"
+
+if is upper c:
+    print "Uppercase letter"
+
+if is lower c:
+    print "Lowercase letter"
+```
+
+Memelang provides three character predicates alongside `is digit` (section 11b.2) for character classification:
+
+- **`is letter <c>`** — returns `Bool` (`true` if `<c>` is an ASCII letter `A`-`Z` or `a`-`z`, `false` otherwise).
+- **`is upper <c>`** — returns `Bool` (`true` if `<c>` is an ASCII uppercase letter `A`-`Z`, `false` otherwise).
+- **`is lower <c>`** — returns `Bool` (`true` if `<c>` is an ASCII lowercase letter `a`-`z`, `false` otherwise).
+
+**Input and Character Model Semantics:**
+- `<c>` must be a `String`.
+- If `<c>` has length other than 1 (i.e. empty string `""` or multi-character string `"abc"`), all predicates return `false`.
+- **ASCII-only byte semantics:** These predicates test ASCII byte values (`a`-`z`, `A`-`Z`). Non-ASCII letters (e.g., `é`, `ñ`, `ü`) evaluate to `false`. This matches memelang's current ASCII string model (see `GAPS.md` Unicode note) so users aren't surprised when `is letter "é"` is `false`. Divergence risk between codegen targets on Unicode is explicitly avoided by sticking to ASCII.
 
 ### Command-Line Arguments (`argv`)
 

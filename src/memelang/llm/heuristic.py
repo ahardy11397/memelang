@@ -21,6 +21,7 @@ from memelang.ir.schema import (
     BinaryOperator,
     BreakStmt,
     CallExpr,
+    CallStmt,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -41,6 +42,9 @@ from memelang.ir.schema import (
     IfStmt,
     ImportStmt,
     IsDigitExpr,
+    IsLetterExpr,
+    IsUpperExpr,
+    IsLowerExpr,
     ListAppendStmt,
     ListFilesExpr,
     ListIndexExpr,
@@ -69,6 +73,7 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadFileStringExpr,
+    ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RenameFileStmt,
@@ -653,6 +658,42 @@ class _ExprParser:
                 return IsDigitExpr(target=tgt_e)
 
             if (
+                t.val.lower() == "is"
+                and t.val not in self.symbols
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "letter"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                tgt_e = self.parse_unary()
+                return IsLetterExpr(target=tgt_e)
+
+            if (
+                t.val.lower() == "is"
+                and t.val not in self.symbols
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "upper"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                tgt_e = self.parse_unary()
+                return IsUpperExpr(target=tgt_e)
+
+            if (
+                t.val.lower() == "is"
+                and t.val not in self.symbols
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "lower"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                tgt_e = self.parse_unary()
+                return IsLowerExpr(target=tgt_e)
+
+            if (
                 t.val.lower() in ("text", "string")
                 and t.val not in self.symbols
                 and self.pos + 1 < len(self.tokens)
@@ -876,6 +917,23 @@ class _ExprParser:
                 return ReadFileStringExpr(filepath=fp)
 
             if (
+                t.val == "read"
+                and self.pos + 3 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val == "lines"
+                and self.tokens[self.pos + 2].kind == "IDENT"
+                and self.tokens[self.pos + 2].val == "from"
+                and self.tokens[self.pos + 3].kind == "IDENT"
+                and self.tokens[self.pos + 3].val == "file"
+            ):
+                self.consume("IDENT", "read")
+                self.consume("IDENT", "lines")
+                self.consume("IDENT", "from")
+                self.consume("IDENT", "file")
+                fp = self.parse_postfix()
+                return ReadFileLinesExpr(filepath=fp)
+
+            if (
                 t.val == "list"
                 and self.pos + 2 < len(self.tokens)
                 and self.tokens[self.pos + 1].kind == "IDENT"
@@ -1011,6 +1069,16 @@ def _parse_expr(
     if m_read_file_str:
         return ReadFileStringExpr(
             filepath=_parse_expr(m_read_file_str.group(1), symbols, func_returns, records)
+        )
+
+    m_read_file_lines = re.fullmatch(
+        r"read\s+lines\s+from\s+file\s+(.+)",
+        s,
+        flags=re.IGNORECASE,
+    )
+    if m_read_file_lines:
+        return ReadFileLinesExpr(
+            filepath=_parse_expr(m_read_file_lines.group(1), symbols, func_returns, records)
         )
 
     m_list_files = re.fullmatch(
@@ -1163,9 +1231,9 @@ def _guess_expr_type(
         return "List<Int>"
     if isinstance(expr, ReadJsonListExpr):
         return cast(MemeType, f"List<{expr.element_type}>")
-    if isinstance(expr, (StringSplitExpr, ListFilesExpr)):
+    if isinstance(expr, (StringSplitExpr, ListFilesExpr, ReadFileLinesExpr)):
         return "List<String>"
-    if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr)):
+    if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr, IsLetterExpr, IsUpperExpr, IsLowerExpr)):
         return "Bool"
     if isinstance(
         expr,
@@ -2077,6 +2145,18 @@ class HeuristicProvider:
         if m_ret:
             return ReturnStmt(value=_pe(m_ret.group(1)), source_line=line.lineno)
 
+        # `call <func>(<args>)`
+        m_call = re.fullmatch(
+            r"call\s+([A-Za-z_]\w*)(?:\s*\(\s*(.*?)\s*\))?",
+            text,
+            flags=re.IGNORECASE,
+        )
+        if m_call:
+            fn_name = m_call.group(1)
+            raw_args = m_call.group(2)
+            args = [_pe(a) for a in _split_top_level_commas(raw_args)] if raw_args else []
+            return CallStmt(func_name=fn_name, args=args, source_line=line.lineno)
+
         # `use <module>`
         m_use = re.fullmatch(r"use\s+([A-Za-z_]\w*)", text, flags=re.IGNORECASE)
         if m_use:
@@ -2201,6 +2281,9 @@ class HeuristicProvider:
                 ParseIntExpr,
                 FormatIntExpr,
                 IsDigitExpr,
+                IsLetterExpr,
+                IsUpperExpr,
+                IsLowerExpr,
             ),
         ):
             return HeuristicProvider._find_free_var(expr.target, symbols)
@@ -2223,7 +2306,7 @@ class HeuristicProvider:
             ) or HeuristicProvider._find_free_var(expr.index, symbols)
         if isinstance(expr, ReadJsonListExpr):
             return HeuristicProvider._find_free_var(expr.filepath, symbols)
-        if isinstance(expr, (FileExistsExpr, ReadFileStringExpr)):
+        if isinstance(expr, (FileExistsExpr, ReadFileStringExpr, ReadFileLinesExpr)):
             return HeuristicProvider._find_free_var(expr.filepath, symbols)
         if isinstance(expr, ListFilesExpr):
             return HeuristicProvider._find_free_var(expr.path, symbols)

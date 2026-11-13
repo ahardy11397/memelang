@@ -35,6 +35,9 @@ from memelang.ir.schema import (
     IRStatement,
     IfStmt,
     IsDigitExpr,
+    IsLetterExpr,
+    IsUpperExpr,
+    IsLowerExpr,
     ListAppendStmt,
     ListFilesExpr,
     ListIndexExpr,
@@ -60,6 +63,7 @@ from memelang.ir.schema import (
     RandomIntExpr,
     RandomListExpr,
     ReadFileStringExpr,
+    ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
     RenameFileStmt,
@@ -140,6 +144,9 @@ def _expr_uses_input(expr: IRExpr) -> bool:
             ParseIntExpr,
             FormatIntExpr,
             IsDigitExpr,
+            IsLetterExpr,
+            IsUpperExpr,
+            IsLowerExpr,
         ),
     ):
         return _expr_uses_input(expr.target)
@@ -151,7 +158,7 @@ def _expr_uses_input(expr: IRExpr) -> bool:
         return _expr_uses_input(expr.items) or _expr_uses_input(expr.separator)
     if isinstance(expr, StringCharAtExpr):
         return _expr_uses_input(expr.target) or _expr_uses_input(expr.index)
-    if isinstance(expr, (FileExistsExpr, ReadFileStringExpr)):
+    if isinstance(expr, (FileExistsExpr, ReadFileStringExpr, ReadFileLinesExpr)):
         return _expr_uses_input(expr.filepath)
     if isinstance(expr, ListFilesExpr):
         return _expr_uses_input(expr.path)
