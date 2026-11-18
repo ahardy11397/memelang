@@ -60,6 +60,10 @@ go build -o hello hello.go && ./hello
 uv run meme compile examples/hello.meme --target c -o hello.c
 gcc -std=c11 -O2 hello.c -o hello -lm && ./hello
 
+# Build standalone native binary via C11 backend:
+uv run meme build examples/hello.meme -o hello
+./hello
+
 # Compile standalone TypeScript source and run:
 uv run meme compile examples/hello.meme --target ts -o hello.ts
 tsc hello.ts --outDir dist --target es2022 --module node16 && node dist/hello.js
@@ -113,6 +117,20 @@ Lock your choice with zero extra LLM calls:
 uv run meme compile examples/random_sort_ambiguous.meme --target rust --resolve 2=3
 uv run meme explain examples/random_sort_ambiguous.meme
 ```
+
+### Native Binaries: `meme build`
+
+Compile a `.meme` program directly into a native binary via the C11 backend:
+
+```bash
+uv run meme build EX.meme -o out [--resolve ID=OPT ...] [--cc COMPILER] [--cflags "..."]
+```
+
+- **Usage:** Point `meme build` at any `.meme` file and provide the `-o/--output` binary destination.
+- **Compiler Requirements:** Invokes a standard C compiler (`cc` by default, falling back to `gcc`). Override the compiler with `--cc <bin>` and compilation flags with `--cflags "..."` (default flags: `-std=c11 -O2`).
+- **Exit-Code Semantics:** Programs using `exit with code N` propagate the exit status directly to the operating system process exit code.
+- **Zero-LLM Lockfile Contract:** Building an already locked program runs 100% deterministically offline with 0ms inference latency, honoring the exact same zero-LLM lockfile contract as `meme compile`.
+- **Modules & Multi-File Linking:** Programs using `use <module>` (such as `examples/advanced/521_modules/`) compile into a single self-contained native binary with all dependencies linked.
 
 ---
 

@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
+import shlex
+import shutil
+import subprocess
 import sys
+import tempfile
 from typing import cast
 
 from memelang.analyzer.verifier import (
@@ -237,6 +242,36 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     _add_shared_args(p_explain)
 
+    # build
+    p_build = subparsers.add_parser(
+        "build", help="Compile a .meme file to a native executable via the C backend"
+    )
+    _add_shared_args(p_build)
+    p_build.add_argument("-o", "--output", type=Path, required=True, help="Output binary path")
+    p_build.add_argument(
+        "--resolve",
+        action="append",
+        metavar="ID=OPT",
+        help="Resolve ambiguity statement ID to option (e.g. --resolve 2=1)",
+    )
+    p_build.add_argument(
+        "--interactive",
+        action="store_true",
+        help="Prompt interactively when semantic ambiguities are detected",
+    )
+    p_build.add_argument(
+        "--cc",
+        type=str,
+        default=None,
+        help="C compiler executable (default: cc, fallback: gcc)",
+    )
+    p_build.add_argument(
+        "--cflags",
+        type=str,
+        default=None,
+        help='C compiler flags (default: "-std=c11 -O2")',
+    )
+
     # pull
     p_pull = subparsers.add_parser(
         "pull", help="Download the default local 3B GGUF model for offline compilation"
@@ -300,6 +335,60 @@ def main(argv: list[str] | None = None) -> int:
             canonical = to_canonical_meme(program)
             if canonical:
                 print(canonical)
+            return 0
+
+        if args.command == "build":
+            cc_arg = getattr(args, "cc", None)
+            compiler: str | None = None
+            if cc_arg is not None:
+                cand = shutil.which(cc_arg)
+                if cand is not None:
+                    compiler = cand
+                else:
+                    p = Path(cc_arg)
+                    if p.is_file() and os.access(p, os.X_OK):
+                        compiler = str(p.resolve())
+            else:
+                for default_cc in ("cc", "gcc"):
+                    cand = shutil.which(default_cc)
+                    if cand is not None:
+                        compiler = cand
+                        break
+
+            if compiler is None:
+                if cc_arg:
+                    print(f"[Error] C compiler not found: {cc_arg}", file=sys.stderr)
+                else:
+                    print("[Error] No C compiler found ('cc' or 'gcc').", file=sys.stderr)
+                return 1
+
+            code = generate_code(program, "c")
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+
+            cflags_arg = getattr(args, "cflags", None)
+            cflags = shlex.split(cflags_arg) if cflags_arg is not None else ["-std=c11", "-O2"]
+
+            with tempfile.TemporaryDirectory(prefix="meme_build_") as tmp_dir:
+                tmp_c = Path(tmp_dir) / f"{args.source.stem}.c"
+                tmp_c.write_text(code, encoding="utf-8")
+
+                cmd = [compiler, *cflags, str(tmp_c), "-o", str(args.output), "-lm"]
+                try:
+                    proc = subprocess.run(cmd, capture_output=True, text=True)
+                except OSError as exc:
+                    print(f"[Error] Failed to execute C compiler: {exc}", file=sys.stderr)
+                    return 1
+
+                if proc.returncode != 0:
+                    if proc.stderr:
+                        sys.stderr.write(proc.stderr)
+                    elif proc.stdout:
+                        sys.stderr.write(proc.stdout)
+                    return proc.returncode if proc.returncode != 0 else 1
+
+            quiet = os.environ.get("MEME_QUIET_PROMPTS", "").strip().lower() in ("1", "true", "yes")
+            if not quiet:
+                print(str(args.output), file=sys.stderr)
             return 0
 
         target = cast(TargetLang, args.target)

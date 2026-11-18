@@ -1,0 +1,459 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/524_build/build_demo.meme": {
+      "source_sha256": "e746a324e528956ddd39f0a32a6bc4646cf520e9a2689fa270732a83a50d5dbe",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "out_file",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "examples/524_build/demo_output.txt",
+            "data_type": "String"
+          },
+          "source_line": 13
+        },
+        {
+          "op": "var_decl",
+          "name": "before_exists",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "file_exists",
+            "filepath": {
+              "expr_type": "var_ref",
+              "name": "out_file"
+            }
+          },
+          "source_line": 14
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "before_exists",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "before_exists"
+            }
+          ],
+          "source_line": 15
+        },
+        {
+          "op": "var_decl",
+          "name": "arg_count",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "arg_count"
+          },
+          "source_line": 17
+        },
+        {
+          "op": "var_decl",
+          "name": "has_args",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "binary_op",
+            "op": ">=",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "arg_count"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 18
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "has_args",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "has_args"
+            }
+          ],
+          "source_line": 19
+        },
+        {
+          "op": "write_file",
+          "filepath": {
+            "expr_type": "var_ref",
+            "name": "out_file"
+          },
+          "content": {
+            "expr_type": "literal",
+            "value": "status=ok",
+            "data_type": "String"
+          },
+          "source_line": 21
+        },
+        {
+          "op": "append_file",
+          "filepath": {
+            "expr_type": "var_ref",
+            "name": "out_file"
+          },
+          "content": {
+            "expr_type": "literal",
+            "value": "\nphase=3a\n",
+            "data_type": "String"
+          },
+          "source_line": 22
+        },
+        {
+          "op": "var_decl",
+          "name": "saved_text",
+          "var_type": "String",
+          "value": {
+            "expr_type": "read_file_string",
+            "filepath": {
+              "expr_type": "var_ref",
+              "name": "out_file"
+            }
+          },
+          "source_line": 24
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "file_content:",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 25
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "saved_text"
+            }
+          ],
+          "source_line": 26
+        },
+        {
+          "op": "var_decl",
+          "name": "after_exists",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "file_exists",
+            "filepath": {
+              "expr_type": "var_ref",
+              "name": "out_file"
+            }
+          },
+          "source_line": 28
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "after_exists",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "after_exists"
+            }
+          ],
+          "source_line": 29
+        },
+        {
+          "op": "delete_file",
+          "path": {
+            "expr_type": "var_ref",
+            "name": "out_file"
+          },
+          "source_line": 31
+        },
+        {
+          "op": "var_decl",
+          "name": "final_exists",
+          "var_type": "Bool",
+          "value": {
+            "expr_type": "file_exists",
+            "filepath": {
+              "expr_type": "var_ref",
+              "name": "out_file"
+            }
+          },
+          "source_line": 32
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "cleaned_up",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "unary_op",
+              "op": "not",
+              "operand": {
+                "expr_type": "var_ref",
+                "name": "final_exists"
+              }
+            }
+          ],
+          "source_line": 33
+        },
+        {
+          "op": "exit_stmt",
+          "code": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "source_line": 35
+        }
+      ],
+      "canonical_meme": "define out_file: String as \"examples/524_build/demo_output.txt\"\ndefine before_exists: Bool as file exists out_file\nprint \"before_exists\", before_exists\ndefine arg_count: Int as argument count\ndefine has_args: Bool as arg_count >= 1\nprint \"has_args\", has_args\nwrite file out_file with \"status=ok\"\nappend \"\\nphase=3a\\n\" to file out_file\ndefine saved_text: String as read string from file out_file\nprint \"file_content:\"\nprint saved_text\ndefine after_exists: Bool as file exists out_file\nprint \"after_exists\", after_exists\ndelete file out_file\ndefine final_exists: Bool as file exists out_file\nprint \"cleaned_up\", not final_exists\nexit with code 0",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "out_file",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "examples/524_build/demo_output.txt",
+              "data_type": "String"
+            },
+            "source_line": 13
+          },
+          {
+            "op": "var_decl",
+            "name": "before_exists",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "file_exists",
+              "filepath": {
+                "expr_type": "var_ref",
+                "name": "out_file"
+              }
+            },
+            "source_line": 14
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "before_exists",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "before_exists"
+              }
+            ],
+            "source_line": 15
+          },
+          {
+            "op": "var_decl",
+            "name": "arg_count",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "arg_count"
+            },
+            "source_line": 17
+          },
+          {
+            "op": "var_decl",
+            "name": "has_args",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "binary_op",
+              "op": ">=",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "arg_count"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 18
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "has_args",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "has_args"
+              }
+            ],
+            "source_line": 19
+          },
+          {
+            "op": "write_file",
+            "filepath": {
+              "expr_type": "var_ref",
+              "name": "out_file"
+            },
+            "content": {
+              "expr_type": "literal",
+              "value": "status=ok",
+              "data_type": "String"
+            },
+            "source_line": 21
+          },
+          {
+            "op": "append_file",
+            "filepath": {
+              "expr_type": "var_ref",
+              "name": "out_file"
+            },
+            "content": {
+              "expr_type": "literal",
+              "value": "\nphase=3a\n",
+              "data_type": "String"
+            },
+            "source_line": 22
+          },
+          {
+            "op": "var_decl",
+            "name": "saved_text",
+            "var_type": "String",
+            "value": {
+              "expr_type": "read_file_string",
+              "filepath": {
+                "expr_type": "var_ref",
+                "name": "out_file"
+              }
+            },
+            "source_line": 24
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "file_content:",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 25
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "saved_text"
+              }
+            ],
+            "source_line": 26
+          },
+          {
+            "op": "var_decl",
+            "name": "after_exists",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "file_exists",
+              "filepath": {
+                "expr_type": "var_ref",
+                "name": "out_file"
+              }
+            },
+            "source_line": 28
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "after_exists",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "after_exists"
+              }
+            ],
+            "source_line": 29
+          },
+          {
+            "op": "delete_file",
+            "path": {
+              "expr_type": "var_ref",
+              "name": "out_file"
+            },
+            "source_line": 31
+          },
+          {
+            "op": "var_decl",
+            "name": "final_exists",
+            "var_type": "Bool",
+            "value": {
+              "expr_type": "file_exists",
+              "filepath": {
+                "expr_type": "var_ref",
+                "name": "out_file"
+              }
+            },
+            "source_line": 32
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "cleaned_up",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "unary_op",
+                "op": "not",
+                "operand": {
+                  "expr_type": "var_ref",
+                  "name": "final_exists"
+                }
+              }
+            ],
+            "source_line": 33
+          },
+          {
+            "op": "exit_stmt",
+            "code": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "source_line": 35
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

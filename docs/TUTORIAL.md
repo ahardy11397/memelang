@@ -93,6 +93,21 @@ The generated `distances.txt` contains:
 ```
 These are the squared distances (3²+4² = 25, 5²+12² = 169).
 
+## Step 5: Build a native binary (`meme build`)
+
+You can also build your application directly into a standalone native binary via the C11 backend:
+
+```bash
+uv run meme build tutorial.meme -o app_bin
+./app_bin
+```
+
+- **Usage:** `meme build <source.meme> -o <binary_path>`
+- **Compiler Requirements:** Uses standard `cc` (with `gcc` fallback) and flags `-std=c11 -O2`. Customize via `--cc <compiler>` or `--cflags "<flags>"`.
+- **Exit-Code Semantics:** Exit codes from `exit with code N` propagate directly to the shell process exit code.
+- **Zero-LLM Lockfile Contract:** Once locked into `build.lock` (or a custom `--lockfile`), rebuilds never invoke the LLM frontend, guaranteeing fast, reproducible builds.
+- **Modules Linked:** All imported modules (`use simple_math`) are automatically linked into the single resulting native binary.
+
 ## What you learned
 - **Modules** (`use simple_math`) keep code organized.
 - **Records** let you model structured data.

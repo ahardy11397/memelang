@@ -1,0 +1,35 @@
+# Built with:
+#   uv run meme build examples/524_build/build_demo.meme -o /tmp/meme_build_probe
+#
+# Run with:
+#   /tmp/meme_build_probe
+#
+# This program demonstrates:
+# - Command-line argument access (argument count and argument 0)
+# - File I/O persistence (writing, appending, reading, file exists check)
+# - Deterministic native binary compilation via C11
+# - Exit-code propagation
+
+define out_file: String as "examples/524_build/demo_output.txt"
+define before_exists: Bool as file exists out_file
+print "before_exists", before_exists
+
+define arg_count: Int as argument count
+define has_args: Bool as arg_count >= 1
+print "has_args", has_args
+
+write file out_file with "status=ok"
+append "\nphase=3a\n" to file out_file
+
+define saved_text: String as read string from file out_file
+print "file_content:"
+print saved_text
+
+define after_exists: Bool as file exists out_file
+print "after_exists", after_exists
+
+delete file out_file
+define final_exists: Bool as file exists out_file
+print "cleaned_up", not final_exists
+
+exit with code 0
