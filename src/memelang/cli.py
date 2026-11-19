@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import os
 from pathlib import Path
+import re
 import shlex
 import shutil
 import subprocess
@@ -19,7 +20,7 @@ from memelang.analyzer.verifier import (
 )
 from memelang.codegen import TargetLang, generate_code
 from memelang.ir.canonical import to_canonical_meme
-from memelang.ir.schema import AmbiguityDiagnostic, ProgramIR
+from memelang.ir.schema import AmbiguityDiagnostic, ProgramIR, TestBlockStmt
 from memelang.llm import (
     DEFAULT_GGUF_FILENAME,
     DEFAULT_GGUF_REPO,
@@ -29,7 +30,7 @@ from memelang.llm import (
     pull_gguf_model,
 )
 from memelang.lockfile.manager import LockfileManager, LockfileResolutionError
-from memelang.runner.executor import execute_ir, program_uses_input
+from memelang.runner.executor import execute_ir, execute_test_blocks, program_uses_input
 
 
 def _compute_source_key(source_path: Path) -> str:
@@ -293,6 +294,32 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Target directory for cached GGUF weights (default: ~/.cache/memelang/models)",
     )
 
+    # test
+    p_test = subparsers.add_parser("test", help="Run test blocks in .meme files")
+    p_test.add_argument(
+        "dir",
+        nargs="?",
+        default="tests/meme",
+        help="Directory or .meme file to test (default: tests/meme)",
+    )
+    p_test.add_argument(
+        "--target",
+        choices=["python", "rust", "cpp", "go", "c", "ts"],
+        default="python",
+        help="Target runtime backend (default: python)",
+    )
+    p_test.add_argument(
+        "--provider",
+        default="heuristic",
+        help="LLM frontend provider: heuristic, auto, etc. (default: heuristic)",
+    )
+    p_test.add_argument(
+        "--lockfile",
+        type=Path,
+        default=None,
+        help="Path to deterministic lockfile (optional)",
+    )
+
     return parser
 
 
@@ -310,6 +337,71 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"Ready: {saved_path}")
             return 0
+
+        if args.command == "test":
+            target_path = Path(args.dir)
+            if not target_path.exists():
+                print(f"[Error] Test path not found: {target_path}", file=sys.stderr)
+                return 1
+
+            if target_path.is_file():
+                meme_files = [target_path]
+            else:
+                meme_files = sorted(target_path.glob("*.meme"))
+
+            target = cast(TargetLang, args.target)
+            total_cases = 0
+            failed_cases = 0
+
+            for meme_file in meme_files:
+                if args.lockfile is not None:
+                    lockfile_path = args.lockfile
+                elif Path(str(meme_file) + ".lock").is_file():
+                    lockfile_path = Path(str(meme_file) + ".lock")
+                elif (meme_file.parent / "build.lock").is_file():
+                    lockfile_path = meme_file.parent / "build.lock"
+                elif Path("build.lock").is_file():
+                    lockfile_path = Path("build.lock")
+                else:
+                    lockfile_path = Path(str(meme_file) + ".lock")
+
+                program, ambiguities = _load_or_synthesize_program(
+                    source_path=meme_file,
+                    lockfile_path=lockfile_path,
+                    provider_spec=getattr(args, "provider", "heuristic"),
+                    resolutions={},
+                    interactive=False,
+                )
+                if program is None:
+                    for diag in ambiguities:
+                        print(_format_ambiguity(diag), file=sys.stderr)
+                    return 2
+
+                test_blocks = [s for s in program.statements if isinstance(s, TestBlockStmt)]
+                if not test_blocks:
+                    continue
+
+                test_names = [s.name for s in test_blocks]
+                block_results = execute_test_blocks(
+                    program,
+                    target=target,
+                    test_names=test_names,
+                    source_dir=meme_file.resolve().parent,
+                )
+
+                file_display = meme_file.as_posix()
+                for name, res in block_results:
+                    total_cases += 1
+                    if res.returncode == 0:
+                        print(f"PASS {file_display}::{name}")
+                    else:
+                        failed_cases += 1
+                        m = re.search(r"ASSERT FAILED line (\d+):", res.stderr)
+                        line_str = f" (line {m.group(1)})" if m else ""
+                        print(f"FAIL {file_display}::{name}{line_str}")
+
+            print(f"Ran {total_cases} cases, {failed_cases} failed")
+            return 1 if failed_cases > 0 else 0
 
         resolutions = _parse_resolve_args(getattr(args, "resolve", None))
         interactive = bool(getattr(args, "interactive", False))

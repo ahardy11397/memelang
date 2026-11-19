@@ -12,14 +12,17 @@ Emits clean, standard C11 code covering the full Memelang surface:
 
 from __future__ import annotations
 
+import json
 import math
 import re
 from typing import Any
 
+from memelang.ir.canonical import format_expr
 from memelang.ir.schema import (
     AppendFileStmt,
     ArgAtExpr,
     ArgCountExpr,
+    AssertStmt,
     AssignStmt,
     BinaryOpExpr,
     BreakStmt,
@@ -102,6 +105,7 @@ from memelang.ir.schema import (
     StringUpperExpr,
     SwitchCase,
     SwitchStmt,
+    TestBlockStmt,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -326,6 +330,11 @@ def _collect_types_from_stmt(stmt: IRStatement, out: set[str]) -> None:
         _collect_types_from_expr(stmt.message, out)
     elif isinstance(stmt, ExitStmt):
         _collect_types_from_expr(stmt.code, out)
+    elif isinstance(stmt, AssertStmt):
+        _collect_types_from_expr(stmt.condition, out)
+    elif isinstance(stmt, TestBlockStmt):
+        for s in stmt.body:
+            _collect_types_from_stmt(s, out)
     elif isinstance(stmt, (ListAppendStmt, ListInsertStmt, ListSetIndexStmt)):
         _collect_types_from_expr(stmt.value, out)
         if hasattr(stmt, "index"):
@@ -913,6 +922,18 @@ class _CGen:
             code = self.gen_expr(stmt.code, scope)
             return [f"{pad}exit((int)(({code}) & 0xFF));"]
 
+        if isinstance(stmt, AssertStmt):
+            cond = self.gen_expr(stmt.condition, scope)
+            line = stmt.source_line if stmt.source_line is not None else 1
+            src_text = stmt.source_text if getattr(stmt, "source_text", None) else format_expr(stmt.condition)
+            escaped_src = json.dumps(src_text)
+            return [
+                f"{pad}if (!({cond})) {{",
+                f"{pad}    fprintf(stderr, \"ASSERT FAILED line %d: %s\\n\", {line}, {escaped_src});",
+                f"{pad}    exit(1);",
+                f"{pad}}}",
+            ]
+
         if isinstance(stmt, PrintStmt):
             if not stmt.expressions:
                 return [f'{pad}printf("\\n");']
@@ -1131,6 +1152,9 @@ class _CGen:
                 expected = param_types[i] if i < len(param_types) else None
                 args.append(self.gen_expr(a, scope, expected))
             return [f"{pad}{_c_ident(stmt.func_name)}({', '.join(args)});"]
+
+        if isinstance(stmt, (ImportStmt, TestBlockStmt)):
+            return []
 
         raise NotImplementedError(f"Unsupported statement: {type(stmt).__name__}")
 
@@ -1531,6 +1555,7 @@ def generate_c(ir: ProgramIR) -> str:
     gen = _CGen()
     records: list[RecordDefStmt] = []
     funcs: list[FuncDefStmt] = []
+    test_blocks: list[TestBlockStmt] = []
     main_stmts: list[IRStatement] = []
 
     all_stmts = [*ir.imported_definitions, *ir.statements]
@@ -1544,6 +1569,8 @@ def generate_c(ir: ProgramIR) -> str:
             funcs.append(stmt)
         elif isinstance(stmt, ImportStmt):
             continue
+        elif isinstance(stmt, TestBlockStmt):
+            test_blocks.append(stmt)
         else:
             main_stmts.append(stmt)
 
@@ -2535,6 +2562,21 @@ def generate_c(ir: ProgramIR) -> str:
         "    _meme_argc = argc;",
         "    _meme_argv = argv;",
     ]
+    if test_blocks:
+        main_lines.append("    if (argc > 2 && strcmp(argv[1], \"--meme-test\") == 0) {")
+        for idx, tb in enumerate(test_blocks):
+            pfx = "if" if idx == 0 else "else if"
+            main_lines.append(f"        {pfx} (strcmp(argv[2], {json.dumps(tb.name)}) == 0) {{")
+            tb_scope = dict(main_scope)
+            for s in tb.body:
+                main_lines.extend(gen.gen_stmt(s, tb_scope, indent=3))
+            main_lines.append("            return 0;")
+            main_lines.append("        }")
+        main_lines.append("        else {")
+        main_lines.append("            fprintf(stderr, \"Unknown test block: %s\\n\", argv[2]);")
+        main_lines.append("            exit(1);")
+        main_lines.append("        }")
+        main_lines.append("    }")
     for stmt in main_stmts:
         main_lines.extend(gen.gen_stmt(stmt, main_scope, indent=1))
     main_lines.append("    return 0;")

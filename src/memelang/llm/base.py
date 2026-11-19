@@ -99,6 +99,7 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "list_remove", "target": "nums", "index": <Int expr> | null}` (removes element at 0-based `index` shifting elements left, or removes last element when `index` is null)
 - `{"op": "fail_stmt", "message": <String expr>}` (prints error message and exits cleanly; counts as returning on that branch!)
 - `{"op": "exit_stmt", "code": <Int expr>}` (`exit with code <int-expr>`, exits immediately with status code `code & 0xFF`; counts as returning on that branch!)
+- `{"op": "assert_stmt", "condition": <Bool expr>, "source_line": 1}` (`assert <condition>`, prints `ASSERT FAILED line <n>: <condition>` to stderr and exits 1 on failure)
 - `{"op": "print_stmt", "expressions": [<expr>, ...]}`
 - `{"op": "if_stmt", "condition": <expr>, "then_body": [...], "else_body": [...]}`
 - `{"op": "switch_stmt", "target": <expr>, "cases": [{"value": <literal expr>, "body": [...]}, ...], "default_body": [...]}` (`match <scalar-expr>:` with `when <literal>:` cases and optional `otherwise:` block)
@@ -121,6 +122,7 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "delete_file", "path": <String expr>}` (`delete file <path>`)
 - `{"op": "create_directory", "path": <String expr>}` (`create directory <path>`, idempotent mkdir -p)
 - `{"op": "import_stmt", "module": "math_utils"}` (`use <module-name>`, bare identifier, top-level only)
+- `{"op": "test_block_stmt", "name": "my_test", "body": [...]}` (`test <name>:` top-level test block with assertions, skipped during normal execution, runnable via `--meme-test <name>`)
 
 ### Rules
 1. Ignore ONLY `#` comment lines, pure narrative header lines (`this runs in the shell`), and the `class <name>` header line itself. You MUST emit EVERY helper `define function <name>` inside a `class` as a top-level `{"op": "func_def", ...}` BEFORE the main statements, and inline `define function main`'s body as top-level statements at the end!

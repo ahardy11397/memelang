@@ -18,10 +18,12 @@ import math
 import re
 from typing import Any
 
+from memelang.ir.canonical import format_expr
 from memelang.ir.schema import (
     AppendFileStmt,
     ArgAtExpr,
     ArgCountExpr,
+    AssertStmt,
     AssignStmt,
     BinaryOpExpr,
     BreakStmt,
@@ -105,6 +107,7 @@ from memelang.ir.schema import (
     StringUpperExpr,
     SwitchCase,
     SwitchStmt,
+    TestBlockStmt,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -647,6 +650,18 @@ class _TSGen:
             code = self.gen_expr(stmt.code, scope)
             return [f"{pad}process.exit(({code}) & 0xFF);"]
 
+        if isinstance(stmt, AssertStmt):
+            cond = self.gen_expr(stmt.condition, scope)
+            line = stmt.source_line if stmt.source_line is not None else 1
+            src_text = stmt.source_text if getattr(stmt, "source_text", None) else format_expr(stmt.condition)
+            escaped_src = json.dumps(src_text)
+            return [
+                f"{pad}if (!({cond})) {{",
+                f"{pad}    process.stderr.write(\"ASSERT FAILED line \" + {line} + \": \" + {escaped_src} + \"\\n\");",
+                f"{pad}    process.exit(1);",
+                f"{pad}}}",
+            ]
+
         if isinstance(stmt, FailStmt):
             msg = self.gen_expr(stmt.message, scope)
             return [
@@ -757,7 +772,7 @@ class _TSGen:
             p = self.gen_expr(stmt.path, scope)
             return [f"{pad}_meme_create_directory({p});"]
 
-        if isinstance(stmt, (RecordDefStmt, FuncDefStmt, ImportStmt)):
+        if isinstance(stmt, (RecordDefStmt, FuncDefStmt, ImportStmt, TestBlockStmt)):
             return []
 
         if isinstance(stmt, CallStmt):
@@ -790,6 +805,7 @@ def generate_ts(ir: ProgramIR) -> str:
     gen = _TSGen()
     records: list[RecordDefStmt] = []
     funcs: list[FuncDefStmt] = []
+    test_blocks: list[TestBlockStmt] = []
     main_stmts: list[IRStatement] = []
 
     all_stmts = [*ir.imported_definitions, *ir.statements]
@@ -803,6 +819,8 @@ def generate_ts(ir: ProgramIR) -> str:
             funcs.append(stmt)
         elif isinstance(stmt, ImportStmt):
             continue
+        elif isinstance(stmt, TestBlockStmt):
+            test_blocks.append(stmt)
         else:
             main_stmts.append(stmt)
 
@@ -814,6 +832,7 @@ def generate_ts(ir: ProgramIR) -> str:
         "    exit(code?: number): never;",
         "    env: Record<string, string | undefined>;",
         "    stdout: { write(str: string): boolean };",
+        "    stderr: { write(str: string): boolean };",
         "};",
         "declare const Buffer: any;",
         "declare function require(name: string): any;",
@@ -1406,6 +1425,19 @@ def generate_ts(ir: ProgramIR) -> str:
     main_lines: list[str] = [
         "function main(): void {",
     ]
+    if test_blocks:
+        main_lines.append("    if (process.argv.length > 3 && process.argv[2] === \"--meme-test\") {")
+        main_lines.append("        const _targetTest = process.argv[3];")
+        for tb in test_blocks:
+            main_lines.append(f"        if (_targetTest === {json.dumps(tb.name)}) {{")
+            tb_scope = dict(main_scope)
+            for s in tb.body:
+                main_lines.extend(gen.gen_stmt(s, tb_scope, indent=3))
+            main_lines.append("            return;")
+            main_lines.append("        }")
+        main_lines.append("        process.stderr.write(`Unknown test block: ${_targetTest}\\n`);")
+        main_lines.append("        process.exit(1);")
+        main_lines.append("    }")
     for stmt in main_stmts:
         main_lines.extend(gen.gen_stmt(stmt, main_scope, indent=1))
     main_lines.append("}")

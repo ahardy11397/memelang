@@ -14,6 +14,7 @@ from memelang.ir.schema import (
     AppendFileStmt,
     ArgAtExpr,
     ArgCountExpr,
+    AssertStmt,
     AssignStmt,
     BinaryOpExpr,
     BreakStmt,
@@ -98,6 +99,7 @@ from memelang.ir.schema import (
     SwitchStmt,
     SynthesisItem,
     SynthesisResult,
+    TestBlockStmt,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -549,6 +551,25 @@ def _extract_negative_int_literal(expr: IRExpr) -> int | None:
     ):
         return -expr.operand.value
     return None
+
+
+def _has_exit_stmt(stmts: list[IRStatement]) -> bool:
+    for s in stmts:
+        if isinstance(s, ExitStmt):
+            return True
+        if isinstance(s, IfStmt):
+            if _has_exit_stmt(s.then_body) or _has_exit_stmt(s.else_body):
+                return True
+        if isinstance(s, SwitchStmt):
+            if any(_has_exit_stmt(c.body) for c in s.cases) or _has_exit_stmt(s.default_body):
+                return True
+        if isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)):
+            if _has_exit_stmt(s.body):
+                return True
+        if isinstance(s, TestBlockStmt):
+            if _has_exit_stmt(s.body):
+                return True
+    return False
 
 
 class _StaticChecker:
@@ -1423,6 +1444,36 @@ class _StaticChecker:
                 )
             return True
 
+        if isinstance(stmt, AssertStmt):
+            cond_t = self.infer_expr_type(stmt.condition, scope, stmt_idx)
+            if cond_t != "Bool":
+                raise StaticVerificationError(
+                    f"`assert_stmt` condition must evaluate to Bool, got {cond_t}", stmt_idx
+                )
+            return False
+
+        if isinstance(stmt, TestBlockStmt):
+            if not is_top_level:
+                raise StaticVerificationError(
+                    "`test` block is only allowed at the top level", stmt_idx
+                )
+            if _has_exit_stmt(stmt.body):
+                raise StaticVerificationError(
+                    f"`exit with code` is not allowed inside test block `{stmt.name}`; use `assert` instead",
+                    stmt_idx,
+                )
+            block_scope = _Scope(parent=scope)
+            for s in stmt.body:
+                self.check_stmt(
+                    s,
+                    block_scope,
+                    stmt_idx,
+                    expected_return=expected_return,
+                    in_loop=in_loop,
+                    is_top_level=False,
+                )
+            return False
+
         if isinstance(stmt, PrintStmt):
             if not stmt.expressions:
                 raise StaticVerificationError("`print` requires at least one expression", stmt_idx)
@@ -2032,6 +2083,10 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
             return True
         if isinstance(s, ExitStmt) and _expr_references_var(s.code, name):
             return True
+        if isinstance(s, AssertStmt) and _expr_references_var(s.condition, name):
+            return True
+        if isinstance(s, TestBlockStmt) and _stmts_reference_var(s.body, name):
+            return True
         if isinstance(s, PrintStmt) and any(
             _expr_references_var(e, name) for e in s.expressions
         ):
@@ -2402,7 +2457,7 @@ def verify_synthesis(
 
     # Unwrap `FuncDefStmt(name="main", params=[], return_type="Void")` if no top-level main statements exist
     has_top_exec = any(
-        not isinstance(it, (FuncDefStmt, RecordDefStmt, AmbiguityDiagnostic, ImportStmt))
+        not isinstance(it, (FuncDefStmt, RecordDefStmt, AmbiguityDiagnostic, ImportStmt, TestBlockStmt))
         for it in result.items
     )
     items_in: list[SynthesisItem] = []

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
+import re
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -55,6 +56,36 @@ class LockfileManager:
     @staticmethod
     def compute_source_hash(source_text: str) -> str:
         normalized = source_text.replace("\r\n", "\n").replace("\r", "\n").rstrip("\n")
+        lines = normalized.split("\n")
+        top_lines: list[str] = []
+        test_blocks: dict[str, list[str]] = {}
+        curr_test: str | None = None
+        has_tests = False
+
+        for raw_line in lines:
+            m = re.match(r"^test\s+([a-z_][a-z0-9_]*)\s*:", raw_line)
+            if m:
+                has_tests = True
+                curr_test = m.group(1)
+                test_blocks[curr_test] = [raw_line]
+                continue
+
+            if curr_test is not None:
+                if raw_line.startswith((" ", "\t")) or not raw_line.strip():
+                    test_blocks[curr_test].append(raw_line)
+                    continue
+                else:
+                    curr_test = None
+
+            top_lines.append(raw_line)
+
+        if has_tests:
+            reconstructed_parts = ["\n".join(top_lines).rstrip("\n")]
+            for name in sorted(test_blocks.keys()):
+                block_content = "\n".join(test_blocks[name]).rstrip("\n")
+                reconstructed_parts.append(block_content)
+            normalized = "\n\n".join(p for p in reconstructed_parts if p).rstrip("\n")
+
         return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
     def _load_doc(self) -> LockFileDocument:

@@ -1,0 +1,379 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/525_assert_statement.meme": {
+      "source_sha256": "757846dbc4a549d7d1ea1878f0fb1cd573a5f010cd022b5c8623f9018b10dd70",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "square",
+          "params": [
+            {
+              "name": "n",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "x",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 5,
+            "data_type": "Int"
+          },
+          "source_line": 4
+        },
+        {
+          "op": "assert_stmt",
+          "condition": {
+            "expr_type": "binary_op",
+            "op": "==",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "x"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 5,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 5,
+          "source_text": "x == 5"
+        },
+        {
+          "op": "assert_stmt",
+          "condition": {
+            "expr_type": "binary_op",
+            "op": ">",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "x"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 6,
+          "source_text": "x > 0"
+        },
+        {
+          "op": "var_decl",
+          "name": "sq",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "call",
+            "func_name": "square",
+            "args": [
+              {
+                "expr_type": "var_ref",
+                "name": "x"
+              }
+            ]
+          },
+          "source_line": 8
+        },
+        {
+          "op": "assert_stmt",
+          "condition": {
+            "expr_type": "binary_op",
+            "op": "==",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "sq"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 25,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 9,
+          "source_text": "sq == 25"
+        },
+        {
+          "op": "var_decl",
+          "name": "numbers",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 3,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 11
+        },
+        {
+          "op": "assert_stmt",
+          "condition": {
+            "expr_type": "binary_op",
+            "op": "==",
+            "left": {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "numbers"
+              }
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 4,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 12,
+          "source_text": "length of numbers == 4"
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "all assertions passed:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "sq"
+            }
+          ],
+          "source_line": 14
+        }
+      ],
+      "canonical_meme": "function square(n: Int) -> Int:\n    return n * n\ndefine x: Int as 5\nassert x == 5\nassert x > 0\ndefine sq: Int as square(x)\nassert sq == 25\ndefine list numbers as [1, 2, 3, 4]\nassert length of numbers == 4\nprint \"all assertions passed:\", sq",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "square",
+            "params": [
+              {
+                "name": "n",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "x",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 5,
+              "data_type": "Int"
+            },
+            "source_line": 4
+          },
+          {
+            "op": "assert_stmt",
+            "condition": {
+              "expr_type": "binary_op",
+              "op": "==",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "x"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 5,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 5,
+            "source_text": "x == 5"
+          },
+          {
+            "op": "assert_stmt",
+            "condition": {
+              "expr_type": "binary_op",
+              "op": ">",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "x"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 6,
+            "source_text": "x > 0"
+          },
+          {
+            "op": "var_decl",
+            "name": "sq",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "call",
+              "func_name": "square",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "x"
+                }
+              ]
+            },
+            "source_line": 8
+          },
+          {
+            "op": "assert_stmt",
+            "condition": {
+              "expr_type": "binary_op",
+              "op": "==",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "sq"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 25,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 9,
+            "source_text": "sq == 25"
+          },
+          {
+            "op": "var_decl",
+            "name": "numbers",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 11
+          },
+          {
+            "op": "assert_stmt",
+            "condition": {
+              "expr_type": "binary_op",
+              "op": "==",
+              "left": {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "numbers"
+                }
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 12,
+            "source_text": "length of numbers == 4"
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "all assertions passed:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "sq"
+              }
+            ],
+            "source_line": 14
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

@@ -512,6 +512,31 @@ class ExitStmt(IRNode):
     source_line: int | None = None
 
 
+class AssertStmt(IRNode):
+    op: Literal["assert_stmt"] = "assert_stmt"
+    condition: IRExpr
+    source_line: int | None = None
+    source_text: str | None = None
+
+
+class TestBlockStmt(IRNode):
+    __test__ = False
+    op: Literal["test_block_stmt"] = "test_block_stmt"
+    name: str
+    body: list[IRStatement] = Field(default_factory=list)
+    source_line: int | None = None
+
+    @model_validator(mode="after")
+    def _validate_name(self) -> TestBlockStmt:
+        import re
+
+        if not re.fullmatch(r"[a-z_][a-z0-9_]*", self.name):
+            raise ValueError(
+                f"Invalid test block name {self.name!r}; must match [a-z_][a-z0-9_]*"
+            )
+        return self
+
+
 class PrintStmt(IRNode):
     op: Literal["print_stmt"] = "print_stmt"
     expressions: list[IRExpr]
@@ -696,6 +721,8 @@ IRStatement = Annotated[
     | ListRemoveStmt
     | FailStmt
     | ExitStmt
+    | AssertStmt
+    | TestBlockStmt
     | PrintStmt
     | IfStmt
     | SwitchStmt
@@ -828,6 +855,8 @@ ListSetIndexStmt.model_rebuild()
 ListRemoveStmt.model_rebuild()
 FailStmt.model_rebuild()
 ExitStmt.model_rebuild()
+AssertStmt.model_rebuild()
+TestBlockStmt.model_rebuild()
 PrintStmt.model_rebuild()
 IfStmt.model_rebuild()
 SwitchCase.model_rebuild()

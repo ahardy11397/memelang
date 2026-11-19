@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import json
 import keyword
 
+from memelang.ir.canonical import format_expr
 from memelang.ir.schema import (
     AppendFileStmt,
     ArgAtExpr,
     ArgCountExpr,
+    AssertStmt,
     AssignStmt,
     BinaryOpExpr,
     BreakStmt,
@@ -90,6 +93,7 @@ from memelang.ir.schema import (
     StringUpperExpr,
     SwitchCase,
     SwitchStmt,
+    TestBlockStmt,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -133,6 +137,7 @@ class _PyGen:
         self.uses_is_upper = False
         self.uses_is_lower = False
         self.uses_argv = False
+        self.uses_assert = False
         self.uses_input = False
         self.uses_input_helpers = False
         self.uses_str_split = False
@@ -543,6 +548,18 @@ class _PyGen:
                 f"{pad}raise _meme_builtins.SystemExit(_meme_builtins.int({self.gen_expr(stmt.code, scope)}) & 0xFF)"
             ]
 
+        if isinstance(stmt, AssertStmt):
+            self.uses_assert = True
+            cond = self.gen_expr(stmt.condition, scope)
+            line = stmt.source_line if stmt.source_line is not None else 1
+            src_text = stmt.source_text if getattr(stmt, "source_text", None) else format_expr(stmt.condition)
+            escaped_src = json.dumps(src_text)
+            return [
+                f"{pad}if not ({cond}):",
+                f'{pad}    _meme_sys.stderr.write("ASSERT FAILED line " + _meme_builtins.str({line}) + ": " + {escaped_src} + "\\n")',
+                f"{pad}    raise _meme_builtins.SystemExit(1)",
+            ]
+
         if isinstance(stmt, PrintStmt):
             parts = ", ".join(f"_meme_fmt({self.gen_expr(e, scope)})" for e in stmt.expressions)
             return [f"{pad}_meme_builtins.print({parts})"]
@@ -725,6 +742,9 @@ class _PyGen:
         if isinstance(stmt, ImportStmt):
             return []
 
+        if isinstance(stmt, TestBlockStmt):
+            return []
+
         if isinstance(stmt, CallStmt):
             args = ", ".join(self.gen_expr(a, scope) for a in stmt.args)
             return [f"{pad}{_py_ident(stmt.func_name)}({args})"]
@@ -742,15 +762,40 @@ def generate_python(ir: ProgramIR) -> str:
             gen.func_returns[stmt.name] = stmt.return_type
 
     record_lines: list[str] = []
-    body_lines: list[str] = []
+    func_lines: list[str] = []
+    stmt_lines: list[str] = []
+    test_blocks: list[TestBlockStmt] = []
+    for stmt in [*ir.imported_definitions, *ir.statements]:
+        if isinstance(stmt, TestBlockStmt):
+            test_blocks.append(stmt)
+
     for stmt in [*ir.imported_definitions, *ir.statements]:
         if isinstance(stmt, RecordDefStmt):
             record_lines.extend(gen.gen_stmt(stmt, gen.symbols, indent=0))
             record_lines.append("")
-        elif isinstance(stmt, ImportStmt):
+        elif isinstance(stmt, FuncDefStmt):
+            func_lines.extend(gen.gen_stmt(stmt, gen.symbols, indent=1))
+        elif isinstance(stmt, (ImportStmt, TestBlockStmt)):
             continue
         else:
-            body_lines.extend(gen.gen_stmt(stmt, gen.symbols, indent=1))
+            stmt_lines.extend(gen.gen_stmt(stmt, gen.symbols, indent=1))
+
+    body_lines: list[str] = []
+    body_lines.extend(func_lines)
+
+    if test_blocks:
+        gen.uses_assert = True
+        body_lines.append("    if _meme_builtins.len(_meme_sys.argv) > 2 and _meme_sys.argv[1] == '--meme-test':")
+        body_lines.append("        _target_test = _meme_sys.argv[2]")
+        for tb in test_blocks:
+            body_lines.append(f"        if _target_test == {json.dumps(tb.name)}:")
+            for s in tb.body:
+                body_lines.extend(gen.gen_stmt(s, dict(gen.symbols), indent=3))
+            body_lines.append("            return")
+        body_lines.append("        _meme_sys.stderr.write(f'Unknown test block: {_target_test}\\n')")
+        body_lines.append("        raise _meme_builtins.SystemExit(1)")
+
+    body_lines.extend(stmt_lines)
     if not body_lines:
         body_lines.append("    pass")
 
@@ -761,7 +806,7 @@ def generate_python(ir: ProgramIR) -> str:
         header.append("import json as _meme_json")
     if gen.uses_json_io or gen.uses_file_io or gen.uses_input:
         header.append("import os as _meme_os")
-    if gen.uses_json_io or gen.uses_file_io or gen.uses_argv:
+    if gen.uses_json_io or gen.uses_file_io or gen.uses_argv or gen.uses_assert:
         header.append("import sys as _meme_sys")
     if gen.uses_file_io:
         header.append("import shutil as _shutil")

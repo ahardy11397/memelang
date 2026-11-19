@@ -7,6 +7,7 @@ from memelang.ir.schema import (
     AppendFileStmt,
     ArgAtExpr,
     ArgCountExpr,
+    AssertStmt,
     AssignStmt,
     BinaryOpExpr,
     BreakStmt,
@@ -88,6 +89,7 @@ from memelang.ir.schema import (
     StringUpperExpr,
     SwitchCase,
     SwitchStmt,
+    TestBlockStmt,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -375,6 +377,15 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
 
     if isinstance(stmt, ExitStmt):
         return [f"{pad}exit with code {format_expr(stmt.code)}"]
+
+    if isinstance(stmt, AssertStmt):
+        return [f"{pad}assert {format_expr(stmt.condition)}"]
+
+    if isinstance(stmt, TestBlockStmt):
+        lines = [f"{pad}test {stmt.name}:"]
+        for child in stmt.body:
+            lines.extend(_format_stmt(child, indent + 1))
+        return lines
 
     if isinstance(stmt, PrintStmt):
         exprs = ", ".join(format_expr(e) for e in stmt.expressions)

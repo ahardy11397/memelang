@@ -1,0 +1,11 @@
+use math_helpers
+
+test addition_test:
+    define x as 15
+    define y as 25
+    assert add_numbers(x, y) == 40
+
+test multiplication_test:
+    define x as 6
+    define y as 7
+    assert multiply_numbers(x, y) == 42

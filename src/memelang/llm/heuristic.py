@@ -16,6 +16,7 @@ from memelang.ir.schema import (
     AppendFileStmt,
     ArgAtExpr,
     ArgCountExpr,
+    AssertStmt,
     AssignStmt,
     BinaryOpExpr,
     BinaryOperator,
@@ -103,6 +104,7 @@ from memelang.ir.schema import (
     SwitchStmt,
     SynthesisItem,
     SynthesisResult,
+    TestBlockStmt,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -349,6 +351,29 @@ class _ExprParser:
                 self.consume("IDENT")
                 self.consume("IDENT")
                 return OptionalIsNothingExpr(target=left, negated=True)
+            if (
+                self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "equal"
+                and self.pos + 2 < len(self.tokens)
+                and self.tokens[self.pos + 2].kind == "IDENT"
+                and self.tokens[self.pos + 2].val.lower() == "to"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                self.consume("IDENT")
+                right = self.parse_add()
+                return BinaryOpExpr(op="==", left=left, right=right)
+            if (
+                self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "not"
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                right = self.parse_add()
+                return BinaryOpExpr(op="!=", left=left, right=right)
+            self.consume("IDENT")
+            right = self.parse_add()
+            return BinaryOpExpr(op="==", left=left, right=right)
         if t and t.kind == "IDENT" and t.val == "has":
             self.consume("IDENT", "has")
             if (nxt := self.peek()) and nxt.kind == "IDENT" and nxt.val == "key":
@@ -1668,6 +1693,26 @@ class HeuristicProvider:
                 )
                 continue
 
+            # 7. `test <name>[:]`
+            m_test = re.fullmatch(r"test\s+(.+?)\s*:?", text, flags=re.IGNORECASE)
+            if m_test:
+                test_name = m_test.group(1).strip()
+                if not re.fullmatch(r"[a-z_][a-z0-9_]*", test_name):
+                    raise LLMProviderError(
+                        f"Invalid test block name {test_name!r}; must match [a-z_][a-z0-9_]* at line {line.lineno}"
+                    )
+                if i + 1 >= len(lines) or lines[i + 1].indent <= base_indent:
+                    raise LLMProviderError(f"Expected indented block after line {line.lineno}")
+                body_items, i = self._parse_block(lines, i + 1, lines[i + 1].indent, dict(symbols))
+                items.append(
+                    TestBlockStmt(
+                        name=test_name,
+                        body=[cast(IRStatement, s) for s in body_items],
+                        source_line=line.lineno,
+                    )
+                )
+                continue
+
             # Single-line statements
             items.append(self._parse_single_stmt(line, symbols))
             i += 1
@@ -2122,6 +2167,16 @@ class HeuristicProvider:
             return ExitStmt(
                 code=_pe(m_exit.group(1)),
                 source_line=line.lineno,
+            )
+
+        # `assert <expr>`
+        m_assert = re.fullmatch(r"assert\s+(.+)", text, flags=re.IGNORECASE)
+        if m_assert:
+            cond_str = m_assert.group(1).strip()
+            return AssertStmt(
+                condition=_pe(cond_str),
+                source_line=line.lineno,
+                source_text=cond_str,
             )
 
         # `print <expr1>, <expr2>, ...`

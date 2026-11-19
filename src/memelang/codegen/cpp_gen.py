@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import json
+
+from memelang.ir.canonical import format_expr
 from memelang.ir.schema import (
     AppendFileStmt,
     ArgAtExpr,
     ArgCountExpr,
+    AssertStmt,
     AssignStmt,
     BinaryOpExpr,
     BreakStmt,
@@ -88,6 +92,7 @@ from memelang.ir.schema import (
     StringUpperExpr,
     SwitchCase,
     SwitchStmt,
+    TestBlockStmt,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -627,6 +632,18 @@ class _CppGen:
                 f"{pad}std::exit(static_cast<int>(({self.gen_expr(stmt.code, scope)}) & 0xFF));"
             ]
 
+        if isinstance(stmt, AssertStmt):
+            cond = self.gen_expr(stmt.condition, scope)
+            line = stmt.source_line if stmt.source_line is not None else 1
+            src_text = stmt.source_text if getattr(stmt, "source_text", None) else format_expr(stmt.condition)
+            escaped_src = json.dumps(src_text)
+            return [
+                f"{pad}if (!({cond})) {{",
+                f"{pad}    std::cerr << \"ASSERT FAILED line \" << {line} << \": \" << {escaped_src} << \"\\n\";",
+                f"{pad}    std::exit(1);",
+                f"{pad}}}",
+            ]
+
         if isinstance(stmt, PrintStmt):
             parts: list[str] = []
             for idx, e in enumerate(stmt.expressions):
@@ -837,6 +854,9 @@ class _CppGen:
         if isinstance(stmt, ImportStmt):
             return []
 
+        if isinstance(stmt, TestBlockStmt):
+            return []
+
         if isinstance(stmt, CallStmt):
             args = ", ".join(self.gen_expr(a, scope) for a in stmt.args)
             return [f"{pad}{_cpp_ident(stmt.func_name)}({args});"]
@@ -858,6 +878,7 @@ def generate_cpp(ir: ProgramIR) -> str:
     gen = _CppGen()
     records: list[RecordDefStmt] = []
     funcs: list[FuncDefStmt] = []
+    test_blocks: list[TestBlockStmt] = []
     main_stmts: list[IRStatement] = []
     for stmt in [*ir.imported_definitions, *ir.statements]:
         if isinstance(stmt, RecordDefStmt):
@@ -868,8 +889,13 @@ def generate_cpp(ir: ProgramIR) -> str:
             funcs.append(stmt)
         elif isinstance(stmt, ImportStmt):
             continue
+        elif isinstance(stmt, TestBlockStmt):
+            test_blocks.append(stmt)
         else:
             main_stmts.append(stmt)
+
+    if test_blocks:
+        gen.uses_argv = True
 
     record_blocks: list[str] = []
     for r in records:
@@ -905,6 +931,19 @@ def generate_cpp(ir: ProgramIR) -> str:
 
     main_scope: dict[str, MemeType] = {}
     main_lines: list[str] = []
+    if test_blocks:
+        main_lines.append("    if (argc > 2 && std::string(argv[1]) == \"--meme-test\") {")
+        main_lines.append("        std::string _meme_target_test = argv[2];")
+        for tb in test_blocks:
+            main_lines.append(f"        if (_meme_target_test == {json.dumps(tb.name)}) {{")
+            tb_scope = dict(main_scope)
+            for s in tb.body:
+                main_lines.extend(gen.gen_stmt(s, tb_scope, indent=3))
+            main_lines.append("            return 0;")
+            main_lines.append("        }")
+        main_lines.append("        std::cerr << \"Unknown test block: \" << _meme_target_test << \"\\n\";")
+        main_lines.append("        std::exit(1);")
+        main_lines.append("    }")
     for stmt in main_stmts:
         main_lines.extend(gen.gen_stmt(stmt, main_scope, indent=1))
 

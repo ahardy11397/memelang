@@ -1,0 +1,7 @@
+test boolean_logic:
+    define flag as true
+    assert flag is true
+
+test list_operations:
+    define items as [1, 2, 3]
+    assert length of items == 3

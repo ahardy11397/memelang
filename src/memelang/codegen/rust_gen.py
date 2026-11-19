@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import json
+
+from memelang.ir.canonical import format_expr
 from memelang.ir.schema import (
     AppendFileStmt,
     ArgAtExpr,
     ArgCountExpr,
+    AssertStmt,
     AssignStmt,
     BinaryOpExpr,
     BreakStmt,
@@ -88,6 +92,7 @@ from memelang.ir.schema import (
     StringUpperExpr,
     SwitchCase,
     SwitchStmt,
+    TestBlockStmt,
     UnaryOpExpr,
     VarDeclStmt,
     VarRefExpr,
@@ -625,6 +630,18 @@ class _RustGen:
                 f"{pad}std::process::exit((({self.gen_expr(stmt.code, scope)}) & 0xFF) as i32);"
             ]
 
+        if isinstance(stmt, AssertStmt):
+            cond = self.gen_expr(stmt.condition, scope)
+            line = stmt.source_line if stmt.source_line is not None else 1
+            src_text = stmt.source_text if getattr(stmt, "source_text", None) else format_expr(stmt.condition)
+            escaped_src = json.dumps(src_text)
+            return [
+                f"{pad}if !({cond}) {{",
+                f"{pad}    eprintln!(\"ASSERT FAILED line {line}: {{}}\", {escaped_src});",
+                f"{pad}    std::process::exit(1);",
+                f"{pad}}}",
+            ]
+
         if isinstance(stmt, PrintStmt):
             if len(stmt.expressions) == 1:
                 return [f"{pad}println!(\"{{}}\", {self._fmt_expr_for_print(stmt.expressions[0], scope)});"]
@@ -806,6 +823,9 @@ class _RustGen:
         if isinstance(stmt, ImportStmt):
             return []
 
+        if isinstance(stmt, TestBlockStmt):
+            return []
+
         if isinstance(stmt, CallStmt):
             args = ", ".join(self.gen_expr(a, scope) for a in stmt.args)
             return [f"{pad}{_rust_ident(stmt.func_name)}({args});"]
@@ -828,6 +848,7 @@ def generate_rust(ir: ProgramIR) -> str:
     gen = _RustGen()
     records: list[RecordDefStmt] = []
     funcs: list[FuncDefStmt] = []
+    test_blocks: list[TestBlockStmt] = []
     main_stmts: list[IRStatement] = []
     for stmt in [*ir.imported_definitions, *ir.statements]:
         if isinstance(stmt, RecordDefStmt):
@@ -838,6 +859,8 @@ def generate_rust(ir: ProgramIR) -> str:
             funcs.append(stmt)
         elif isinstance(stmt, ImportStmt):
             continue
+        elif isinstance(stmt, TestBlockStmt):
+            test_blocks.append(stmt)
         else:
             main_stmts.append(stmt)
 
@@ -870,6 +893,23 @@ def generate_rust(ir: ProgramIR) -> str:
 
     main_scope: dict[str, MemeType] = {}
     main_lines: list[str] = []
+    if test_blocks:
+        main_lines.append("    let _meme_args: Vec<String> = std::env::args().collect();")
+        main_lines.append("    if _meme_args.len() > 2 && _meme_args[1] == \"--meme-test\" {")
+        main_lines.append("        match _meme_args[2].as_str() {")
+        for tb in test_blocks:
+            main_lines.append(f"            {json.dumps(tb.name)} => {{")
+            tb_scope = dict(main_scope)
+            for s in tb.body:
+                main_lines.extend(gen.gen_stmt(s, tb_scope, indent=4))
+            main_lines.append("                return;")
+            main_lines.append("            }")
+        main_lines.append("            unknown => {")
+        main_lines.append("                eprintln!(\"Unknown test block: {}\", unknown);")
+        main_lines.append("                std::process::exit(1);")
+        main_lines.append("            }")
+        main_lines.append("        }")
+        main_lines.append("    }")
     for stmt in main_stmts:
         main_lines.extend(gen.gen_stmt(stmt, main_scope, indent=1))
 

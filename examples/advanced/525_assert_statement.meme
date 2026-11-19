@@ -1,0 +1,14 @@
+function square(n: Int) -> Int:
+    return n * n
+
+define x as 5
+assert x == 5
+assert x > 0
+
+define sq as square(x)
+assert sq == 25
+
+define list numbers as [1, 2, 3, 4]
+assert length of numbers == 4
+
+print "all assertions passed:", sq

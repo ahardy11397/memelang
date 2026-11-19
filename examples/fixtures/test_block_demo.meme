@@ -1,0 +1,10 @@
+function double(n: Int) -> Int:
+    return n * 2
+
+print "running demo"
+
+test double_positive:
+    assert double(3) == 6
+
+test double_zero:
+    assert double(0) == 0

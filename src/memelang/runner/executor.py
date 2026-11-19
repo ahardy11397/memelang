@@ -85,6 +85,7 @@ from memelang.ir.schema import (
     StringTrimExpr,
     StringUpperExpr,
     SwitchStmt,
+    TestBlockStmt,
     UnaryOpExpr,
     VarDeclStmt,
     WhileStmt,
@@ -501,3 +502,205 @@ def execute_ir(
         )
 
     raise ValueError(f"Unsupported target language: {target!r}")
+
+
+def execute_test_blocks(
+    ir: ProgramIR,
+    target: TargetLang,
+    test_names: list[str] | None = None,
+    timeout_sec: float = 15.0,
+    source_dir: Path | None = None,
+    cwd: Path | None = None,
+) -> list[tuple[str, ExecutionResult]]:
+    """Compile once, then execute each specified test block in a separate process."""
+    if test_names is None:
+        test_names = [s.name for s in ir.statements if isinstance(s, TestBlockStmt)]
+    if not test_names:
+        return []
+
+    code = generate_code(ir, target)
+    run_env: dict[str, str] | None = None
+    if source_dir is not None:
+        run_env = dict(os.environ)
+        run_env["MEME_SOURCE_DIR"] = str(source_dir.resolve())
+
+    results: list[tuple[str, ExecutionResult]] = []
+
+    with tempfile.TemporaryDirectory(prefix=f"meme_test_{target}_") as tmp_dir:
+        tmp = Path(tmp_dir)
+        exec_cwd = cwd if cwd is not None else tmp
+
+        if target == "python":
+            src_path = tmp / "main.py"
+            src_path.write_text(code, encoding="utf-8")
+            for name in test_names:
+                res = _run_target_cmd(
+                    [sys.executable, str(src_path), "--meme-test", name],
+                    code=code,
+                    timeout_sec=timeout_sec,
+                    stdin_text=None,
+                    interactive_io=False,
+                    env=run_env,
+                    cwd=exec_cwd,
+                )
+                results.append((name, res))
+            return results
+
+        if target == "rust":
+            src_path = tmp / "main.rs"
+            bin_path = tmp / "app"
+            src_path.write_text(code, encoding="utf-8")
+            comp = subprocess.run(
+                ["rustc", "--edition=2021", str(src_path), "-o", str(bin_path)],
+                capture_output=True,
+                text=True,
+                timeout=timeout_sec,
+            )
+            if comp.returncode != 0:
+                err_res = ExecutionResult(
+                    stdout=comp.stdout,
+                    stderr=comp.stderr,
+                    returncode=comp.returncode,
+                    generated_code=code,
+                )
+                return [(name, err_res) for name in test_names]
+            for name in test_names:
+                res = _run_target_cmd(
+                    [str(bin_path), "--meme-test", name],
+                    code=code,
+                    timeout_sec=timeout_sec,
+                    stdin_text=None,
+                    interactive_io=False,
+                    env=run_env,
+                    cwd=exec_cwd,
+                )
+                results.append((name, res))
+            return results
+
+        if target == "cpp":
+            src_path = tmp / "main.cpp"
+            bin_path = tmp / "app"
+            src_path.write_text(code, encoding="utf-8")
+            comp = subprocess.run(
+                ["g++", "-std=c++20", str(src_path), "-o", str(bin_path)],
+                capture_output=True,
+                text=True,
+                timeout=timeout_sec,
+            )
+            if comp.returncode != 0:
+                err_res = ExecutionResult(
+                    stdout=comp.stdout,
+                    stderr=comp.stderr,
+                    returncode=comp.returncode,
+                    generated_code=code,
+                )
+                return [(name, err_res) for name in test_names]
+            for name in test_names:
+                res = _run_target_cmd(
+                    [str(bin_path), "--meme-test", name],
+                    code=code,
+                    timeout_sec=timeout_sec,
+                    stdin_text=None,
+                    interactive_io=False,
+                    env=run_env,
+                    cwd=exec_cwd,
+                )
+                results.append((name, res))
+            return results
+
+        if target == "go":
+            src_path = tmp / "main.go"
+            bin_path = tmp / "app"
+            src_path.write_text(code, encoding="utf-8")
+            comp = subprocess.run(
+                ["go", "build", "-o", str(bin_path), str(src_path)],
+                capture_output=True,
+                text=True,
+                timeout=timeout_sec,
+            )
+            if comp.returncode != 0:
+                err_res = ExecutionResult(
+                    stdout=comp.stdout,
+                    stderr=comp.stderr,
+                    returncode=comp.returncode,
+                    generated_code=code,
+                )
+                return [(name, err_res) for name in test_names]
+            for name in test_names:
+                res = _run_target_cmd(
+                    [str(bin_path), "--meme-test", name],
+                    code=code,
+                    timeout_sec=timeout_sec,
+                    stdin_text=None,
+                    interactive_io=False,
+                    env=run_env,
+                    cwd=exec_cwd,
+                )
+                results.append((name, res))
+            return results
+
+        if target == "c":
+            src_path = tmp / "main.c"
+            bin_path = tmp / "app"
+            src_path.write_text(code, encoding="utf-8")
+            comp = subprocess.run(
+                ["gcc", "-std=c11", "-O2", str(src_path), "-o", str(bin_path), "-lm"],
+                capture_output=True,
+                text=True,
+                timeout=timeout_sec,
+            )
+            if comp.returncode != 0:
+                err_res = ExecutionResult(
+                    stdout=comp.stdout,
+                    stderr=comp.stderr,
+                    returncode=comp.returncode,
+                    generated_code=code,
+                )
+                return [(name, err_res) for name in test_names]
+            for name in test_names:
+                res = _run_target_cmd(
+                    [str(bin_path), "--meme-test", name],
+                    code=code,
+                    timeout_sec=timeout_sec,
+                    stdin_text=None,
+                    interactive_io=False,
+                    env=run_env,
+                    cwd=exec_cwd,
+                )
+                results.append((name, res))
+            return results
+
+        if target == "ts":
+            src_path = tmp / "main.ts"
+            js_path = tmp / "main.js"
+            src_path.write_text(code, encoding="utf-8")
+            tsc_bin = shutil.which("tsc") or str(Path.home() / ".local" / "bin" / "tsc")
+            comp = subprocess.run(
+                [tsc_bin, str(src_path), "--outDir", str(tmp), "--target", "es2022", "--module", "node16"],
+                capture_output=True,
+                text=True,
+                timeout=timeout_sec,
+            )
+            if comp.returncode != 0:
+                err_res = ExecutionResult(
+                    stdout=comp.stdout,
+                    stderr=comp.stderr,
+                    returncode=comp.returncode,
+                    generated_code=code,
+                )
+                return [(name, err_res) for name in test_names]
+            for name in test_names:
+                res = _run_target_cmd(
+                    ["node", str(js_path), "--meme-test", name],
+                    code=code,
+                    timeout_sec=timeout_sec,
+                    stdin_text=None,
+                    interactive_io=False,
+                    env=run_env,
+                    cwd=exec_cwd,
+                )
+                results.append((name, res))
+            return results
+
+    raise ValueError(f"Unsupported target language: {target!r}")
+
