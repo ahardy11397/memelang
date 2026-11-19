@@ -32,6 +32,7 @@ from memelang.ir.schema import (
     FilterCollectionStmt,
     ForEachStmt,
     FormatIntExpr,
+    FormatFloatExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -73,6 +74,8 @@ from memelang.ir.schema import (
     ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    ReadJsonRecordExpr,
+    ReadJsonRecordsExpr,
     RecordDefStmt,
     RecordFieldDef,
     RecordFieldExpr,
@@ -105,6 +108,7 @@ from memelang.ir.schema import (
     VarRefExpr,
     WhileStmt,
     WriteFileStmt,
+    WriteJsonStmt,
 )
 
 
@@ -1052,6 +1056,59 @@ class _StaticChecker:
                 )
             return "String"
 
+        if isinstance(expr, FormatFloatExpr):
+            t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if t_t != "Float":
+                raise StaticVerificationError(
+                    f"`format_float` requires Float target, got {t_t}", stmt_idx
+                )
+            if (
+                not isinstance(expr.decimals, LiteralExpr)
+                or expr.decimals.data_type != "Int"
+                or not isinstance(expr.decimals.value, int)
+            ):
+                raise StaticVerificationError(
+                    "`format_float` decimals must be a literal Int in range 0..10", stmt_idx
+                )
+            if not (0 <= expr.decimals.value <= 10):
+                raise StaticVerificationError(
+                    f"`format_float` decimals must be between 0 and 10, got {expr.decimals.value}", stmt_idx
+                )
+            return "String"
+
+        if isinstance(expr, (ReadJsonRecordExpr, ReadJsonRecordsExpr)):
+            fp_t = self.infer_expr_type(expr.filepath, scope, stmt_idx)
+            if fp_t != "String":
+                raise StaticVerificationError(
+                    f"`{expr.expr_type}` filepath must be String, got {fp_t}", stmt_idx
+                )
+            if expr.record_name not in self.records:
+                raise StaticVerificationError(
+                    f"Unknown record `{expr.record_name}` in `{expr.expr_type}`", stmt_idx
+                )
+            rec_fields = self.records[expr.record_name]
+            for fname, ftype in rec_fields.items():
+                base_t = ftype[9:-1] if (ftype.startswith("Optional<") and ftype.endswith(">")) else ftype
+                if base_t in self.records:
+                    raise StaticVerificationError(
+                        f"`{expr.expr_type}` record `{expr.record_name}` field `{fname}` has nested record type `{base_t}`; nested records in JSON are not supported",
+                        stmt_idx,
+                    )
+                if base_t.startswith("List<") or base_t.startswith("Map<"):
+                    raise StaticVerificationError(
+                        f"`{expr.expr_type}` record `{expr.record_name}` field `{fname}` has type `{ftype}`; record field cannot be List or Map in JSON",
+                        stmt_idx,
+                    )
+            base_ret = expr.record_name if isinstance(expr, ReadJsonRecordExpr) else f"List<{expr.record_name}>"
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d_t = self.infer_expr_type(expr.default_val, scope, stmt_idx)
+                if d_t != base_ret:
+                    raise StaticVerificationError(
+                        f"`{expr.expr_type}` fallback must have type {base_ret}, got {d_t}", stmt_idx
+                    )
+                return base_ret
+            return f"Optional<{base_ret}>"
+
         if isinstance(expr, RecordLiteralExpr):
             if expr.record_name not in self.records:
                 raise StaticVerificationError(
@@ -1071,10 +1128,13 @@ class _StaticChecker:
                     )
                 val_t = self.infer_expr_type(f.value, scope, stmt_idx)
                 if val_t != expected_fields[f.name]:
-                    raise StaticVerificationError(
-                        f"Field `{f.name}` of `{expr.record_name}` expects {expected_fields[f.name]}, got {val_t}",
-                        stmt_idx,
-                    )
+                    if val_t == "Optional<Void>" and expected_fields[f.name].startswith("Optional<"):
+                        pass
+                    else:
+                        raise StaticVerificationError(
+                            f"Field `{f.name}` of `{expr.record_name}` expects {expected_fields[f.name]}, got {val_t}",
+                            stmt_idx,
+                        )
             missing = set(expected_fields.keys()) - seen_fields
             if missing:
                 raise StaticVerificationError(
@@ -1832,6 +1892,37 @@ class _StaticChecker:
                 )
             return False
 
+        if isinstance(stmt, WriteJsonStmt):
+            fp_t = self.infer_expr_type(stmt.filepath, scope, stmt_idx)
+            if fp_t != "String":
+                raise StaticVerificationError(
+                    f"`write_json` filepath must be String, got {fp_t}", stmt_idx
+                )
+            target_t = self.infer_expr_type(stmt.target, scope, stmt_idx)
+            rec_name: str | None = None
+            if target_t in self.records:
+                rec_name = target_t
+            elif target_t.startswith("List<") and target_t.endswith(">") and target_t[5:-1] in self.records:
+                rec_name = target_t[5:-1]
+            else:
+                raise StaticVerificationError(
+                    f"`write_json` target must be a Record or List<Record>, got {target_t}", stmt_idx
+                )
+            rec_fields = self.records[rec_name]
+            for fname, ftype in rec_fields.items():
+                base_t = ftype[9:-1] if (ftype.startswith("Optional<") and ftype.endswith(">")) else ftype
+                if base_t in self.records:
+                    raise StaticVerificationError(
+                        f"`write_json` record `{rec_name}` field `{fname}` has nested record type `{base_t}`; nested records in JSON are not supported",
+                        stmt_idx,
+                    )
+                if base_t.startswith("List<") or base_t.startswith("Map<"):
+                    raise StaticVerificationError(
+                        f"`write_json` record `{rec_name}` field `{fname}` has type `{ftype}`; record field cannot be List or Map in JSON",
+                        stmt_idx,
+                    )
+            return False
+
         if isinstance(stmt, AppendFileStmt):
             fp_t = self.infer_expr_type(stmt.filepath, scope, stmt_idx)
             if fp_t != "String":
@@ -1962,6 +2053,13 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
         ),
     ):
         return _expr_references_var(expr.target, name)
+    if isinstance(expr, FormatFloatExpr):
+        return _expr_references_var(expr.target, name) or _expr_references_var(expr.decimals, name)
+    if isinstance(expr, (ReadJsonRecordExpr, ReadJsonRecordsExpr)):
+        ref = _expr_references_var(expr.filepath, name)
+        if expr.default_val is not None:
+            ref = ref or _expr_references_var(expr.default_val, name)
+        return ref
     if isinstance(expr, ParseIntOrDefaultExpr):
         return _expr_references_var(expr.target, name) or _expr_references_var(expr.default_val, name)
     if isinstance(expr, StringSplitExpr):
@@ -2055,6 +2153,10 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
             return True
         if isinstance(s, (WriteFileStmt, AppendFileStmt)) and (
             _expr_references_var(s.filepath, name) or _expr_references_var(s.content, name)
+        ):
+            return True
+        if isinstance(s, WriteJsonStmt) and (
+            _expr_references_var(s.target, name) or _expr_references_var(s.filepath, name)
         ):
             return True
         if isinstance(s, (CopyFileStmt, MoveFileStmt)) and (

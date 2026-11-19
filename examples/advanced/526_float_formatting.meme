@@ -1,0 +1,16 @@
+define pi as 3.14159
+print "pi 2 decimals:", format pi with 2 decimals
+print "pi 4 decimals:", format pi with 4 decimals
+
+print "round half-up ties:"
+print format 2.345 with 2 decimals
+print format 2.5 with 0 decimals
+print format -2.5 with 0 decimals
+print format 0.005 with 2 decimals
+
+print "fixed padding:"
+print format 10.0 with 2 decimals
+print format 1000000000.0 with 0 decimals
+
+print "negative zero normalized:"
+print format -0.001 with 2 decimals

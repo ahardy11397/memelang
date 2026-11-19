@@ -27,6 +27,7 @@ from memelang.ir.schema import (
     FilterCollectionStmt,
     ForEachStmt,
     FormatIntExpr,
+    FormatFloatExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -68,6 +69,8 @@ from memelang.ir.schema import (
     ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    ReadJsonRecordExpr,
+    ReadJsonRecordsExpr,
     RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
@@ -98,6 +101,7 @@ from memelang.ir.schema import (
     VarRefExpr,
     WhileStmt,
     WriteFileStmt,
+    WriteJsonStmt,
 )
 
 
@@ -192,7 +196,13 @@ class _RustGen:
         self.uses_is_letter = False
         self.uses_is_upper = False
         self.uses_is_lower = False
+        self.uses_format_float = False
         self.uses_optional_helpers = False
+        self.uses_json_records = False
+        self.uses_json_write = False
+        self.json_records_read: set[str] = set()
+        self.json_record_lists_read: set[str] = set()
+        self.json_records_write: set[str] = set()
         self._match_counter = 0
         self.func_returns: dict[str, MemeType] = {}
         self.records: dict[str, dict[str, MemeType]] = {}
@@ -208,6 +218,14 @@ class _RustGen:
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
+        if isinstance(expr, ReadJsonRecordExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return expr.record_name  # type: ignore[return-value]
+            return f"Optional<{expr.record_name}>"  # type: ignore[return-value]
+        if isinstance(expr, ReadJsonRecordsExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return f"List<{expr.record_name}>"  # type: ignore[return-value]
+            return f"Optional<List<{expr.record_name}>>"  # type: ignore[return-value]
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
         if isinstance(expr, ListFilesExpr):
@@ -232,6 +250,7 @@ class _RustGen:
                 ReadFileStringExpr,
                 ArgAtExpr,
                 FormatIntExpr,
+                FormatFloatExpr,
             ),
         ):
             return "String"
@@ -455,9 +474,35 @@ class _RustGen:
         if isinstance(expr, FormatIntExpr):
             return f"({self.gen_expr(expr.target, scope)}).to_string()"
 
+        if isinstance(expr, FormatFloatExpr):
+            self.uses_format_float = True
+            tgt = self.gen_expr(expr.target, scope)
+            dec = self.gen_expr(expr.decimals, scope)
+            return f"_meme_format_float({tgt}, {dec})"
+
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True
             return f"_meme_read_json_list_{expr.element_type.lower()}(&({self.gen_expr(expr.filepath, scope)}))"
+
+        if isinstance(expr, ReadJsonRecordExpr):
+            self.uses_json_records = True
+            self.json_records_read.add(expr.record_name)
+            p = self.gen_expr(expr.filepath, scope)
+            call = f"_meme_read_json_record_{_rust_ident(expr.record_name)}(&({p}))"
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope)
+                return f"{call}.unwrap_or_else(|| {d})"
+            return call
+
+        if isinstance(expr, ReadJsonRecordsExpr):
+            self.uses_json_records = True
+            self.json_record_lists_read.add(expr.record_name)
+            p = self.gen_expr(expr.filepath, scope)
+            call = f"_meme_read_json_records_{_rust_ident(expr.record_name)}(&({p}))"
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope)
+                return f"{call}.unwrap_or_else(|| {d})"
+            return call
 
         if isinstance(expr, FileExistsExpr):
             self.uses_file_io = True
@@ -784,6 +829,20 @@ class _RustGen:
                 f"{pad}_meme_write_file(&({self.gen_expr(stmt.filepath, scope)}), &({self.gen_expr(stmt.content, scope)}));"
             ]
 
+        if isinstance(stmt, WriteJsonStmt):
+            self.uses_file_io = True
+            self.uses_json_write = True
+            tgt_t = self.infer_type(stmt.target, scope)
+            fp = self.gen_expr(stmt.filepath, scope)
+            tgt = self.gen_expr(stmt.target, scope)
+            if tgt_t in self.records:
+                self.json_records_write.add(tgt_t)
+                return [f"{pad}_meme_write_file(&({fp}), &(_meme_serialize_json_record_{_rust_ident(tgt_t)}(&({tgt}))));"]
+            elif tgt_t.startswith("List<") and tgt_t.endswith(">"):
+                r_name = tgt_t[5:-1]
+                self.json_records_write.add(r_name)
+                return [f"{pad}_meme_write_file(&({fp}), &(_meme_serialize_json_records_{_rust_ident(r_name)}(&({tgt}))));"]
+
         if isinstance(stmt, AppendFileStmt):
             self.uses_file_io = True
             return [
@@ -842,6 +901,345 @@ class _RustGen:
             lines.extend(self.gen_stmt(ch, fn_scope, indent=1))
         lines.append("}")
         return lines
+
+
+_RUST_JSON_PARSER_HELPERS = [
+    "#[derive(Clone, Debug, PartialEq)]",
+    "enum _MemeJV {",
+    "    Null,",
+    "    Bool(bool),",
+    "    Num(f64, bool, i64),",
+    "    Str(String),",
+    "    Arr(Vec<_MemeJV>),",
+    "    Obj(Vec<(String, _MemeJV)>),",
+    "}",
+    "",
+    "fn _meme_skip_ws(chars: &[char], idx: &mut usize) {",
+    "    while *idx < chars.len() && chars[*idx].is_whitespace() {",
+    "        *idx += 1;",
+    "    }",
+    "}",
+    "",
+    "fn _meme_parse_jv_str(chars: &[char], idx: &mut usize) -> Option<String> {",
+    "    if *idx >= chars.len() || chars[*idx] != '\"' { return None; }",
+    "    *idx += 1;",
+    "    let mut out = String::new();",
+    "    while *idx < chars.len() && chars[*idx] != '\"' {",
+    "        if chars[*idx] == '\\\\' {",
+    "            *idx += 1;",
+    "            if *idx >= chars.len() { return None; }",
+    "            let c = chars[*idx];",
+    "            *idx += 1;",
+    "            match c {",
+    "                '\"' => out.push('\"'),",
+    "                '\\\\' => out.push('\\\\'),",
+    "                '/' => out.push('/'),",
+    "                'b' => out.push('\\x08'),",
+    "                'f' => out.push('\\x0c'),",
+    "                'n' => out.push('\\n'),",
+    "                'r' => out.push('\\r'),",
+    "                't' => out.push('\\t'),",
+    "                'u' => {",
+    "                    if *idx + 4 > chars.len() { return None; }",
+    "                    let hex_str: String = chars[*idx..*idx + 4].iter().collect();",
+    "                    *idx += 4;",
+    "                    let cp = u32::from_str_radix(&hex_str, 16).ok()?;",
+    "                    let ch = char::from_u32(cp)?;",
+    "                    out.push(ch);",
+    "                }",
+    "                _ => return None,",
+    "            }",
+    "        } else {",
+    "            out.push(chars[*idx]);",
+    "            *idx += 1;",
+    "        }",
+    "    }",
+    "    if *idx >= chars.len() || chars[*idx] != '\"' { return None; }",
+    "    *idx += 1;",
+    "    Some(out)",
+    "}",
+    "",
+    "fn _meme_parse_jv(chars: &[char], idx: &mut usize) -> Option<_MemeJV> {",
+    "    _meme_skip_ws(chars, idx);",
+    "    if *idx >= chars.len() { return None; }",
+    "    let rem: String = chars[*idx..].iter().collect();",
+    "    if rem.starts_with(\"null\") {",
+    "        *idx += 4; return Some(_MemeJV::Null);",
+    "    }",
+    "    if rem.starts_with(\"true\") {",
+    "        *idx += 4; return Some(_MemeJV::Bool(true));",
+    "    }",
+    "    if rem.starts_with(\"false\") {",
+    "        *idx += 5; return Some(_MemeJV::Bool(false));",
+    "    }",
+    "    if chars[*idx] == '\"' {",
+    "        let s = _meme_parse_jv_str(chars, idx)?;",
+    "        return Some(_MemeJV::Str(s));",
+    "    }",
+    "    if chars[*idx] == '-' || chars[*idx].is_ascii_digit() {",
+    "        let start = *idx;",
+    "        let mut has_dot_or_exp = false;",
+    "        if chars[*idx] == '-' { *idx += 1; }",
+    "        while *idx < chars.len() && chars[*idx].is_ascii_digit() { *idx += 1; }",
+    "        if *idx < chars.len() && chars[*idx] == '.' {",
+    "            has_dot_or_exp = true; *idx += 1;",
+    "            while *idx < chars.len() && chars[*idx].is_ascii_digit() { *idx += 1; }",
+    "        }",
+    "        if *idx < chars.len() && (chars[*idx] == 'e' || chars[*idx] == 'E') {",
+    "            has_dot_or_exp = true; *idx += 1;",
+    "            if *idx < chars.len() && (chars[*idx] == '+' || chars[*idx] == '-') { *idx += 1; }",
+    "            while *idx < chars.len() && chars[*idx].is_ascii_digit() { *idx += 1; }",
+    "        }",
+    "        let num_str: String = chars[start..*idx].iter().collect();",
+    "        let num: f64 = num_str.parse().ok()?;",
+    "        let (is_int, ival) = if !has_dot_or_exp {",
+    "            let iv: i64 = num_str.parse().ok()?;",
+    "            (true, iv)",
+    "        } else if num == (num as i64 as f64) {",
+    "            (true, num as i64)",
+    "        } else {",
+    "            (false, 0)",
+    "        };",
+    "        return Some(_MemeJV::Num(num, is_int, ival));",
+    "    }",
+    "    if chars[*idx] == '[' {",
+    "        *idx += 1;",
+    "        let mut arr = Vec::new();",
+    "        _meme_skip_ws(chars, idx);",
+    "        if *idx < chars.len() && chars[*idx] == ']' {",
+    "            *idx += 1;",
+    "            return Some(_MemeJV::Arr(arr));",
+    "        }",
+    "        while *idx < chars.len() {",
+    "            let el = _meme_parse_jv(chars, idx)?;",
+    "            arr.push(el);",
+    "            _meme_skip_ws(chars, idx);",
+    "            if *idx < chars.len() && chars[*idx] == ',' {",
+    "                *idx += 1;",
+    "                continue;",
+    "            }",
+    "            if *idx < chars.len() && chars[*idx] == ']' {",
+    "                *idx += 1;",
+    "                return Some(_MemeJV::Arr(arr));",
+    "            }",
+    "            return None;",
+    "        }",
+    "        return None;",
+    "    }",
+    "    if chars[*idx] == '{' {",
+    "        *idx += 1;",
+    "        let mut obj = Vec::new();",
+    "        _meme_skip_ws(chars, idx);",
+    "        if *idx < chars.len() && chars[*idx] == '}' {",
+    "            *idx += 1;",
+    "            return Some(_MemeJV::Obj(obj));",
+    "        }",
+    "        while *idx < chars.len() {",
+    "            _meme_skip_ws(chars, idx);",
+    "            let key = _meme_parse_jv_str(chars, idx)?;",
+    "            _meme_skip_ws(chars, idx);",
+    "            if *idx >= chars.len() || chars[*idx] != ':' { return None; }",
+    "            *idx += 1;",
+    "            let val = _meme_parse_jv(chars, idx)?;",
+    "            obj.push((key, val));",
+    "            _meme_skip_ws(chars, idx);",
+    "            if *idx < chars.len() && chars[*idx] == ',' {",
+    "                *idx += 1;",
+    "                continue;",
+    "            }",
+    "            if *idx < chars.len() && chars[*idx] == '}' {",
+    "                *idx += 1;",
+    "                return Some(_MemeJV::Obj(obj));",
+    "            }",
+    "            return None;",
+    "        }",
+    "        return None;",
+    "    }",
+    "    None",
+    "}",
+    "",
+    "fn _meme_find_field<'a>(obj: &'a _MemeJV, key: &str) -> Option<&'a _MemeJV> {",
+    "    if let _MemeJV::Obj(fields) = obj {",
+    "        for (k, v) in fields {",
+    "            if k == key { return Some(v); }",
+    "        }",
+    "    }",
+    "    None",
+    "}",
+    "",
+    "fn _meme_read_json_file(path: &str) -> Option<_MemeJV> {",
+    "    let resolved = _meme_resolve_path(path);",
+    "    let raw = std::fs::read_to_string(resolved).ok()?;",
+    "    let chars: Vec<char> = raw.chars().collect();",
+    "    let mut idx = 0;",
+    "    let jv = _meme_parse_jv(&chars, &mut idx)?;",
+    "    _meme_skip_ws(&chars, &mut idx);",
+    "    if idx < chars.len() { return None; }",
+    "    Some(jv)",
+    "}",
+    "",
+]
+
+
+def _emit_rust_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> list[str]:
+    ident = _rust_ident(r_name)
+    lines = [
+        f"fn _meme_parse_record_{ident}(jv: &_MemeJV) -> Option<{ident}> {{",
+        "    if let _MemeJV::Obj(_) = jv {",
+        f"        Some({ident} {{",
+    ]
+    for fname, ftype in fields.items():
+        fn_str = json.dumps(fname)
+        f_ident = _rust_ident(fname)
+        if ftype == "Int":
+            lines.extend([
+                f"            {f_ident}: {{",
+                f"                let f_val = _meme_find_field(jv, {fn_str})?;",
+                "                if let _MemeJV::Num(_, is_int, ival) = f_val {",
+                "                    if !*is_int { return None; }",
+                "                    *ival",
+                "                } else {",
+                "                    return None;",
+                "                }",
+                "            },",
+            ])
+        elif ftype == "Float":
+            lines.extend([
+                f"            {f_ident}: {{",
+                f"                let f_val = _meme_find_field(jv, {fn_str})?;",
+                "                if let _MemeJV::Num(num, _, _) = f_val {",
+                "                    *num",
+                "                } else {",
+                "                    return None;",
+                "                }",
+                "            },",
+            ])
+        elif ftype == "String":
+            lines.extend([
+                f"            {f_ident}: {{",
+                f"                let f_val = _meme_find_field(jv, {fn_str})?;",
+                "                if let _MemeJV::Str(s) = f_val {",
+                "                    s.clone()",
+                "                } else {",
+                "                    return None;",
+                "                }",
+                "            },",
+            ])
+        elif ftype == "Bool":
+            lines.extend([
+                f"            {f_ident}: {{",
+                f"                let f_val = _meme_find_field(jv, {fn_str})?;",
+                "                if let _MemeJV::Bool(b) = f_val {",
+                "                    *b",
+                "                } else {",
+                "                    return None;",
+                "                }",
+                "            },",
+            ])
+        elif ftype.startswith("Optional<"):
+            inner = ftype[9:-1]
+            lines.extend([
+                f"            {f_ident}: {{",
+                f"                match _meme_find_field(jv, {fn_str}) {{",
+                "                    None | Some(_MemeJV::Null) => None,",
+            ])
+            if inner == "Int":
+                lines.extend([
+                    "                    Some(_MemeJV::Num(_, is_int, ival)) if *is_int => Some(*ival),",
+                    "                    _ => return None,",
+                ])
+            elif inner == "Float":
+                lines.extend([
+                    "                    Some(_MemeJV::Num(num, _, _)) => Some(*num),",
+                    "                    _ => return None,",
+                ])
+            elif inner == "String":
+                lines.extend([
+                    "                    Some(_MemeJV::Str(s)) => Some(s.clone()),",
+                    "                    _ => return None,",
+                ])
+            elif inner == "Bool":
+                lines.extend([
+                    "                    Some(_MemeJV::Bool(b)) => Some(*b),",
+                    "                    _ => return None,",
+                ])
+            lines.extend([
+                "                }",
+                "            },",
+            ])
+    lines.extend([
+        "        })",
+        "    } else {",
+        "        None",
+        "    }",
+        "}",
+        "",
+        f"fn _meme_read_json_record_{ident}(path: &str) -> Option<{ident}> {{",
+        "    let jv = _meme_read_json_file(path)?;",
+        f"    _meme_parse_record_{ident}(&jv)",
+        "}",
+        "",
+        f"fn _meme_read_json_records_{ident}(path: &str) -> Option<Vec<{ident}>> {{",
+        "    let jv = _meme_read_json_file(path)?;",
+        "    if let _MemeJV::Arr(items) = jv {",
+        "        let mut out = Vec::new();",
+        "        for item in items {",
+        f"            out.push(_meme_parse_record_{ident}(&item)?);",
+        "        }",
+        "        Some(out)",
+        "    } else {",
+        "        None",
+        "    }",
+        "}",
+        "",
+    ])
+    return lines
+
+
+def _emit_rust_json_record_writer(r_name: str, fields: dict[str, MemeType]) -> list[str]:
+    ident = _rust_ident(r_name)
+    lines = [
+        f"fn _meme_serialize_json_record_{ident}(rec: &{ident}) -> String {{",
+        "    let mut parts: Vec<String> = Vec::new();",
+    ]
+    for fname, ftype in fields.items():
+        k_str = json.dumps(fname) + ":"
+        f_ident = _rust_ident(fname)
+        if ftype == "Int":
+            val_code = f"rec.{f_ident}.to_string()"
+        elif ftype == "Float":
+            val_code = f"_meme_format_json_float(rec.{f_ident})"
+        elif ftype == "String":
+            val_code = f"_meme_escape_json_str(&rec.{f_ident})"
+        elif ftype == "Bool":
+            val_code = f"(if rec.{f_ident} {{ \"true\" }} else {{ \"false\" }}).to_string()"
+        elif ftype.startswith("Optional<"):
+            inner = ftype[9:-1]
+            if inner == "Int":
+                inner_code = "v.to_string()"
+            elif inner == "Float":
+                inner_code = "_meme_format_json_float(*v)"
+            elif inner == "String":
+                inner_code = "_meme_escape_json_str(v)"
+            elif inner == "Bool":
+                inner_code = "(if *v { \"true\" } else { \"false\" }).to_string()"
+            else:
+                inner_code = "v.to_string()"
+            val_code = f"(match &rec.{f_ident} {{ None => \"null\".to_string(), Some(v) => {inner_code} }})"
+        else:
+            val_code = f"rec.{f_ident}.to_string()"
+        lines.append(f"    parts.push(format!(\"{{}}{{}}\", {json.dumps(k_str)}, {val_code}));")
+    lines.extend([
+        "    format!(\"{{{}}}\", parts.join(\",\"))",
+        "}",
+        "",
+        f"fn _meme_serialize_json_records_{ident}(recs: &[{ident}]) -> String {{",
+        f"    let parts: Vec<String> = recs.iter().map(_meme_serialize_json_record_{ident}).collect();",
+        "    format!(\"[{}]\", parts.join(\",\"))",
+        "}",
+        "",
+    ])
+    return lines
 
 
 def generate_rust(ir: ProgramIR) -> str:
@@ -1137,6 +1535,29 @@ def generate_rust(ir: ProgramIR) -> str:
             ]
         )
 
+    if gen.uses_format_float:
+        preamble.extend(
+            [
+                "fn _meme_format_float(v: f64, n: i64) -> String {",
+                "    let mut neg = v < 0.0;",
+                "    let mag = v.abs();",
+                "    if n == 0 {",
+                "        let r = (mag + 0.5).floor();",
+                "        if r == 0.0 { neg = false; }",
+                "        return if neg { format!(\"-{:.0}\", r) } else { format!(\"{:.0}\", r) };",
+                "    }",
+                "    let factor = 10.0_f64.powi(n as i32);",
+                "    let rounded_total = (mag * factor + 0.5).floor();",
+                "    let int_part = (rounded_total / factor).floor();",
+                "    let frac_part = (rounded_total - int_part * factor + 0.5) as u64;",
+                "    if int_part == 0.0 && frac_part == 0 { neg = false; }",
+                "    let s = format!(\"{:.0}.{:0>width$}\", int_part, frac_part, width = n as usize);",
+                "    if neg { format!(\"-{}\", s) } else { s }",
+                "}",
+                "",
+            ]
+        )
+
     if gen.uses_input:
         preamble.extend(
             [
@@ -1157,7 +1578,7 @@ def generate_rust(ir: ProgramIR) -> str:
             ]
         )
 
-    if gen.uses_json_io or gen.uses_file_io:
+    if gen.uses_json_io or gen.uses_file_io or gen.uses_json_records:
         preamble.extend(
             [
                 "fn _meme_resolve_path(path: &str) -> std::path::PathBuf {",
@@ -1179,6 +1600,9 @@ def generate_rust(ir: ProgramIR) -> str:
                 "",
             ]
         )
+
+    if gen.uses_json_records:
+        preamble.extend(_RUST_JSON_PARSER_HELPERS)
 
     if gen.uses_file_io:
         preamble.extend(
@@ -1510,6 +1934,51 @@ def generate_rust(ir: ProgramIR) -> str:
                 "",
             ]
         )
+
+    if gen.uses_json_records:
+        for r_name in sorted(gen.json_records_read | gen.json_record_lists_read):
+            r_fields = gen.records.get(r_name, {})
+            record_blocks.extend(_emit_rust_json_record_reader(r_name, r_fields))
+
+    if gen.uses_json_write:
+        gen.uses_format_float = True
+        preamble.extend([
+            "fn _meme_format_json_float(v: f64) -> String {",
+            "    let mut s = _meme_format_float(v, 6);",
+            "    if s.contains('.') {",
+            "        while s.ends_with('0') {",
+            "            s.pop();",
+            "        }",
+            "        if s.ends_with('.') {",
+            "            s.push('0');",
+            "        }",
+            "    }",
+            "    s",
+            "}",
+            "",
+            "fn _meme_escape_json_str(s: &str) -> String {",
+            "    let mut out = String::from(\"\\\"\");",
+            "    for b in s.bytes() {",
+            "        match b {",
+            "            b'\"' => out.push_str(\"\\\\\\\"\"),",
+            "            b'\\\\' => out.push_str(\"\\\\\\\\\"),",
+            "            b'\\n' => out.push_str(\"\\\\n\"),",
+            "            b'\\r' => out.push_str(\"\\\\r\"),",
+            "            b'\\t' => out.push_str(\"\\\\t\"),",
+            "            0..=0x1f => {",
+            "                out.push_str(&format!(\"\\\\u{:04x}\", b));",
+            "            }",
+            "            _ => out.push(b as char),",
+            "        }",
+            "    }",
+            "    out.push('\"');",
+            "    out",
+            "}",
+            "",
+        ])
+        for r_name in sorted(gen.json_records_write):
+            r_fields = gen.records.get(r_name, {})
+            record_blocks.extend(_emit_rust_json_record_writer(r_name, r_fields))
 
     out = preamble + record_blocks + fn_blocks + ["fn main() {"] + main_lines + ["}", ""]
     return "\n".join(out)

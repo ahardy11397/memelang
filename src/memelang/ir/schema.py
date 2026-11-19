@@ -247,6 +247,20 @@ class ReadJsonListExpr(IRNode):
     explicit_type: bool = False
 
 
+class ReadJsonRecordExpr(IRNode):
+    expr_type: Literal["read_json_record"] = "read_json_record"
+    record_name: str
+    filepath: IRExpr
+    default_val: IRExpr | None = None
+
+
+class ReadJsonRecordsExpr(IRNode):
+    expr_type: Literal["read_json_records"] = "read_json_records"
+    record_name: str
+    filepath: IRExpr
+    default_val: IRExpr | None = None
+
+
 class StringLengthExpr(IRNode):
     expr_type: Literal["string_length"] = "string_length"
     target: IRExpr
@@ -293,6 +307,12 @@ class IsLowerExpr(IRNode):
 class FormatIntExpr(IRNode):
     expr_type: Literal["format_int"] = "format_int"
     target: IRExpr
+
+
+class FormatFloatExpr(IRNode):
+    expr_type: Literal["format_float"] = "format_float"
+    target: IRExpr
+    decimals: IRExpr
 
 
 class RecordFieldInit(IRNode):
@@ -393,11 +413,14 @@ IRExpr = Annotated[
     | ArgCountExpr
     | ArgAtExpr
     | ReadJsonListExpr
+    | ReadJsonRecordExpr
+    | ReadJsonRecordsExpr
     | StringLengthExpr
     | StringSliceExpr
     | ParseIntExpr
     | ParseIntOrDefaultExpr
     | FormatIntExpr
+    | FormatFloatExpr
     | IsDigitExpr
     | IsLetterExpr
     | IsUpperExpr
@@ -649,6 +672,13 @@ class WriteFileStmt(IRNode):
     source_line: int | None = None
 
 
+class WriteJsonStmt(IRNode):
+    op: Literal["write_json"] = "write_json"
+    target: IRExpr
+    filepath: IRExpr
+    source_line: int | None = None
+
+
 class AppendFileStmt(IRNode):
     op: Literal["append_file"] = "append_file"
     filepath: IRExpr
@@ -737,6 +767,7 @@ IRStatement = Annotated[
     | RecordSetFieldStmt
     | MapSetStmt
     | WriteFileStmt
+    | WriteJsonStmt
     | AppendFileStmt
     | CopyFileStmt
     | MoveFileStmt
@@ -825,11 +856,14 @@ ListFilesExpr.model_rebuild()
 ArgCountExpr.model_rebuild()
 ArgAtExpr.model_rebuild()
 ReadJsonListExpr.model_rebuild()
+ReadJsonRecordExpr.model_rebuild()
+ReadJsonRecordsExpr.model_rebuild()
 StringLengthExpr.model_rebuild()
 StringSliceExpr.model_rebuild()
 ParseIntExpr.model_rebuild()
 ParseIntOrDefaultExpr.model_rebuild()
 FormatIntExpr.model_rebuild()
+FormatFloatExpr.model_rebuild()
 IsDigitExpr.model_rebuild()
 IsLetterExpr.model_rebuild()
 IsUpperExpr.model_rebuild()
@@ -872,6 +906,7 @@ RecordDefStmt.model_rebuild()
 RecordSetFieldStmt.model_rebuild()
 MapSetStmt.model_rebuild()
 WriteFileStmt.model_rebuild()
+WriteJsonStmt.model_rebuild()
 AppendFileStmt.model_rebuild()
 CopyFileStmt.model_rebuild()
 MoveFileStmt.model_rebuild()

@@ -1,0 +1,1279 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/528_json_roundtrip.meme": {
+      "source_sha256": "c4f8b9939a7b6a2ff2c30b8e640f02f121f9df827ff608b8d52329380cb099fb",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "Item",
+          "fields": [
+            {
+              "name": "id",
+              "field_type": "Int"
+            },
+            {
+              "name": "sku",
+              "field_type": "String"
+            },
+            {
+              "name": "price",
+              "field_type": "Float"
+            },
+            {
+              "name": "in_stock",
+              "field_type": "Bool"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "itm",
+          "var_type": "Item",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Item",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 101,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "sku",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "WIDGET-A",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "price",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 19.95,
+                  "data_type": "Float"
+                }
+              },
+              {
+                "name": "in_stock",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              }
+            ]
+          },
+          "source_line": 7
+        },
+        {
+          "op": "write_json",
+          "target": {
+            "expr_type": "var_ref",
+            "name": "itm"
+          },
+          "filepath": {
+            "expr_type": "literal",
+            "value": "tmp_528_single.json",
+            "data_type": "String"
+          },
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "itm_opt",
+          "var_type": "Optional<Item>",
+          "value": {
+            "expr_type": "read_json_record",
+            "record_name": "Item",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_528_single.json",
+              "data_type": "String"
+            },
+            "default_val": {
+              "expr_type": "optional_none"
+            }
+          },
+          "source_line": 10
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "itm_opt"
+            },
+            "negated": false
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "single: nothing",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 12
+            }
+          ],
+          "else_body": [
+            {
+              "op": "var_decl",
+              "name": "item",
+              "var_type": "Item",
+              "value": {
+                "expr_type": "optional_unwrap",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "itm_opt"
+                }
+              },
+              "source_line": 14
+            },
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "item"
+                  },
+                  "field_name": "id"
+                },
+                "right": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "itm"
+                  },
+                  "field_name": "id"
+                }
+              },
+              "source_line": 15,
+              "source_text": "item.id == itm.id"
+            },
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "item"
+                  },
+                  "field_name": "sku"
+                },
+                "right": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "itm"
+                  },
+                  "field_name": "sku"
+                }
+              },
+              "source_line": 16,
+              "source_text": "item.sku == itm.sku"
+            },
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "item"
+                  },
+                  "field_name": "price"
+                },
+                "right": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "itm"
+                  },
+                  "field_name": "price"
+                }
+              },
+              "source_line": 17,
+              "source_text": "item.price == itm.price"
+            },
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "item"
+                  },
+                  "field_name": "in_stock"
+                },
+                "right": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "itm"
+                  },
+                  "field_name": "in_stock"
+                }
+              },
+              "source_line": 18,
+              "source_text": "item.in_stock == itm.in_stock"
+            },
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "single item:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "item"
+                  },
+                  "field_name": "id"
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "item"
+                  },
+                  "field_name": "sku"
+                },
+                {
+                  "expr_type": "format_float",
+                  "target": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "item"
+                    },
+                    "field_name": "price"
+                  },
+                  "decimals": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "item"
+                  },
+                  "field_name": "in_stock"
+                }
+              ],
+              "source_line": 19
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "var_decl",
+          "name": "itm2",
+          "var_type": "Item",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Item",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 102,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "sku",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "GADGET-B",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "price",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 49.5,
+                  "data_type": "Float"
+                }
+              },
+              {
+                "name": "in_stock",
+                "value": {
+                  "expr_type": "literal",
+                  "value": false,
+                  "data_type": "Bool"
+                }
+              }
+            ]
+          },
+          "source_line": 21
+        },
+        {
+          "op": "var_decl",
+          "name": "itm3",
+          "var_type": "Item",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Item",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 103,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "sku",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "TOOL-C",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "price",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 10.0,
+                  "data_type": "Float"
+                }
+              },
+              {
+                "name": "in_stock",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              }
+            ]
+          },
+          "source_line": 22
+        },
+        {
+          "op": "var_decl",
+          "name": "items",
+          "var_type": "List<Item>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "var_ref",
+                "name": "itm"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "itm2"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "itm3"
+              }
+            ],
+            "element_type": "Item"
+          },
+          "source_line": 23
+        },
+        {
+          "op": "write_json",
+          "target": {
+            "expr_type": "var_ref",
+            "name": "items"
+          },
+          "filepath": {
+            "expr_type": "literal",
+            "value": "tmp_528_list.json",
+            "data_type": "String"
+          },
+          "source_line": 24
+        },
+        {
+          "op": "var_decl",
+          "name": "items_opt",
+          "var_type": "Optional<List<Item>>",
+          "value": {
+            "expr_type": "read_json_records",
+            "record_name": "Item",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_528_list.json",
+              "data_type": "String"
+            },
+            "default_val": {
+              "expr_type": "optional_none"
+            }
+          },
+          "source_line": 26
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "items_opt"
+            },
+            "negated": false
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "list: nothing",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 28
+            }
+          ],
+          "else_body": [
+            {
+              "op": "var_decl",
+              "name": "back_items",
+              "var_type": "List<Item>",
+              "value": {
+                "expr_type": "optional_unwrap",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "items_opt"
+                }
+              },
+              "source_line": 30
+            },
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "back_items"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 31,
+              "source_text": "length of back_items == 3"
+            },
+            {
+              "op": "for_each",
+              "item_var": "item",
+              "index_var": null,
+              "collection": "back_items",
+              "body": [
+                {
+                  "op": "print_stmt",
+                  "expressions": [
+                    {
+                      "expr_type": "literal",
+                      "value": "list item:",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "item"
+                      },
+                      "field_name": "id"
+                    },
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "item"
+                      },
+                      "field_name": "sku"
+                    },
+                    {
+                      "expr_type": "format_float",
+                      "target": {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "item"
+                        },
+                        "field_name": "price"
+                      },
+                      "decimals": {
+                        "expr_type": "literal",
+                        "value": 2,
+                        "data_type": "Int"
+                      }
+                    },
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "item"
+                      },
+                      "field_name": "in_stock"
+                    }
+                  ],
+                  "source_line": 33
+                }
+              ],
+              "source_line": 32
+            }
+          ],
+          "source_line": 27
+        },
+        {
+          "op": "var_decl",
+          "name": "single_raw",
+          "var_type": "String",
+          "value": {
+            "expr_type": "read_file_string",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_528_single.json",
+              "data_type": "String"
+            }
+          },
+          "source_line": 35
+        },
+        {
+          "op": "var_decl",
+          "name": "list_raw",
+          "var_type": "String",
+          "value": {
+            "expr_type": "read_file_string",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_528_list.json",
+              "data_type": "String"
+            }
+          },
+          "source_line": 36
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "single raw json:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "single_raw"
+            }
+          ],
+          "source_line": 37
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "list raw json:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "list_raw"
+            }
+          ],
+          "source_line": 38
+        },
+        {
+          "op": "delete_file",
+          "path": {
+            "expr_type": "literal",
+            "value": "tmp_528_single.json",
+            "data_type": "String"
+          },
+          "source_line": 40
+        },
+        {
+          "op": "delete_file",
+          "path": {
+            "expr_type": "literal",
+            "value": "tmp_528_list.json",
+            "data_type": "String"
+          },
+          "source_line": 41
+        }
+      ],
+      "canonical_meme": "record Item:\n    id: Int\n    sku: String\n    price: Float\n    in_stock: Bool\ndefine itm: Item as Item(id=101, sku=\"WIDGET-A\", price=19.95, in_stock=true)\nwrite itm as json to file \"tmp_528_single.json\"\ndefine itm_opt: Optional<Item> as read json record Item from file \"tmp_528_single.json\" or else nothing\nif itm_opt is nothing:\n    print \"single: nothing\"\nelse:\n    define item: Item as value of itm_opt\n    assert item.id == itm.id\n    assert item.sku == itm.sku\n    assert item.price == itm.price\n    assert item.in_stock == itm.in_stock\n    print \"single item:\", item.id, item.sku, format item.price with 2 decimals, item.in_stock\ndefine itm2: Item as Item(id=102, sku=\"GADGET-B\", price=49.5, in_stock=false)\ndefine itm3: Item as Item(id=103, sku=\"TOOL-C\", price=10.0, in_stock=true)\ndefine list items as [itm, itm2, itm3]\nwrite items as json to file \"tmp_528_list.json\"\ndefine items_opt: Optional<List<Item>> as read json records Item from file \"tmp_528_list.json\" or else nothing\nif items_opt is nothing:\n    print \"list: nothing\"\nelse:\n    define list back_items as value of items_opt\n    assert length of back_items == 3\n    for each item in back_items:\n        print \"list item:\", item.id, item.sku, format item.price with 2 decimals, item.in_stock\ndefine single_raw: String as read string from file \"tmp_528_single.json\"\ndefine list_raw: String as read string from file \"tmp_528_list.json\"\nprint \"single raw json:\", single_raw\nprint \"list raw json:\", list_raw\ndelete file \"tmp_528_single.json\"\ndelete file \"tmp_528_list.json\"",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "Item",
+            "fields": [
+              {
+                "name": "id",
+                "field_type": "Int"
+              },
+              {
+                "name": "sku",
+                "field_type": "String"
+              },
+              {
+                "name": "price",
+                "field_type": "Float"
+              },
+              {
+                "name": "in_stock",
+                "field_type": "Bool"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "itm",
+            "var_type": "Item",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Item",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 101,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "sku",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "WIDGET-A",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "price",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 19.95,
+                    "data_type": "Float"
+                  }
+                },
+                {
+                  "name": "in_stock",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                }
+              ]
+            },
+            "source_line": 7
+          },
+          {
+            "op": "write_json",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "itm"
+            },
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_528_single.json",
+              "data_type": "String"
+            },
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "itm_opt",
+            "var_type": "Optional<Item>",
+            "value": {
+              "expr_type": "read_json_record",
+              "record_name": "Item",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tmp_528_single.json",
+                "data_type": "String"
+              },
+              "default_val": {
+                "expr_type": "optional_none"
+              }
+            },
+            "source_line": 10
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "itm_opt"
+              },
+              "negated": false
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "single: nothing",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 12
+              }
+            ],
+            "else_body": [
+              {
+                "op": "var_decl",
+                "name": "item",
+                "var_type": "Item",
+                "value": {
+                  "expr_type": "optional_unwrap",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "itm_opt"
+                  }
+                },
+                "source_line": 14
+              },
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "item"
+                    },
+                    "field_name": "id"
+                  },
+                  "right": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "itm"
+                    },
+                    "field_name": "id"
+                  }
+                },
+                "source_line": 15,
+                "source_text": "item.id == itm.id"
+              },
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "item"
+                    },
+                    "field_name": "sku"
+                  },
+                  "right": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "itm"
+                    },
+                    "field_name": "sku"
+                  }
+                },
+                "source_line": 16,
+                "source_text": "item.sku == itm.sku"
+              },
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "item"
+                    },
+                    "field_name": "price"
+                  },
+                  "right": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "itm"
+                    },
+                    "field_name": "price"
+                  }
+                },
+                "source_line": 17,
+                "source_text": "item.price == itm.price"
+              },
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "item"
+                    },
+                    "field_name": "in_stock"
+                  },
+                  "right": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "itm"
+                    },
+                    "field_name": "in_stock"
+                  }
+                },
+                "source_line": 18,
+                "source_text": "item.in_stock == itm.in_stock"
+              },
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "single item:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "item"
+                    },
+                    "field_name": "id"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "item"
+                    },
+                    "field_name": "sku"
+                  },
+                  {
+                    "expr_type": "format_float",
+                    "target": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "item"
+                      },
+                      "field_name": "price"
+                    },
+                    "decimals": {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    }
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "item"
+                    },
+                    "field_name": "in_stock"
+                  }
+                ],
+                "source_line": 19
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "var_decl",
+            "name": "itm2",
+            "var_type": "Item",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Item",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 102,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "sku",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "GADGET-B",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "price",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 49.5,
+                    "data_type": "Float"
+                  }
+                },
+                {
+                  "name": "in_stock",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": false,
+                    "data_type": "Bool"
+                  }
+                }
+              ]
+            },
+            "source_line": 21
+          },
+          {
+            "op": "var_decl",
+            "name": "itm3",
+            "var_type": "Item",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Item",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 103,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "sku",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "TOOL-C",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "price",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 10.0,
+                    "data_type": "Float"
+                  }
+                },
+                {
+                  "name": "in_stock",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                }
+              ]
+            },
+            "source_line": 22
+          },
+          {
+            "op": "var_decl",
+            "name": "items",
+            "var_type": "List<Item>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "itm"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "itm2"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "itm3"
+                }
+              ],
+              "element_type": "Item"
+            },
+            "source_line": 23
+          },
+          {
+            "op": "write_json",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "items"
+            },
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_528_list.json",
+              "data_type": "String"
+            },
+            "source_line": 24
+          },
+          {
+            "op": "var_decl",
+            "name": "items_opt",
+            "var_type": "Optional<List<Item>>",
+            "value": {
+              "expr_type": "read_json_records",
+              "record_name": "Item",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tmp_528_list.json",
+                "data_type": "String"
+              },
+              "default_val": {
+                "expr_type": "optional_none"
+              }
+            },
+            "source_line": 26
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "items_opt"
+              },
+              "negated": false
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "list: nothing",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 28
+              }
+            ],
+            "else_body": [
+              {
+                "op": "var_decl",
+                "name": "back_items",
+                "var_type": "List<Item>",
+                "value": {
+                  "expr_type": "optional_unwrap",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "items_opt"
+                  }
+                },
+                "source_line": 30
+              },
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "list_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "back_items"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 31,
+                "source_text": "length of back_items == 3"
+              },
+              {
+                "op": "for_each",
+                "item_var": "item",
+                "index_var": null,
+                "collection": "back_items",
+                "body": [
+                  {
+                    "op": "print_stmt",
+                    "expressions": [
+                      {
+                        "expr_type": "literal",
+                        "value": "list item:",
+                        "data_type": "String"
+                      },
+                      {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "item"
+                        },
+                        "field_name": "id"
+                      },
+                      {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "item"
+                        },
+                        "field_name": "sku"
+                      },
+                      {
+                        "expr_type": "format_float",
+                        "target": {
+                          "expr_type": "record_field",
+                          "target": {
+                            "expr_type": "var_ref",
+                            "name": "item"
+                          },
+                          "field_name": "price"
+                        },
+                        "decimals": {
+                          "expr_type": "literal",
+                          "value": 2,
+                          "data_type": "Int"
+                        }
+                      },
+                      {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "item"
+                        },
+                        "field_name": "in_stock"
+                      }
+                    ],
+                    "source_line": 33
+                  }
+                ],
+                "source_line": 32
+              }
+            ],
+            "source_line": 27
+          },
+          {
+            "op": "var_decl",
+            "name": "single_raw",
+            "var_type": "String",
+            "value": {
+              "expr_type": "read_file_string",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tmp_528_single.json",
+                "data_type": "String"
+              }
+            },
+            "source_line": 35
+          },
+          {
+            "op": "var_decl",
+            "name": "list_raw",
+            "var_type": "String",
+            "value": {
+              "expr_type": "read_file_string",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tmp_528_list.json",
+                "data_type": "String"
+              }
+            },
+            "source_line": 36
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "single raw json:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "single_raw"
+              }
+            ],
+            "source_line": 37
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "list raw json:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "list_raw"
+              }
+            ],
+            "source_line": 38
+          },
+          {
+            "op": "delete_file",
+            "path": {
+              "expr_type": "literal",
+              "value": "tmp_528_single.json",
+              "data_type": "String"
+            },
+            "source_line": 40
+          },
+          {
+            "op": "delete_file",
+            "path": {
+              "expr_type": "literal",
+              "value": "tmp_528_list.json",
+              "data_type": "String"
+            },
+            "source_line": 41
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

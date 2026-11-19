@@ -41,6 +41,7 @@ from memelang.ir.schema import (
     FilterCollectionStmt,
     ForEachStmt,
     FormatIntExpr,
+    FormatFloatExpr,
     ForRangeStmt,
     FuncDefStmt,
     FuncParam,
@@ -83,6 +84,8 @@ from memelang.ir.schema import (
     ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    ReadJsonRecordExpr,
+    ReadJsonRecordsExpr,
     RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
@@ -113,6 +116,7 @@ from memelang.ir.schema import (
     VarRefExpr,
     WhileStmt,
     WriteFileStmt,
+    WriteJsonStmt,
 )
 
 _TS_KEYWORDS = {
@@ -187,6 +191,11 @@ class _TSGen:
         self.func_returns: dict[str, str] = {}
         self.func_params: dict[str, list[FuncParam]] = {}
         self.current_func_return: str | None = None
+        self.uses_json_records = False
+        self.uses_json_write = False
+        self.json_records_read: set[str] = set()
+        self.json_record_lists_read: set[str] = set()
+        self.json_records_write: set[str] = set()
         self._match_counter = 0
 
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> str:
@@ -219,12 +228,20 @@ class _TSGen:
         if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr)):
             return "Int"
         if isinstance(expr, (StringSliceExpr, StringReplaceExpr, StringUpperExpr, StringLowerExpr,
-                             StringTrimExpr, StringJoinExpr, StringCharAtExpr, ReadFileStringExpr, ArgAtExpr, FormatIntExpr)):
+                             StringTrimExpr, StringJoinExpr, StringCharAtExpr, ReadFileStringExpr, ArgAtExpr, FormatIntExpr, FormatFloatExpr)):
             return "String"
         if isinstance(expr, (StringSplitExpr, ListFilesExpr, ReadFileLinesExpr)):
             return "List<String>"
         if isinstance(expr, ReadJsonListExpr):
             return f"List<{expr.element_type}>"
+        if isinstance(expr, ReadJsonRecordExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return expr.record_name
+            return f"Optional<{expr.record_name}>"
+        if isinstance(expr, ReadJsonRecordsExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return f"List<{expr.record_name}>"
+            return f"Optional<List<{expr.record_name}>>"
         if isinstance(expr, ReadInputExpr):
             return expr.target_type
         if isinstance(expr, CallExpr):
@@ -455,6 +472,11 @@ class _TSGen:
         if isinstance(expr, FormatIntExpr):
             return f"String({self.gen_expr(expr.target, scope)})"
 
+        if isinstance(expr, FormatFloatExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            dec = self.gen_expr(expr.decimals, scope)
+            return f"_meme_format_float({tgt}, {dec})"
+
         if isinstance(expr, FileExistsExpr):
             return f"_meme_file_exists({self.gen_expr(expr.filepath, scope)})"
 
@@ -469,6 +491,26 @@ class _TSGen:
 
         if isinstance(expr, ReadJsonListExpr):
             return f"_meme_read_json_list_{expr.element_type.lower()}({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ReadJsonRecordExpr):
+            self.uses_json_records = True
+            self.json_records_read.add(expr.record_name)
+            p = self.gen_expr(expr.filepath, scope)
+            call = f"_meme_read_json_record_{expr.record_name}({p})"
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope)
+                return f"((_r => _r !== null ? _r : {d})({call}))"
+            return call
+
+        if isinstance(expr, ReadJsonRecordsExpr):
+            self.uses_json_records = True
+            self.json_record_lists_read.add(expr.record_name)
+            p = self.gen_expr(expr.filepath, scope)
+            call = f"_meme_read_json_records_{expr.record_name}({p})"
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope)
+                return f"((_r => _r !== null ? _r : {d})({call}))"
+            return call
 
         if isinstance(expr, ArgCountExpr):
             return "_meme_argv.length"
@@ -744,6 +786,20 @@ class _TSGen:
             c = self.gen_expr(stmt.content, scope)
             return [f"{pad}_meme_write_file({p}, {c});"]
 
+        if isinstance(stmt, WriteJsonStmt):
+            self.uses_file_io = True
+            self.uses_json_write = True
+            tgt_t = self.infer_type(stmt.target, scope)
+            fp = self.gen_expr(stmt.filepath, scope)
+            tgt = self.gen_expr(stmt.target, scope)
+            if tgt_t in self.records:
+                self.json_records_write.add(tgt_t)
+                return [f"{pad}_meme_write_file({fp}, _meme_serialize_json_record_{tgt_t}({tgt}));"]
+            elif tgt_t.startswith("List<") and tgt_t.endswith(">"):
+                r_name = tgt_t[5:-1]
+                self.json_records_write.add(r_name)
+                return [f"{pad}_meme_write_file({fp}, _meme_serialize_json_records_{r_name}({tgt}));"]
+
         if isinstance(stmt, AppendFileStmt):
             p = self.gen_expr(stmt.filepath, scope)
             c = self.gen_expr(stmt.content, scope)
@@ -799,6 +855,150 @@ class _TSGen:
         lines.append("}")
         self.current_func_return = None
         return lines
+
+
+def _emit_ts_json_record_reader(r_name: str, fields: dict[str, str]) -> list[str]:
+    lines = [
+        f"function _meme_parse_record_{r_name}(_d: any): {r_name} | null {{",
+        "    if (typeof _d !== \"object\" || _d === null || Array.isArray(_d)) return null;",
+        f"    const _res: any = {{ _meme_type: {json.dumps(r_name)} }};",
+    ]
+    for fname, ftype in fields.items():
+        fn_json = json.dumps(fname)
+        if ftype == "Int":
+            lines.extend([
+                f"    if (!({fn_json} in _d)) return null;",
+                f"    const _v_{fname} = _d[{fn_json}];",
+                f"    if (typeof _v_{fname} !== \"number\" || !Number.isInteger(_v_{fname})) return null;",
+                f"    _res[{fn_json}] = _v_{fname};",
+            ])
+        elif ftype == "Float":
+            lines.extend([
+                f"    if (!({fn_json} in _d)) return null;",
+                f"    const _v_{fname} = _d[{fn_json}];",
+                f"    if (typeof _v_{fname} !== \"number\" || Number.isNaN(_v_{fname})) return null;",
+                f"    _res[{fn_json}] = _v_{fname};",
+            ])
+        elif ftype == "String":
+            lines.extend([
+                f"    if (!({fn_json} in _d)) return null;",
+                f"    const _v_{fname} = _d[{fn_json}];",
+                f"    if (typeof _v_{fname} !== \"string\") return null;",
+                f"    _res[{fn_json}] = _v_{fname};",
+            ])
+        elif ftype == "Bool":
+            lines.extend([
+                f"    if (!({fn_json} in _d)) return null;",
+                f"    const _v_{fname} = _d[{fn_json}];",
+                f"    if (typeof _v_{fname} !== \"boolean\") return null;",
+                f"    _res[{fn_json}] = _v_{fname};",
+            ])
+        elif ftype.startswith("Optional<"):
+            inner = ftype[9:-1]
+            lines.extend([
+                f"    if (!({fn_json} in _d) || _d[{fn_json}] === null) {{",
+                f"        _res[{fn_json}] = null;",
+                "    } else {",
+                f"        const _v_{fname} = _d[{fn_json}];",
+            ])
+            if inner == "Int":
+                lines.extend([
+                    f"        if (typeof _v_{fname} !== \"number\" || !Number.isInteger(_v_{fname})) return null;",
+                    f"        _res[{fn_json}] = _v_{fname};",
+                ])
+            elif inner == "Float":
+                lines.extend([
+                    f"        if (typeof _v_{fname} !== \"number\" || Number.isNaN(_v_{fname})) return null;",
+                    f"        _res[{fn_json}] = _v_{fname};",
+                ])
+            elif inner == "String":
+                lines.extend([
+                    f"        if (typeof _v_{fname} !== \"string\") return null;",
+                    f"        _res[{fn_json}] = _v_{fname};",
+                ])
+            elif inner == "Bool":
+                lines.extend([
+                    f"        if (typeof _v_{fname} !== \"boolean\") return null;",
+                    f"        _res[{fn_json}] = _v_{fname};",
+                ])
+            lines.append("    }")
+    lines.append(f"    return _res as {r_name};")
+    lines.append("}")
+    lines.append("")
+    lines.extend([
+        f"function _meme_read_json_record_{r_name}(path: string): {r_name} | null {{",
+        "    try {",
+        "        const raw = _fs.readFileSync(_meme_resolve_path(path), \"utf-8\");",
+        "        const d = JSON.parse(raw);",
+        f"        return _meme_parse_record_{r_name}(d);",
+        "    } catch (_) {",
+        "        return null;",
+        "    }",
+        "}",
+        "",
+        f"function _meme_read_json_records_{r_name}(path: string): {r_name}[] | null {{",
+        "    try {",
+        "        const raw = _fs.readFileSync(_meme_resolve_path(path), \"utf-8\");",
+        "        const d = JSON.parse(raw);",
+        "        if (!Array.isArray(d)) return null;",
+        f"        const out: {r_name}[] = [];",
+        "        for (const item of d) {",
+        f"            const rec = _meme_parse_record_{r_name}(item);",
+        "            if (rec === null) return null;",
+        "            out.push(rec);",
+        "        }",
+        "        return out;",
+        "    } catch (_) {",
+        "        return null;",
+        "    }",
+        "}",
+        "",
+    ])
+    return lines
+
+
+def _emit_ts_json_record_writer(r_name: str, fields: dict[str, str]) -> list[str]:
+    lines = [
+        f"function _meme_serialize_json_record_{r_name}(rec: {r_name}): string {{",
+        "    const parts: string[] = [];",
+    ]
+    for fname, ftype in fields.items():
+        k_str = json.dumps(fname) + ":"
+        f_ident = _ts_ident(fname)
+        if ftype == "Int":
+            val_code = f"rec.{f_ident}.toString()"
+        elif ftype == "Float":
+            val_code = f"_meme_format_json_float(rec.{f_ident})"
+        elif ftype == "String":
+            val_code = f"_meme_escape_json_str(rec.{f_ident})"
+        elif ftype == "Bool":
+            val_code = f"(rec.{f_ident} ? 'true' : 'false')"
+        elif ftype.startswith("Optional<"):
+            inner = ftype[9:-1]
+            if inner == "Int":
+                inner_code = f"rec.{f_ident}.toString()"
+            elif inner == "Float":
+                inner_code = f"_meme_format_json_float(rec.{f_ident})"
+            elif inner == "String":
+                inner_code = f"_meme_escape_json_str(rec.{f_ident})"
+            elif inner == "Bool":
+                inner_code = f"(rec.{f_ident} ? 'true' : 'false')"
+            else:
+                inner_code = f"String(rec.{f_ident})"
+            val_code = f"(rec.{f_ident} === null ? 'null' : {inner_code})"
+        else:
+            val_code = f"String(rec.{f_ident})"
+        lines.append(f"    parts.push({json.dumps(k_str)} + {val_code});")
+    lines.extend([
+        "    return '{' + parts.join(',') + '}';",
+        "}",
+        "",
+        f"function _meme_serialize_json_records_{r_name}(recs: {r_name}[]): string {{",
+        f"    return '[' + recs.map(_meme_serialize_json_record_{r_name}).join(',') + ']';",
+        "}",
+        "",
+    ])
+    return lines
 
 
 def generate_ts(ir: ProgramIR) -> str:
@@ -1278,6 +1478,24 @@ def generate_ts(ir: ProgramIR) -> str:
         "    return s.length === 1 && s >= \"a\" && s <= \"z\";",
         "}",
         "",
+        "function _meme_format_float(v: number, n: number): string {",
+        "    let neg = v < 0.0;",
+        "    const mag = Math.abs(v);",
+        "    if (n === 0) {",
+        "        const r = Math.floor(mag + 0.5);",
+        "        if (r === 0) neg = false;",
+        "        return (neg ? \"-\" : \"\") + r.toFixed(0);",
+        "    }",
+        "    const factor = Math.pow(10, n);",
+        "    const roundedTotal = Math.floor(mag * factor + 0.5);",
+        "    const intPart = Math.floor(roundedTotal / factor);",
+        "    const fracPart = Math.round(roundedTotal - intPart * factor);",
+        "    if (intPart === 0 && fracPart === 0) neg = false;",
+        "    const fracStr = fracPart.toString().padStart(n, \"0\");",
+        "    const s = intPart.toFixed(0) + \".\" + fracStr;",
+        "    return (neg ? \"-\" : \"\") + s;",
+        "}",
+        "",
         "function _meme_parse_float(s: string): number {",
         "    const v = parseFloat(s.trim());",
         "    return Number.isNaN(v) ? 0 : v;",
@@ -1444,5 +1662,52 @@ def generate_ts(ir: ProgramIR) -> str:
     main_lines.append("main();")
     main_lines.append("")
 
-    out = preamble + record_blocks + fn_blocks + main_lines
+    reader_blocks: list[str] = []
+    if gen.uses_json_records:
+        for r_name in sorted(gen.json_records_read | gen.json_record_lists_read):
+            r_fields = gen.records.get(r_name, {})
+            reader_blocks.extend(_emit_ts_json_record_reader(r_name, r_fields))
+
+    writer_blocks: list[str] = []
+    if gen.uses_json_write:
+        writer_blocks.extend([
+            "function _meme_format_json_float(v: number): string {",
+            "    let s = _meme_format_float(v, 6);",
+            "    if (s.includes('.')) {",
+            "        while (s.endsWith('0')) {",
+            "            s = s.slice(0, -1);",
+            "        }",
+            "        if (s.endsWith('.')) {",
+            "            s += '0';",
+            "        }",
+            "    }",
+            "    return s;",
+            "}",
+            "",
+            "function _meme_escape_json_str(s: string): string {",
+            "    let out = '\"';",
+            "    for (let i = 0; i < s.length; i++) {",
+            "        const c = s[i];",
+            "        const code = s.charCodeAt(i);",
+            "        if (c === '\"') out += '\\\\\"';",
+            "        else if (c === '\\\\') out += '\\\\\\\\';",
+            "        else if (c === '\\n') out += '\\\\n';",
+            "        else if (c === '\\r') out += '\\\\r';",
+            "        else if (c === '\\t') out += '\\\\t';",
+            "        else if (code < 0x20) {",
+            "            out += '\\\\u' + code.toString(16).padStart(4, '0');",
+            "        } else {",
+            "            out += c;",
+            "        }",
+            "    }",
+            "    out += '\"';",
+            "    return out;",
+            "}",
+            "",
+        ])
+        for r_name in sorted(gen.json_records_write):
+            r_fields = gen.records.get(r_name, {})
+            writer_blocks.extend(_emit_ts_json_record_writer(r_name, r_fields))
+
+    out = preamble + record_blocks + reader_blocks + writer_blocks + fn_blocks + main_lines
     return "\n".join(out)

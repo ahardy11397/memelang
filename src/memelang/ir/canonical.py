@@ -25,6 +25,7 @@ from memelang.ir.schema import (
     FilterCollectionStmt,
     ForEachStmt,
     FormatIntExpr,
+    FormatFloatExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -65,6 +66,8 @@ from memelang.ir.schema import (
     ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    ReadJsonRecordExpr,
+    ReadJsonRecordsExpr,
     RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
@@ -95,6 +98,7 @@ from memelang.ir.schema import (
     VarRefExpr,
     WhileStmt,
     WriteFileStmt,
+    WriteJsonStmt,
 )
 
 
@@ -242,6 +246,16 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
             return f"({res})" if parent_prec > 5 else res
         return f"read JSON number list from {format_expr(expr.filepath)}"
 
+    if isinstance(expr, ReadJsonRecordExpr):
+        dflt_str = "nothing" if (expr.default_val is None or isinstance(expr.default_val, OptionalNoneExpr)) else format_expr(expr.default_val, 6)
+        res = f"read json record {expr.record_name} from file {format_expr(expr.filepath, 6)} or else {dflt_str}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, ReadJsonRecordsExpr):
+        dflt_str = "nothing" if (expr.default_val is None or isinstance(expr.default_val, OptionalNoneExpr)) else format_expr(expr.default_val, 6)
+        res = f"read json records {expr.record_name} from file {format_expr(expr.filepath, 6)} or else {dflt_str}"
+        return f"({res})" if parent_prec > 5 else res
+
     if isinstance(expr, StringLengthExpr):
         return f"length of string {format_expr(expr.target)}"
 
@@ -274,6 +288,10 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
 
     if isinstance(expr, FormatIntExpr):
         res = f"text of {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, FormatFloatExpr):
+        res = f"format {format_expr(expr.target, 6)} with {format_expr(expr.decimals, 6)} decimals"
         return f"({res})" if parent_prec > 5 else res
 
     if isinstance(expr, RecordLiteralExpr):
@@ -472,6 +490,9 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
 
     if isinstance(stmt, WriteFileStmt):
         return [f"{pad}write file {format_expr(stmt.filepath)} with {format_expr(stmt.content)}"]
+
+    if isinstance(stmt, WriteJsonStmt):
+        return [f"{pad}write {format_expr(stmt.target)} as json to file {format_expr(stmt.filepath)}"]
 
     if isinstance(stmt, AppendFileStmt):
         return [f"{pad}append {format_expr(stmt.content)} to file {format_expr(stmt.filepath)}"]

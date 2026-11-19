@@ -1,0 +1,467 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/526_float_formatting.meme": {
+      "source_sha256": "5c1d266bccfb352f28066f477f0f99eb18f6b618aefc045038a91ecd4aa09ae5",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "pi",
+          "var_type": "Float",
+          "value": {
+            "expr_type": "literal",
+            "value": 3.14159,
+            "data_type": "Float"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "pi 2 decimals:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "format_float",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "pi"
+              },
+              "decimals": {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 2
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "pi 4 decimals:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "format_float",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "pi"
+              },
+              "decimals": {
+                "expr_type": "literal",
+                "value": 4,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "round half-up ties:",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 5
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "format_float",
+              "target": {
+                "expr_type": "literal",
+                "value": 2.345,
+                "data_type": "Float"
+              },
+              "decimals": {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "format_float",
+              "target": {
+                "expr_type": "literal",
+                "value": 2.5,
+                "data_type": "Float"
+              },
+              "decimals": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "format_float",
+              "target": {
+                "expr_type": "literal",
+                "value": -2.5,
+                "data_type": "Float"
+              },
+              "decimals": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "format_float",
+              "target": {
+                "expr_type": "literal",
+                "value": 0.005,
+                "data_type": "Float"
+              },
+              "decimals": {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "fixed padding:",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "format_float",
+              "target": {
+                "expr_type": "literal",
+                "value": 10.0,
+                "data_type": "Float"
+              },
+              "decimals": {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "format_float",
+              "target": {
+                "expr_type": "literal",
+                "value": 1000000000.0,
+                "data_type": "Float"
+              },
+              "decimals": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 13
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "negative zero normalized:",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 15
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "format_float",
+              "target": {
+                "expr_type": "literal",
+                "value": -0.001,
+                "data_type": "Float"
+              },
+              "decimals": {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 16
+        }
+      ],
+      "canonical_meme": "define pi: Float as 3.14159\nprint \"pi 2 decimals:\", format pi with 2 decimals\nprint \"pi 4 decimals:\", format pi with 4 decimals\nprint \"round half-up ties:\"\nprint format 2.345 with 2 decimals\nprint format 2.5 with 0 decimals\nprint format -2.5 with 0 decimals\nprint format 0.005 with 2 decimals\nprint \"fixed padding:\"\nprint format 10.0 with 2 decimals\nprint format 1000000000.0 with 0 decimals\nprint \"negative zero normalized:\"\nprint format -0.001 with 2 decimals",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "pi",
+            "var_type": "Float",
+            "value": {
+              "expr_type": "literal",
+              "value": 3.14159,
+              "data_type": "Float"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "pi 2 decimals:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "format_float",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "pi"
+                },
+                "decimals": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 2
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "pi 4 decimals:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "format_float",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "pi"
+                },
+                "decimals": {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "round half-up ties:",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 5
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "format_float",
+                "target": {
+                  "expr_type": "literal",
+                  "value": 2.345,
+                  "data_type": "Float"
+                },
+                "decimals": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "format_float",
+                "target": {
+                  "expr_type": "literal",
+                  "value": 2.5,
+                  "data_type": "Float"
+                },
+                "decimals": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "format_float",
+                "target": {
+                  "expr_type": "literal",
+                  "value": -2.5,
+                  "data_type": "Float"
+                },
+                "decimals": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "format_float",
+                "target": {
+                  "expr_type": "literal",
+                  "value": 0.005,
+                  "data_type": "Float"
+                },
+                "decimals": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "fixed padding:",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "format_float",
+                "target": {
+                  "expr_type": "literal",
+                  "value": 10.0,
+                  "data_type": "Float"
+                },
+                "decimals": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "format_float",
+                "target": {
+                  "expr_type": "literal",
+                  "value": 1000000000.0,
+                  "data_type": "Float"
+                },
+                "decimals": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 13
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "negative zero normalized:",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 15
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "format_float",
+                "target": {
+                  "expr_type": "literal",
+                  "value": -0.001,
+                  "data_type": "Float"
+                },
+                "decimals": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 16
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

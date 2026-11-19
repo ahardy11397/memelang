@@ -27,6 +27,7 @@ from memelang.ir.schema import (
     FilterCollectionStmt,
     ForEachStmt,
     FormatIntExpr,
+    FormatFloatExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -68,6 +69,8 @@ from memelang.ir.schema import (
     ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    ReadJsonRecordExpr,
+    ReadJsonRecordsExpr,
     RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
@@ -98,6 +101,7 @@ from memelang.ir.schema import (
     VarRefExpr,
     WhileStmt,
     WriteFileStmt,
+    WriteJsonStmt,
 )
 
 
@@ -196,8 +200,14 @@ class _CppGen:
         self.uses_is_letter = False
         self.uses_is_upper = False
         self.uses_is_lower = False
+        self.uses_format_float = False
         self.uses_argv = False
         self.uses_optional_helpers = False
+        self.uses_json_records = False
+        self.uses_json_write = False
+        self.json_records_read: set[str] = set()
+        self.json_record_lists_read: set[str] = set()
+        self.json_records_write: set[str] = set()
         self._match_counter = 0
         self.func_returns: dict[str, MemeType] = {}
         self.records: dict[str, dict[str, MemeType]] = {}
@@ -213,6 +223,14 @@ class _CppGen:
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
+        if isinstance(expr, ReadJsonRecordExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return expr.record_name  # type: ignore[return-value]
+            return f"Optional<{expr.record_name}>"  # type: ignore[return-value]
+        if isinstance(expr, ReadJsonRecordsExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return f"List<{expr.record_name}>"  # type: ignore[return-value]
+            return f"Optional<List<{expr.record_name}>>"  # type: ignore[return-value]
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
         if isinstance(expr, ListFilesExpr):
@@ -237,6 +255,7 @@ class _CppGen:
                 ReadFileStringExpr,
                 ArgAtExpr,
                 FormatIntExpr,
+                FormatFloatExpr,
             ),
         ):
             return "String"
@@ -446,10 +465,38 @@ class _CppGen:
         if isinstance(expr, FormatIntExpr):
             return f"std::to_string({self.gen_expr(expr.target, scope)})"
 
+        if isinstance(expr, FormatFloatExpr):
+            self.uses_format_float = True
+            tgt = self.gen_expr(expr.target, scope)
+            dec = self.gen_expr(expr.decimals, scope)
+            return f"_meme_format_float({tgt}, {dec})"
+
         if isinstance(expr, ReadJsonListExpr):
             self.uses_str_helpers = True
             self.uses_json_io = True
             return f"_meme_read_json_list_{expr.element_type.lower()}({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ReadJsonRecordExpr):
+            self.uses_json_records = True
+            self.uses_str_helpers = True
+            self.json_records_read.add(expr.record_name)
+            p = self.gen_expr(expr.filepath, scope)
+            call = f"_meme_read_json_record_{_cpp_ident(expr.record_name)}({p})"
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope)
+                return f"({call}.value_or({d}))"
+            return call
+
+        if isinstance(expr, ReadJsonRecordsExpr):
+            self.uses_json_records = True
+            self.uses_str_helpers = True
+            self.json_record_lists_read.add(expr.record_name)
+            p = self.gen_expr(expr.filepath, scope)
+            call = f"_meme_read_json_records_{_cpp_ident(expr.record_name)}({p})"
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope)
+                return f"({call}.value_or({d}))"
+            return call
 
         if isinstance(expr, FileExistsExpr):
             self.uses_str_helpers = True
@@ -809,6 +856,21 @@ class _CppGen:
                 f"{pad}_meme_write_file({self.gen_expr(stmt.filepath, scope)}, {self.gen_expr(stmt.content, scope)});"
             ]
 
+        if isinstance(stmt, WriteJsonStmt):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            self.uses_json_write = True
+            tgt_t = self.infer_type(stmt.target, scope)
+            fp = self.gen_expr(stmt.filepath, scope)
+            tgt = self.gen_expr(stmt.target, scope)
+            if tgt_t in self.records:
+                self.json_records_write.add(tgt_t)
+                return [f"{pad}_meme_write_file({fp}, _meme_serialize_json_record_{_cpp_ident(tgt_t)}({tgt}));"]
+            elif tgt_t.startswith("List<") and tgt_t.endswith(">"):
+                r_name = tgt_t[5:-1]
+                self.json_records_write.add(r_name)
+                return [f"{pad}_meme_write_file({fp}, _meme_serialize_json_records_{_cpp_ident(r_name)}({tgt}));"]
+
         if isinstance(stmt, AppendFileStmt):
             self.uses_str_helpers = True
             self.uses_file_io = True
@@ -872,6 +934,312 @@ class _CppGen:
             lines.extend(self.gen_stmt(ch, fn_scope, indent=1))
         lines.append("}")
         return lines
+
+
+_CPP_JSON_PARSER_HELPERS = [
+    "enum class _MemeJK { Null, Bool, Num, Str, Arr, Obj };",
+    "struct _MemeJV {",
+    "    _MemeJK kind = _MemeJK::Null;",
+    "    bool b = false;",
+    "    double num = 0.0;",
+    "    bool is_int = false;",
+    "    long long i_val = 0;",
+    "    std::string s;",
+    "    std::vector<_MemeJV> arr;",
+    "    std::vector<std::pair<std::string, _MemeJV>> obj;",
+    "};",
+    "",
+    "inline void _meme_skip_ws(const std::string& s, size_t& i) {",
+    "    while (i < s.size() && std::isspace(static_cast<unsigned char>(s[i]))) ++i;",
+    "}",
+    "",
+    "inline bool _meme_parse_jv(const std::string& raw, size_t& i, _MemeJV& out);",
+    "",
+    "inline bool _meme_parse_jv_str(const std::string& raw, size_t& i, std::string& out) {",
+    "    if (i >= raw.size() || raw[i] != '\"') return false;",
+    "    ++i;",
+    "    out.clear();",
+    "    while (i < raw.size() && raw[i] != '\"') {",
+    "        if (raw[i] == '\\\\') {",
+    "            ++i;",
+    "            if (i >= raw.size()) return false;",
+    "            char c = raw[i++];",
+    "            if (c == '\"') out.push_back('\"');",
+    "            else if (c == '\\\\') out.push_back('\\\\');",
+    "            else if (c == '/') out.push_back('/');",
+    "            else if (c == 'b') out.push_back('\\b');",
+    "            else if (c == 'f') out.push_back('\\f');",
+    "            else if (c == 'n') out.push_back('\\n');",
+    "            else if (c == 'r') out.push_back('\\r');",
+    "            else if (c == 't') out.push_back('\\t');",
+    "            else if (c == 'u') {",
+    "                if (i + 4 > raw.size()) return false;",
+    "                unsigned int cp = 0;",
+    "                for (int k = 0; k < 4; ++k) {",
+    "                    char h = raw[i++];",
+    "                    cp <<= 4;",
+    "                    if (h >= '0' && h <= '9') cp |= (h - '0');",
+    "                    else if (h >= 'a' && h <= 'f') cp |= (h - 'a' + 10);",
+    "                    else if (h >= 'A' && h <= 'F') cp |= (h - 'A' + 10);",
+    "                    else return false;",
+    "                }",
+    "                if (cp <= 0x7F) out.push_back(static_cast<char>(cp));",
+    "                else if (cp <= 0x7FF) {",
+    "                    out.push_back(static_cast<char>(0xC0 | (cp >> 6)));",
+    "                    out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));",
+    "                } else {",
+    "                    out.push_back(static_cast<char>(0xE0 | (cp >> 12)));",
+    "                    out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));",
+    "                    out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));",
+    "                }",
+    "            } else return false;",
+    "        } else {",
+    "            out.push_back(raw[i++]);",
+    "        }",
+    "    }",
+    "    if (i >= raw.size() || raw[i] != '\"') return false;",
+    "    ++i;",
+    "    return true;",
+    "}",
+    "",
+    "inline bool _meme_parse_jv(const std::string& raw, size_t& i, _MemeJV& out) {",
+    "    _meme_skip_ws(raw, i);",
+    "    if (i >= raw.size()) return false;",
+    "    if (raw.compare(i, 4, \"null\") == 0) {",
+    "        i += 4; out.kind = _MemeJK::Null; return true;",
+    "    }",
+    "    if (raw.compare(i, 4, \"true\") == 0) {",
+    "        i += 4; out.kind = _MemeJK::Bool; out.b = true; return true;",
+    "    }",
+    "    if (raw.compare(i, 5, \"false\") == 0) {",
+    "        i += 5; out.kind = _MemeJK::Bool; out.b = false; return true;",
+    "    }",
+    "    if (raw[i] == '\"') {",
+    "        out.kind = _MemeJK::Str;",
+    "        return _meme_parse_jv_str(raw, i, out.s);",
+    "    }",
+    "    if (raw[i] == '-' || (raw[i] >= '0' && raw[i] <= '9')) {",
+    "        size_t start = i;",
+    "        bool has_dot_or_exp = false;",
+    "        if (raw[i] == '-') ++i;",
+    "        while (i < raw.size() && (raw[i] >= '0' && raw[i] <= '9')) ++i;",
+    "        if (i < raw.size() && raw[i] == '.') {",
+    "            has_dot_or_exp = true; ++i;",
+    "            while (i < raw.size() && (raw[i] >= '0' && raw[i] <= '9')) ++i;",
+    "        }",
+    "        if (i < raw.size() && (raw[i] == 'e' || raw[i] == 'E')) {",
+    "            has_dot_or_exp = true; ++i;",
+    "            if (i < raw.size() && (raw[i] == '+' || raw[i] == '-')) ++i;",
+    "            while (i < raw.size() && (raw[i] >= '0' && raw[i] <= '9')) ++i;",
+    "        }",
+    "        std::string num_str = raw.substr(start, i - start);",
+    "        try {",
+    "            out.kind = _MemeJK::Num;",
+    "            out.num = std::stod(num_str);",
+    "            if (!has_dot_or_exp) {",
+    "                out.is_int = true;",
+    "                out.i_val = std::stoll(num_str);",
+    "            } else if (out.num == static_cast<double>(static_cast<long long>(out.num))) {",
+    "                out.is_int = true;",
+    "                out.i_val = static_cast<long long>(out.num);",
+    "            } else {",
+    "                out.is_int = false;",
+    "            }",
+    "            return true;",
+    "        } catch (...) {",
+    "            return false;",
+    "        }",
+    "    }",
+    "    if (raw[i] == '[') {",
+    "        ++i;",
+    "        out.kind = _MemeJK::Arr;",
+    "        out.arr.clear();",
+    "        _meme_skip_ws(raw, i);",
+    "        if (i < raw.size() && raw[i] == ']') { ++i; return true; }",
+    "        while (i < raw.size()) {",
+    "            _MemeJV el;",
+    "            if (!_meme_parse_jv(raw, i, el)) return false;",
+    "            out.arr.push_back(std::move(el));",
+    "            _meme_skip_ws(raw, i);",
+    "            if (i < raw.size() && raw[i] == ',') { ++i; continue; }",
+    "            if (i < raw.size() && raw[i] == ']') { ++i; return true; }",
+    "            return false;",
+    "        }",
+    "        return false;",
+    "    }",
+    "    if (raw[i] == '{') {",
+    "        ++i;",
+    "        out.kind = _MemeJK::Obj;",
+    "        out.obj.clear();",
+    "        _meme_skip_ws(raw, i);",
+    "        if (i < raw.size() && raw[i] == '}') { ++i; return true; }",
+    "        while (i < raw.size()) {",
+    "            _meme_skip_ws(raw, i);",
+    "            std::string key;",
+    "            if (!_meme_parse_jv_str(raw, i, key)) return false;",
+    "            _meme_skip_ws(raw, i);",
+    "            if (i >= raw.size() || raw[i] != ':') return false;",
+    "            ++i;",
+    "            _MemeJV val;",
+    "            if (!_meme_parse_jv(raw, i, val)) return false;",
+    "            out.obj.emplace_back(std::move(key), std::move(val));",
+    "            _meme_skip_ws(raw, i);",
+    "            if (i < raw.size() && raw[i] == ',') { ++i; continue; }",
+    "            if (i < raw.size() && raw[i] == '}') { ++i; return true; }",
+    "            return false;",
+    "        }",
+    "        return false;",
+    "    }",
+    "    return false;",
+    "}",
+    "",
+    "inline const _MemeJV* _meme_find_field(const _MemeJV& obj, const std::string& key) {",
+    "    if (obj.kind != _MemeJK::Obj) return nullptr;",
+    "    for (const auto& pair : obj.obj) {",
+    "        if (pair.first == key) return &pair.second;",
+    "    }",
+    "    return nullptr;",
+    "}",
+    "",
+    "inline std::optional<_MemeJV> _meme_read_json_file(const std::string& path) {",
+    "    std::ifstream ifs(_meme_resolve_path(path), std::ios::binary);",
+    "    if (!ifs) return std::nullopt;",
+    "    std::ostringstream ss;",
+    "    ss << ifs.rdbuf();",
+    "    std::string raw = ss.str();",
+    "    size_t i = 0;",
+    "    _MemeJV root;",
+    "    if (!_meme_parse_jv(raw, i, root)) return std::nullopt;",
+    "    _meme_skip_ws(raw, i);",
+    "    if (i < raw.size()) return std::nullopt;",
+    "    return root;",
+    "}",
+    "",
+]
+
+
+def _emit_cpp_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> list[str]:
+    ident = _cpp_ident(r_name)
+    lines = [
+        f"inline std::optional<{ident}> _meme_parse_record_{ident}(const _MemeJV& _jv) {{",
+        "    if (_jv.kind != _MemeJK::Obj) return std::nullopt;",
+        f"    {ident} _rec;",
+    ]
+    for fname, ftype in fields.items():
+        fn_str = json.dumps(fname)
+        f_ident = _cpp_ident(fname)
+        lines.append(f"    const _MemeJV* _f_{fname} = _meme_find_field(_jv, {fn_str});")
+        if ftype == "Int":
+            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MemeJK::Num || !_f_{fname}->is_int) return std::nullopt;")
+            lines.append(f"    _rec.{f_ident} = _f_{fname}->i_val;")
+        elif ftype == "Float":
+            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MemeJK::Num) return std::nullopt;")
+            lines.append(f"    _rec.{f_ident} = _f_{fname}->num;")
+        elif ftype == "String":
+            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MemeJK::Str) return std::nullopt;")
+            lines.append(f"    _rec.{f_ident} = _f_{fname}->s;")
+        elif ftype == "Bool":
+            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MemeJK::Bool) return std::nullopt;")
+            lines.append(f"    _rec.{f_ident} = _f_{fname}->b;")
+        elif ftype.startswith("Optional<"):
+            inner = ftype[9:-1]
+            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind == _MemeJK::Null) {{")
+            lines.append(f"        _rec.{f_ident} = std::nullopt;")
+            lines.append("    } else {")
+            if inner == "Int":
+                lines.append(f"        if (_f_{fname}->kind != _MemeJK::Num || !_f_{fname}->is_int) return std::nullopt;")
+                lines.append(f"        _rec.{f_ident} = _f_{fname}->i_val;")
+            elif inner == "Float":
+                lines.append(f"        if (_f_{fname}->kind != _MemeJK::Num) return std::nullopt;")
+                lines.append(f"        _rec.{f_ident} = _f_{fname}->num;")
+            elif inner == "String":
+                lines.append(f"        if (_f_{fname}->kind != _MemeJK::Str) return std::nullopt;")
+                lines.append(f"        _rec.{f_ident} = _f_{fname}->s;")
+            elif inner == "Bool":
+                lines.append(f"        if (_f_{fname}->kind != _MemeJK::Bool) return std::nullopt;")
+                lines.append(f"        _rec.{f_ident} = _f_{fname}->b;")
+            lines.append("    }")
+    lines.append("    return _rec;")
+    lines.append("}")
+    lines.append("")
+    lines.extend([
+        f"inline std::optional<{ident}> _meme_read_json_record_{ident}(const std::string& path) {{",
+        "    auto jv = _meme_read_json_file(path);",
+        "    if (!jv) return std::nullopt;",
+        f"    return _meme_parse_record_{ident}(*jv);",
+        "}",
+        "",
+        f"inline std::optional<std::vector<{ident}>> _meme_read_json_records_{ident}(const std::string& path) {{",
+        "    auto jv = _meme_read_json_file(path);",
+        "    if (!jv || jv->kind != _MemeJK::Arr) return std::nullopt;",
+        f"    std::vector<{ident}> out;",
+        "    for (const auto& item : jv->arr) {",
+        f"        auto rec = _meme_parse_record_{ident}(item);",
+        "        if (!rec) return std::nullopt;",
+        "        out.push_back(*rec);",
+        "    }",
+        "    return out;",
+        "}",
+        "",
+    ])
+    return lines
+
+
+def _emit_cpp_json_record_writer(r_name: str, fields: dict[str, MemeType]) -> list[str]:
+    ident = _cpp_ident(r_name)
+    lines = [
+        f"inline std::string _meme_serialize_json_record_{ident}(const {ident}& rec) {{",
+        "    std::vector<std::string> parts;",
+    ]
+    for fname, ftype in fields.items():
+        k_str = json.dumps(fname) + ":"
+        f_ident = _cpp_ident(fname)
+        if ftype == "Int":
+            val_code = f"std::to_string(rec.{f_ident})"
+        elif ftype == "Float":
+            val_code = f"_meme_format_json_float(rec.{f_ident})"
+        elif ftype == "String":
+            val_code = f"_meme_escape_json_str(rec.{f_ident})"
+        elif ftype == "Bool":
+            val_code = f"(rec.{f_ident} ? \"true\" : \"false\")"
+        elif ftype.startswith("Optional<"):
+            inner = ftype[9:-1]
+            if inner == "Int":
+                inner_code = f"std::to_string(*rec.{f_ident})"
+            elif inner == "Float":
+                inner_code = f"_meme_format_json_float(*rec.{f_ident})"
+            elif inner == "String":
+                inner_code = f"_meme_escape_json_str(*rec.{f_ident})"
+            elif inner == "Bool":
+                inner_code = f"(*rec.{f_ident} ? \"true\" : \"false\")"
+            else:
+                inner_code = f"std::to_string(*rec.{f_ident})"
+            val_code = f"(!rec.{f_ident}.has_value() ? std::string(\"null\") : {inner_code})"
+        else:
+            val_code = f"std::to_string(rec.{f_ident})"
+        lines.append(f"    parts.push_back(std::string({json.dumps(k_str)}) + {val_code});")
+    lines.extend([
+        "    std::string out = \"{\";",
+        "    for (size_t i = 0; i < parts.size(); ++i) {",
+        "        if (i > 0) out += \",\";",
+        "        out += parts[i];",
+        "    }",
+        "    out += \"}\";",
+        "    return out;",
+        "}",
+        "",
+        f"inline std::string _meme_serialize_json_records_{ident}(const std::vector<{ident}>& recs) {{",
+        "    std::string out = \"[\";",
+        "    for (size_t i = 0; i < recs.size(); ++i) {",
+        "        if (i > 0) out += \",\";",
+        f"        out += _meme_serialize_json_record_{ident}(recs[i]);",
+        "    }",
+        "    out += \"]\";",
+        "    return out;",
+        "}",
+        "",
+    ])
+    return lines
 
 
 def generate_cpp(ir: ProgramIR) -> str:
@@ -954,6 +1322,7 @@ def generate_cpp(ir: ProgramIR) -> str:
         "#include <cstdlib>",
         "#include <filesystem>",
         "#include <fstream>",
+        "#include <iomanip>",
         "#include <iostream>",
         "#include <optional>",
         "#include <sstream>",
@@ -1122,6 +1491,35 @@ def generate_cpp(ir: ProgramIR) -> str:
             [
                 "inline bool _meme_is_lower(const std::string& s) {",
                 "    return s.size() == 1 && s[0] >= 'a' && s[0] <= 'z';",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_format_float:
+        helpers.extend(
+            [
+                "inline std::string _meme_format_float(double v, int64_t n) {",
+                "    bool neg = (v < 0.0);",
+                "    double mag = std::fabs(v);",
+                "    if (n == 0) {",
+                "        double r = std::floor(mag + 0.5);",
+                "        if (r == 0.0) neg = false;",
+                "        std::ostringstream ss;",
+                "        if (neg) ss << \"-\";",
+                "        ss << std::fixed << std::setprecision(0) << r;",
+                "        return ss.str();",
+                "    }",
+                "    double factor = std::pow(10.0, (double)n);",
+                "    double rounded_total = std::floor(mag * factor + 0.5);",
+                "    double int_part = std::floor(rounded_total / factor);",
+                "    uint64_t frac_part = (uint64_t)(rounded_total - int_part * factor + 0.5);",
+                "    if (int_part == 0.0 && frac_part == 0) neg = false;",
+                "    std::ostringstream ss;",
+                "    if (neg) ss << \"-\";",
+                "    ss << std::fixed << std::setprecision(0) << int_part << \".\";",
+                "    ss << std::setw(n) << std::setfill('0') << frac_part;",
+                "    return ss.str();",
                 "}",
                 "",
             ]
@@ -1358,7 +1756,7 @@ def generate_cpp(ir: ProgramIR) -> str:
             ]
         )
 
-    if gen.uses_json_io or gen.uses_file_io:
+    if gen.uses_json_io or gen.uses_file_io or gen.uses_json_records:
         helpers.extend(
             [
                 "inline std::filesystem::path _meme_resolve_path(const std::string& path) {",
@@ -1375,6 +1773,9 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "}",
             ]
         )
+
+    if gen.uses_json_records:
+        helpers.extend(_CPP_JSON_PARSER_HELPERS)
 
     if gen.uses_file_io:
         helpers.extend(
@@ -1722,6 +2123,54 @@ def generate_cpp(ir: ProgramIR) -> str:
             ]
         )
 
+    reader_record_blocks: list[str] = []
+    if gen.uses_json_records:
+        for r_name in sorted(gen.json_records_read | gen.json_record_lists_read):
+            r_fields = gen.records.get(r_name, {})
+            reader_record_blocks.extend(_emit_cpp_json_record_reader(r_name, r_fields))
+
+    writer_record_blocks: list[str] = []
+    if gen.uses_json_write:
+        gen.uses_format_float = True
+        helpers.extend([
+            "inline std::string _meme_format_json_float(double v) {",
+            "    std::string s = _meme_format_float(v, 6);",
+            "    if (s.find('.') != std::string::npos) {",
+            "        while (!s.empty() && s.back() == '0') {",
+            "            s.pop_back();",
+            "        }",
+            "        if (!s.empty() && s.back() == '.') {",
+            "            s.push_back('0');",
+            "        }",
+            "    }",
+            "    return s;",
+            "}",
+            "",
+            "inline std::string _meme_escape_json_str(const std::string& s) {",
+            "    std::string out = \"\\\"\";",
+            "    for (unsigned char c : s) {",
+            "        if (c == '\"') out += \"\\\\\\\"\";",
+            "        else if (c == '\\\\') out += \"\\\\\\\\\";",
+            "        else if (c == '\\n') out += \"\\\\n\";",
+            "        else if (c == '\\r') out += \"\\\\r\";",
+            "        else if (c == '\\t') out += \"\\\\t\";",
+            "        else if (c < 0x20) {",
+            "            char buf[8];",
+            "            snprintf(buf, sizeof(buf), \"\\\\u%04x\", c);",
+            "            out += buf;",
+            "        } else {",
+            "            out += static_cast<char>(c);",
+            "        }",
+            "    }",
+            "    out += \"\\\"\";",
+            "    return out;",
+            "}",
+            "",
+        ])
+        for r_name in sorted(gen.json_records_write):
+            r_fields = gen.records.get(r_name, {})
+            writer_record_blocks.extend(_emit_cpp_json_record_writer(r_name, r_fields))
+
     main_header = (
         ["int main(int argc, char** argv) {", "    _meme_argv().assign(argv, argv + argc);"]
         if gen.uses_argv
@@ -1731,6 +2180,8 @@ def generate_cpp(ir: ProgramIR) -> str:
         headers
         + helpers
         + record_blocks
+        + reader_record_blocks
+        + writer_record_blocks
         + fn_blocks
         + main_header
         + main_lines

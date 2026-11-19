@@ -1,0 +1,36 @@
+record Item:
+    id: Int
+    sku: String
+    price: Float
+    in_stock: Bool
+
+write file "tmp_527_single.json" with "{\"id\": 101, \"sku\": \"WIDGET-A\", \"price\": 19.95, \"in_stock\": true}"
+write file "tmp_527_list.json" with "[{\"id\": 101, \"sku\": \"WIDGET-A\", \"price\": 19.95, \"in_stock\": true}, {\"id\": 102, \"sku\": \"GADGET-B\", \"price\": 49.5, \"in_stock\": false}]"
+write file "tmp_527_bad.json" with "{ invalid json"
+
+define item_opt as read json record Item from file "tmp_527_single.json" or else nothing
+if item_opt is nothing:
+    print "single: nothing"
+else:
+    define item as value of item_opt
+    print "single item:", item.id, item.sku, format item.price with 2 decimals, item.in_stock
+
+define items_opt as read json records Item from file "tmp_527_list.json" or else nothing
+if items_opt is nothing:
+    print "list: nothing"
+else:
+    define items as value of items_opt
+    for each itm in items:
+        print "list item:", itm.id, itm.sku, format itm.price with 2 decimals, itm.in_stock
+
+define bad_opt as read json record Item from file "tmp_527_bad.json" or else nothing
+if bad_opt is nothing:
+    print "bad file: returned nothing"
+
+define missing_opt as read json record Item from file "nonexistent_527.json" or else nothing
+if missing_opt is nothing:
+    print "nonexistent: returned nothing"
+
+delete file "tmp_527_single.json"
+delete file "tmp_527_list.json"
+delete file "tmp_527_bad.json"

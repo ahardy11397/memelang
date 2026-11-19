@@ -40,6 +40,7 @@ from memelang.ir.schema import (
     FilterCollectionStmt,
     ForEachStmt,
     FormatIntExpr,
+    FormatFloatExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -81,6 +82,8 @@ from memelang.ir.schema import (
     ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    ReadJsonRecordExpr,
+    ReadJsonRecordsExpr,
     RecordDefStmt,
     RecordFieldDef,
     RecordFieldExpr,
@@ -111,6 +114,7 @@ from memelang.ir.schema import (
     VarRefExpr,
     WhileStmt,
     WriteFileStmt,
+    WriteJsonStmt,
 )
 
 _C_KEYWORDS = {
@@ -259,6 +263,20 @@ def _collect_types_from_expr(expr: IRExpr, out: set[str]) -> None:
     elif isinstance(expr, ListFilesExpr):
         out.add("List<String>")
         _collect_types_from_expr(expr.path, out)
+    elif isinstance(expr, ReadJsonRecordExpr):
+        out.add(f"Optional<{expr.record_name}>")
+        out.add(expr.record_name)
+        _collect_types_from_expr(expr.filepath, out)
+        if expr.default_val is not None:
+            _collect_types_from_expr(expr.default_val, out)
+    elif isinstance(expr, ReadJsonRecordsExpr):
+        out.add(f"List<{expr.record_name}>")
+        out.add(f"Optional<List<{expr.record_name}>>")
+        out.add(f"Optional<{expr.record_name}>")
+        out.add(expr.record_name)
+        _collect_types_from_expr(expr.filepath, out)
+        if expr.default_val is not None:
+            _collect_types_from_expr(expr.default_val, out)
     elif isinstance(expr, ReadFileLinesExpr):
         out.add("List<String>")
         _collect_types_from_expr(expr.filepath, out)
@@ -267,9 +285,10 @@ def _collect_types_from_expr(expr: IRExpr, out: set[str]) -> None:
                            StringJoinExpr, StringIndexOfExpr, StringCharAtExpr,
                            StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr,
                            FileExistsExpr, ReadFileStringExpr, ParseIntExpr, FormatIntExpr,
+                           FormatFloatExpr,
                            IsDigitExpr, IsLetterExpr, IsUpperExpr, IsLowerExpr)):
         for attr in ("target", "substring", "prefix", "suffix", "old", "new",
-                     "start", "end", "filepath", "index", "separator", "items"):
+                     "start", "end", "filepath", "index", "separator", "items", "decimals"):
             if hasattr(expr, attr):
                 val = getattr(expr, attr)
                 if hasattr(val, "expr_type"):
@@ -355,6 +374,9 @@ def _collect_types_from_stmt(stmt: IRStatement, out: set[str]) -> None:
     elif isinstance(stmt, (WriteFileStmt, AppendFileStmt)):
         _collect_types_from_expr(stmt.filepath, out)
         _collect_types_from_expr(stmt.content, out)
+    elif isinstance(stmt, WriteJsonStmt):
+        _collect_types_from_expr(stmt.target, out)
+        _collect_types_from_expr(stmt.filepath, out)
     elif isinstance(stmt, (CopyFileStmt, MoveFileStmt)):
         _collect_types_from_expr(stmt.src, out)
         _collect_types_from_expr(stmt.dst, out)
@@ -384,6 +406,11 @@ class _CGen:
         self.func_params: dict[str, list[FuncParam]] = {}
         self.records: dict[str, dict[str, MemeType]] = {}
         self.current_func_return: str | None = None
+        self.uses_json_records = False
+        self.uses_json_write = False
+        self.json_records_read: set[str] = set()
+        self.json_record_lists_read: set[str] = set()
+        self.json_records_write: set[str] = set()
 
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> MemeType:
         if isinstance(expr, LiteralExpr):
@@ -396,6 +423,14 @@ class _CGen:
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
+        if isinstance(expr, ReadJsonRecordExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return expr.record_name  # type: ignore[return-value]
+            return f"Optional<{expr.record_name}>"  # type: ignore[return-value]
+        if isinstance(expr, ReadJsonRecordsExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return f"List<{expr.record_name}>"  # type: ignore[return-value]
+            return f"Optional<List<{expr.record_name}>>"  # type: ignore[return-value]
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
         if isinstance(expr, ListFilesExpr):
@@ -420,6 +455,7 @@ class _CGen:
                 ReadFileStringExpr,
                 ArgAtExpr,
                 FormatIntExpr,
+                FormatFloatExpr,
             ),
         ):
             return "String"
@@ -683,10 +719,37 @@ class _CGen:
         if isinstance(expr, FormatIntExpr):
             return f"_meme_fmt_int({self.gen_expr(expr.target, scope)})"
 
+        if isinstance(expr, FormatFloatExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            dec = self.gen_expr(expr.decimals, scope)
+            return f"_meme_format_float({tgt}, {dec})"
+
         if isinstance(expr, ReadJsonListExpr):
             self.uses_str_helpers = True
             self.uses_json_io = True
             return f"_meme_read_json_list_{expr.element_type.lower()}({self.gen_expr(expr.filepath, scope)})"
+
+        if isinstance(expr, ReadJsonRecordExpr):
+            self.uses_json_records = True
+            self.uses_str_helpers = True
+            self.json_records_read.add(expr.record_name)
+            p = self.gen_expr(expr.filepath, scope)
+            call = f"_meme_read_json_record_{_c_ident(expr.record_name)}({p})"
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope, expr.record_name)
+                return f"_meme_read_json_record_{_c_ident(expr.record_name)}_or({p}, {d})"
+            return call
+
+        if isinstance(expr, ReadJsonRecordsExpr):
+            self.uses_json_records = True
+            self.uses_str_helpers = True
+            self.json_record_lists_read.add(expr.record_name)
+            p = self.gen_expr(expr.filepath, scope)
+            call = f"_meme_read_json_records_{_c_ident(expr.record_name)}({p})"
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope, f"List<{expr.record_name}>")
+                return f"_meme_read_json_records_{_c_ident(expr.record_name)}_or({p}, {d})"
+            return call
 
         if isinstance(expr, FileExistsExpr):
             self.uses_str_helpers = True
@@ -1104,6 +1167,35 @@ class _CGen:
             path = self.gen_expr(stmt.filepath, scope)
             content = self.gen_expr(stmt.content, scope)
             return [f"{pad}_meme_write_file({path}, {content});"]
+
+        if isinstance(stmt, WriteJsonStmt):
+            self.uses_str_helpers = True
+            self.uses_file_io = True
+            self.uses_json_write = True
+            tgt_t = self.infer_type(stmt.target, scope)
+            path = self.gen_expr(stmt.filepath, scope)
+            tgt = self.gen_expr(stmt.target, scope)
+            if tgt_t in self.records:
+                self.json_records_write.add(tgt_t)
+                r_ident = _c_ident(tgt_t)
+                return [
+                    f"{pad}{{",
+                    f"{pad}    char* _jstr = _meme_serialize_json_record_{r_ident}({tgt});",
+                    f"{pad}    _meme_write_file({path}, _jstr);",
+                    f"{pad}    free(_jstr);",
+                    f"{pad}}}",
+                ]
+            elif tgt_t.startswith("List<") and tgt_t.endswith(">"):
+                r_name = tgt_t[5:-1]
+                self.json_records_write.add(r_name)
+                r_ident = _c_ident(r_name)
+                return [
+                    f"{pad}{{",
+                    f"{pad}    char* _jstr = _meme_serialize_json_records_{r_ident}({tgt});",
+                    f"{pad}    _meme_write_file({path}, _jstr);",
+                    f"{pad}    free(_jstr);",
+                    f"{pad}}}",
+                ]
 
         if isinstance(stmt, AppendFileStmt):
             self.uses_str_helpers = True
@@ -1551,6 +1643,427 @@ def _emit_record(r: RecordDefStmt, gen: _CGen) -> list[str]:
     return lines
 
 
+_C_JSON_PARSER_HELPERS = [
+    "typedef enum { _MEME_J_NULL, _MEME_J_BOOL, _MEME_J_NUM, _MEME_J_STR, _MEME_J_ARR, _MEME_J_OBJ } _MemeJK;",
+    "typedef struct _MemeJV _MemeJV;",
+    "typedef struct { char* key; _MemeJV* val; } _MemeJField;",
+    "struct _MemeJV {",
+    "    _MemeJK kind;",
+    "    bool b;",
+    "    double num;",
+    "    bool is_int;",
+    "    int64_t i_val;",
+    "    char* str;",
+    "    _MemeJV** arr;",
+    "    size_t arr_len;",
+    "    _MemeJField* obj;",
+    "    size_t obj_len;",
+    "};",
+    "",
+    "static void _meme_free_jv(_MemeJV* v) {",
+    "    if (!v) return;",
+    "    if (v->kind == _MEME_J_STR) free(v->str);",
+    "    else if (v->kind == _MEME_J_ARR) {",
+    "        for (size_t i = 0; i < v->arr_len; ++i) _meme_free_jv(v->arr[i]);",
+    "        free(v->arr);",
+    "    } else if (v->kind == _MEME_J_OBJ) {",
+    "        for (size_t i = 0; i < v->obj_len; ++i) {",
+    "            free(v->obj[i].key);",
+    "            _meme_free_jv(v->obj[i].val);",
+    "        }",
+    "        free(v->obj);",
+    "    }",
+    "    free(v);",
+    "}",
+    "",
+    "static inline void _meme_skip_ws(const char* s, size_t* i) {",
+    "    while (s[*i] && isspace((unsigned char)s[*i])) (*i)++;",
+    "}",
+    "",
+    "static bool _meme_parse_jv(const char* s, size_t* i, _MemeJV** out);",
+    "",
+    "static bool _meme_parse_jv_str(const char* s, size_t* i, char** out) {",
+    "    if (s[*i] != '\"') return false;",
+    "    (*i)++;",
+    "    _MemeSB sb = _meme_sb_new();",
+    "    while (s[*i] && s[*i] != '\"') {",
+    "        if (s[*i] == '\\\\') {",
+    "            (*i)++;",
+    "            if (!s[*i]) { free(sb.data); return false; }",
+    "            char c = s[(*i)++];",
+    "            if (c == '\"') _meme_sb_append_char(&sb, '\"');",
+    "            else if (c == '\\\\') _meme_sb_append_char(&sb, '\\\\');",
+    "            else if (c == '/') _meme_sb_append_char(&sb, '/');",
+    "            else if (c == 'b') _meme_sb_append_char(&sb, '\\b');",
+    "            else if (c == 'f') _meme_sb_append_char(&sb, '\\f');",
+    "            else if (c == 'n') _meme_sb_append_char(&sb, '\\n');",
+    "            else if (c == 'r') _meme_sb_append_char(&sb, '\\r');",
+    "            else if (c == 't') _meme_sb_append_char(&sb, '\\t');",
+    "            else if (c == 'u') {",
+    "                unsigned int cp = 0;",
+    "                for (int k = 0; k < 4; ++k) {",
+    "                    char h = s[(*i)++];",
+    "                    if (!h) { free(sb.data); return false; }",
+    "                    cp <<= 4;",
+    "                    if (h >= '0' && h <= '9') cp |= (h - '0');",
+    "                    else if (h >= 'a' && h <= 'f') cp |= (h - 'a' + 10);",
+    "                    else if (h >= 'A' && h <= 'F') cp |= (h - 'A' + 10);",
+    "                    else { free(sb.data); return false; }",
+    "                }",
+    "                char ubuf[5] = {0};",
+    "                if (cp <= 0x7F) { ubuf[0] = (char)cp; }",
+    "                else if (cp <= 0x7FF) {",
+    "                    ubuf[0] = (char)(0xC0 | (cp >> 6));",
+    "                    ubuf[1] = (char)(0x80 | (cp & 0x3F));",
+    "                } else {",
+    "                    ubuf[0] = (char)(0xE0 | (cp >> 12));",
+    "                    ubuf[1] = (char)(0x80 | ((cp >> 6) & 0x3F));",
+    "                    ubuf[2] = (char)(0x80 | (cp & 0x3F));",
+    "                }",
+    "                _meme_sb_append(&sb, ubuf);",
+    "            } else { free(sb.data); return false; }",
+    "        } else {",
+    "            _meme_sb_append_char(&sb, s[(*i)++]);",
+    "        }",
+    "    }",
+    "    if (s[*i] != '\"') { free(sb.data); return false; }",
+    "    (*i)++;",
+    "    *out = sb.data;",
+    "    return true;",
+    "}",
+    "",
+    "static bool _meme_parse_jv(const char* s, size_t* i, _MemeJV** out) {",
+    "    _meme_skip_ws(s, i);",
+    "    if (!s[*i]) return false;",
+    "    _MemeJV* v = (_MemeJV*)calloc(1, sizeof(_MemeJV));",
+    "    if (strncmp(s + *i, \"null\", 4) == 0) {",
+    "        *i += 4; v->kind = _MEME_J_NULL; *out = v; return true;",
+    "    }",
+    "    if (strncmp(s + *i, \"true\", 4) == 0) {",
+    "        *i += 4; v->kind = _MEME_J_BOOL; v->b = true; *out = v; return true;",
+    "    }",
+    "    if (strncmp(s + *i, \"false\", 5) == 0) {",
+    "        *i += 5; v->kind = _MEME_J_BOOL; v->b = false; *out = v; return true;",
+    "    }",
+    "    if (s[*i] == '\"') {",
+    "        v->kind = _MEME_J_STR;",
+    "        if (!_meme_parse_jv_str(s, i, &v->str)) { free(v); return false; }",
+    "        *out = v; return true;",
+    "    }",
+    "    if (s[*i] == '-' || (s[*i] >= '0' && s[*i] <= '9')) {",
+    "        size_t start = *i;",
+    "        bool has_dot_or_exp = false;",
+    "        if (s[*i] == '-') (*i)++;",
+    "        while (s[*i] >= '0' && s[*i] <= '9') (*i)++;",
+    "        if (s[*i] == '.') {",
+    "            has_dot_or_exp = true; (*i)++;",
+    "            while (s[*i] >= '0' && s[*i] <= '9') (*i)++;",
+    "        }",
+    "        if (s[*i] == 'e' || s[*i] == 'E') {",
+    "            has_dot_or_exp = true; (*i)++;",
+    "            if (s[*i] == '+' || s[*i] == '-') (*i)++;",
+    "            while (s[*i] >= '0' && s[*i] <= '9') (*i)++;",
+    "        }",
+    "        size_t nlen = *i - start;",
+    "        char nbuf[64];",
+    "        if (nlen >= sizeof(nbuf)) { free(v); return false; }",
+    "        memcpy(nbuf, s + start, nlen);",
+    "        nbuf[nlen] = '\\0';",
+    "        char* end = NULL;",
+    "        v->num = strtod(nbuf, &end);",
+    "        if (!end || *end != '\\0') { free(v); return false; }",
+    "        v->kind = _MEME_J_NUM;",
+    "        if (!has_dot_or_exp) {",
+    "            v->is_int = true;",
+    "            v->i_val = strtoll(nbuf, NULL, 10);",
+    "        } else if (v->num == (double)((int64_t)v->num)) {",
+    "            v->is_int = true;",
+    "            v->i_val = (int64_t)v->num;",
+    "        } else {",
+    "            v->is_int = false;",
+    "        }",
+    "        *out = v; return true;",
+    "    }",
+    "    if (s[*i] == '[') {",
+    "        (*i)++;",
+    "        v->kind = _MEME_J_ARR;",
+    "        size_t cap = 8;",
+    "        v->arr = (_MemeJV**)malloc(sizeof(_MemeJV*) * cap);",
+    "        v->arr_len = 0;",
+    "        _meme_skip_ws(s, i);",
+    "        if (s[*i] == ']') { (*i)++; *out = v; return true; }",
+    "        while (s[*i]) {",
+    "            _MemeJV* elem = NULL;",
+    "            if (!_meme_parse_jv(s, i, &elem)) { _meme_free_jv(v); return false; }",
+    "            if (v->arr_len >= cap) {",
+    "                cap *= 2;",
+    "                v->arr = (_MemeJV**)realloc(v->arr, sizeof(_MemeJV*) * cap);",
+    "            }",
+    "            v->arr[v->arr_len++] = elem;",
+    "            _meme_skip_ws(s, i);",
+    "            if (s[*i] == ',') { (*i)++; continue; }",
+    "            if (s[*i] == ']') { (*i)++; *out = v; return true; }",
+    "            _meme_free_jv(v); return false;",
+    "        }",
+    "        _meme_free_jv(v); return false;",
+    "    }",
+    "    if (s[*i] == '{') {",
+    "        (*i)++;",
+    "        v->kind = _MEME_J_OBJ;",
+    "        size_t cap = 8;",
+    "        v->obj = (_MemeJField*)malloc(sizeof(_MemeJField) * cap);",
+    "        v->obj_len = 0;",
+    "        _meme_skip_ws(s, i);",
+    "        if (s[*i] == '}') { (*i)++; *out = v; return true; }",
+    "        while (s[*i]) {",
+    "            _meme_skip_ws(s, i);",
+    "            char* key = NULL;",
+    "            if (!_meme_parse_jv_str(s, i, &key)) { _meme_free_jv(v); return false; }",
+    "            _meme_skip_ws(s, i);",
+    "            if (s[*i] != ':') { free(key); _meme_free_jv(v); return false; }",
+    "            (*i)++;",
+    "            _MemeJV* val = NULL;",
+    "            if (!_meme_parse_jv(s, i, &val)) { free(key); _meme_free_jv(v); return false; }",
+    "            if (v->obj_len >= cap) {",
+    "                cap *= 2;",
+    "                v->obj = (_MemeJField*)realloc(v->obj, sizeof(_MemeJField) * cap);",
+    "            }",
+    "            v->obj[v->obj_len].key = key;",
+    "            v->obj[v->obj_len].val = val;",
+    "            v->obj_len++;",
+    "            _meme_skip_ws(s, i);",
+    "            if (s[*i] == ',') { (*i)++; continue; }",
+    "            if (s[*i] == '}') { (*i)++; *out = v; return true; }",
+    "            _meme_free_jv(v); return false;",
+    "        }",
+    "        _meme_free_jv(v); return false;",
+    "    }",
+    "    free(v);",
+    "    return false;",
+    "}",
+    "",
+    "static const _MemeJV* _meme_jv_find_field(const _MemeJV* obj, const char* key) {",
+    "    if (!obj || obj->kind != _MEME_J_OBJ) return NULL;",
+    "    for (size_t i = 0; i < obj->obj_len; ++i) {",
+    "        if (strcmp(obj->obj[i].key, key) == 0) return obj->obj[i].val;",
+    "    }",
+    "    return NULL;",
+    "}",
+    "",
+    "static _MemeJV* _meme_read_json_file(const char* path) {",
+    "    const char* rp = _meme_resolve_path(path);",
+    "    FILE* fp = fopen(rp, \"rb\");",
+    "    if (!fp) return NULL;",
+    "    fseek(fp, 0, SEEK_END);",
+    "    long sz = ftell(fp);",
+    "    fseek(fp, 0, SEEK_SET);",
+    "    if (sz < 0) { fclose(fp); return NULL; }",
+    "    char* buf = (char*)malloc(sz + 1);",
+    "    if (fread(buf, 1, sz, fp) != (size_t)sz) { free(buf); fclose(fp); return NULL; }",
+    "    fclose(fp);",
+    "    buf[sz] = '\\0';",
+    "    size_t i = 0;",
+    "    _MemeJV* root = NULL;",
+    "    if (!_meme_parse_jv(buf, &i, &root)) { free(buf); return NULL; }",
+    "    _meme_skip_ws(buf, &i);",
+    "    if (buf[i] != '\\0') { _meme_free_jv(root); free(buf); return NULL; }",
+    "    free(buf);",
+    "    return root;",
+    "}",
+    "",
+]
+
+
+def _emit_c_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> list[str]:
+    ident = _c_ident(r_name)
+    lines = [
+        f"static inline bool _meme_parse_record_{ident}(const _MemeJV* _jv, {ident}* _out) {{",
+        "    if (!_jv || _jv->kind != _MEME_J_OBJ) return false;",
+    ]
+    for fname, ftype in fields.items():
+        fn_str = json.dumps(fname)
+        f_ident = _c_ident(fname)
+        lines.append(f"    const _MemeJV* _f_{fname} = _meme_jv_find_field(_jv, {fn_str});")
+        if ftype == "Int":
+            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MEME_J_NUM || !_f_{fname}->is_int) return false;")
+            lines.append(f"    _out->{f_ident} = _f_{fname}->i_val;")
+        elif ftype == "Float":
+            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MEME_J_NUM) return false;")
+            lines.append(f"    _out->{f_ident} = _f_{fname}->num;")
+        elif ftype == "String":
+            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MEME_J_STR) return false;")
+            lines.append(f"    char* _s_{fname} = (char*)malloc(strlen(_f_{fname}->str) + 1);")
+            lines.append(f"    strcpy(_s_{fname}, _f_{fname}->str);")
+            lines.append(f"    _out->{f_ident} = _s_{fname};")
+        elif ftype == "Bool":
+            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MEME_J_BOOL) return false;")
+            lines.append(f"    _out->{f_ident} = _f_{fname}->b;")
+        elif ftype.startswith("Optional<"):
+            inner = ftype[9:-1]
+            m_inner = _mangle_type(inner)
+            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind == _MEME_J_NULL) {{")
+            lines.append(f"        _out->{f_ident} = (meme_opt_{m_inner}){{0}};")
+            lines.append("    } else {")
+            if inner == "Int":
+                lines.append(f"        if (_f_{fname}->kind != _MEME_J_NUM || !_f_{fname}->is_int) return false;")
+                lines.append(f"        _out->{f_ident} = (meme_opt_Int){{ .present = true, .value = _f_{fname}->i_val }};")
+            elif inner == "Float":
+                lines.append(f"        if (_f_{fname}->kind != _MEME_J_NUM) return false;")
+                lines.append(f"        _out->{f_ident} = (meme_opt_Float){{ .present = true, .value = _f_{fname}->num }};")
+            elif inner == "String":
+                lines.append(f"        if (_f_{fname}->kind != _MEME_J_STR) return false;")
+                lines.append(f"        char* _s_{fname} = (char*)malloc(strlen(_f_{fname}->str) + 1);")
+                lines.append(f"        strcpy(_s_{fname}, _f_{fname}->str);")
+                lines.append(f"        _out->{f_ident} = (meme_opt_String){{ .present = true, .value = _s_{fname} }};")
+            elif inner == "Bool":
+                lines.append(f"        if (_f_{fname}->kind != _MEME_J_BOOL) return false;")
+                lines.append(f"        _out->{f_ident} = (meme_opt_Bool){{ .present = true, .value = _f_{fname}->b }};")
+            lines.append("    }")
+    lines.append("    return true;")
+    lines.append("}")
+    lines.append("")
+    lines.extend([
+        f"static inline meme_opt_{ident} _meme_read_json_record_{ident}(const char* path) {{",
+        "    _MemeJV* root = _meme_read_json_file(path);",
+        f"    if (!root) return (meme_opt_{ident}){{0}};",
+        f"    {ident} rec;",
+        f"    bool ok = _meme_parse_record_{ident}(root, &rec);",
+        "    _meme_free_jv(root);",
+        f"    if (!ok) return (meme_opt_{ident}){{0}};",
+        f"    return (meme_opt_{ident}){{ .present = true, .value = rec }};",
+        "}",
+        "",
+        f"static inline {ident} _meme_read_json_record_{ident}_or(const char* path, {ident} dflt) {{",
+        f"    meme_opt_{ident} o = _meme_read_json_record_{ident}(path);",
+        "    return o.present ? o.value : dflt;",
+        "}",
+        "",
+        f"static inline meme_opt_List_{ident} _meme_read_json_records_{ident}(const char* path) {{",
+        "    _MemeJV* root = _meme_read_json_file(path);",
+        f"    if (!root || root->kind != _MEME_J_ARR) {{",
+        "        _meme_free_jv(root);",
+        f"        return (meme_opt_List_{ident}){{0}};",
+        "    }",
+        f"    meme_list_{ident} list = _meme_list_{ident}_new();",
+        "    for (size_t i = 0; i < root->arr_len; ++i) {",
+        f"        {ident} rec;",
+        f"        if (!_meme_parse_record_{ident}(root->arr[i], &rec)) {{",
+        "            _meme_free_jv(root);",
+        f"            return (meme_opt_List_{ident}){{0}};",
+        "        }",
+        f"        _meme_list_{ident}_append(&list, rec);",
+        "    }",
+        "    _meme_free_jv(root);",
+        f"    return (meme_opt_List_{ident}){{ .present = true, .value = list }};",
+        "}",
+        "",
+        f"static inline meme_list_{ident} _meme_read_json_records_{ident}_or(const char* path, meme_list_{ident} dflt) {{",
+        f"    meme_opt_List_{ident} o = _meme_read_json_records_{ident}(path);",
+        "    return o.present ? o.value : dflt;",
+        "}",
+        "",
+    ])
+    return lines
+
+
+def _emit_c_json_record_writer(r_name: str, fields: dict[str, MemeType]) -> list[str]:
+    ident = _c_ident(r_name)
+    lines = [
+        f"static inline char* _meme_serialize_json_record_{ident}({ident} rec) {{",
+        "    _MemeSB sb = _meme_sb_new();",
+        "    _meme_sb_append_char(&sb, '{');",
+    ]
+    for idx, (fname, ftype) in enumerate(fields.items()):
+        fn_str = json.dumps(fname) + ":"
+        f_ident = _c_ident(fname)
+        if idx > 0:
+            lines.append("    _meme_sb_append_char(&sb, ',');")
+        lines.append(f"    _meme_sb_append(&sb, {json.dumps(fn_str)});")
+        if ftype == "Int":
+            lines.extend([
+                "    {",
+                "        char buf[32];",
+                f"        snprintf(buf, sizeof(buf), \"%lld\", (long long)rec.{f_ident});",
+                "        _meme_sb_append(&sb, buf);",
+                "    }",
+            ])
+        elif ftype == "Float":
+            lines.extend([
+                "    {",
+                f"        char* f_str = _meme_format_json_float(rec.{f_ident});",
+                "        _meme_sb_append(&sb, f_str);",
+                "        free(f_str);",
+                "    }",
+            ])
+        elif ftype == "String":
+            lines.extend([
+                "    {",
+                f"        char* s_str = _meme_escape_json_str(rec.{f_ident});",
+                "        _meme_sb_append(&sb, s_str);",
+                "        free(s_str);",
+                "    }",
+            ])
+        elif ftype == "Bool":
+            lines.append(f"    _meme_sb_append(&sb, rec.{f_ident} ? \"true\" : \"false\");")
+        elif ftype.startswith("Optional<"):
+            inner = ftype[9:-1]
+            lines.extend([
+                f"    if (!rec.{f_ident}.present) {{",
+                "        _meme_sb_append(&sb, \"null\");",
+                "    } else {",
+            ])
+            if inner == "Int":
+                lines.extend([
+                    "        char buf[32];",
+                    f"        snprintf(buf, sizeof(buf), \"%lld\", (long long)rec.{f_ident}.value);",
+                    "        _meme_sb_append(&sb, buf);",
+                ])
+            elif inner == "Float":
+                lines.extend([
+                    "        {",
+                    f"            char* f_str = _meme_format_json_float(rec.{f_ident}.value);",
+                    "            _meme_sb_append(&sb, f_str);",
+                    "            free(f_str);",
+                    "        }",
+                ])
+            elif inner == "String":
+                lines.extend([
+                    "        {",
+                    f"            char* s_str = _meme_escape_json_str(rec.{f_ident}.value);",
+                    "            _meme_sb_append(&sb, s_str);",
+                    "            free(s_str);",
+                    "        }",
+                ])
+            elif inner == "Bool":
+                lines.append(f"        _meme_sb_append(&sb, rec.{f_ident}.value ? \"true\" : \"false\");")
+            else:
+                lines.append("        _meme_sb_append(&sb, \"null\");")
+            lines.append("    }")
+        else:
+            lines.append("    _meme_sb_append(&sb, \"null\");")
+
+    lines.extend([
+        "    _meme_sb_append_char(&sb, '}');",
+        "    return sb.data;",
+        "}",
+        "",
+        f"static inline char* _meme_serialize_json_records_{ident}(meme_list_{ident} recs) {{",
+        "    _MemeSB sb = _meme_sb_new();",
+        "    _meme_sb_append_char(&sb, '[');",
+        "    for (int64_t i = 0; i < recs.len; i++) {",
+        "        if (i > 0) _meme_sb_append_char(&sb, ',');",
+        f"        char* r_str = _meme_serialize_json_record_{ident}(recs.data[i]);",
+        "        _meme_sb_append(&sb, r_str);",
+        "        free(r_str);",
+        "    }",
+        "    _meme_sb_append_char(&sb, ']');",
+        "    return sb.data;",
+        "}",
+        "",
+    ])
+    return lines
+
+
 def generate_c(ir: ProgramIR) -> str:
     gen = _CGen()
     records: list[RecordDefStmt] = []
@@ -1702,6 +2215,27 @@ def generate_c(ir: ProgramIR) -> str:
         "    }",
         "    char* buf = (char*)malloc(64);",
         "    snprintf(buf, 64, \"%.6g\", v);",
+        "    return buf;",
+        "}",
+        "static inline char* _meme_format_float(double v, int64_t n) {",
+        "    bool neg = (v < 0.0);",
+        "    double mag = fabs(v);",
+        "    if (n == 0) {",
+        "        double r = floor(mag + 0.5);",
+        "        if (r == 0.0) neg = false;",
+        "        char* buf = (char*)malloc(64);",
+        "        if (neg) snprintf(buf, 64, \"-%.0f\", r);",
+        "        else snprintf(buf, 64, \"%.0f\", r);",
+        "        return buf;",
+        "    }",
+        "    double factor = pow(10.0, (double)n);",
+        "    double rounded_total = floor(mag * factor + 0.5);",
+        "    double int_part = floor(rounded_total / factor);",
+        "    uint64_t frac_part = (uint64_t)(rounded_total - int_part * factor + 0.5);",
+        "    if (int_part == 0.0 && frac_part == 0) neg = false;",
+        "    char* buf = (char*)malloc(128);",
+        "    if (neg) snprintf(buf, 128, \"-%.0f.%0*llu\", int_part, (int)n, (unsigned long long)frac_part);",
+        "    else snprintf(buf, 128, \"%.0f.%0*llu\", int_part, (int)n, (unsigned long long)frac_part);",
         "    return buf;",
         "}",
         "static inline const char* _meme_fmt_string(const char* s) { return s ? s : \"\"; }",
@@ -2511,7 +3045,7 @@ def generate_c(ir: ProgramIR) -> str:
     # Primitive optionals
     primitive_opts: list[str] = []
     for inner in opt_types:
-        if inner not in gen.records:
+        if inner not in gen.records and not inner.startswith("List<"):
             primitive_opts.extend(_emit_opt_type(inner, gen))
             primitive_opts.append("")
 
@@ -2538,7 +3072,7 @@ def generate_c(ir: ProgramIR) -> str:
     # Record optionals
     record_opts: list[str] = []
     for inner in opt_types:
-        if inner in gen.records:
+        if inner in gen.records or inner.startswith("List<"):
             record_opts.extend(_emit_opt_type(inner, gen))
             record_opts.append("")
 
@@ -2583,12 +3117,72 @@ def generate_c(ir: ProgramIR) -> str:
     main_lines.append("}")
     main_lines.append("")
 
+    json_record_helpers: list[str] = []
+    record_readers: list[str] = []
+    if gen.uses_json_records:
+        json_record_helpers.extend(_C_JSON_PARSER_HELPERS)
+        for r_name in sorted(gen.json_records_read | gen.json_record_lists_read):
+            r_fields = gen.records.get(r_name, {})
+            record_readers.extend(_emit_c_json_record_reader(r_name, r_fields))
+            record_readers.append("")
+
+    record_writers: list[str] = []
+    if gen.uses_json_write:
+        record_writers.extend([
+            "static inline char* _meme_format_json_float(double v) {",
+            "    char* s = _meme_format_float(v, 6);",
+            "    char* dot = strchr(s, '.');",
+            "    if (dot) {",
+            "        size_t len = strlen(s);",
+            "        while (len > 0 && s[len - 1] == '0') {",
+            "            s[len - 1] = '\\0';",
+            "            len--;",
+            "        }",
+            "        if (len > 0 && s[len - 1] == '.') {",
+            "            s[len] = '0';",
+            "            s[len + 1] = '\\0';",
+            "        }",
+            "    }",
+            "    return s;",
+            "}",
+            "",
+            "static inline char* _meme_escape_json_str(const char* s) {",
+            "    if (!s) s = \"\";",
+            "    size_t len = strlen(s);",
+            "    char* buf = (char*)malloc(len * 6 + 3);",
+            "    char* p = buf;",
+            "    *p++ = '\"';",
+            "    for (size_t i = 0; i < len; i++) {",
+            "        unsigned char c = (unsigned char)s[i];",
+            "        if (c == '\"') { *p++ = '\\\\'; *p++ = '\"'; }",
+            "        else if (c == '\\\\') { *p++ = '\\\\'; *p++ = '\\\\'; }",
+            "        else if (c == '\\n') { *p++ = '\\\\'; *p++ = 'n'; }",
+            "        else if (c == '\\r') { *p++ = '\\\\'; *p++ = 'r'; }",
+            "        else if (c == '\\t') { *p++ = '\\\\'; *p++ = 't'; }",
+            "        else if (c < 0x20) {",
+            "            p += sprintf(p, \"\\\\u%04x\", c);",
+            "        } else {",
+            "            *p++ = c;",
+            "        }",
+            "    }",
+            "    *p++ = '\"';",
+            "    *p = '\\0';",
+            "    return buf;",
+            "}",
+            "",
+        ])
+        for r_name in sorted(gen.json_records_write):
+            r_fields = gen.records.get(r_name, {})
+            record_writers.extend(_emit_c_json_record_writer(r_name, r_fields))
+            record_writers.append("")
+
     out = (
         headers
         + record_fwd_decls
         + runtime_helpers
         + str_helpers
         + file_helpers
+        + json_record_helpers
         + input_helpers
         + argv_helpers
         + random_helpers
@@ -2603,6 +3197,8 @@ def generate_c(ir: ProgramIR) -> str:
         + record_lists
         + record_maps
         + record_opts
+        + record_readers
+        + record_writers
         + fn_fwd_decls
         + fn_blocks
         + main_lines

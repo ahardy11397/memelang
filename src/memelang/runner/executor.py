@@ -29,6 +29,7 @@ from memelang.ir.schema import (
     FilterCollectionStmt,
     ForEachStmt,
     FormatIntExpr,
+    FormatFloatExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -66,6 +67,8 @@ from memelang.ir.schema import (
     ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    ReadJsonRecordExpr,
+    ReadJsonRecordsExpr,
     RenameFileStmt,
     RecordFieldExpr,
     RecordLiteralExpr,
@@ -90,6 +93,7 @@ from memelang.ir.schema import (
     VarDeclStmt,
     WhileStmt,
     WriteFileStmt,
+    WriteJsonStmt,
 )
 
 
@@ -151,6 +155,8 @@ def _expr_uses_input(expr: IRExpr) -> bool:
         ),
     ):
         return _expr_uses_input(expr.target)
+    if isinstance(expr, FormatFloatExpr):
+        return _expr_uses_input(expr.target) or _expr_uses_input(expr.decimals)
     if isinstance(expr, ParseIntOrDefaultExpr):
         return _expr_uses_input(expr.target) or _expr_uses_input(expr.default_val)
     if isinstance(expr, StringSplitExpr):
@@ -165,6 +171,11 @@ def _expr_uses_input(expr: IRExpr) -> bool:
         return _expr_uses_input(expr.path)
     if isinstance(expr, ArgAtExpr):
         return _expr_uses_input(expr.index)
+    if isinstance(expr, (ReadJsonRecordExpr, ReadJsonRecordsExpr)):
+        ref = _expr_uses_input(expr.filepath)
+        if expr.default_val is not None:
+            ref = ref or _expr_uses_input(expr.default_val)
+        return ref
     if isinstance(expr, ReadJsonListExpr):
         return _expr_uses_input(expr.filepath)
     if isinstance(expr, StringLengthExpr):
@@ -216,6 +227,10 @@ def _stmts_use_input(stmts: list[IRStatement]) -> bool:
             return True
         if isinstance(s, (WriteFileStmt, AppendFileStmt)) and (
             _expr_uses_input(s.filepath) or _expr_uses_input(s.content)
+        ):
+            return True
+        if isinstance(s, WriteJsonStmt) and (
+            _expr_uses_input(s.target) or _expr_uses_input(s.filepath)
         ):
             return True
         if isinstance(s, (CopyFileStmt, MoveFileStmt)) and (

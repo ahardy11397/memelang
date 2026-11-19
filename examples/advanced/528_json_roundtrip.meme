@@ -1,0 +1,41 @@
+record Item:
+    id: Int
+    sku: String
+    price: Float
+    in_stock: Bool
+
+define itm as Item(id=101, sku="WIDGET-A", price=19.95, in_stock=true)
+write itm as json to file "tmp_528_single.json"
+
+define itm_opt as read json record Item from file "tmp_528_single.json" or else nothing
+if itm_opt is nothing:
+    print "single: nothing"
+else:
+    define item as value of itm_opt
+    assert item.id == itm.id
+    assert item.sku == itm.sku
+    assert item.price == itm.price
+    assert item.in_stock == itm.in_stock
+    print "single item:", item.id, item.sku, format item.price with 2 decimals, item.in_stock
+
+define itm2 as Item(id=102, sku="GADGET-B", price=49.5, in_stock=false)
+define itm3 as Item(id=103, sku="TOOL-C", price=10.0, in_stock=true)
+define items as [itm, itm2, itm3]
+write items as json to file "tmp_528_list.json"
+
+define items_opt as read json records Item from file "tmp_528_list.json" or else nothing
+if items_opt is nothing:
+    print "list: nothing"
+else:
+    define back_items as value of items_opt
+    assert length of back_items == 3
+    for each item in back_items:
+        print "list item:", item.id, item.sku, format item.price with 2 decimals, item.in_stock
+
+define single_raw as read string from file "tmp_528_single.json"
+define list_raw as read string from file "tmp_528_list.json"
+print "single raw json:", single_raw
+print "list raw json:", list_raw
+
+delete file "tmp_528_single.json"
+delete file "tmp_528_list.json"

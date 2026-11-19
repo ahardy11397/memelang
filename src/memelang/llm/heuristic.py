@@ -35,6 +35,7 @@ from memelang.ir.schema import (
     FilterCollectionStmt,
     ForEachStmt,
     FormatIntExpr,
+    FormatFloatExpr,
     ForRangeStmt,
     FuncDefStmt,
     FuncParam,
@@ -77,6 +78,8 @@ from memelang.ir.schema import (
     ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    ReadJsonRecordExpr,
+    ReadJsonRecordsExpr,
     RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
@@ -110,6 +113,7 @@ from memelang.ir.schema import (
     VarRefExpr,
     WhileStmt,
     WriteFileStmt,
+    WriteJsonStmt,
 )
 from memelang.llm.base import LLMProviderError, has_executable_content
 
@@ -730,6 +734,21 @@ class _ExprParser:
                 tgt_e = self.parse_unary()
                 return FormatIntExpr(target=tgt_e)
 
+            if (
+                t.val.lower() == "format"
+                and t.val not in self.symbols
+            ):
+                self.consume("IDENT")
+                tgt_e = self.parse_add()
+                with_tok = self.consume("IDENT")
+                if with_tok.val.lower() != "with":
+                    raise LLMProviderError(f"Expected 'with' in format expression, got {with_tok.val!r}")
+                dec_e = self.parse_add()
+                dec_tok = self.consume("IDENT")
+                if dec_tok.val.lower() not in ("decimals", "decimal"):
+                    raise LLMProviderError(f"Expected 'decimals' in format expression, got {dec_tok.val!r}")
+                return FormatFloatExpr(target=tgt_e, decimals=dec_e)
+
             if t.val in ("true", "True"):
                 self.consume()
                 return LiteralExpr(value=True, data_type="Bool")
@@ -925,6 +944,43 @@ class _ExprParser:
                 )
 
             if (
+                t.val.lower() == "read"
+                and self.pos + 2 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "json"
+                and self.tokens[self.pos + 2].kind == "IDENT"
+                and self.tokens[self.pos + 2].val.lower() in ("record", "records")
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                rec_kind_tok = self.consume("IDENT")
+                is_records = (rec_kind_tok.val.lower() == "records")
+                rec_name = self.consume("IDENT").val
+                from_tok = self.consume("IDENT")
+                if from_tok.val.lower() != "from":
+                    raise LLMProviderError(f"Expected 'from' after record name, got {from_tok.val!r}")
+                file_tok = self.consume("IDENT")
+                if file_tok.val.lower() != "file":
+                    raise LLMProviderError(f"Expected 'file' after 'from', got {file_tok.val!r}")
+                fp = self.parse_postfix()
+                dflt = None
+                if (
+                    (nxt := self.peek())
+                    and nxt.kind == "IDENT"
+                    and nxt.val.lower() == "or"
+                    and self.pos + 1 < len(self.tokens)
+                    and self.tokens[self.pos + 1].kind == "IDENT"
+                    and self.tokens[self.pos + 1].val.lower() == "else"
+                ):
+                    self.consume("IDENT")
+                    self.consume("IDENT")
+                    dflt = self.parse_add()
+                if is_records:
+                    return ReadJsonRecordsExpr(record_name=rec_name, filepath=fp, default_val=dflt)
+                else:
+                    return ReadJsonRecordExpr(record_name=rec_name, filepath=fp, default_val=dflt)
+
+            if (
                 t.val == "read"
                 and self.pos + 3 < len(self.tokens)
                 and self.tokens[self.pos + 1].kind == "IDENT"
@@ -1056,6 +1112,23 @@ def _parse_expr(
             value_type=mt[1],
             entries=[],
         )
+
+    m_read_json_record = re.fullmatch(
+        r"read\s+json\s+(record|records)\s+([A-Za-z_]\w*)\s+from\s+file\s+(.+?)(?:\s+or\s+else\s+(.+))?",
+        s,
+        flags=re.IGNORECASE,
+    )
+    if m_read_json_record:
+        is_records = m_read_json_record.group(1).lower() == "records"
+        rec_name = m_read_json_record.group(2)
+        fp_str = m_read_json_record.group(3)
+        dflt_str = m_read_json_record.group(4)
+        fp_expr = _parse_expr(fp_str, symbols, func_returns, records)
+        dflt_expr = _parse_expr(dflt_str, symbols, func_returns, records) if dflt_str else None
+        if is_records:
+            return ReadJsonRecordsExpr(record_name=rec_name, filepath=fp_expr, default_val=dflt_expr)
+        else:
+            return ReadJsonRecordExpr(record_name=rec_name, filepath=fp_expr, default_val=dflt_expr)
 
     m_read_json_typed = re.fullmatch(
         r"read\s+json\s+file\s+(.+?)\s+as\s+List\s*<\s*([A-Za-z_]\w*)\s*>",
@@ -1256,6 +1329,14 @@ def _guess_expr_type(
         return "List<Int>"
     if isinstance(expr, ReadJsonListExpr):
         return cast(MemeType, f"List<{expr.element_type}>")
+    if isinstance(expr, ReadJsonRecordExpr):
+        if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+            return expr.record_name
+        return f"Optional<{expr.record_name}>"
+    if isinstance(expr, ReadJsonRecordsExpr):
+        if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+            return f"List<{expr.record_name}>"
+        return f"Optional<List<{expr.record_name}>>"
     if isinstance(expr, (StringSplitExpr, ListFilesExpr, ReadFileLinesExpr)):
         return "List<String>"
     if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr, IsLetterExpr, IsUpperExpr, IsLowerExpr)):
@@ -1273,6 +1354,7 @@ def _guess_expr_type(
             ReadFileStringExpr,
             ArgAtExpr,
             FormatIntExpr,
+            FormatFloatExpr,
         ),
     ):
         return "String"
@@ -1971,6 +2053,17 @@ class HeuristicProvider:
                 target=target, item_var=item_var, predicate=pred, source_line=line.lineno
             )
 
+        # `write <target> as json to file <path>`
+        m_write_json = re.fullmatch(
+            r"write\s+(.+?)\s+as\s+json\s+to\s+file\s+(.+)", text, flags=re.IGNORECASE
+        )
+        if m_write_json:
+            return WriteJsonStmt(
+                target=_pe(m_write_json.group(1)),
+                filepath=_pe(m_write_json.group(2)),
+                source_line=line.lineno,
+            )
+
         # `write file <path> with <content>`
         m_write_file = re.fullmatch(
             r"write\s+file\s+(.+?)\s+with\s+(.+)", text, flags=re.IGNORECASE
@@ -2342,6 +2435,10 @@ class HeuristicProvider:
             ),
         ):
             return HeuristicProvider._find_free_var(expr.target, symbols)
+        if isinstance(expr, FormatFloatExpr):
+            return HeuristicProvider._find_free_var(
+                expr.target, symbols
+            ) or HeuristicProvider._find_free_var(expr.decimals, symbols)
         if isinstance(expr, ParseIntOrDefaultExpr):
             return (
                 HeuristicProvider._find_free_var(expr.target, symbols)
@@ -2361,6 +2458,11 @@ class HeuristicProvider:
             ) or HeuristicProvider._find_free_var(expr.index, symbols)
         if isinstance(expr, ReadJsonListExpr):
             return HeuristicProvider._find_free_var(expr.filepath, symbols)
+        if isinstance(expr, (ReadJsonRecordExpr, ReadJsonRecordsExpr)):
+            found = HeuristicProvider._find_free_var(expr.filepath, symbols)
+            if not found and expr.default_val is not None:
+                found = HeuristicProvider._find_free_var(expr.default_val, symbols)
+            return found
         if isinstance(expr, (FileExistsExpr, ReadFileStringExpr, ReadFileLinesExpr)):
             return HeuristicProvider._find_free_var(expr.filepath, symbols)
         if isinstance(expr, ListFilesExpr):

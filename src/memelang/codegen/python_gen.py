@@ -28,6 +28,7 @@ from memelang.ir.schema import (
     FilterCollectionStmt,
     ForEachStmt,
     FormatIntExpr,
+    FormatFloatExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -69,6 +70,8 @@ from memelang.ir.schema import (
     ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    ReadJsonRecordExpr,
+    ReadJsonRecordsExpr,
     RenameFileStmt,
     RecordDefStmt,
     RecordFieldDef,
@@ -99,6 +102,7 @@ from memelang.ir.schema import (
     VarRefExpr,
     WhileStmt,
     WriteFileStmt,
+    WriteJsonStmt,
 )
 
 
@@ -136,6 +140,7 @@ class _PyGen:
         self.uses_is_letter = False
         self.uses_is_upper = False
         self.uses_is_lower = False
+        self.uses_format_float = False
         self.uses_argv = False
         self.uses_assert = False
         self.uses_input = False
@@ -144,6 +149,11 @@ class _PyGen:
         self.uses_char_at = False
         self.uses_dataclass = False
         self.uses_optional_helpers = False
+        self.uses_json_records = False
+        self.uses_json_write = False
+        self.json_records_read: set[str] = set()
+        self.json_record_lists_read: set[str] = set()
+        self.json_records_write: set[str] = set()
         self._match_counter = 0
         self.symbols: dict[str, MemeType] = {}
         self.func_returns: dict[str, MemeType] = {}
@@ -160,6 +170,14 @@ class _PyGen:
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
+        if isinstance(expr, ReadJsonRecordExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return expr.record_name  # type: ignore[return-value]
+            return f"Optional<{expr.record_name}>"  # type: ignore[return-value]
+        if isinstance(expr, ReadJsonRecordsExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return f"List<{expr.record_name}>"  # type: ignore[return-value]
+            return f"Optional<List<{expr.record_name}>>"  # type: ignore[return-value]
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
         if isinstance(expr, ListFilesExpr):
@@ -383,9 +401,34 @@ class _PyGen:
         if isinstance(expr, FormatIntExpr):
             return f"_meme_builtins.str({self.gen_expr(expr.target, scope)})"
 
+        if isinstance(expr, FormatFloatExpr):
+            self.uses_format_float = True
+            self.uses_math = True
+            return f"_meme_format_float({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.decimals, scope)})"
+
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True
             return f"_meme_read_json_list({self.gen_expr(expr.filepath, scope)}, {repr(expr.element_type)})"
+
+        if isinstance(expr, ReadJsonRecordExpr):
+            self.uses_json_records = True
+            self.json_records_read.add(expr.record_name)
+            p = self.gen_expr(expr.filepath, scope)
+            call = f"_meme_read_json_record_{expr.record_name}({p})"
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope)
+                return f"((lambda _r: _r if _r is not None else {d})({call}))"
+            return call
+
+        if isinstance(expr, ReadJsonRecordsExpr):
+            self.uses_json_records = True
+            self.json_record_lists_read.add(expr.record_name)
+            p = self.gen_expr(expr.filepath, scope)
+            call = f"_meme_read_json_records_{expr.record_name}({p})"
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope)
+                return f"((lambda _r: _r if _r is not None else {d})({call}))"
+            return call
 
         if isinstance(expr, FileExistsExpr):
             self.uses_file_io = True
@@ -703,6 +746,20 @@ class _PyGen:
                 f"{pad}_meme_write_file({self.gen_expr(stmt.filepath, scope)}, {self.gen_expr(stmt.content, scope)})"
             ]
 
+        if isinstance(stmt, WriteJsonStmt):
+            self.uses_file_io = True
+            self.uses_json_write = True
+            tgt_t = self.infer_type(stmt.target, scope)
+            fp = self.gen_expr(stmt.filepath, scope)
+            tgt = self.gen_expr(stmt.target, scope)
+            if tgt_t in self.records:
+                self.json_records_write.add(tgt_t)
+                return [f"{pad}_meme_write_file({fp}, _meme_serialize_json_record_{tgt_t}({tgt}))"]
+            elif tgt_t.startswith("List<") and tgt_t.endswith(">"):
+                r_name = tgt_t[5:-1]
+                self.json_records_write.add(r_name)
+                return [f"{pad}_meme_write_file({fp}, _meme_serialize_json_records_{r_name}({tgt}))"]
+
         if isinstance(stmt, AppendFileStmt):
             self.uses_file_io = True
             return [
@@ -752,6 +809,142 @@ class _PyGen:
         raise TypeError(f"Unsupported IRStatement: {type(stmt)!r}")
 
 
+def _emit_py_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> list[str]:
+    lines = [
+        f"def _meme_parse_record_{r_name}(_d):",
+        "    if not isinstance(_d, dict):",
+        "        return None",
+        "    _kwargs = {}",
+    ]
+    for fname, ftype in fields.items():
+        if ftype == "Int":
+            lines.extend([
+                f"    if {json.dumps(fname)} not in _d: return None",
+                f"    _v = _d[{json.dumps(fname)}]",
+                "    if type(_v) is not int or isinstance(_v, bool): return None",
+                f"    _kwargs[{json.dumps(fname)}] = _v",
+            ])
+        elif ftype == "Float":
+            lines.extend([
+                f"    if {json.dumps(fname)} not in _d: return None",
+                f"    _v = _d[{json.dumps(fname)}]",
+                "    if isinstance(_v, bool) or not isinstance(_v, (int, float)): return None",
+                f"    _kwargs[{json.dumps(fname)}] = float(_v)",
+            ])
+        elif ftype == "String":
+            lines.extend([
+                f"    if {json.dumps(fname)} not in _d: return None",
+                f"    _v = _d[{json.dumps(fname)}]",
+                "    if not isinstance(_v, str): return None",
+                f"    _kwargs[{json.dumps(fname)}] = _v",
+            ])
+        elif ftype == "Bool":
+            lines.extend([
+                f"    if {json.dumps(fname)} not in _d: return None",
+                f"    _v = _d[{json.dumps(fname)}]",
+                "    if not isinstance(_v, bool): return None",
+                f"    _kwargs[{json.dumps(fname)}] = _v",
+            ])
+        elif ftype.startswith("Optional<"):
+            inner = ftype[9:-1]
+            lines.extend([
+                f"    if {json.dumps(fname)} not in _d or _d[{json.dumps(fname)}] is None:",
+                f"        _kwargs[{json.dumps(fname)}] = None",
+                "    else:",
+                f"        _v = _d[{json.dumps(fname)}]",
+            ])
+            if inner == "Int":
+                lines.extend([
+                    "        if type(_v) is not int or isinstance(_v, bool): return None",
+                    f"        _kwargs[{json.dumps(fname)}] = _v",
+                ])
+            elif inner == "Float":
+                lines.extend([
+                    "        if isinstance(_v, bool) or not isinstance(_v, (int, float)): return None",
+                    f"        _kwargs[{json.dumps(fname)}] = float(_v)",
+                ])
+            elif inner == "String":
+                lines.extend([
+                    "        if not isinstance(_v, str): return None",
+                    f"        _kwargs[{json.dumps(fname)}] = _v",
+                ])
+            elif inner == "Bool":
+                lines.extend([
+                    "        if not isinstance(_v, bool): return None",
+                    f"        _kwargs[{json.dumps(fname)}] = _v",
+                ])
+    lines.append(f"    return {r_name}(**_kwargs)")
+    lines.append("")
+    lines.extend([
+        f"def _meme_read_json_record_{r_name}(_path):",
+        "    try:",
+        f"        with open(_meme_resolve_path(_path), 'r', encoding='utf-8') as _f:",
+        "            _data = _meme_json.load(_f)",
+        f"        return _meme_parse_record_{r_name}(_data)",
+        "    except Exception:",
+        "        return None",
+        "",
+        f"def _meme_read_json_records_{r_name}(_path):",
+        "    try:",
+        f"        with open(_meme_resolve_path(_path), 'r', encoding='utf-8') as _f:",
+        "            _data = _meme_json.load(_f)",
+        "        if not isinstance(_data, list):",
+        "            return None",
+        "        _out = []",
+        "        for _item in _data:",
+        f"            _rec = _meme_parse_record_{r_name}(_item)",
+        "            if _rec is None:",
+        "                return None",
+        "            _out.append(_rec)",
+        "        return _out",
+        "    except Exception:",
+        "        return None",
+        "",
+    ])
+    return lines
+
+
+def _emit_py_json_record_writer(r_name: str, fields: dict[str, MemeType]) -> list[str]:
+    lines = [
+        f"def _meme_serialize_json_record_{r_name}(rec):",
+        "    parts = []",
+    ]
+    for fname, ftype in fields.items():
+        k_prefix = json.dumps(fname) + ":"
+        if ftype == "Int":
+            val_code = f"str(rec.{fname})"
+        elif ftype == "Float":
+            val_code = f"_meme_format_json_float(rec.{fname})"
+        elif ftype == "String":
+            val_code = f"_meme_escape_json_str(rec.{fname})"
+        elif ftype == "Bool":
+            val_code = f"('true' if rec.{fname} else 'false')"
+        elif ftype.startswith("Optional<"):
+            inner = ftype[9:-1]
+            if inner == "Int":
+                inner_code = f"str(rec.{fname})"
+            elif inner == "Float":
+                inner_code = f"_meme_format_json_float(rec.{fname})"
+            elif inner == "String":
+                inner_code = f"_meme_escape_json_str(rec.{fname})"
+            elif inner == "Bool":
+                inner_code = f"('true' if rec.{fname} else 'false')"
+            else:
+                inner_code = f"str(rec.{fname})"
+            val_code = f"('null' if rec.{fname} is None else {inner_code})"
+        else:
+            val_code = f"str(rec.{fname})"
+        lines.append(f"    parts.append({json.dumps(k_prefix)} + {val_code})")
+    lines.extend([
+        "    return '{' + ','.join(parts) + '}'",
+        "",
+        f"def _meme_serialize_json_records_{r_name}(recs):",
+        f"    return '[' + ','.join(_meme_serialize_json_record_{r_name}(r) for r in recs) + ']'",
+        "",
+    ])
+    return lines
+
+
 def generate_python(ir: ProgramIR) -> str:
     gen = _PyGen()
     for stmt in [*ir.imported_definitions, *ir.statements]:
@@ -779,6 +972,41 @@ def generate_python(ir: ProgramIR) -> str:
             continue
         else:
             stmt_lines.extend(gen.gen_stmt(stmt, gen.symbols, indent=1))
+
+    if gen.uses_json_records:
+        gen.uses_json_io = True
+        for r_name in sorted(gen.json_records_read | gen.json_record_lists_read):
+            r_fields = gen.records.get(r_name, {})
+            record_lines.extend(_emit_py_json_record_reader(r_name, r_fields))
+
+    if gen.uses_json_write:
+        gen.uses_format_float = True
+        record_lines.extend([
+            "def _meme_format_json_float(v: float) -> str:",
+            "    s = _meme_format_float(v, 6)",
+            "    if '.' in s:",
+            "        s = s.rstrip('0')",
+            "        if s.endswith('.'):",
+            "            s += '0'",
+            "    return s",
+            "",
+            "def _meme_escape_json_str(s: str) -> str:",
+            "    out = ['\"']",
+            "    for ch in s:",
+            "        if ch == '\"': out.append('\\\"')",
+            "        elif ch == '\\\\': out.append('\\\\\\\\')",
+            "        elif ch == '\\n': out.append('\\\\n')",
+            "        elif ch == '\\r': out.append('\\\\r')",
+            "        elif ch == '\\t': out.append('\\\\t')",
+            "        elif ord(ch) < 0x20: out.append(f'\\\\u{ord(ch):04x}')",
+            "        else: out.append(ch)",
+            "    out.append('\"')",
+            "    return ''.join(out)",
+            "",
+        ])
+        for r_name in sorted(gen.json_records_write):
+            r_fields = gen.records.get(r_name, {})
+            record_lines.extend(_emit_py_json_record_writer(r_name, r_fields))
 
     body_lines: list[str] = []
     body_lines.extend(func_lines)
@@ -1165,6 +1393,30 @@ def generate_python(ir: ProgramIR) -> str:
             [
                 "def _meme_is_lower(s: str) -> bool:",
                 "    return _meme_builtins.len(s) == 1 and 'a' <= s <= 'z'",
+                "",
+            ]
+        )
+
+    if gen.uses_format_float:
+        header.extend(
+            [
+                "def _meme_format_float(v: float, n: int) -> str:",
+                "    neg = (v < 0.0)",
+                "    mag = _meme_builtins.abs(v)",
+                "    if n == 0:",
+                "        r = _meme_math.floor(mag + 0.5)",
+                "        if r == 0.0:",
+                "            neg = False",
+                "        s = f'{_meme_builtins.int(r)}'",
+                "        return f'-{s}' if neg else s",
+                "    factor = 10.0 ** n",
+                "    rounded_total = _meme_math.floor(mag * factor + 0.5)",
+                "    int_part = _meme_math.floor(rounded_total / factor)",
+                "    frac_part = _meme_builtins.int(rounded_total - int_part * factor + 0.5)",
+                "    if int_part == 0.0 and frac_part == 0:",
+                "        neg = False",
+                "    s = f'{_meme_builtins.int(int_part)}.{frac_part:0{n}d}'",
+                "    return f'-{s}' if neg else s",
                 "",
             ]
         )

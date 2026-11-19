@@ -64,6 +64,7 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"expr_type": "parse_int", "target": <String expr>}` (`integer value of <target>`, parses integer from text after trimming ASCII whitespace; fails exit 1 on invalid text, returns `"Int"`)
 - `{"expr_type": "parse_int_or_default", "target": <String expr>, "default_val": <Int expr>}` (`integer value of <target> or else <default>`, lazily evaluates `<default>` only when parse fails, returns `"Int"`)
 - `{"expr_type": "format_int", "target": <Int expr>}` (`text of <target>`, formats integer as plain decimal text, returns `"String"`)
+- `{"expr_type": "format_float", "target": <Float expr>, "decimals": <Int literal 0..10>}` (`format <target> with <decimals> decimals`, returns `"String"`)
 - `{"expr_type": "is_digit", "target": <String expr>}` (`is digit <target>`, returns `"Bool"`, true if single ASCII digit '0'..'9', false for empty or non-digit)
 - `{"expr_type": "is_letter", "target": <String expr>}` (`is letter <target>`, returns `"Bool"`, true if single ASCII letter 'A'..'Z' or 'a'..'z', false for empty or non-letter)
 - `{"expr_type": "is_upper", "target": <String expr>}` (`is upper <target>`, returns `"Bool"`, true if single ASCII uppercase letter 'A'..'Z', false otherwise)
@@ -75,6 +76,8 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"expr_type": "arg_count"}` (`argument count`, returns `"Int"`, argc including program name at index 0)
 - `{"expr_type": "arg_at", "index": <Int expr>}` (`argument <n>`, returns `"String"`, 1-based for user CLI args where 0 is program name)
 - `{"expr_type": "read_json_list", "filepath": <String expr>, "element_type": "Float"}` (`read json file <path> as List<T>` where `element_type` is `"Int"`, `"Float"`, `"String"`, or `"Bool"`, or `read JSON number list from <path>` defaulting to `"Float"`)
+- `{"expr_type": "read_json_record", "record_name": "User", "filepath": <String expr>, "default_val": <optional default expr>}` (`read json record <RecordName> from file <path> or else nothing`, returns `"Optional<RecordName>"`)
+- `{"expr_type": "read_json_records", "record_name": "User", "filepath": <String expr>, "default_val": <optional default expr>}` (`read json records <RecordName> from file <path> or else nothing`, returns `"Optional<List<RecordName>>"`)
 - `{"expr_type": "record_literal", "record_name": "User", "fields": [{"name": "id", "value": <expr>}, ...]}`
 - `{"expr_type": "record_field", "target": <expr>, "field_name": "id"}`
 - `{"expr_type": "map_literal", "key_type": "String", "value_type": "Int", "entries": [{"key": <expr>, "value": <expr>}, ...]}`
@@ -115,6 +118,7 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "record_set_field", "target": "u", "field_name": "id", "value": <expr>}`
 - `{"op": "map_set", "target": "m", "key": <expr>, "value": <expr>}`
 - `{"op": "write_file", "filepath": <String expr>, "content": <String expr>}` (`write file <path> with <content>`, overwrites/creates file)
+- `{"op": "write_json", "target": <Record or List<Record> expr>, "filepath": <String expr>}` (`write <target> as json to file <path>`)
 - `{"op": "append_file", "filepath": <String expr>, "content": <String expr>}` (`append <content> to file <path>`, appends/creates file)
 - `{"op": "copy_file", "src": <String expr>, "dst": <String expr>}` (`copy file <src> to <dst>`, overwrites dst)
 - `{"op": "move_file", "src": <String expr>, "dst": <String expr>}` (`move file <src> to <dst>`, overwrites dst)

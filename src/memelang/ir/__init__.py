@@ -26,6 +26,7 @@ from memelang.ir.schema import (
     FilterCollectionStmt,
     ForEachStmt,
     FormatIntExpr,
+    FormatFloatExpr,
     ForRangeStmt,
     FuncDefStmt,
     FuncParam,
@@ -63,6 +64,8 @@ from memelang.ir.schema import (
     ReadFileLinesExpr,
     ReadInputExpr,
     ReadJsonListExpr,
+    ReadJsonRecordExpr,
+    ReadJsonRecordsExpr,
     RenameFileStmt,
     ReturnStmt,
     SortCollectionStmt,
@@ -90,6 +93,7 @@ from memelang.ir.schema import (
     VarRefExpr,
     WhileStmt,
     WriteFileStmt,
+    WriteJsonStmt,
 )
 
 __all__ = [
@@ -117,6 +121,7 @@ __all__ = [
     "FilterCollectionStmt",
     "ForEachStmt",
     "FormatIntExpr",
+    "FormatFloatExpr",
     "ForRangeStmt",
     "FuncDefStmt",
     "FuncParam",
@@ -154,6 +159,8 @@ __all__ = [
     "ReadFileLinesExpr",
     "ReadInputExpr",
     "ReadJsonListExpr",
+    "ReadJsonRecordExpr",
+    "ReadJsonRecordsExpr",
     "RenameFileStmt",
     "ReturnStmt",
     "SortCollectionStmt",
@@ -181,6 +188,7 @@ __all__ = [
     "VarRefExpr",
     "WhileStmt",
     "WriteFileStmt",
+    "WriteJsonStmt",
     "format_expr",
     "to_canonical_meme",
 ]
