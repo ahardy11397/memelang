@@ -1,0 +1,49 @@
+write file "tmp_opt_existing_530.txt" with "hello world\nsecond line"
+
+define s_missing as read string from file "tmp_nonexistent_530.txt" or else nothing
+if s_missing is nothing:
+    print "missing string is nothing: true"
+else:
+    print "missing string is nothing: false"
+
+define s_missing_fallback as read string from file "tmp_nonexistent_530.txt" or else "default_str"
+print "missing string fallback:", s_missing_fallback
+
+define s_existing as read string from file "tmp_opt_existing_530.txt" or else nothing
+if s_existing is nothing:
+    print "existing string is nothing: true"
+else:
+    define s_val as value of s_existing
+    print "existing string:", s_val
+
+define l_missing as read lines from file "tmp_nonexistent_530.txt" or else nothing
+if l_missing is nothing:
+    print "missing lines is nothing: true"
+else:
+    print "missing lines is nothing: false"
+
+define l_existing as read lines from file "tmp_opt_existing_530.txt" or else nothing
+if l_existing is nothing:
+    print "existing lines is nothing: true"
+else:
+    define lines_val as value of l_existing
+    for each line in lines_val:
+        print "line:", line
+
+write file "tmp_opt_valid_530.json" with "[10, 20, 30]"
+define j_valid as read json file "tmp_opt_valid_530.json" as List<Int> or else nothing
+if j_valid is nothing:
+    print "valid json is nothing: true"
+else:
+    define nums as value of j_valid
+    for each n in nums:
+        print "num:", n
+
+define j_missing as read json file "tmp_nonexistent_530.json" as List<Int> or else nothing
+if j_missing is nothing:
+    print "missing json is nothing: true"
+else:
+    print "missing json is nothing: false"
+
+delete file "tmp_opt_existing_530.txt"
+delete file "tmp_opt_valid_530.json"

@@ -21,7 +21,10 @@ from memelang.ir.schema import (
     ContinueStmt,
     CopyFileStmt,
     CreateDirectoryStmt,
+    CurrentEpochExpr,
     DeleteFileStmt,
+    EmptySetExpr,
+    EnvVarExpr,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -80,6 +83,10 @@ from memelang.ir.schema import (
     RecordLiteralExpr,
     RecordSetFieldStmt,
     ReturnStmt,
+    SetAddStmt,
+    SetContainsExpr,
+    SetLengthExpr,
+    SetRemoveStmt,
     SortCollectionStmt,
     StrContainsExpr,
     StrEndsWithExpr,
@@ -128,6 +135,12 @@ def _map_types_of(map_type: str) -> tuple[str, str] | None:
     return None
 
 
+def _set_type_of(set_type: str) -> str | None:
+    if set_type.startswith("Set<") and set_type.endswith(">"):
+        return set_type[4:-1].strip()
+    return None
+
+
 class _PyGen:
     def __init__(self) -> None:
         self.uses_random = False
@@ -141,6 +154,8 @@ class _PyGen:
         self.uses_is_upper = False
         self.uses_is_lower = False
         self.uses_format_float = False
+        self.uses_time = False
+        self.uses_env = False
         self.uses_argv = False
         self.uses_assert = False
         self.uses_input = False
@@ -169,7 +184,12 @@ class _PyGen:
         if isinstance(expr, RandomListExpr):
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
-            return f"List<{expr.element_type}>"  # type: ignore[return-value]
+            t = f"List<{expr.element_type}>"
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return t  # type: ignore[return-value]
+            if expr.default_val is not None:
+                return f"Optional<{t}>"  # type: ignore[return-value]
+            return t  # type: ignore[return-value]
         if isinstance(expr, ReadJsonRecordExpr):
             if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
                 return expr.record_name  # type: ignore[return-value]
@@ -178,6 +198,12 @@ class _PyGen:
             if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
                 return f"List<{expr.record_name}>"  # type: ignore[return-value]
             return f"Optional<List<{expr.record_name}>>"  # type: ignore[return-value]
+        if isinstance(expr, CurrentEpochExpr):
+            return "Int"
+        if isinstance(expr, EnvVarExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "String"
+            return "Optional<String>"
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
         if isinstance(expr, ListFilesExpr):
@@ -199,12 +225,21 @@ class _PyGen:
                 StringTrimExpr,
                 StringJoinExpr,
                 StringCharAtExpr,
-                ReadFileStringExpr,
                 ArgAtExpr,
             ),
         ):
             return "String"
+        if isinstance(expr, ReadFileStringExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "String"
+            if expr.default_val is not None:
+                return "Optional<String>"
+            return "String"
         if isinstance(expr, ReadFileLinesExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "List<String>"
+            if expr.default_val is not None:
+                return "Optional<List<String>>"
             return "List<String>"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
@@ -243,6 +278,12 @@ class _PyGen:
                 return tgt_t[9:-1]
             if isinstance(expr, OptionalUnwrapOrDefaultExpr):
                 return self.infer_type(expr.default_val, scope)
+            return "Int"
+        if isinstance(expr, EmptySetExpr):
+            return f"Set<{expr.element_type}>"
+        if isinstance(expr, SetContainsExpr):
+            return "Bool"
+        if isinstance(expr, SetLengthExpr):
             return "Int"
         if isinstance(expr, UnaryOpExpr):
             return "Bool" if expr.op == "not" else self.infer_type(expr.operand, scope)
@@ -406,8 +447,26 @@ class _PyGen:
             self.uses_math = True
             return f"_meme_format_float({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.decimals, scope)})"
 
+        if isinstance(expr, CurrentEpochExpr):
+            self.uses_time = True
+            return "_meme_builtins.int(_meme_time.time())"
+
+        if isinstance(expr, EnvVarExpr):
+            self.uses_env = True
+            v = self.gen_expr(expr.var_name, scope)
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope)
+                return f"_meme_os.environ.get({v}, {d})"
+            return f"_meme_os.environ.get({v})"
+
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True
+            if expr.default_val is not None:
+                call = f"_meme_read_json_list_opt({self.gen_expr(expr.filepath, scope)}, {repr(expr.element_type)})"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"((lambda _r: _r if _r is not None else {d})({call}))"
+                return call
             return f"_meme_read_json_list({self.gen_expr(expr.filepath, scope)}, {repr(expr.element_type)})"
 
         if isinstance(expr, ReadJsonRecordExpr):
@@ -436,10 +495,22 @@ class _PyGen:
 
         if isinstance(expr, ReadFileStringExpr):
             self.uses_file_io = True
+            if expr.default_val is not None:
+                call = f"_meme_read_file_string_opt({self.gen_expr(expr.filepath, scope)})"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"((lambda _r: _r if _r is not None else {d})({call}))"
+                return call
             return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ReadFileLinesExpr):
             self.uses_file_io = True
+            if expr.default_val is not None:
+                call = f"_meme_read_file_lines_opt({self.gen_expr(expr.filepath, scope)})"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"((lambda _r: _r if _r is not None else {d})({call}))"
+                return call
             return f"_meme_read_file_lines({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ListFilesExpr):
@@ -507,6 +578,15 @@ class _PyGen:
             dflt = self.gen_expr(expr.default_val, scope)
             return f"_meme_unwrap_or_else({tgt}, lambda: {dflt})"
 
+        if isinstance(expr, EmptySetExpr):
+            return "set()"
+
+        if isinstance(expr, SetContainsExpr):
+            return f"({self.gen_expr(expr.value, scope)} in {self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, SetLengthExpr):
+            return f"_meme_builtins.len({self.gen_expr(expr.target, scope)})"
+
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
     def gen_stmt(
@@ -570,6 +650,9 @@ class _PyGen:
             tgt = _py_ident(stmt.target)
             idx = self.gen_expr(stmt.index, scope)
             val = self.gen_expr(stmt.value, scope)
+            if stmt.nested_index is not None:
+                nidx = self.gen_expr(stmt.nested_index, scope)
+                return [f"{pad}{tgt}[_meme_builtins.int({idx})][_meme_builtins.int({nidx})] = {val}"]
             return [f"{pad}{tgt}[_meme_builtins.int({idx})] = {val}"]
 
         if isinstance(stmt, ListRemoveStmt):
@@ -651,9 +734,13 @@ class _PyGen:
             sub = dict(scope)
             col_t = scope.get(stmt.collection, "List<Int>")
             map_t = _map_types_of(col_t)
+            set_t = _set_type_of(col_t)
             if map_t is not None:
                 sub[stmt.item_var] = map_t[0]  # type: ignore[assignment]
                 iter_expr = f"_meme_builtins.sorted({_py_ident(stmt.collection)}.keys())"
+            elif set_t is not None:
+                sub[stmt.item_var] = set_t  # type: ignore[assignment]
+                iter_expr = f"_meme_builtins.sorted({_py_ident(stmt.collection)})"
             else:
                 sub[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[assignment]
                 iter_expr = f"{_py_ident(stmt.collection)}[:]"
@@ -722,7 +809,7 @@ class _PyGen:
         if isinstance(stmt, RecordDefStmt):
             self.uses_dataclass = True
             self.records[stmt.name] = {f.name: f.field_type for f in stmt.fields}
-            lines = [f"{pad}@_dataclass", f"{pad}class {stmt.name}:"]
+            lines = [f"{pad}@_dataclass(unsafe_hash=True, order=True)", f"{pad}class {stmt.name}:"]
             if not stmt.fields:
                 lines.append(f"{pad}    pass")
             else:
@@ -738,6 +825,16 @@ class _PyGen:
         if isinstance(stmt, MapSetStmt):
             return [
                 f"{pad}{_py_ident(stmt.target)}[{self.gen_expr(stmt.key, scope)}] = {self.gen_expr(stmt.value, scope)}"
+            ]
+
+        if isinstance(stmt, SetAddStmt):
+            return [
+                f"{pad}{_py_ident(stmt.target)}.add({self.gen_expr(stmt.value, scope)})"
+            ]
+
+        if isinstance(stmt, SetRemoveStmt):
+            return [
+                f"{pad}{_py_ident(stmt.target)}.discard({self.gen_expr(stmt.value, scope)})"
             ]
 
         if isinstance(stmt, WriteFileStmt):
@@ -1032,7 +1129,7 @@ def generate_python(ir: ProgramIR) -> str:
         header.append("from dataclasses import dataclass as _dataclass")
     if gen.uses_json_io:
         header.append("import json as _meme_json")
-    if gen.uses_json_io or gen.uses_file_io or gen.uses_input:
+    if gen.uses_json_io or gen.uses_file_io or gen.uses_input or gen.uses_env:
         header.append("import os as _meme_os")
     if gen.uses_json_io or gen.uses_file_io or gen.uses_argv or gen.uses_assert:
         header.append("import sys as _meme_sys")
@@ -1042,6 +1139,8 @@ def generate_python(ir: ProgramIR) -> str:
         header.append("import math as _meme_math")
     if gen.uses_random:
         header.append("import random as _meme_random")
+    if gen.uses_time:
+        header.append("import time as _meme_time")
     header.append("")
 
     if gen.uses_argv:
@@ -1149,6 +1248,26 @@ def generate_python(ir: ProgramIR) -> str:
                 "",
                 "def _meme_read_file_lines(path: str) -> list[str]:",
                 "    raw = _meme_read_file_string(path)",
+                "    if not raw:",
+                "        return []",
+                "    if raw.endswith('\\n'):",
+                "        raw = raw[:-1]",
+                "    return raw.split('\\n')",
+                "",
+                "def _meme_read_file_string_opt(path: str):",
+                "    _rp = _meme_resolve_path(path)",
+                "    if not _meme_os.path.isfile(_rp):",
+                "        return None",
+                "    try:",
+                "        with _meme_builtins.open(_rp, 'r', encoding='utf-8', newline='') as _f:",
+                "            return _f.read()",
+                "    except _meme_builtins.Exception:",
+                "        return None",
+                "",
+                "def _meme_read_file_lines_opt(path: str):",
+                "    raw = _meme_read_file_string_opt(path)",
+                "    if raw is None:",
+                "        return None",
                 "    if not raw:",
                 "        return []",
                 "    if raw.endswith('\\n'):",
@@ -1280,6 +1399,41 @@ def generate_python(ir: ProgramIR) -> str:
                 "    except _meme_builtins.Exception as _e:",
                 "        _meme_builtins.print(f'Error reading JSON file: {_e}', file=_meme_sys.stderr)",
                 "        raise _meme_builtins.SystemExit(1)",
+                "",
+                "def _meme_read_json_list_opt(path: str, elem_type: str = 'Float'):",
+                "    _rp = _meme_resolve_path(path)",
+                "    if not _meme_os.path.isfile(_rp):",
+                "        return None",
+                "    try:",
+                "        with _meme_builtins.open(_rp, 'r', encoding='utf-8') as _f:",
+                "            _data = _meme_json.load(_f)",
+                "        if not _meme_builtins.isinstance(_data, _meme_builtins.list):",
+                "            return None",
+                "        _out = []",
+                "        for _x in _data:",
+                "            if _x is None:",
+                "                return None",
+                "            if elem_type == 'Int':",
+                "                if _meme_builtins.isinstance(_x, _meme_builtins.bool) or not _meme_builtins.isinstance(_x, _meme_builtins.int):",
+                "                    return None",
+                "                _out.append(_meme_builtins.int(_x))",
+                "            elif elem_type == 'Float':",
+                "                if _meme_builtins.isinstance(_x, _meme_builtins.bool) or not _meme_builtins.isinstance(_x, (_meme_builtins.int, _meme_builtins.float)):",
+                "                    return None",
+                "                _out.append(_meme_builtins.float(_x))",
+                "            elif elem_type == 'String':",
+                "                if not _meme_builtins.isinstance(_x, _meme_builtins.str):",
+                "                    return None",
+                "                _out.append(_x)",
+                "            elif elem_type == 'Bool':",
+                "                if not _meme_builtins.isinstance(_x, _meme_builtins.bool):",
+                "                    return None",
+                "                _out.append(_x)",
+                "            else:",
+                "                return None",
+                "        return _out",
+                "    except _meme_builtins.Exception:",
+                "        return None",
                 "",
             ]
         )
@@ -1433,6 +1587,8 @@ def generate_python(ir: ProgramIR) -> str:
             "    if _meme_builtins.isinstance(val, _meme_builtins.dict):",
             "        _items = _meme_builtins.sorted((_meme_fmt(k), _meme_fmt(v)) for k, v in val.items())",
             "        return '{' + ', '.join(f'{k}: {v}' for k, v in _items) + '}'",
+            "    if _meme_builtins.isinstance(val, _meme_builtins.set):",
+            "        return '{' + ', '.join(_meme_fmt(x) for x in _meme_builtins.sorted(val)) + '}'",
             "    if _meme_builtins.hasattr(val, '__dataclass_fields__'):",
             "        _fields = [f'{k}={_meme_fmt(_meme_builtins.getattr(val, k))}' for k in val.__dataclass_fields__]",
             "        return f'{val.__class__.__name__}({', '.join(_fields)})'",

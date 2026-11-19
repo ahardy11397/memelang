@@ -1,0 +1,565 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/532_2d_lists.meme": {
+      "source_sha256": "656710ea991c651b8aa66e5453f3c8f24d79255e4f86a20a39c642bc52def769",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "grid",
+          "var_type": "List<List<Int>>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              },
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              }
+            ],
+            "element_type": "List<Int>"
+          },
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "rows",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "grid"
+              }
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "cell01",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "grid"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 5
+        },
+        {
+          "op": "list_set_index",
+          "target": "grid",
+          "index": {
+            "expr_type": "literal",
+            "value": 1,
+            "data_type": "Int"
+          },
+          "nested_index": {
+            "expr_type": "literal",
+            "value": 0,
+            "data_type": "Int"
+          },
+          "value": {
+            "expr_type": "literal",
+            "value": 9,
+            "data_type": "Int"
+          },
+          "source_line": 7
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "cell10",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "grid"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "for_each",
+          "item_var": "row",
+          "index_var": null,
+          "collection": "grid",
+          "body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "rowlen",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "row"
+                  }
+                }
+              ],
+              "source_line": 11
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "var_decl",
+          "name": "jag",
+          "var_type": "List<List<Int>>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              },
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              }
+            ],
+            "element_type": "List<Int>"
+          },
+          "source_line": 13
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "jag11",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "jag"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 14
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "jag00",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "jag"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 15
+        }
+      ],
+      "canonical_meme": "define list grid as [[1, 2], [3, 4]]\nprint \"rows\", length of grid\nprint \"cell01\", grid[0][1]\nset grid[1][0] to 9\nprint \"cell10\", grid[1][0]\nfor each row in grid:\n    print \"rowlen\", length of row\ndefine list jag as [[1], [2, 3]]\nprint \"jag11\", jag[1][1]\nprint \"jag00\", jag[0][0]",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "grid",
+            "var_type": "List<List<Int>>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                },
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 4,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                }
+              ],
+              "element_type": "List<Int>"
+            },
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "rows",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "grid"
+                }
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "cell01",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "grid"
+                  },
+                  "index": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 5
+          },
+          {
+            "op": "list_set_index",
+            "target": "grid",
+            "index": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            },
+            "nested_index": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            },
+            "value": {
+              "expr_type": "literal",
+              "value": 9,
+              "data_type": "Int"
+            },
+            "source_line": 7
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "cell10",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "grid"
+                  },
+                  "index": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "for_each",
+            "item_var": "row",
+            "index_var": null,
+            "collection": "grid",
+            "body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "rowlen",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "list_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "row"
+                    }
+                  }
+                ],
+                "source_line": 11
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "var_decl",
+            "name": "jag",
+            "var_type": "List<List<Int>>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                },
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                }
+              ],
+              "element_type": "List<Int>"
+            },
+            "source_line": 13
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "jag11",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "jag"
+                  },
+                  "index": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 14
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "jag00",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "jag"
+                  },
+                  "index": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 15
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

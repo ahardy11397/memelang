@@ -1,0 +1,15 @@
+# List<List<T>>: generic 2D lists with jagged rows.
+# Indexing is g[i][j]; nested assignment via `set g[i][j] to v`.
+define grid as [[1, 2], [3, 4]]
+print "rows", length of grid
+print "cell01", grid[0][1]
+
+set grid[1][0] to 9
+print "cell10", grid[1][0]
+
+for each row in grid:
+    print "rowlen", length of row
+
+define jag as [[1], [2, 3]]
+print "jag11", jag[1][1]
+print "jag00", jag[0][0]

@@ -1,0 +1,30 @@
+# Set<T>: first-class sets with deterministic sorted iteration.
+# Adds are idempotent; `contains` is structural for records;
+# iteration order is sorted (bytewise for strings, numeric for numbers).
+define fruits as empty set of String
+add "banana" to set fruits
+add "apple" to set fruits
+add "cherry" to set fruits
+add "apple" to set fruits
+
+print "count", length of set fruits
+for each fruit in fruits:
+    print "fruit", fruit
+
+record Point:
+    x: Int
+    y: Int
+
+define pts as empty set of Point
+add Point(x=2, y=3) to set pts
+add Point(x=1, y=1) to set pts
+add Point(x=2, y=3) to set pts
+
+print "points", length of set pts
+if pts contains Point(x=1, y=1):
+    print "has origin-ish: true"
+else:
+    print "has origin-ish: false"
+
+remove Point(x=1, y=1) from set pts
+print "points after remove", length of set pts

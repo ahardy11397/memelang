@@ -20,7 +20,10 @@ from memelang.ir.schema import (
     ContinueStmt,
     CopyFileStmt,
     CreateDirectoryStmt,
+    CurrentEpochExpr,
     DeleteFileStmt,
+    EmptySetExpr,
+    EnvVarExpr,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -80,6 +83,10 @@ from memelang.ir.schema import (
     RecordLiteralExpr,
     RecordSetFieldStmt,
     ReturnStmt,
+    SetAddStmt,
+    SetContainsExpr,
+    SetLengthExpr,
+    SetRemoveStmt,
     SortCollectionStmt,
     StrContainsExpr,
     StrEndsWithExpr,
@@ -164,6 +171,12 @@ def _map_types_of(map_type: str) -> tuple[str, str] | None:
     return None
 
 
+def _set_type_of(set_type: str) -> str | None:
+    if set_type.startswith("Set<") and set_type.endswith(">"):
+        return set_type[4:-1].strip()
+    return None
+
+
 def _go_type(meme_type: str) -> str:
     mapping = {
         "Int": "int64",
@@ -181,6 +194,9 @@ def _go_type(meme_type: str) -> str:
         mt = _map_types_of(meme_type)
         if mt is not None:
             return f"map[{_go_type(mt[0])}]{_go_type(mt[1])}"
+    set_t = _set_type_of(meme_type)
+    if set_t is not None:
+        return f"_MemeSet[{_go_type(set_t)}]"
     if meme_type.startswith("Optional<") and meme_type.endswith(">"):
         inner = meme_type[9:-1]
         return f"*{_go_type(inner)}"
@@ -209,6 +225,9 @@ class _GoGen:
         self.uses_is_upper = False
         self.uses_is_lower = False
         self.uses_format_float = False
+        self.uses_time = False
+        self.uses_env = False
+        self.uses_env_or = False
 
         self.uses_meme_fmt = False
         self.uses_int_div = False
@@ -218,12 +237,15 @@ class _GoGen:
         self.uses_input_helpers = False
         self.uses_path_helpers = False
         self.uses_file_io = False
+        self.uses_file_io_opt = False
         self.uses_json_io = False
+        self.uses_json_list_opt = False
         self.uses_str_split = False
         self.uses_char_at = False
         self.uses_str_slice = False
         self.uses_optional_helpers = False
         self.uses_map_helpers = False
+        self.uses_set = False
         self.uses_json_records = False
         self.uses_json_write = False
         self.json_records_read: set[str] = set()
@@ -243,7 +265,23 @@ class _GoGen:
         if isinstance(expr, RandomListExpr):
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return f"List<{expr.element_type}>"  # type: ignore[return-value]
+            if expr.default_val is not None:
+                return f"Optional<List<{expr.element_type}>>"  # type: ignore[return-value]
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
+        if isinstance(expr, ReadFileStringExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "String"
+            if expr.default_val is not None:
+                return "Optional<String>"
+            return "String"
+        if isinstance(expr, ReadFileLinesExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "List<String>"
+            if expr.default_val is not None:
+                return "Optional<List<String>>"
+            return "List<String>"
         if isinstance(expr, ReadJsonRecordExpr):
             if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
                 return expr.record_name  # type: ignore[return-value]
@@ -252,6 +290,12 @@ class _GoGen:
             if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
                 return f"List<{expr.record_name}>"  # type: ignore[return-value]
             return f"Optional<List<{expr.record_name}>>"  # type: ignore[return-value]
+        if isinstance(expr, CurrentEpochExpr):
+            return "Int"
+        if isinstance(expr, EnvVarExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "String"
+            return "Optional<String>"
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
         if isinstance(expr, ListFilesExpr):
@@ -273,15 +317,12 @@ class _GoGen:
                 StringTrimExpr,
                 StringJoinExpr,
                 StringCharAtExpr,
-                ReadFileStringExpr,
                 ArgAtExpr,
                 FormatIntExpr,
                 FormatFloatExpr,
             ),
         ):
             return "String"
-        if isinstance(expr, ReadFileLinesExpr):
-            return "List<String>"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
             if col_t.startswith("List<"):
@@ -319,6 +360,12 @@ class _GoGen:
                 return tgt_t[9:-1]
             if isinstance(expr, OptionalUnwrapOrDefaultExpr):
                 return self.infer_type(expr.default_val, scope)
+            return "Int"
+        if isinstance(expr, EmptySetExpr):
+            return f"Set<{expr.element_type}>"
+        if isinstance(expr, SetContainsExpr):
+            return "Bool"
+        if isinstance(expr, SetLengthExpr):
             return "Int"
         if isinstance(expr, UnaryOpExpr):
             return "Bool" if expr.op == "not" else self.infer_type(expr.operand, scope)
@@ -531,9 +578,31 @@ class _GoGen:
             dec = self.gen_expr(expr.decimals, scope)
             return f"_meme_format_float({tgt}, {dec})"
 
+        if isinstance(expr, CurrentEpochExpr):
+            self.uses_time = True
+            return "time.Now().Unix()"
+
+        if isinstance(expr, EnvVarExpr):
+            self.uses_os = True
+            v = self.gen_expr(expr.var_name, scope)
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope)
+                self.uses_env_or = True
+                return f"_meme_env_var_or({v}, {d})"
+            self.uses_env = True
+            return f"_meme_env_var({v})"
+
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True
             el_lower = expr.element_type.lower()
+            if expr.default_val is not None:
+                self.uses_json_list_opt = True
+                call = f"_meme_read_json_list_{el_lower}_opt({self.gen_expr(expr.filepath, scope)})"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    go_t = _go_type(expr.element_type)
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"(func() []{go_t} {{ if _r := {call}; _r != nil {{ return *_r }}; return {d} }}())"
+                return call
             return f"_meme_read_json_list_{el_lower}({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ReadJsonRecordExpr):
@@ -562,10 +631,24 @@ class _GoGen:
 
         if isinstance(expr, ReadFileStringExpr):
             self.uses_file_io = True
+            if expr.default_val is not None:
+                self.uses_file_io_opt = True
+                call = f"_meme_read_file_string_opt({self.gen_expr(expr.filepath, scope)})"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"(func() string {{ if _r := {call}; _r != nil {{ return *_r }}; return {d} }}())"
+                return call
             return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ReadFileLinesExpr):
             self.uses_file_io = True
+            if expr.default_val is not None:
+                self.uses_file_io_opt = True
+                call = f"_meme_read_file_lines_opt({self.gen_expr(expr.filepath, scope)})"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"(func() []string {{ if _r := {call}; _r != nil {{ return *_r }}; return {d} }}())"
+                return call
             return f"_meme_read_file_lines({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ListFilesExpr):
@@ -639,6 +722,18 @@ class _GoGen:
             dflt_t = _go_type(val_t)
             dflt = self.gen_expr(expr.default_val, scope)
             return f"_meme_unwrap_or_else({tgt}, func() {dflt_t} {{ return {dflt} }})"
+
+        if isinstance(expr, EmptySetExpr):
+            self.uses_set = True
+            return f"make(_MemeSet[{_go_type(expr.element_type)}])"
+
+        if isinstance(expr, SetContainsExpr):
+            self.uses_set = True
+            return f"{self.gen_expr(expr.target, scope)}[{self.gen_expr(expr.value, scope)}]"
+
+        if isinstance(expr, SetLengthExpr):
+            self.uses_set = True
+            return f"int64(len({self.gen_expr(expr.target, scope)}))"
 
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
@@ -733,6 +828,9 @@ class _GoGen:
             tgt = _go_ident(stmt.target)
             idx = self.gen_expr(stmt.index, scope)
             val = self.gen_expr(stmt.value, scope)
+            if stmt.nested_index is not None:
+                nidx = self.gen_expr(stmt.nested_index, scope)
+                return [f"{pad}{tgt}[{idx}][{nidx}] = {val}"]
             return [f"{pad}{tgt}[{idx}] = {val}"]
 
         if isinstance(stmt, ListRemoveStmt):
@@ -822,6 +920,7 @@ class _GoGen:
             map_t = _map_types_of(col_t)
             col_ident = _go_ident(stmt.collection)
             item_ident = _go_ident(stmt.item_var)
+            set_t = _set_type_of(col_t)
             if map_t is not None:
                 self.uses_sort = True
                 sub[stmt.item_var] = map_t[0]  # type: ignore[assignment]
@@ -850,6 +949,51 @@ class _GoGen:
                     lines.append(f"{pad}        _ = {idx_ident}")
                 else:
                     lines.append(f"{pad}    for _, {item_ident} := range _meme_keys {{")
+                    lines.append(f"{pad}        _ = {item_ident}")
+                for ch in stmt.body:
+                    lines.extend(self.gen_stmt(ch, sub, indent + 2))
+                lines.append(f"{pad}    }}")
+                lines.append(f"{pad}}}")
+                return lines
+            elif set_t is not None:
+                self.uses_sort = True
+                self.uses_set = True
+                el_mtype = set_t
+                sub[stmt.item_var] = el_mtype  # type: ignore[assignment]
+                el_go = _go_type(el_mtype)
+                lines = [
+                    f"{pad}{{",
+                    f"{pad}    _meme_items := make([]{el_go}, 0, len({col_ident}))",
+                    f"{pad}    for _it := range {col_ident} {{",
+                    f"{pad}        _meme_items = append(_meme_items, _it)",
+                    f"{pad}    }}",
+                ]
+                if el_mtype == "Bool":
+                    lines.append(
+                        f"{pad}    sort.SliceStable(_meme_items, func(i, j int) bool {{ return !_meme_items[i] && _meme_items[j] }})"
+                    )
+                elif el_mtype in ("Int", "Float", "String"):
+                    lines.append(
+                        f"{pad}    sort.SliceStable(_meme_items, func(i, j int) bool {{ return _meme_items[i] < _meme_items[j] }})"
+                    )
+                elif el_mtype in self.records:
+                    lines.append(
+                        f"{pad}    sort.SliceStable(_meme_items, func(i, j int) bool {{ return _meme_less_{_go_ident(el_mtype)}(_meme_items[i], _meme_items[j]) }})"
+                    )
+                else:
+                    self.uses_meme_fmt = True
+                    lines.append(
+                        f"{pad}    sort.SliceStable(_meme_items, func(i, j int) bool {{ return _meme_fmt(_meme_items[i]) < _meme_fmt(_meme_items[j]) }})"
+                    )
+                if stmt.index_var is not None:
+                    sub[stmt.index_var] = "Int"
+                    idx_ident = _go_ident(stmt.index_var)
+                    lines.append(f"{pad}    for _meme_idx, {item_ident} := range _meme_items {{")
+                    lines.append(f"{pad}        _ = {item_ident}")
+                    lines.append(f"{pad}        {idx_ident} := int64(_meme_idx)")
+                    lines.append(f"{pad}        _ = {idx_ident}")
+                else:
+                    lines.append(f"{pad}    for _, {item_ident} := range _meme_items {{")
                     lines.append(f"{pad}        _ = {item_ident}")
                 for ch in stmt.body:
                     lines.extend(self.gen_stmt(ch, sub, indent + 2))
@@ -923,6 +1067,18 @@ class _GoGen:
         if isinstance(stmt, MapSetStmt):
             return [
                 f"{pad}{_go_ident(stmt.target)}[{self.gen_expr(stmt.key, scope)}] = {self.gen_expr(stmt.value, scope)}"
+            ]
+
+        if isinstance(stmt, SetAddStmt):
+            self.uses_set = True
+            return [
+                f"{pad}{_go_ident(stmt.target)}[{self.gen_expr(stmt.value, scope)}] = true"
+            ]
+
+        if isinstance(stmt, SetRemoveStmt):
+            self.uses_set = True
+            return [
+                f"{pad}delete({_go_ident(stmt.target)}, {self.gen_expr(stmt.value, scope)})"
             ]
 
         if isinstance(stmt, WriteFileStmt):
@@ -1237,6 +1393,17 @@ def generate_go(ir: ProgramIR) -> str:
             record_blocks.append(f'    _parts := []string{{{f_fmts}}}')
             record_blocks.append(f'    return "{r.name}(" + strings.Join(_parts, ", ") + ")"')
             gen.uses_strings = True
+        record_blocks.append("}")
+        record_blocks.append(f"func _meme_less_{r_name}(a, b {r_name}) bool {{")
+        for f in r.fields:
+            f_id = _go_ident(f.name)
+            if f.field_type == "Bool":
+                record_blocks.append(f"    if a.{f_id} != b.{f_id} {{ return !a.{f_id} && b.{f_id} }}")
+            elif f.field_type in ("Int", "Float", "String"):
+                record_blocks.append(f"    if a.{f_id} != b.{f_id} {{ return a.{f_id} < b.{f_id} }}")
+            elif f.field_type in gen.records:
+                record_blocks.append(f"    if a.{f_id} != b.{f_id} {{ return _meme_less_{_go_ident(f.field_type)}(a.{f_id}, b.{f_id}) }}")
+        record_blocks.append("    return false")
         record_blocks.append("}")
         record_blocks.append("")
 
@@ -1681,6 +1848,37 @@ def generate_go(ir: ProgramIR) -> str:
                 '    return strings.Split(raw, "\\n")',
                 "}",
                 "",
+                "func _meme_read_file_string_opt(path string) *string {",
+                "    rp := _meme_resolve_path(path)",
+                "    info, err := os.Stat(rp)",
+                "    if err != nil || info.IsDir() {",
+                "        return nil",
+                "    }",
+                "    bytes, err := os.ReadFile(rp)",
+                "    if err != nil {",
+                "        return nil",
+                "    }",
+                "    s := string(bytes)",
+                "    return &s",
+                "}",
+                "",
+                "func _meme_read_file_lines_opt(path string) *[]string {",
+                "    s := _meme_read_file_string_opt(path)",
+                "    if s == nil {",
+                "        return nil",
+                "    }",
+                "    raw := *s",
+                "    if len(raw) == 0 {",
+                "        res := []string{}",
+                "        return &res",
+                "    }",
+                '    if strings.HasSuffix(raw, "\\n") {',
+                "        raw = raw[:len(raw)-1]",
+                "    }",
+                '    res := strings.Split(raw, "\\n")',
+                "    return &res",
+                "}",
+                "",
                 "func _meme_write_file(path string, content string) {",
                 "    p := strings.TrimSpace(path)",
                 "    if err := os.WriteFile(p, []byte(content), 0644); err != nil {",
@@ -1944,6 +2142,110 @@ def generate_go(ir: ProgramIR) -> str:
             ]
         )
 
+    if gen.uses_json_list_opt:
+        gen.uses_json = True
+        gen.uses_os = True
+        helpers.extend(
+            [
+                "func _meme_read_json_list_int_opt(path string) *[]int64 {",
+                "    data, err := os.ReadFile(_meme_resolve_path(path))",
+                "    if err != nil {",
+                "        return nil",
+                "    }",
+                "    var raw any",
+                "    if err := json.Unmarshal(data, &raw); err != nil {",
+                "        return nil",
+                "    }",
+                "    arr, ok := raw.([]any)",
+                "    if !ok {",
+                "        return nil",
+                "    }",
+                "    out := make([]int64, len(arr))",
+                "    for i, item := range arr {",
+                "        f, ok := item.(float64)",
+                "        if !ok || f != float64(int64(f)) {",
+                "            return nil",
+                "        }",
+                "        out[i] = int64(f)",
+                "    }",
+                "    return &out",
+                "}",
+                "",
+                "func _meme_read_json_list_float_opt(path string) *[]float64 {",
+                "    data, err := os.ReadFile(_meme_resolve_path(path))",
+                "    if err != nil {",
+                "        return nil",
+                "    }",
+                "    var raw any",
+                "    if err := json.Unmarshal(data, &raw); err != nil {",
+                "        return nil",
+                "    }",
+                "    arr, ok := raw.([]any)",
+                "    if !ok {",
+                "        return nil",
+                "    }",
+                "    out := make([]float64, len(arr))",
+                "    for i, item := range arr {",
+                "        f, ok := item.(float64)",
+                "        if !ok {",
+                "            return nil",
+                "        }",
+                "        out[i] = f",
+                "    }",
+                "    return &out",
+                "}",
+                "",
+                "func _meme_read_json_list_string_opt(path string) *[]string {",
+                "    data, err := os.ReadFile(_meme_resolve_path(path))",
+                "    if err != nil {",
+                "        return nil",
+                "    }",
+                "    var raw any",
+                "    if err := json.Unmarshal(data, &raw); err != nil {",
+                "        return nil",
+                "    }",
+                "    arr, ok := raw.([]any)",
+                "    if !ok {",
+                "        return nil",
+                "    }",
+                "    out := make([]string, len(arr))",
+                "    for i, item := range arr {",
+                "        s, ok := item.(string)",
+                "        if !ok {",
+                "            return nil",
+                "        }",
+                "        out[i] = s",
+                "    }",
+                "    return &out",
+                "}",
+                "",
+                "func _meme_read_json_list_bool_opt(path string) *[]bool {",
+                "    data, err := os.ReadFile(_meme_resolve_path(path))",
+                "    if err != nil {",
+                "        return nil",
+                "    }",
+                "    var raw any",
+                "    if err := json.Unmarshal(data, &raw); err != nil {",
+                "        return nil",
+                "    }",
+                "    arr, ok := raw.([]any)",
+                "    if !ok {",
+                "        return nil",
+                "    }",
+                "    out := make([]bool, len(arr))",
+                "    for i, item := range arr {",
+                "        b, ok := item.(bool)",
+                "        if !ok {",
+                "            return nil",
+                "        }",
+                "        out[i] = b",
+                "    }",
+                "    return &out",
+                "}",
+                "",
+            ]
+        )
+
     if gen.uses_optional_helpers:
         gen.uses_fmt = True
         gen.uses_os = True
@@ -1968,6 +2270,15 @@ def generate_go(ir: ProgramIR) -> str:
                 "    }",
                 "    return dflt()",
                 "}",
+                "",
+            ]
+        )
+
+    if gen.uses_set:
+        helpers.extend(
+            [
+                "// Set representation: map[T]bool with sorted-key iteration.",
+                "type _MemeSet[T comparable] map[T]bool",
                 "",
             ]
         )
@@ -2046,6 +2357,35 @@ def generate_go(ir: ProgramIR) -> str:
             r_fields = gen.records.get(r_name, {})
             helpers.extend(_emit_go_json_record_writer(r_name, r_fields))
 
+    if gen.uses_env:
+        gen.uses_os = True
+        helpers.extend(
+            [
+                "func _meme_env_var(name string) *string {",
+                "    val, ok := os.LookupEnv(name)",
+                "    if !ok {",
+                "        return nil",
+                "    }",
+                "    return &val",
+                "}",
+                "",
+            ]
+        )
+    if gen.uses_env_or:
+        gen.uses_os = True
+        helpers.extend(
+            [
+                "func _meme_env_var_or(name string, dflt string) string {",
+                "    val, ok := os.LookupEnv(name)",
+                "    if !ok {",
+                "        return dflt",
+                "    }",
+                "    return val",
+                "}",
+                "",
+            ]
+        )
+
     # Collect required imports in sorted order
     imports: list[str] = []
     if gen.uses_bufio:
@@ -2074,6 +2414,8 @@ def generate_go(ir: ProgramIR) -> str:
         imports.append('"strconv"')
     if gen.uses_strings:
         imports.append('"strings"')
+    if gen.uses_time:
+        imports.append('"time"')
 
     out: list[str] = ["package main", ""]
     if imports:

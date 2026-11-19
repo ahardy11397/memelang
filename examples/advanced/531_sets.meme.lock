@@ -1,0 +1,661 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/531_sets.meme": {
+      "source_sha256": "732a8737a6f1ac862d79b905a6ffdfaa39cf2a9fcdd31b494a5169f3fee217ec",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "fruits",
+          "var_type": "Set<String>",
+          "value": {
+            "expr_type": "empty_set",
+            "element_type": "String"
+          },
+          "source_line": 4
+        },
+        {
+          "op": "set_add",
+          "target": "fruits",
+          "value": {
+            "expr_type": "literal",
+            "value": "banana",
+            "data_type": "String"
+          },
+          "source_line": 5
+        },
+        {
+          "op": "set_add",
+          "target": "fruits",
+          "value": {
+            "expr_type": "literal",
+            "value": "apple",
+            "data_type": "String"
+          },
+          "source_line": 6
+        },
+        {
+          "op": "set_add",
+          "target": "fruits",
+          "value": {
+            "expr_type": "literal",
+            "value": "cherry",
+            "data_type": "String"
+          },
+          "source_line": 7
+        },
+        {
+          "op": "set_add",
+          "target": "fruits",
+          "value": {
+            "expr_type": "literal",
+            "value": "apple",
+            "data_type": "String"
+          },
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "count",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "set_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "fruits"
+              }
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "for_each",
+          "item_var": "fruit",
+          "index_var": null,
+          "collection": "fruits",
+          "body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "fruit",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "fruit"
+                }
+              ],
+              "source_line": 12
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "record_def",
+          "name": "Point",
+          "fields": [
+            {
+              "name": "x",
+              "field_type": "Int"
+            },
+            {
+              "name": "y",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 14
+        },
+        {
+          "op": "var_decl",
+          "name": "pts",
+          "var_type": "Set<Point>",
+          "value": {
+            "expr_type": "empty_set",
+            "element_type": "Point"
+          },
+          "source_line": 18
+        },
+        {
+          "op": "set_add",
+          "target": "pts",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Point",
+            "fields": [
+              {
+                "name": "x",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "y",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 19
+        },
+        {
+          "op": "set_add",
+          "target": "pts",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Point",
+            "fields": [
+              {
+                "name": "x",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "y",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 20
+        },
+        {
+          "op": "set_add",
+          "target": "pts",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Point",
+            "fields": [
+              {
+                "name": "x",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "y",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 21
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "points",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "set_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "pts"
+              }
+            }
+          ],
+          "source_line": 23
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "set_contains",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "pts"
+            },
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Point",
+              "fields": [
+                {
+                  "name": "x",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "y",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            }
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "has origin-ish: true",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 25
+            }
+          ],
+          "else_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "has origin-ish: false",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 27
+            }
+          ],
+          "source_line": 24
+        },
+        {
+          "op": "set_remove",
+          "target": "pts",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Point",
+            "fields": [
+              {
+                "name": "x",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "y",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 29
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "points after remove",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "set_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "pts"
+              }
+            }
+          ],
+          "source_line": 30
+        }
+      ],
+      "canonical_meme": "define fruits as empty set of String\nadd \"banana\" to set fruits\nadd \"apple\" to set fruits\nadd \"cherry\" to set fruits\nadd \"apple\" to set fruits\nprint \"count\", length of set fruits\nfor each fruit in fruits:\n    print \"fruit\", fruit\nrecord Point:\n    x: Int\n    y: Int\ndefine pts as empty set of Point\nadd Point(x=2, y=3) to set pts\nadd Point(x=1, y=1) to set pts\nadd Point(x=2, y=3) to set pts\nprint \"points\", length of set pts\nif pts contains Point(x=1, y=1):\n    print \"has origin-ish: true\"\nelse:\n    print \"has origin-ish: false\"\nremove Point(x=1, y=1) from set pts\nprint \"points after remove\", length of set pts",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "fruits",
+            "var_type": "Set<String>",
+            "value": {
+              "expr_type": "empty_set",
+              "element_type": "String"
+            },
+            "source_line": 4
+          },
+          {
+            "op": "set_add",
+            "target": "fruits",
+            "value": {
+              "expr_type": "literal",
+              "value": "banana",
+              "data_type": "String"
+            },
+            "source_line": 5
+          },
+          {
+            "op": "set_add",
+            "target": "fruits",
+            "value": {
+              "expr_type": "literal",
+              "value": "apple",
+              "data_type": "String"
+            },
+            "source_line": 6
+          },
+          {
+            "op": "set_add",
+            "target": "fruits",
+            "value": {
+              "expr_type": "literal",
+              "value": "cherry",
+              "data_type": "String"
+            },
+            "source_line": 7
+          },
+          {
+            "op": "set_add",
+            "target": "fruits",
+            "value": {
+              "expr_type": "literal",
+              "value": "apple",
+              "data_type": "String"
+            },
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "count",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "set_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "fruits"
+                }
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "for_each",
+            "item_var": "fruit",
+            "index_var": null,
+            "collection": "fruits",
+            "body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "fruit",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "fruit"
+                  }
+                ],
+                "source_line": 12
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "record_def",
+            "name": "Point",
+            "fields": [
+              {
+                "name": "x",
+                "field_type": "Int"
+              },
+              {
+                "name": "y",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 14
+          },
+          {
+            "op": "var_decl",
+            "name": "pts",
+            "var_type": "Set<Point>",
+            "value": {
+              "expr_type": "empty_set",
+              "element_type": "Point"
+            },
+            "source_line": 18
+          },
+          {
+            "op": "set_add",
+            "target": "pts",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Point",
+              "fields": [
+                {
+                  "name": "x",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "y",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 19
+          },
+          {
+            "op": "set_add",
+            "target": "pts",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Point",
+              "fields": [
+                {
+                  "name": "x",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "y",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 20
+          },
+          {
+            "op": "set_add",
+            "target": "pts",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Point",
+              "fields": [
+                {
+                  "name": "x",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "y",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 21
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "points",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "set_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "pts"
+                }
+              }
+            ],
+            "source_line": 23
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "set_contains",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "pts"
+              },
+              "value": {
+                "expr_type": "record_literal",
+                "record_name": "Point",
+                "fields": [
+                  {
+                    "name": "x",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  },
+                  {
+                    "name": "y",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  }
+                ]
+              }
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "has origin-ish: true",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 25
+              }
+            ],
+            "else_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "has origin-ish: false",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 27
+              }
+            ],
+            "source_line": 24
+          },
+          {
+            "op": "set_remove",
+            "target": "pts",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Point",
+              "fields": [
+                {
+                  "name": "x",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "y",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 29
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "points after remove",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "set_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "pts"
+                }
+              }
+            ],
+            "source_line": 30
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

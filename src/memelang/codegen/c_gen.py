@@ -33,7 +33,9 @@ from memelang.ir.schema import (
     ContinueStmt,
     CopyFileStmt,
     CreateDirectoryStmt,
+    CurrentEpochExpr,
     DeleteFileStmt,
+    EnvVarExpr,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -60,6 +62,11 @@ from memelang.ir.schema import (
     ListRemoveStmt,
     ListSetIndexStmt,
     LiteralExpr,
+    EmptySetExpr,
+    SetAddStmt,
+    SetContainsExpr,
+    SetLengthExpr,
+    SetRemoveStmt,
     MapEntry,
     MapGetExpr,
     MapHasKeyExpr,
@@ -175,6 +182,12 @@ def _map_types_of(map_type: str) -> tuple[str, str] | None:
     return None
 
 
+def _set_types_of(set_type: str) -> str | None:
+    if set_type.startswith("Set<") and set_type.endswith(">"):
+        return set_type[4:-1].strip()
+    return None
+
+
 def _mangle_type(meme_type: str) -> str:
     clean = re.sub(r"[^A-Za-z0-9]", "_", meme_type)
     return re.sub(r"_+", "_", clean).strip("_")
@@ -190,6 +203,9 @@ def _c_type(meme_type: MemeType | str) -> str:
     map_t = _map_types_of(meme_type)
     if map_t is not None:
         return f"meme_map_{_mangle_type(map_t[0])}_{_mangle_type(map_t[1])}"
+    set_t = _set_types_of(meme_type)
+    if set_t is not None:
+        return f"meme_set_{_mangle_type(set_t)}"
     mapping = {
         "Int": "int64_t",
         "Float": "double",
@@ -208,6 +224,9 @@ def _collect_types_from_expr(expr: IRExpr, out: set[str]) -> None:
         out.add(expr.element_type)
         for e in expr.elements:
             _collect_types_from_expr(e, out)
+    elif isinstance(expr, EmptySetExpr):
+        out.add(f"Set<{expr.element_type}>")
+        out.add(expr.element_type)
     elif isinstance(expr, MapLiteralExpr):
         out.add(f"Map<{expr.key_type}, {expr.value_type}>")
         out.add(expr.key_type)
@@ -218,6 +237,9 @@ def _collect_types_from_expr(expr: IRExpr, out: set[str]) -> None:
     elif isinstance(expr, ReadJsonListExpr):
         out.add(f"List<{expr.element_type}>")
         out.add(expr.element_type)
+        if expr.default_val is not None:
+            out.add(f"Optional<List<{expr.element_type}>>")
+            _collect_types_from_expr(expr.default_val, out)
         _collect_types_from_expr(expr.filepath, out)
     elif isinstance(expr, StringSplitExpr):
         out.add("List<String>")
@@ -277,14 +299,32 @@ def _collect_types_from_expr(expr: IRExpr, out: set[str]) -> None:
         _collect_types_from_expr(expr.filepath, out)
         if expr.default_val is not None:
             _collect_types_from_expr(expr.default_val, out)
+    elif isinstance(expr, CurrentEpochExpr):
+        out.add("Int")
+    elif isinstance(expr, EnvVarExpr):
+        out.add("String")
+        out.add("Optional<String>")
+        _collect_types_from_expr(expr.var_name, out)
+        if expr.default_val is not None:
+            _collect_types_from_expr(expr.default_val, out)
     elif isinstance(expr, ReadFileLinesExpr):
         out.add("List<String>")
+        out.add("String")
+        if expr.default_val is not None:
+            out.add("Optional<List<String>>")
+            _collect_types_from_expr(expr.default_val, out)
+        _collect_types_from_expr(expr.filepath, out)
+    elif isinstance(expr, ReadFileStringExpr):
+        out.add("String")
+        if expr.default_val is not None:
+            out.add("Optional<String>")
+            _collect_types_from_expr(expr.default_val, out)
         _collect_types_from_expr(expr.filepath, out)
     elif isinstance(expr, (StringLengthExpr, StringSliceExpr, StringReplaceExpr,
                            StringUpperExpr, StringLowerExpr, StringTrimExpr,
                            StringJoinExpr, StringIndexOfExpr, StringCharAtExpr,
                            StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr,
-                           FileExistsExpr, ReadFileStringExpr, ParseIntExpr, FormatIntExpr,
+                           FileExistsExpr, ParseIntExpr, FormatIntExpr,
                            FormatFloatExpr,
                            IsDigitExpr, IsLetterExpr, IsUpperExpr, IsLowerExpr)):
         for attr in ("target", "substring", "prefix", "suffix", "old", "new",
@@ -397,6 +437,11 @@ class _CGen:
         self.uses_str_helpers = False
         self.uses_json_io = False
         self.uses_file_io = False
+        self.uses_file_io_opt = False
+        self.uses_read_file_string_opt = False
+        self.uses_read_file_lines_opt = False
+        self.uses_json_list_opt = False
+        self.json_list_opt_types: set[str] = set()
         self.uses_list_files = False
         self.uses_argv = False
         self.uses_int_div = False
@@ -406,6 +451,8 @@ class _CGen:
         self.func_params: dict[str, list[FuncParam]] = {}
         self.records: dict[str, dict[str, MemeType]] = {}
         self.current_func_return: str | None = None
+        self.uses_env = False
+        self.uses_env_or = False
         self.uses_json_records = False
         self.uses_json_write = False
         self.json_records_read: set[str] = set()
@@ -422,7 +469,23 @@ class _CGen:
         if isinstance(expr, RandomListExpr):
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return f"List<{expr.element_type}>"  # type: ignore[return-value]
+            if expr.default_val is not None:
+                return f"Optional<List<{expr.element_type}>>"  # type: ignore[return-value]
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
+        if isinstance(expr, ReadFileStringExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "String"
+            if expr.default_val is not None:
+                return "Optional<String>"
+            return "String"
+        if isinstance(expr, ReadFileLinesExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "List<String>"
+            if expr.default_val is not None:
+                return "Optional<List<String>>"
+            return "List<String>"
         if isinstance(expr, ReadJsonRecordExpr):
             if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
                 return expr.record_name  # type: ignore[return-value]
@@ -431,6 +494,12 @@ class _CGen:
             if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
                 return f"List<{expr.record_name}>"  # type: ignore[return-value]
             return f"Optional<List<{expr.record_name}>>"  # type: ignore[return-value]
+        if isinstance(expr, CurrentEpochExpr):
+            return "Int"
+        if isinstance(expr, EnvVarExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "String"
+            return "Optional<String>"
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
         if isinstance(expr, ListFilesExpr):
@@ -452,15 +521,12 @@ class _CGen:
                 StringTrimExpr,
                 StringJoinExpr,
                 StringCharAtExpr,
-                ReadFileStringExpr,
                 ArgAtExpr,
                 FormatIntExpr,
                 FormatFloatExpr,
             ),
         ):
             return "String"
-        if isinstance(expr, ReadFileLinesExpr):
-            return "List<String>"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
             if col_t.startswith("List<"):
@@ -724,10 +790,32 @@ class _CGen:
             dec = self.gen_expr(expr.decimals, scope)
             return f"_meme_format_float({tgt}, {dec})"
 
+        if isinstance(expr, CurrentEpochExpr):
+            return "(int64_t)time(NULL)"
+
+        if isinstance(expr, EnvVarExpr):
+            v = self.gen_expr(expr.var_name, scope, "String")
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope, "String")
+                self.uses_env_or = True
+                return f"_meme_env_var_or({v}, {d})"
+            self.uses_env = True
+            return f"_meme_env_var({v})"
+
         if isinstance(expr, ReadJsonListExpr):
             self.uses_str_helpers = True
             self.uses_json_io = True
-            return f"_meme_read_json_list_{expr.element_type.lower()}({self.gen_expr(expr.filepath, scope)})"
+            el_t = expr.element_type
+            el_lower = el_t.lower()
+            p = self.gen_expr(expr.filepath, scope)
+            if expr.default_val is not None:
+                self.uses_json_list_opt = True
+                self.json_list_opt_types.add(el_lower)
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope, f"List<{el_t}>")
+                    return f"_meme_read_json_list_{el_lower}_or({p}, {d})"
+                return f"_meme_read_json_list_{el_lower}_opt({p})"
+            return f"_meme_read_json_list_{el_lower}({p})"
 
         if isinstance(expr, ReadJsonRecordExpr):
             self.uses_json_records = True
@@ -759,12 +847,29 @@ class _CGen:
         if isinstance(expr, ReadFileStringExpr):
             self.uses_str_helpers = True
             self.uses_file_io = True
-            return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
+            p = self.gen_expr(expr.filepath, scope)
+            if expr.default_val is not None:
+                self.uses_file_io_opt = True
+                self.uses_read_file_string_opt = True
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope, "String")
+                    return f"_meme_read_file_string_or({p}, {d})"
+                return f"_meme_read_file_string_opt({p})"
+            return f"_meme_read_file_string({p})"
 
         if isinstance(expr, ReadFileLinesExpr):
             self.uses_str_helpers = True
             self.uses_file_io = True
-            return f"_meme_read_file_lines({self.gen_expr(expr.filepath, scope)})"
+            p = self.gen_expr(expr.filepath, scope)
+            if expr.default_val is not None:
+                self.uses_file_io_opt = True
+                self.uses_read_file_lines_opt = True
+                self.uses_read_file_string_opt = True
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope, "List<String>")
+                    return f"_meme_read_file_lines_or({p}, {d})"
+                return f"_meme_read_file_lines_opt({p})"
+            return f"_meme_read_file_lines({p})"
 
         if isinstance(expr, ListFilesExpr):
             self.uses_str_helpers = True
@@ -827,6 +932,19 @@ class _CGen:
             k_t, v_t = _map_types_of(tgt_t) if _map_types_of(tgt_t) else ("String", "Int")
             m_type = f"{_mangle_type(k_t)}_{_mangle_type(v_t)}"
             return f"_meme_map_{m_type}_has_key({tgt}, {k})"
+
+        if isinstance(expr, EmptySetExpr):
+            return f"_meme_set_{_mangle_type(expr.element_type)}_new()"
+
+        if isinstance(expr, SetContainsExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            v = self.gen_expr(expr.value, scope)
+            tgt_t = self.infer_type(expr.target, scope)
+            el_t = _set_types_of(tgt_t) if _set_types_of(tgt_t) else "String"
+            return f"_meme_set_{_mangle_type(el_t)}_contains({tgt}, {v})"
+
+        if isinstance(expr, SetLengthExpr):
+            return f"((int64_t)({self.gen_expr(expr.target, scope)}).len)"
 
         if isinstance(expr, OptionalNoneExpr):
             if expected_type and expected_type.startswith("Optional<"):
@@ -962,6 +1080,15 @@ class _CGen:
             m_type = _mangle_type(el_t)
             idx = self.gen_expr(stmt.index, scope)
             val = self.gen_expr(stmt.value, scope, el_t)
+            if stmt.nested_index is not None:
+                nidx = self.gen_expr(stmt.nested_index, scope, el_t)
+                inner_elem_t = (
+                    el_t[5:-1] if el_t.startswith("List<") else el_t
+                )
+                val = self.gen_expr(stmt.value, scope, inner_elem_t)
+                return [
+                    f"{pad}_meme_list_{_mangle_type(inner_elem_t)}_set(&{tgt}.data[{idx}], {nidx}, {val});"
+                ]
             return [f"{pad}_meme_list_{m_type}_set(&{tgt}, {idx}, {val});"]
 
         if isinstance(stmt, ListRemoveStmt):
@@ -1083,6 +1210,28 @@ class _CGen:
                 lines.append(f"{pad}    }}")
                 lines.append(f"{pad}}}")
                 return lines
+            elif _set_types_of(col_t) is not None:
+                el_t = _set_types_of(col_t)
+                sub[stmt.item_var] = el_t  # type: ignore[assignment]
+                c_el_t = _c_type(el_t)
+                m_type = _mangle_type(el_t)
+                lines = [
+                    f"{pad}{{",
+                    f"{pad}    meme_set_{m_type} _meme_col = _meme_set_{m_type}_copy({col_ident});",
+                    f"{pad}    for (int64_t _meme_idx = 0; _meme_idx < _meme_col.len; ++_meme_idx) {{",
+                    f"{pad}        {c_el_t} {item_ident} = _meme_col.data[_meme_idx];",
+                    f"{pad}        (void){item_ident};",
+                ]
+                if stmt.index_var is not None:
+                    sub[stmt.index_var] = "Int"
+                    idx_ident = _c_ident(stmt.index_var)
+                    lines.append(f"{pad}        int64_t {idx_ident} = _meme_idx;")
+                    lines.append(f"{pad}        (void){idx_ident};")
+                for ch in stmt.body:
+                    lines.extend(self.gen_stmt(ch, sub, indent + 2))
+                lines.append(f"{pad}    }}")
+                lines.append(f"{pad}}}")
+                return lines
             else:
                 el_t = col_t[5:-1] if col_t.startswith("List<") else "Int"
                 sub[stmt.item_var] = el_t  # type: ignore[assignment]
@@ -1160,6 +1309,20 @@ class _CGen:
             k = self.gen_expr(stmt.key, scope, k_t)
             val = self.gen_expr(stmt.value, scope, v_t)
             return [f"{pad}_meme_map_{m_type}_set(&{tgt}, {k}, {val});"]
+
+        if isinstance(stmt, SetAddStmt):
+            tgt = _c_ident(stmt.target)
+            col_t = scope.get(stmt.target, "")
+            el_t = _set_types_of(col_t) if _set_types_of(col_t) else "String"
+            val = self.gen_expr(stmt.value, scope, el_t)
+            return [f"{pad}_meme_set_{_mangle_type(el_t)}_add(&{tgt}, {val});"]
+
+        if isinstance(stmt, SetRemoveStmt):
+            tgt = _c_ident(stmt.target)
+            col_t = scope.get(stmt.target, "")
+            el_t = _set_types_of(col_t) if _set_types_of(col_t) else "String"
+            val = self.gen_expr(stmt.value, scope, el_t)
+            return [f"{pad}_meme_set_{_mangle_type(el_t)}_remove(&{tgt}, {val});"]
 
         if isinstance(stmt, WriteFileStmt):
             self.uses_str_helpers = True
@@ -1544,6 +1707,123 @@ def _emit_map_type(k_t: str, v_t: str, gen: _CGen) -> list[str]:
         f"        if (!{val_eq}) return false;",
         f"    }}",
         f"    return true;",
+        f"}}",
+    ]
+
+
+def _emit_set_type(el_t: str, gen: _CGen) -> list[str]:
+    m_type = _mangle_type(el_t)
+    c_el = _c_type(el_t)
+    fmt_call = gen._fmt_function_name(el_t)
+    if el_t == "String":
+        elem_eq = "(strcmp(a.data[i], b.data[i]) == 0)"
+    elif el_t in gen.records:
+        elem_eq = f"{_c_ident(el_t)}_eq(a.data[i], b.data[i])"
+    elif el_t.startswith("List<"):
+        inner = el_t[5:-1]
+        elem_eq = f"_meme_list_{_mangle_type(inner)}_eq(a.data[i], b.data[i])"
+    else:
+        elem_eq = "(a.data[i] == b.data[i])"
+
+    if el_t in gen.records:
+        cmp_fn = f"_meme_set_cmp_{m_type}"
+        field_cmps: list[str] = []
+        for f_name, f_type in gen.records[el_t].items():
+            f_ident = _c_ident(f_name)
+            if f_type == "String":
+                field_cmps.append(
+                    f"    {{ int _c = strcmp((a.{f_ident} ? a.{f_ident} : \"\"), (b.{f_ident} ? b.{f_ident} : \"\")); if (_c != 0) return _c; }}"
+                )
+            elif f_type in ("Int", "Float", "Bool"):
+                field_cmps.append(
+                    f"    {{ if (a.{f_ident} != b.{f_ident}) return (a.{f_ident} > b.{f_ident}) - (a.{f_ident} < b.{f_ident}); }}"
+                )
+            elif f_type.startswith("Optional<"):
+                field_cmps.append(
+                    f"    {{ if (a.{f_ident}.present != b.{f_ident}.present) return a.{f_ident}.present ? 1 : -1; }}"
+                )
+                if f_type.startswith("Optional<List<"):
+                    continue
+                inner_v_t = f_type[9:-1]
+                if inner_v_t == "String":
+                    field_cmps.append(
+                        f"    {{ if (a.{f_ident}.present) {{ int _c = strcmp(a.{f_ident}.value, b.{f_ident}.value); if (_c != 0) return _c; }} }}"
+                    )
+                elif inner_v_t in ("Int", "Float", "Bool"):
+                    field_cmps.append(
+                        f"    {{ if (a.{f_ident}.present && a.{f_ident}.value != b.{f_ident}.value) return (a.{f_ident}.value > b.{f_ident}.value) - (a.{f_ident}.value < b.{f_ident}.value); }}"
+                    )
+        cmp_lines = [
+            f"static inline int _meme_set_cmp_{m_type}({_c_ident(el_t)} a, {_c_ident(el_t)} b) {{",
+            *field_cmps,
+            f"    return 0;",
+            f"}}",
+        ]
+    else:
+        cmp_fn = f"_cmp_{el_t}"
+        cmp_lines = []
+
+    return [
+        f"// Set<{el_t}>",
+        f"typedef struct {{",
+        f"    {c_el}* data;",
+        f"    int64_t len;",
+        f"    int64_t cap;",
+        f"}} meme_set_{m_type};",
+        f"static inline meme_set_{m_type} _meme_set_{m_type}_new(void) {{",
+        f"    meme_set_{m_type} s = {{ .data = NULL, .len = 0, .cap = 0 }};",
+        f"    return s;",
+        f"}}",
+        *cmp_lines,
+        f"static inline int64_t _meme_set_{m_type}_find(const meme_set_{m_type}* s, {c_el} val) {{",
+        f"    int64_t lo = 0, hi = s->len - 1;",
+        f"    while (lo <= hi) {{",
+        f"        int64_t mid = lo + (hi - lo) / 2;",
+        f"        int cmp = {cmp_fn}(s->data[mid], val);",
+        f"        if (cmp == 0) return mid;",
+        f"        if (cmp < 0) lo = mid + 1;",
+        f"        else hi = mid - 1;",
+        f"    }}",
+        f"    return -1 - lo;",
+        f"}}",
+        f"static inline void _meme_set_{m_type}_add(meme_set_{m_type}* s, {c_el} val) {{",
+        f"    int64_t idx = _meme_set_{m_type}_find(s, val);",
+        f"    if (idx >= 0) return;",
+        f"    int64_t ins = -1 - idx;",
+        f"    if (s->len >= s->cap) {{",
+        f"        s->cap = s->cap == 0 ? 4 : s->cap * 2;",
+        f"        s->data = ({c_el}*)realloc(s->data, sizeof({c_el}) * s->cap);",
+        f"    }}",
+        f"    for (int64_t i = s->len; i > ins; --i) s->data[i] = s->data[i - 1];",
+        f"    s->data[ins] = val;",
+        f"    s->len++;",
+        f"}}",
+        f"static inline void _meme_set_{m_type}_remove(meme_set_{m_type}* s, {c_el} val) {{",
+        f"    int64_t idx = _meme_set_{m_type}_find(s, val);",
+        f"    if (idx < 0) return;",
+        f"    for (int64_t i = idx; i < s->len - 1; ++i) s->data[i] = s->data[i + 1];",
+        f"    s->len--;",
+        f"}}",
+        f"static inline bool _meme_set_{m_type}_contains(meme_set_{m_type} s, {c_el} val) {{",
+        f"    return _meme_set_{m_type}_find(&s, val) >= 0;",
+        f"}}",
+        f"static inline meme_set_{m_type} _meme_set_{m_type}_copy(meme_set_{m_type} s) {{",
+        f"    meme_set_{m_type} res;",
+        f"    res.len = s.len;",
+        f"    res.cap = s.len > 0 ? s.len : 4;",
+        f"    res.data = ({c_el}*)malloc(sizeof({c_el}) * res.cap);",
+        f"    if (s.len > 0 && s.data) {{ memcpy(res.data, s.data, sizeof({c_el}) * s.len); }}",
+        f"    return res;",
+        f"}}",
+        f"static inline const char* _meme_set_{m_type}_fmt(meme_set_{m_type} s) {{",
+        f"    _MemeSB sb = _meme_sb_new();",
+        f"    _meme_sb_append(&sb, \"{{\");",
+        f"    for (int64_t i = 0; i < s.len; ++i) {{",
+        f"        if (i > 0) _meme_sb_append(&sb, \", \");",
+        f"        _meme_sb_append(&sb, {fmt_call}(s.data[i]));",
+        f"    }}",
+        f"    _meme_sb_append(&sb, \"}}\");",
+        f"    return sb.data;",
         f"}}",
     ]
 
@@ -2108,6 +2388,9 @@ def generate_c(ir: ProgramIR) -> str:
             if map_t is not None:
                 used_types.add(map_t[0])
                 used_types.add(map_t[1])
+            set_t = _set_types_of(t)
+            if set_t is not None:
+                used_types.add(set_t)
             if t in gen.records:
                 for f_type in gen.records[t].values():
                     used_types.add(f_type)
@@ -2117,6 +2400,7 @@ def generate_c(ir: ProgramIR) -> str:
     list_elem_types: list[str] = ["Int", "Float", "String", "Bool"]
     map_types: list[tuple[str, str]] = []
     opt_types: list[str] = []
+    set_elem_types: list[str] = []
 
     for t in used_types:
         if t.startswith("List<") and t.endswith(">"):
@@ -2130,6 +2414,9 @@ def generate_c(ir: ProgramIR) -> str:
         map_t = _map_types_of(t)
         if map_t is not None and map_t not in map_types:
             map_types.append(map_t)
+        set_t = _set_types_of(t)
+        if set_t is not None and set_t not in set_elem_types:
+            set_elem_types.append(set_t)
 
     list_elem_types.sort(key=lambda x: (x.count("<"), len(x)))
 
@@ -2148,6 +2435,7 @@ def generate_c(ir: ProgramIR) -> str:
         "#include <sys/stat.h>",
         "#include <dirent.h>",
         "#include <unistd.h>",
+        "#include <time.h>",
         "",
     ]
 
@@ -3069,6 +3357,20 @@ def generate_c(ir: ProgramIR) -> str:
             record_maps.extend(_emit_map_type(k_t, v_t, gen))
             record_maps.append("")
 
+    # Record sets (element is a record — needs the record struct + eq)
+    record_sets: list[str] = []
+    for el_t in set_elem_types:
+        if el_t in gen.records or el_t.startswith("List<"):
+            record_sets.extend(_emit_set_type(el_t, gen))
+            record_sets.append("")
+
+    # Primitive sets
+    primitive_sets: list[str] = []
+    for el_t in set_elem_types:
+        if el_t not in gen.records and not el_t.startswith("List<"):
+            primitive_sets.extend(_emit_set_type(el_t, gen))
+            primitive_sets.append("")
+
     # Record optionals
     record_opts: list[str] = []
     for inner in opt_types:
@@ -3119,8 +3421,9 @@ def generate_c(ir: ProgramIR) -> str:
 
     json_record_helpers: list[str] = []
     record_readers: list[str] = []
-    if gen.uses_json_records:
+    if gen.uses_json_records or gen.uses_json_list_opt:
         json_record_helpers.extend(_C_JSON_PARSER_HELPERS)
+    if gen.uses_json_records:
         for r_name in sorted(gen.json_records_read | gen.json_record_lists_read):
             r_fields = gen.records.get(r_name, {})
             record_readers.extend(_emit_c_json_record_reader(r_name, r_fields))
@@ -3176,6 +3479,195 @@ def generate_c(ir: ProgramIR) -> str:
             record_writers.extend(_emit_c_json_record_writer(r_name, r_fields))
             record_writers.append("")
 
+    env_helpers: list[str] = []
+    if gen.uses_env:
+        env_helpers.extend([
+            "static inline meme_opt_String _meme_env_var(const char* name) {",
+            "    const char* val = getenv(name);",
+            "    if (val != NULL) {",
+            "        return (meme_opt_String){ .present = true, .value = val };",
+            "    }",
+            "    return (meme_opt_String){0};",
+            "}",
+            "",
+        ])
+    if gen.uses_env_or:
+        env_helpers.extend([
+            "static inline const char* _meme_env_var_or(const char* name, const char* fallback) {",
+            "    const char* val = getenv(name);",
+            "    return val != NULL ? val : fallback;",
+            "}",
+            "",
+        ])
+
+    opt_file_helpers: list[str] = []
+    if gen.uses_read_file_string_opt:
+        opt_file_helpers.extend([
+            "static inline meme_opt_String _meme_read_file_string_opt(const char* path) {",
+            "    const char* rp = _meme_resolve_path(path);",
+            "    struct stat st;",
+            "    if (stat(rp, &st) != 0 || !S_ISREG(st.st_mode)) return (meme_opt_String){0};",
+            "    FILE* f = fopen(rp, \"rb\");",
+            "    if (!f) return (meme_opt_String){0};",
+            "    size_t sz = (size_t)st.st_size;",
+            "    char* buf = (char*)malloc(sz + 1);",
+            "    size_t n = fread(buf, 1, sz, f);",
+            "    fclose(f);",
+            "    buf[n] = '\\0';",
+            "    return (meme_opt_String){ .present = true, .value = buf };",
+            "}",
+            "",
+            "static inline const char* _meme_read_file_string_or(const char* path, const char* dflt) {",
+            "    meme_opt_String o = _meme_read_file_string_opt(path);",
+            "    return o.present ? o.value : dflt;",
+            "}",
+            "",
+        ])
+
+    if gen.uses_read_file_lines_opt:
+        opt_file_helpers.extend([
+            "static inline meme_opt_List_String _meme_read_file_lines_opt(const char* path) {",
+            "    meme_opt_String o = _meme_read_file_string_opt(path);",
+            "    if (!o.present) return (meme_opt_List_String){0};",
+            "    const char* raw = o.value;",
+            "    meme_list_String res = _meme_list_String_new();",
+            "    if (!raw || strlen(raw) == 0) return (meme_opt_List_String){ .present = true, .value = res };",
+            "    size_t len = strlen(raw);",
+            "    if (len > 0 && raw[len - 1] == '\\n') len--;",
+            "    const char* p = raw;",
+            "    const char* end = raw + len;",
+            "    while (p <= end) {",
+            "        const char* next_nl = (const char*)memchr(p, '\\n', (size_t)(end - p));",
+            "        size_t part_len = next_nl ? (size_t)(next_nl - p) : (size_t)(end - p);",
+            "        char* part = (char*)malloc(part_len + 1);",
+            "        memcpy(part, p, part_len);",
+            "        part[part_len] = '\\0';",
+            "        _meme_list_String_append(&res, part);",
+            "        if (!next_nl) break;",
+            "        p = next_nl + 1;",
+            "    }",
+            "    return (meme_opt_List_String){ .present = true, .value = res };",
+            "}",
+            "",
+            "static inline meme_list_String _meme_read_file_lines_or(const char* path, meme_list_String dflt) {",
+            "    meme_opt_List_String o = _meme_read_file_lines_opt(path);",
+            "    return o.present ? o.value : dflt;",
+            "}",
+            "",
+        ])
+
+    for el in sorted(gen.json_list_opt_types):
+        if el == "int":
+            opt_file_helpers.extend([
+                "static inline meme_opt_List_Int _meme_read_json_list_int_opt(const char* path) {",
+                "    _MemeJV* root = _meme_read_json_file(path);",
+                "    if (!root || root->kind != _MEME_J_ARR) {",
+                "        _meme_free_jv(root);",
+                "        return (meme_opt_List_Int){0};",
+                "    }",
+                "    meme_list_Int list = _meme_list_Int_new();",
+                "    for (size_t i = 0; i < root->arr_len; ++i) {",
+                "        _MemeJV* it = root->arr[i];",
+                "        if (!it || it->kind != _MEME_J_NUM || !it->is_int) {",
+                "            _meme_free_jv(root);",
+                "            return (meme_opt_List_Int){0};",
+                "        }",
+                "        _meme_list_Int_append(&list, it->i_val);",
+                "    }",
+                "    _meme_free_jv(root);",
+                "    return (meme_opt_List_Int){ .present = true, .value = list };",
+                "}",
+                "",
+                "static inline meme_list_Int _meme_read_json_list_int_or(const char* path, meme_list_Int dflt) {",
+                "    meme_opt_List_Int o = _meme_read_json_list_int_opt(path);",
+                "    return o.present ? o.value : dflt;",
+                "}",
+                "",
+            ])
+        elif el == "float":
+            opt_file_helpers.extend([
+                "static inline meme_opt_List_Float _meme_read_json_list_float_opt(const char* path) {",
+                "    _MemeJV* root = _meme_read_json_file(path);",
+                "    if (!root || root->kind != _MEME_J_ARR) {",
+                "        _meme_free_jv(root);",
+                "        return (meme_opt_List_Float){0};",
+                "    }",
+                "    meme_list_Float list = _meme_list_Float_new();",
+                "    for (size_t i = 0; i < root->arr_len; ++i) {",
+                "        _MemeJV* it = root->arr[i];",
+                "        if (!it || it->kind != _MEME_J_NUM) {",
+                "            _meme_free_jv(root);",
+                "            return (meme_opt_List_Float){0};",
+                "        }",
+                "        _meme_list_Float_append(&list, it->num);",
+                "    }",
+                "    _meme_free_jv(root);",
+                "    return (meme_opt_List_Float){ .present = true, .value = list };",
+                "}",
+                "",
+                "static inline meme_list_Float _meme_read_json_list_float_or(const char* path, meme_list_Float dflt) {",
+                "    meme_opt_List_Float o = _meme_read_json_list_float_opt(path);",
+                "    return o.present ? o.value : dflt;",
+                "}",
+                "",
+            ])
+        elif el == "string":
+            opt_file_helpers.extend([
+                "static inline meme_opt_List_String _meme_read_json_list_string_opt(const char* path) {",
+                "    _MemeJV* root = _meme_read_json_file(path);",
+                "    if (!root || root->kind != _MEME_J_ARR) {",
+                "        _meme_free_jv(root);",
+                "        return (meme_opt_List_String){0};",
+                "    }",
+                "    meme_list_String list = _meme_list_String_new();",
+                "    for (size_t i = 0; i < root->arr_len; ++i) {",
+                "        _MemeJV* it = root->arr[i];",
+                "        if (!it || it->kind != _MEME_J_STR) {",
+                "            _meme_free_jv(root);",
+                "            return (meme_opt_List_String){0};",
+                "        }",
+                "        char* s = (char*)malloc(strlen(it->str) + 1);",
+                "        strcpy(s, it->str);",
+                "        _meme_list_String_append(&list, s);",
+                "    }",
+                "    _meme_free_jv(root);",
+                "    return (meme_opt_List_String){ .present = true, .value = list };",
+                "}",
+                "",
+                "static inline meme_list_String _meme_read_json_list_string_or(const char* path, meme_list_String dflt) {",
+                "    meme_opt_List_String o = _meme_read_json_list_string_opt(path);",
+                "    return o.present ? o.value : dflt;",
+                "}",
+                "",
+            ])
+        elif el == "bool":
+            opt_file_helpers.extend([
+                "static inline meme_opt_List_Bool _meme_read_json_list_bool_opt(const char* path) {",
+                "    _MemeJV* root = _meme_read_json_file(path);",
+                "    if (!root || root->kind != _MEME_J_ARR) {",
+                "        _meme_free_jv(root);",
+                "        return (meme_opt_List_Bool){0};",
+                "    }",
+                "    meme_list_Bool list = _meme_list_Bool_new();",
+                "    for (size_t i = 0; i < root->arr_len; ++i) {",
+                "        _MemeJV* it = root->arr[i];",
+                "        if (!it || it->kind != _MEME_J_BOOL) {",
+                "            _meme_free_jv(root);",
+                "            return (meme_opt_List_Bool){0};",
+                "        }",
+                "        _meme_list_Bool_append(&list, it->b);",
+                "    }",
+                "    _meme_free_jv(root);",
+                "    return (meme_opt_List_Bool){ .present = true, .value = list };",
+                "}",
+                "",
+                "static inline meme_list_Bool _meme_read_json_list_bool_or(const char* path, meme_list_Bool dflt) {",
+                "    meme_opt_List_Bool o = _meme_read_json_list_bool_opt(path);",
+                "    return o.present ? o.value : dflt;",
+                "}",
+                "",
+            ])
+
     out = (
         headers
         + record_fwd_decls
@@ -3188,17 +3680,21 @@ def generate_c(ir: ProgramIR) -> str:
         + random_helpers
         + json_helpers
         + primitive_lists
+        + primitive_sets
         + json_readers
         + str_container_helpers
         + file_container_helpers
         + primitive_maps
         + primitive_opts
+        + env_helpers
         + record_blocks
         + record_lists
         + record_maps
+        + record_sets
         + record_opts
         + record_readers
         + record_writers
+        + opt_file_helpers
         + fn_fwd_decls
         + fn_blocks
         + main_lines

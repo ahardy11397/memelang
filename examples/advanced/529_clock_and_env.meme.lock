@@ -1,0 +1,419 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/529_clock_and_env.meme": {
+      "source_sha256": "739ae44e9142845a48dc4238cce71539534d67a5ea6e948a72cb5fb2826153e7",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "t1",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "current_epoch"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "t2",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "current_epoch"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "assert_stmt",
+          "condition": {
+            "expr_type": "binary_op",
+            "op": ">",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "t1"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 3,
+          "source_text": "t1 > 0"
+        },
+        {
+          "op": "assert_stmt",
+          "condition": {
+            "expr_type": "binary_op",
+            "op": ">=",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "t2"
+            },
+            "right": {
+              "expr_type": "var_ref",
+              "name": "t1"
+            }
+          },
+          "source_line": 4,
+          "source_text": "t2 >= t1"
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "clock valid: true",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 5
+        },
+        {
+          "op": "var_decl",
+          "name": "unset_val",
+          "var_type": "Optional<String>",
+          "value": {
+            "expr_type": "env_var",
+            "var_name": {
+              "expr_type": "literal",
+              "value": "MEME_NONEXISTENT_VAR_529",
+              "data_type": "String"
+            },
+            "default_val": null
+          },
+          "source_line": 7
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "unset_val"
+            },
+            "negated": false
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "unset is nothing: true",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 9
+            }
+          ],
+          "else_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "unset is nothing: false",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 11
+            }
+          ],
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "fallback_val",
+          "var_type": "String",
+          "value": {
+            "expr_type": "env_var",
+            "var_name": {
+              "expr_type": "literal",
+              "value": "MEME_NONEXISTENT_VAR_529",
+              "data_type": "String"
+            },
+            "default_val": {
+              "expr_type": "literal",
+              "value": "fallback_value_ok",
+              "data_type": "String"
+            }
+          },
+          "source_line": 13
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "fallback:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "fallback_val"
+            }
+          ],
+          "source_line": 14
+        },
+        {
+          "op": "var_decl",
+          "name": "path_val",
+          "var_type": "String",
+          "value": {
+            "expr_type": "env_var",
+            "var_name": {
+              "expr_type": "literal",
+              "value": "PATH",
+              "data_type": "String"
+            },
+            "default_val": {
+              "expr_type": "literal",
+              "value": "no_path",
+              "data_type": "String"
+            }
+          },
+          "source_line": 16
+        },
+        {
+          "op": "assert_stmt",
+          "condition": {
+            "expr_type": "binary_op",
+            "op": "!=",
+            "left": {
+              "expr_type": "var_ref",
+              "name": "path_val"
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": "no_path",
+              "data_type": "String"
+            }
+          },
+          "source_line": 17,
+          "source_text": "path_val != \"no_path\""
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "path exists: true",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 18
+        }
+      ],
+      "canonical_meme": "define t1: Int as current epoch seconds\ndefine t2: Int as current epoch seconds\nassert t1 > 0\nassert t2 >= t1\nprint \"clock valid: true\"\ndefine unset_val: Optional<String> as environment variable \"MEME_NONEXISTENT_VAR_529\"\nif unset_val is nothing:\n    print \"unset is nothing: true\"\nelse:\n    print \"unset is nothing: false\"\ndefine fallback_val: String as environment variable \"MEME_NONEXISTENT_VAR_529\" or else \"fallback_value_ok\"\nprint \"fallback:\", fallback_val\ndefine path_val: String as environment variable \"PATH\" or else \"no_path\"\nassert path_val != \"no_path\"\nprint \"path exists: true\"",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "t1",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "current_epoch"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "t2",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "current_epoch"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "assert_stmt",
+            "condition": {
+              "expr_type": "binary_op",
+              "op": ">",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "t1"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 3,
+            "source_text": "t1 > 0"
+          },
+          {
+            "op": "assert_stmt",
+            "condition": {
+              "expr_type": "binary_op",
+              "op": ">=",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "t2"
+              },
+              "right": {
+                "expr_type": "var_ref",
+                "name": "t1"
+              }
+            },
+            "source_line": 4,
+            "source_text": "t2 >= t1"
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "clock valid: true",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 5
+          },
+          {
+            "op": "var_decl",
+            "name": "unset_val",
+            "var_type": "Optional<String>",
+            "value": {
+              "expr_type": "env_var",
+              "var_name": {
+                "expr_type": "literal",
+                "value": "MEME_NONEXISTENT_VAR_529",
+                "data_type": "String"
+              },
+              "default_val": null
+            },
+            "source_line": 7
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "unset_val"
+              },
+              "negated": false
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "unset is nothing: true",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 9
+              }
+            ],
+            "else_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "unset is nothing: false",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 11
+              }
+            ],
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "fallback_val",
+            "var_type": "String",
+            "value": {
+              "expr_type": "env_var",
+              "var_name": {
+                "expr_type": "literal",
+                "value": "MEME_NONEXISTENT_VAR_529",
+                "data_type": "String"
+              },
+              "default_val": {
+                "expr_type": "literal",
+                "value": "fallback_value_ok",
+                "data_type": "String"
+              }
+            },
+            "source_line": 13
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "fallback:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "fallback_val"
+              }
+            ],
+            "source_line": 14
+          },
+          {
+            "op": "var_decl",
+            "name": "path_val",
+            "var_type": "String",
+            "value": {
+              "expr_type": "env_var",
+              "var_name": {
+                "expr_type": "literal",
+                "value": "PATH",
+                "data_type": "String"
+              },
+              "default_val": {
+                "expr_type": "literal",
+                "value": "no_path",
+                "data_type": "String"
+              }
+            },
+            "source_line": 16
+          },
+          {
+            "op": "assert_stmt",
+            "condition": {
+              "expr_type": "binary_op",
+              "op": "!=",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "path_val"
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": "no_path",
+                "data_type": "String"
+              }
+            },
+            "source_line": 17,
+            "source_text": "path_val != \"no_path\""
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "path exists: true",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 18
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

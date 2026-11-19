@@ -6,6 +6,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 MemeType = str
+SetType = str
 
 # Scope guard (Phase 2 Task 16): Bitwise and shift operators (`&`, `|`, `^`, `<<`, `>>`)
 # are intentionally deferred because Python's unbounded arbitrary-precision ints vs
@@ -219,11 +220,13 @@ class FileExistsExpr(IRNode):
 class ReadFileStringExpr(IRNode):
     expr_type: Literal["read_file_string"] = "read_file_string"
     filepath: IRExpr
+    default_val: IRExpr | None = None
 
 
 class ReadFileLinesExpr(IRNode):
     expr_type: Literal["read_file_lines"] = "read_file_lines"
     filepath: IRExpr
+    default_val: IRExpr | None = None
 
 
 class ListFilesExpr(IRNode):
@@ -245,6 +248,7 @@ class ReadJsonListExpr(IRNode):
     filepath: IRExpr
     element_type: Literal["Int", "Float", "String", "Bool"] = "Float"
     explicit_type: bool = False
+    default_val: IRExpr | None = None
 
 
 class ReadJsonRecordExpr(IRNode):
@@ -383,6 +387,32 @@ class OptionalUnwrapOrDefaultExpr(IRNode):
     default_val: IRExpr
 
 
+class CurrentEpochExpr(IRNode):
+    expr_type: Literal["current_epoch"] = "current_epoch"
+
+
+class EnvVarExpr(IRNode):
+    expr_type: Literal["env_var"] = "env_var"
+    var_name: IRExpr
+    default_val: IRExpr | None = None
+
+
+class EmptySetExpr(IRNode):
+    expr_type: Literal["empty_set"] = "empty_set"
+    element_type: MemeType
+
+
+class SetContainsExpr(IRNode):
+    expr_type: Literal["set_contains"] = "set_contains"
+    target: IRExpr
+    value: IRExpr
+
+
+class SetLengthExpr(IRNode):
+    expr_type: Literal["set_length"] = "set_length"
+    target: IRExpr
+
+
 IRExpr = Annotated[
     LiteralExpr
     | ListLiteralExpr
@@ -425,6 +455,8 @@ IRExpr = Annotated[
     | IsLetterExpr
     | IsUpperExpr
     | IsLowerExpr
+    | CurrentEpochExpr
+    | EnvVarExpr
     | RecordLiteralExpr
     | RecordFieldExpr
     | MapLiteralExpr
@@ -434,7 +466,10 @@ IRExpr = Annotated[
     | OptionalWrapExpr
     | OptionalIsNothingExpr
     | OptionalUnwrapExpr
-    | OptionalUnwrapOrDefaultExpr,
+    | OptionalUnwrapOrDefaultExpr
+    | EmptySetExpr
+    | SetContainsExpr
+    | SetLengthExpr,
     Field(discriminator="expr_type"),
 ]
 
@@ -512,6 +547,7 @@ class ListSetIndexStmt(IRNode):
     op: Literal["list_set_index"] = "list_set_index"
     target: str
     index: IRExpr
+    nested_index: IRExpr | None = None
     value: IRExpr
     source_line: int | None = None
 
@@ -665,6 +701,20 @@ class MapSetStmt(IRNode):
     source_line: int | None = None
 
 
+class SetAddStmt(IRNode):
+    op: Literal["set_add"] = "set_add"
+    target: str
+    value: IRExpr
+    source_line: int | None = None
+
+
+class SetRemoveStmt(IRNode):
+    op: Literal["set_remove"] = "set_remove"
+    target: str
+    value: IRExpr
+    source_line: int | None = None
+
+
 class WriteFileStmt(IRNode):
     op: Literal["write_file"] = "write_file"
     filepath: IRExpr
@@ -766,6 +816,8 @@ IRStatement = Annotated[
     | RecordDefStmt
     | RecordSetFieldStmt
     | MapSetStmt
+    | SetAddStmt
+    | SetRemoveStmt
     | WriteFileStmt
     | WriteJsonStmt
     | AppendFileStmt
@@ -868,6 +920,8 @@ IsDigitExpr.model_rebuild()
 IsLetterExpr.model_rebuild()
 IsUpperExpr.model_rebuild()
 IsLowerExpr.model_rebuild()
+CurrentEpochExpr.model_rebuild()
+EnvVarExpr.model_rebuild()
 RecordLiteralExpr.model_rebuild()
 RecordFieldExpr.model_rebuild()
 MapLiteralExpr.model_rebuild()
@@ -878,6 +932,9 @@ OptionalWrapExpr.model_rebuild()
 OptionalIsNothingExpr.model_rebuild()
 OptionalUnwrapExpr.model_rebuild()
 OptionalUnwrapOrDefaultExpr.model_rebuild()
+EmptySetExpr.model_rebuild()
+SetContainsExpr.model_rebuild()
+SetLengthExpr.model_rebuild()
 VarDeclStmt.model_rebuild()
 AssignStmt.model_rebuild()
 CompoundAssignStmt.model_rebuild()
@@ -905,6 +962,8 @@ ReturnStmt.model_rebuild()
 RecordDefStmt.model_rebuild()
 RecordSetFieldStmt.model_rebuild()
 MapSetStmt.model_rebuild()
+SetAddStmt.model_rebuild()
+SetRemoveStmt.model_rebuild()
 WriteFileStmt.model_rebuild()
 WriteJsonStmt.model_rebuild()
 AppendFileStmt.model_rebuild()

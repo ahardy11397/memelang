@@ -1,0 +1,18 @@
+define t1 as current epoch seconds
+define t2 as current epoch seconds
+assert t1 > 0
+assert t2 >= t1
+print "clock valid: true"
+
+define unset_val as environment variable "MEME_NONEXISTENT_VAR_529"
+if unset_val is nothing:
+    print "unset is nothing: true"
+else:
+    print "unset is nothing: false"
+
+define fallback_val as environment variable "MEME_NONEXISTENT_VAR_529" or else "fallback_value_ok"
+print "fallback:", fallback_val
+
+define path_val as environment variable "PATH" or else "no_path"
+assert path_val != "no_path"
+print "path exists: true"

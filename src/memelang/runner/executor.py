@@ -22,7 +22,9 @@ from memelang.ir.schema import (
     CompoundAssignStmt,
     CopyFileStmt,
     CreateDirectoryStmt,
+    CurrentEpochExpr,
     DeleteFileStmt,
+    EnvVarExpr,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -157,6 +159,13 @@ def _expr_uses_input(expr: IRExpr) -> bool:
         return _expr_uses_input(expr.target)
     if isinstance(expr, FormatFloatExpr):
         return _expr_uses_input(expr.target) or _expr_uses_input(expr.decimals)
+    if isinstance(expr, CurrentEpochExpr):
+        return False
+    if isinstance(expr, EnvVarExpr):
+        ref = _expr_uses_input(expr.var_name)
+        if expr.default_val is not None:
+            ref = ref or _expr_uses_input(expr.default_val)
+        return ref
     if isinstance(expr, ParseIntOrDefaultExpr):
         return _expr_uses_input(expr.target) or _expr_uses_input(expr.default_val)
     if isinstance(expr, StringSplitExpr):
@@ -166,7 +175,10 @@ def _expr_uses_input(expr: IRExpr) -> bool:
     if isinstance(expr, StringCharAtExpr):
         return _expr_uses_input(expr.target) or _expr_uses_input(expr.index)
     if isinstance(expr, (FileExistsExpr, ReadFileStringExpr, ReadFileLinesExpr)):
-        return _expr_uses_input(expr.filepath)
+        ref = _expr_uses_input(expr.filepath)
+        if getattr(expr, "default_val", None) is not None:
+            ref = ref or _expr_uses_input(expr.default_val)
+        return ref
     if isinstance(expr, ListFilesExpr):
         return _expr_uses_input(expr.path)
     if isinstance(expr, ArgAtExpr):
@@ -177,7 +189,10 @@ def _expr_uses_input(expr: IRExpr) -> bool:
             ref = ref or _expr_uses_input(expr.default_val)
         return ref
     if isinstance(expr, ReadJsonListExpr):
-        return _expr_uses_input(expr.filepath)
+        ref = _expr_uses_input(expr.filepath)
+        if expr.default_val is not None:
+            ref = ref or _expr_uses_input(expr.default_val)
+        return ref
     if isinstance(expr, StringLengthExpr):
         return _expr_uses_input(expr.target)
     if isinstance(expr, StringSliceExpr):

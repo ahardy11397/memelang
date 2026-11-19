@@ -18,7 +18,10 @@ from memelang.ir.schema import (
     ContinueStmt,
     CopyFileStmt,
     CreateDirectoryStmt,
+    CurrentEpochExpr,
     DeleteFileStmt,
+    EmptySetExpr,
+    EnvVarExpr,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -76,6 +79,10 @@ from memelang.ir.schema import (
     RecordLiteralExpr,
     RecordSetFieldStmt,
     ReturnStmt,
+    SetAddStmt,
+    SetContainsExpr,
+    SetLengthExpr,
+    SetRemoveStmt,
     SortCollectionStmt,
     StrContainsExpr,
     StrEndsWithExpr,
@@ -222,11 +229,19 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
         return f"({res})" if parent_prec > 5 else res
 
     if isinstance(expr, ReadFileStringExpr):
-        res = f"read string from file {format_expr(expr.filepath, 6)}"
+        if expr.default_val is not None:
+            dflt_str = "nothing" if isinstance(expr.default_val, OptionalNoneExpr) else format_expr(expr.default_val, 6)
+            res = f"read string from file {format_expr(expr.filepath, 6)} or else {dflt_str}"
+        else:
+            res = f"read string from file {format_expr(expr.filepath, 6)}"
         return f"({res})" if parent_prec > 5 else res
 
     if isinstance(expr, ReadFileLinesExpr):
-        res = f"read lines from file {format_expr(expr.filepath, 6)}"
+        if expr.default_val is not None:
+            dflt_str = "nothing" if isinstance(expr.default_val, OptionalNoneExpr) else format_expr(expr.default_val, 6)
+            res = f"read lines from file {format_expr(expr.filepath, 6)} or else {dflt_str}"
+        else:
+            res = f"read lines from file {format_expr(expr.filepath, 6)}"
         return f"({res})" if parent_prec > 5 else res
 
     if isinstance(expr, ListFilesExpr):
@@ -241,10 +256,18 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
         return f"({res})" if parent_prec > 5 else res
 
     if isinstance(expr, ReadJsonListExpr):
-        if expr.explicit_type or expr.element_type != "Float":
-            res = f"read json file {format_expr(expr.filepath, 6)} as List<{expr.element_type}>"
+        if expr.default_val is not None:
+            dflt_str = "nothing" if isinstance(expr.default_val, OptionalNoneExpr) else format_expr(expr.default_val, 6)
+            if expr.explicit_type or expr.element_type != "Float":
+                res = f"read json file {format_expr(expr.filepath, 6)} as List<{expr.element_type}> or else {dflt_str}"
+            else:
+                res = f"read JSON number list from {format_expr(expr.filepath, 6)} or else {dflt_str}"
             return f"({res})" if parent_prec > 5 else res
-        return f"read JSON number list from {format_expr(expr.filepath)}"
+        else:
+            if expr.explicit_type or expr.element_type != "Float":
+                res = f"read json file {format_expr(expr.filepath, 6)} as List<{expr.element_type}>"
+                return f"({res})" if parent_prec > 5 else res
+            return f"read JSON number list from {format_expr(expr.filepath)}"
 
     if isinstance(expr, ReadJsonRecordExpr):
         dflt_str = "nothing" if (expr.default_val is None or isinstance(expr.default_val, OptionalNoneExpr)) else format_expr(expr.default_val, 6)
@@ -294,6 +317,16 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
         res = f"format {format_expr(expr.target, 6)} with {format_expr(expr.decimals, 6)} decimals"
         return f"({res})" if parent_prec > 5 else res
 
+    if isinstance(expr, CurrentEpochExpr):
+        return "current epoch seconds"
+
+    if isinstance(expr, EnvVarExpr):
+        if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+            res = f"environment variable {format_expr(expr.var_name, 6)} or else {format_expr(expr.default_val, 6)}"
+        else:
+            res = f"environment variable {format_expr(expr.var_name, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
     if isinstance(expr, RecordLiteralExpr):
         fields_str = ", ".join(f"{f.name}={format_expr(f.value)}" for f in expr.fields)
         return f"{expr.record_name}({fields_str})"
@@ -338,6 +371,16 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
         res = f"value of {format_expr(expr.target, 6)} or else {format_expr(expr.default_val, 6)}"
         return f"({res})" if parent_prec > 5 else res
 
+    if isinstance(expr, EmptySetExpr):
+        return f"empty set of {expr.element_type}"
+
+    if isinstance(expr, SetContainsExpr):
+        res = f"{format_expr(expr.target, 3)} contains {format_expr(expr.value, 4)}"
+        return f"({res})" if parent_prec > 3 else res
+
+    if isinstance(expr, SetLengthExpr):
+        return f"length of set {format_expr(expr.target, 6)}"
+
     raise TypeError(f"Unsupported expression node: {type(expr)!r}")
 
 
@@ -347,6 +390,8 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
     if isinstance(stmt, VarDeclStmt):
         if stmt.var_type.startswith("List<"):
             return [f"{pad}define list {stmt.name} as {format_expr(stmt.value)}"]
+        if stmt.var_type.startswith("Set<"):
+            return [f"{pad}define {stmt.name} as {format_expr(stmt.value)}"]
         return [f"{pad}define {stmt.name}: {stmt.var_type} as {format_expr(stmt.value)}"]
 
     if isinstance(stmt, AssignStmt):
@@ -383,6 +428,10 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
         ]
 
     if isinstance(stmt, ListSetIndexStmt):
+        if stmt.nested_index is not None:
+            return [
+                f"{pad}set {stmt.target}[{format_expr(stmt.index)}][{format_expr(stmt.nested_index)}] to {format_expr(stmt.value)}"
+            ]
         return [f"{pad}set {stmt.target}[{format_expr(stmt.index)}] to {format_expr(stmt.value)}"]
 
     if isinstance(stmt, ListRemoveStmt):
@@ -487,6 +536,12 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
 
     if isinstance(stmt, MapSetStmt):
         return [f"{pad}set {stmt.target}[{format_expr(stmt.key)}] to {format_expr(stmt.value)}"]
+
+    if isinstance(stmt, SetAddStmt):
+        return [f"{pad}add {format_expr(stmt.value)} to set {stmt.target}"]
+
+    if isinstance(stmt, SetRemoveStmt):
+        return [f"{pad}remove {format_expr(stmt.value)} from set {stmt.target}"]
 
     if isinstance(stmt, WriteFileStmt):
         return [f"{pad}write file {format_expr(stmt.filepath)} with {format_expr(stmt.content)}"]

@@ -28,7 +28,10 @@ from memelang.ir.schema import (
     ContinueStmt,
     CopyFileStmt,
     CreateDirectoryStmt,
+    CurrentEpochExpr,
     DeleteFileStmt,
+    EmptySetExpr,
+    EnvVarExpr,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -88,6 +91,10 @@ from memelang.ir.schema import (
     RecordLiteralExpr,
     RecordSetFieldStmt,
     ReturnStmt,
+    SetAddStmt,
+    SetContainsExpr,
+    SetLengthExpr,
+    SetRemoveStmt,
     SortCollectionStmt,
     SortDirection,
     StrContainsExpr,
@@ -144,6 +151,8 @@ def _is_valid_type(t: str, records: dict[str, dict[str, MemeType]] | None = None
         return _is_valid_type(t[5:-1], records)
     if t.startswith("Optional<") and t.endswith(">"):
         return _is_valid_type(t[9:-1], records)
+    if t.startswith("Set<") and t.endswith(">"):
+        return _is_valid_type(t[4:-1], records)
     if t.startswith("Map<") and t.endswith(">"):
         inner = t[4:-1]
         depth = 0
@@ -169,6 +178,8 @@ def _normalize_type(t: str) -> str:
         return f"List<{_normalize_type(t[5:-1])}>"
     if t.startswith("Optional<") and t.endswith(">"):
         return f"Optional<{_normalize_type(t[9:-1])}>"
+    if t.startswith("Set<") and t.endswith(">"):
+        return f"Set<{_normalize_type(t[4:-1])}>"
     if t.startswith("Map<") and t.endswith(">"):
         inner = t[4:-1]
         depth = 0
@@ -388,7 +399,12 @@ class _ExprParser:
         elif t and t.kind == "IDENT" and t.val.lower() == "contains":
             self.consume("IDENT")
             sub_expr = self.parse_add()
-            left = StrContainsExpr(target=left, substring=sub_expr)
+            if isinstance(left, VarRefExpr) and self.symbols.get(left.name, "").startswith("Set<"):
+                left = SetContainsExpr(target=left, value=sub_expr)
+            elif _guess_expr_type(left, self.symbols, self.func_returns, self.records).startswith("Set<"):
+                left = SetContainsExpr(target=left, value=sub_expr)
+            else:
+                left = StrContainsExpr(target=left, substring=sub_expr)
             t = self.peek()
         elif t and t.kind == "IDENT" and t.val.lower() == "starts_with":
             self.consume("IDENT")
@@ -749,6 +765,44 @@ class _ExprParser:
                     raise LLMProviderError(f"Expected 'decimals' in format expression, got {dec_tok.val!r}")
                 return FormatFloatExpr(target=tgt_e, decimals=dec_e)
 
+            if (
+                t.val.lower() == "current"
+                and t.val not in self.symbols
+                and self.pos + 2 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() == "epoch"
+                and self.tokens[self.pos + 2].kind == "IDENT"
+                and self.tokens[self.pos + 2].val.lower() in ("seconds", "second")
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                self.consume("IDENT")
+                return CurrentEpochExpr()
+
+            if (
+                t.val.lower() == "environment"
+                and t.val not in self.symbols
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() in ("variable", "var")
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                v_expr = self.parse_postfix()
+                dflt = None
+                if (
+                    (nxt := self.peek())
+                    and nxt.kind == "IDENT"
+                    and nxt.val.lower() == "or"
+                    and self.pos + 1 < len(self.tokens)
+                    and self.tokens[self.pos + 1].kind == "IDENT"
+                    and self.tokens[self.pos + 1].val.lower() == "else"
+                ):
+                    self.consume("IDENT")
+                    self.consume("IDENT")
+                    dflt = self.parse_add()
+                return EnvVarExpr(var_name=v_expr, default_val=dflt)
+
             if t.val in ("true", "True"):
                 self.consume()
                 return LiteralExpr(value=True, data_type="Bool")
@@ -759,7 +813,20 @@ class _ExprParser:
                 self.consume()
                 if (nxt := self.peek()) and nxt.kind == "IDENT" and nxt.val == "of":
                     self.consume()
+                is_set = False
                 if (
+                    (nxt := self.peek())
+                    and nxt.kind == "IDENT"
+                    and nxt.val == "set"
+                    and self.pos + 1 < len(self.tokens)
+                    and self.tokens[self.pos + 1].kind in ("IDENT", "STRING", "OP")
+                    and self.tokens[self.pos + 1].val not in (
+                        "+", "-", "*", "/", "%", "==", "!=", "<", "<=", ">", ">=", ",", ")", "]"
+                    )
+                ):
+                    self.consume()
+                    is_set = True
+                elif (
                     (nxt := self.peek())
                     and nxt.kind == "IDENT"
                     and nxt.val == "string"
@@ -773,6 +840,10 @@ class _ExprParser:
                     target = self.parse_unary()
                     return StringLengthExpr(target=target)
                 target = self.parse_unary()
+                if is_set:
+                    return SetLengthExpr(target=target)
+                if isinstance(target, VarRefExpr) and self.symbols.get(target.name, "").startswith("Set<"):
+                    return SetLengthExpr(target=target)
                 return ListLengthExpr(target=target)
 
             if (
@@ -937,10 +1008,23 @@ class _ExprParser:
                     raise LLMProviderError(
                         f"Unsupported JSON list element type {el_tok.val!r}; expected Int, Float, String, or Bool"
                     )
+                dflt = None
+                if (
+                    (nxt := self.peek())
+                    and nxt.kind == "IDENT"
+                    and nxt.val.lower() == "or"
+                    and self.pos + 1 < len(self.tokens)
+                    and self.tokens[self.pos + 1].kind == "IDENT"
+                    and self.tokens[self.pos + 1].val.lower() == "else"
+                ):
+                    self.consume("IDENT")
+                    self.consume("IDENT")
+                    dflt = self.parse_add()
                 return ReadJsonListExpr(
                     filepath=fp,
                     element_type=cast(Literal["Int", "Float", "String", "Bool"], el_tok.val),
                     explicit_type=True,
+                    default_val=dflt,
                 )
 
             if (
@@ -995,7 +1079,19 @@ class _ExprParser:
                 self.consume("IDENT", "from")
                 self.consume("IDENT", "file")
                 fp = self.parse_postfix()
-                return ReadFileStringExpr(filepath=fp)
+                dflt = None
+                if (
+                    (nxt := self.peek())
+                    and nxt.kind == "IDENT"
+                    and nxt.val.lower() == "or"
+                    and self.pos + 1 < len(self.tokens)
+                    and self.tokens[self.pos + 1].kind == "IDENT"
+                    and self.tokens[self.pos + 1].val.lower() == "else"
+                ):
+                    self.consume("IDENT")
+                    self.consume("IDENT")
+                    dflt = self.parse_add()
+                return ReadFileStringExpr(filepath=fp, default_val=dflt)
 
             if (
                 t.val == "read"
@@ -1012,7 +1108,19 @@ class _ExprParser:
                 self.consume("IDENT", "from")
                 self.consume("IDENT", "file")
                 fp = self.parse_postfix()
-                return ReadFileLinesExpr(filepath=fp)
+                dflt = None
+                if (
+                    (nxt := self.peek())
+                    and nxt.kind == "IDENT"
+                    and nxt.val.lower() == "or"
+                    and self.pos + 1 < len(self.tokens)
+                    and self.tokens[self.pos + 1].kind == "IDENT"
+                    and self.tokens[self.pos + 1].val.lower() == "else"
+                ):
+                    self.consume("IDENT")
+                    self.consume("IDENT")
+                    dflt = self.parse_add()
+                return ReadFileLinesExpr(filepath=fp, default_val=dflt)
 
             if (
                 t.val == "list"
@@ -1113,6 +1221,31 @@ def _parse_expr(
             entries=[],
         )
 
+    m_empty_set = re.fullmatch(
+        r"empty\s+(?:set\s+of\s+(.+)|Set<(.+)>)", s, flags=re.IGNORECASE
+    )
+    if m_empty_set:
+        raw_el = m_empty_set.group(1) or m_empty_set.group(2)
+        el_t = _normalize_type(raw_el)
+        if not _is_valid_type(el_t, records):
+            raise LLMProviderError(f"Unknown set element type {el_t!r} in {s!r}")
+        return EmptySetExpr(element_type=cast(MemeType, el_t))
+
+    if re.fullmatch(r"current\s+epoch\s+seconds?", s, flags=re.IGNORECASE):
+        return CurrentEpochExpr()
+
+    m_env = re.fullmatch(
+        r"environment\s+variable\s+(.+?)(?:\s+or\s+else\s+(.+))?",
+        s,
+        flags=re.IGNORECASE,
+    )
+    if m_env:
+        v_str = m_env.group(1)
+        dflt_str = m_env.group(2)
+        v_expr = _parse_expr(v_str, symbols, func_returns, records)
+        dflt_expr = _parse_expr(dflt_str, symbols, func_returns, records) if dflt_str else None
+        return EnvVarExpr(var_name=v_expr, default_val=dflt_expr)
+
     m_read_json_record = re.fullmatch(
         r"read\s+json\s+(record|records)\s+([A-Za-z_]\w*)\s+from\s+file\s+(.+?)(?:\s+or\s+else\s+(.+))?",
         s,
@@ -1131,7 +1264,7 @@ def _parse_expr(
             return ReadJsonRecordExpr(record_name=rec_name, filepath=fp_expr, default_val=dflt_expr)
 
     m_read_json_typed = re.fullmatch(
-        r"read\s+json\s+file\s+(.+?)\s+as\s+List\s*<\s*([A-Za-z_]\w*)\s*>",
+        r"read\s+json\s+file\s+(.+?)\s+as\s+List\s*<\s*([A-Za-z_]\w*)\s*>(?:\s+or\s+else\s+(.+))?",
         s,
         flags=re.IGNORECASE,
     )
@@ -1141,42 +1274,58 @@ def _parse_expr(
             raise LLMProviderError(
                 f"Unsupported JSON list element type {raw_el!r}; expected Int, Float, String, or Bool"
             )
+        fp_expr = _parse_expr(m_read_json_typed.group(1), symbols, func_returns, records)
+        dflt_str = m_read_json_typed.group(3)
+        dflt_expr = _parse_expr(dflt_str, symbols, func_returns, records) if dflt_str else None
         return ReadJsonListExpr(
-            filepath=_parse_expr(m_read_json_typed.group(1), symbols, func_returns, records),
+            filepath=fp_expr,
             element_type=cast(Literal["Int", "Float", "String", "Bool"], raw_el),
             explicit_type=True,
+            default_val=dflt_expr,
         )
 
     m_read_json = re.fullmatch(
-        r"read\s+JSON\s+number\s+list\s+from\s+(.+)",
+        r"read\s+JSON\s+number\s+list\s+from\s+(.+?)(?:\s+or\s+else\s+(.+))?",
         s,
         flags=re.IGNORECASE,
     )
     if m_read_json:
+        fp_expr = _parse_expr(m_read_json.group(1), symbols, func_returns, records)
+        dflt_str = m_read_json.group(2)
+        dflt_expr = _parse_expr(dflt_str, symbols, func_returns, records) if dflt_str else None
         return ReadJsonListExpr(
-            filepath=_parse_expr(m_read_json.group(1), symbols, func_returns, records),
+            filepath=fp_expr,
             element_type="Float",
             explicit_type=False,
+            default_val=dflt_expr,
         )
 
     m_read_file_str = re.fullmatch(
-        r"read\s+string\s+from\s+file\s+(.+)",
+        r"read\s+string\s+from\s+file\s+(.+?)(?:\s+or\s+else\s+(.+))?",
         s,
         flags=re.IGNORECASE,
     )
     if m_read_file_str:
+        fp_expr = _parse_expr(m_read_file_str.group(1), symbols, func_returns, records)
+        dflt_str = m_read_file_str.group(2)
+        dflt_expr = _parse_expr(dflt_str, symbols, func_returns, records) if dflt_str else None
         return ReadFileStringExpr(
-            filepath=_parse_expr(m_read_file_str.group(1), symbols, func_returns, records)
+            filepath=fp_expr,
+            default_val=dflt_expr,
         )
 
     m_read_file_lines = re.fullmatch(
-        r"read\s+lines\s+from\s+file\s+(.+)",
+        r"read\s+lines\s+from\s+file\s+(.+?)(?:\s+or\s+else\s+(.+))?",
         s,
         flags=re.IGNORECASE,
     )
     if m_read_file_lines:
+        fp_expr = _parse_expr(m_read_file_lines.group(1), symbols, func_returns, records)
+        dflt_str = m_read_file_lines.group(2)
+        dflt_expr = _parse_expr(dflt_str, symbols, func_returns, records) if dflt_str else None
         return ReadFileLinesExpr(
-            filepath=_parse_expr(m_read_file_lines.group(1), symbols, func_returns, records)
+            filepath=fp_expr,
+            default_val=dflt_expr,
         )
 
     m_list_files = re.fullmatch(
@@ -1305,6 +1454,12 @@ def _map_types_of(map_type: str) -> tuple[str, str] | None:
     return None
 
 
+def _set_type_of(set_type: str) -> str | None:
+    if set_type.startswith("Set<") and set_type.endswith(">"):
+        return set_type[4:-1].strip()
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Type-Inference Failure Policy (Phase 0 Task 2)
 # ---------------------------------------------------------------------------
@@ -1328,7 +1483,24 @@ def _guess_expr_type(
     if isinstance(expr, RandomListExpr):
         return "List<Int>"
     if isinstance(expr, ReadJsonListExpr):
-        return cast(MemeType, f"List<{expr.element_type}>")
+        el_t = f"List<{expr.element_type}>"
+        if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+            return cast(MemeType, el_t)
+        if expr.default_val is not None:
+            return cast(MemeType, f"Optional<{el_t}>")
+        return cast(MemeType, el_t)
+    if isinstance(expr, ReadFileLinesExpr):
+        if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+            return "List<String>"
+        if expr.default_val is not None:
+            return "Optional<List<String>>"
+        return "List<String>"
+    if isinstance(expr, ReadFileStringExpr):
+        if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+            return "String"
+        if expr.default_val is not None:
+            return "Optional<String>"
+        return "String"
     if isinstance(expr, ReadJsonRecordExpr):
         if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
             return expr.record_name
@@ -1337,7 +1509,13 @@ def _guess_expr_type(
         if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
             return f"List<{expr.record_name}>"
         return f"Optional<List<{expr.record_name}>>"
-    if isinstance(expr, (StringSplitExpr, ListFilesExpr, ReadFileLinesExpr)):
+    if isinstance(expr, CurrentEpochExpr):
+        return "Int"
+    if isinstance(expr, EnvVarExpr):
+        if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+            return "String"
+        return "Optional<String>"
+    if isinstance(expr, (StringSplitExpr, ListFilesExpr)):
         return "List<String>"
     if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr, IsLetterExpr, IsUpperExpr, IsLowerExpr)):
         return "Bool"
@@ -1351,7 +1529,6 @@ def _guess_expr_type(
             StringTrimExpr,
             StringJoinExpr,
             StringCharAtExpr,
-            ReadFileStringExpr,
             ArgAtExpr,
             FormatIntExpr,
             FormatFloatExpr,
@@ -1360,7 +1537,7 @@ def _guess_expr_type(
         return "String"
     if isinstance(
         expr,
-        (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr),
+        (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr, SetLengthExpr),
     ):
         return "Int"
     if isinstance(expr, ReadInputExpr):
@@ -1387,6 +1564,10 @@ def _guess_expr_type(
             f"Cannot infer map value type from non-map target of type {tgt_t!r}"
         )
     if isinstance(expr, MapHasKeyExpr):
+        return "Bool"
+    if isinstance(expr, EmptySetExpr):
+        return cast(MemeType, f"Set<{expr.element_type}>")
+    if isinstance(expr, SetContainsExpr):
         return "Bool"
     if isinstance(expr, OptionalNoneExpr):
         return "Optional<Void>"
@@ -1604,10 +1785,13 @@ class HeuristicProvider:
                     )
                 col_t = symbols[col_name]
                 map_t = _map_types_of(col_t)
+                set_t = _set_type_of(col_t)
                 if col_t.startswith("List<"):
                     el_t = cast(MemeType, col_t[5:-1])
                 elif map_t is not None:
                     el_t = map_t[0]
+                elif set_t is not None:
+                    el_t = cast(MemeType, set_t)
                 else:
                     raise LLMProviderError(
                         f"Cannot iterate over non-collection {col_name!r} of type {col_t!r} at line {line.lineno}"
@@ -1973,18 +2157,21 @@ class HeuristicProvider:
                 source_line=line.lineno,
             )
 
-        # `set <target>[<index>] to <expr>`
+        # `set <target>[<index>] to <expr>` (optionally nested: `set t[i][j] to v`)
         m_set_idx = re.fullmatch(
-            r"set\s+([A-Za-z_]\w*)\s*\[\s*(.+?)\s*\]\s+to\s+(.+)",
+            r"set\s+([A-Za-z_]\w*)\s*\[\s*(.+?)\s*\]\s*(?:\[\s*(.+?)\s*\])?\s+to\s+(.+)",
             text,
             flags=re.IGNORECASE,
         )
         if m_set_idx:
             tgt = m_set_idx.group(1)
             idx_e = _pe(m_set_idx.group(2))
-            val_e = _pe(m_set_idx.group(3))
+            nested_e = (
+                _pe(m_set_idx.group(3)) if m_set_idx.group(3) is not None else None
+            )
+            val_e = _pe(m_set_idx.group(4))
             tgt_t = symbols.get(tgt, "")
-            if tgt_t.startswith("Map<"):
+            if tgt_t.startswith("Map<") and nested_e is None:
                 return MapSetStmt(
                     target=tgt,
                     key=idx_e,
@@ -1994,6 +2181,7 @@ class HeuristicProvider:
             return ListSetIndexStmt(
                 target=tgt,
                 index=idx_e,
+                nested_index=nested_e,
                 value=val_e,
                 source_line=line.lineno,
             )
@@ -2150,13 +2338,20 @@ class HeuristicProvider:
                 source_line=line.lineno,
             )
 
-        # `add <expr> to <target>` (list append if target is List<...>, else compound +=)
+        # `add <expr> to <target>` (set add if target is Set<...>, list append if target is List<...>, else compound +=)
         m_add = re.fullmatch(
-            r"add\s+(.+?)\s+to\s+([A-Za-z_]\w*)", text, flags=re.IGNORECASE
+            r"add\s+(.+?)\s+to\s+(?:set\s+)?([A-Za-z_]\w*)", text, flags=re.IGNORECASE
         )
         if m_add:
             target = m_add.group(2)
             val = _pe(m_add.group(1))
+            is_explicit_set = bool(re.search(r"\bto\s+set\b", text, flags=re.IGNORECASE))
+            if is_explicit_set or symbols.get(target, "").startswith("Set<"):
+                return SetAddStmt(
+                    target=target,
+                    value=val,
+                    source_line=line.lineno,
+                )
             if symbols.get(target, "").startswith("List<"):
                 return ListAppendStmt(
                     target=target,
@@ -2245,6 +2440,22 @@ class HeuristicProvider:
                 index=_pe(m_remove.group(1)),
                 source_line=line.lineno,
             )
+
+        # `remove <expr> from set <target>` or `remove <expr> from <target>`
+        m_remove_set = re.fullmatch(
+            r"remove\s+(.+?)\s+from\s+(?:set\s+)?([A-Za-z_]\w*)",
+            text,
+            flags=re.IGNORECASE,
+        )
+        if m_remove_set:
+            target = m_remove_set.group(2)
+            is_explicit_set = bool(re.search(r"\bfrom\s+set\b", text, flags=re.IGNORECASE))
+            if is_explicit_set or symbols.get(target, "").startswith("Set<"):
+                return SetRemoveStmt(
+                    target=target,
+                    value=_pe(m_remove_set.group(1)),
+                    source_line=line.lineno,
+                )
 
         # `fail with <expr>`
         m_fail = re.fullmatch(r"fail\s+with\s+(.+)", text, flags=re.IGNORECASE)
@@ -2439,6 +2650,13 @@ class HeuristicProvider:
             return HeuristicProvider._find_free_var(
                 expr.target, symbols
             ) or HeuristicProvider._find_free_var(expr.decimals, symbols)
+        if isinstance(expr, CurrentEpochExpr):
+            return None
+        if isinstance(expr, EnvVarExpr):
+            found = HeuristicProvider._find_free_var(expr.var_name, symbols)
+            if not found and expr.default_val is not None:
+                found = HeuristicProvider._find_free_var(expr.default_val, symbols)
+            return found
         if isinstance(expr, ParseIntOrDefaultExpr):
             return (
                 HeuristicProvider._find_free_var(expr.target, symbols)
@@ -2457,14 +2675,20 @@ class HeuristicProvider:
                 expr.target, symbols
             ) or HeuristicProvider._find_free_var(expr.index, symbols)
         if isinstance(expr, ReadJsonListExpr):
-            return HeuristicProvider._find_free_var(expr.filepath, symbols)
+            found = HeuristicProvider._find_free_var(expr.filepath, symbols)
+            if not found and expr.default_val is not None:
+                found = HeuristicProvider._find_free_var(expr.default_val, symbols)
+            return found
         if isinstance(expr, (ReadJsonRecordExpr, ReadJsonRecordsExpr)):
             found = HeuristicProvider._find_free_var(expr.filepath, symbols)
             if not found and expr.default_val is not None:
                 found = HeuristicProvider._find_free_var(expr.default_val, symbols)
             return found
         if isinstance(expr, (FileExistsExpr, ReadFileStringExpr, ReadFileLinesExpr)):
-            return HeuristicProvider._find_free_var(expr.filepath, symbols)
+            found = HeuristicProvider._find_free_var(expr.filepath, symbols)
+            if not found and getattr(expr, "default_val", None) is not None:
+                found = HeuristicProvider._find_free_var(expr.default_val, symbols)
+            return found
         if isinstance(expr, ListFilesExpr):
             return HeuristicProvider._find_free_var(expr.path, symbols)
         if isinstance(expr, ArgAtExpr):
@@ -2501,6 +2725,12 @@ class HeuristicProvider:
                 ) or HeuristicProvider._find_free_var(e.value, symbols)
                 if found:
                     return found
+        if isinstance(expr, SetContainsExpr):
+            return HeuristicProvider._find_free_var(
+                expr.target, symbols
+            ) or HeuristicProvider._find_free_var(expr.value, symbols)
+        if isinstance(expr, SetLengthExpr):
+            return HeuristicProvider._find_free_var(expr.target, symbols)
         return None
 
     @staticmethod

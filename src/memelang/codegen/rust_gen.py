@@ -20,7 +20,10 @@ from memelang.ir.schema import (
     ContinueStmt,
     CopyFileStmt,
     CreateDirectoryStmt,
+    CurrentEpochExpr,
     DeleteFileStmt,
+    EmptySetExpr,
+    EnvVarExpr,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -79,6 +82,10 @@ from memelang.ir.schema import (
     RecordLiteralExpr,
     RecordSetFieldStmt,
     ReturnStmt,
+    SetAddStmt,
+    SetContainsExpr,
+    SetLengthExpr,
+    SetRemoveStmt,
     SortCollectionStmt,
     StrContainsExpr,
     StrEndsWithExpr,
@@ -154,6 +161,12 @@ def _map_types_of(map_type: str) -> tuple[str, str] | None:
     return None
 
 
+def _set_type_of(set_type: str) -> str | None:
+    if set_type.startswith("Set<") and set_type.endswith(">"):
+        return set_type[4:-1].strip()
+    return None
+
+
 def _rust_ident(name: str) -> str:
     return f"meme_{name}" if name in _RUST_KEYWORDS or name.startswith("_meme_") else name
 
@@ -168,6 +181,9 @@ def _rust_type(meme_type: MemeType | str) -> str:
     map_t = _map_types_of(meme_type)
     if map_t is not None:
         return f"std::collections::HashMap<{_rust_type(map_t[0])}, {_rust_type(map_t[1])}>"
+    set_t = _set_type_of(meme_type)
+    if set_t is not None:
+        return f"_MemeSet<{_rust_type(set_t)}>"
     mapping = {
         "Int": "i64",
         "Float": "f64",
@@ -197,6 +213,8 @@ class _RustGen:
         self.uses_is_upper = False
         self.uses_is_lower = False
         self.uses_format_float = False
+        self.uses_file_io_opt = False
+        self.uses_json_list_opt = False
         self.uses_optional_helpers = False
         self.uses_json_records = False
         self.uses_json_write = False
@@ -217,7 +235,12 @@ class _RustGen:
         if isinstance(expr, RandomListExpr):
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
-            return f"List<{expr.element_type}>"  # type: ignore[return-value]
+            t = f"List<{expr.element_type}>"
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return t  # type: ignore[return-value]
+            if expr.default_val is not None:
+                return f"Optional<{t}>"  # type: ignore[return-value]
+            return t  # type: ignore[return-value]
         if isinstance(expr, ReadJsonRecordExpr):
             if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
                 return expr.record_name  # type: ignore[return-value]
@@ -226,6 +249,12 @@ class _RustGen:
             if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
                 return f"List<{expr.record_name}>"  # type: ignore[return-value]
             return f"Optional<List<{expr.record_name}>>"  # type: ignore[return-value]
+        if isinstance(expr, CurrentEpochExpr):
+            return "Int"
+        if isinstance(expr, EnvVarExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "String"
+            return "Optional<String>"
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
         if isinstance(expr, ListFilesExpr):
@@ -247,14 +276,23 @@ class _RustGen:
                 StringTrimExpr,
                 StringJoinExpr,
                 StringCharAtExpr,
-                ReadFileStringExpr,
                 ArgAtExpr,
                 FormatIntExpr,
                 FormatFloatExpr,
             ),
         ):
             return "String"
+        if isinstance(expr, ReadFileStringExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "String"
+            if expr.default_val is not None:
+                return "Optional<String>"
+            return "String"
         if isinstance(expr, ReadFileLinesExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "List<String>"
+            if expr.default_val is not None:
+                return "Optional<List<String>>"
             return "List<String>"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
@@ -293,6 +331,12 @@ class _RustGen:
                 return tgt_t[9:-1]
             if isinstance(expr, OptionalUnwrapOrDefaultExpr):
                 return self.infer_type(expr.default_val, scope)
+            return "Int"
+        if isinstance(expr, EmptySetExpr):
+            return f"Set<{expr.element_type}>"
+        if isinstance(expr, SetContainsExpr):
+            return "Bool"
+        if isinstance(expr, SetLengthExpr):
             return "Int"
         if isinstance(expr, UnaryOpExpr):
             return "Bool" if expr.op == "not" else self.infer_type(expr.operand, scope)
@@ -480,8 +524,25 @@ class _RustGen:
             dec = self.gen_expr(expr.decimals, scope)
             return f"_meme_format_float({tgt}, {dec})"
 
+        if isinstance(expr, CurrentEpochExpr):
+            return "std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0)"
+
+        if isinstance(expr, EnvVarExpr):
+            v = self.gen_expr(expr.var_name, scope)
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope)
+                return f"std::env::var(&({v})).unwrap_or_else(|_| {d})"
+            return f"std::env::var(&({v})).ok()"
+
         if isinstance(expr, ReadJsonListExpr):
             self.uses_json_io = True
+            if expr.default_val is not None:
+                self.uses_json_list_opt = True
+                call = f"_meme_read_json_list_{expr.element_type.lower()}_opt(&({self.gen_expr(expr.filepath, scope)}))"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"{call}.unwrap_or_else(|| {d})"
+                return call
             return f"_meme_read_json_list_{expr.element_type.lower()}(&({self.gen_expr(expr.filepath, scope)}))"
 
         if isinstance(expr, ReadJsonRecordExpr):
@@ -510,10 +571,24 @@ class _RustGen:
 
         if isinstance(expr, ReadFileStringExpr):
             self.uses_file_io = True
+            if expr.default_val is not None:
+                self.uses_file_io_opt = True
+                call = f"_meme_read_file_string_opt(&({self.gen_expr(expr.filepath, scope)}))"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"{call}.unwrap_or_else(|| {d})"
+                return call
             return f"_meme_read_file_string(&({self.gen_expr(expr.filepath, scope)}))"
 
         if isinstance(expr, ReadFileLinesExpr):
             self.uses_file_io = True
+            if expr.default_val is not None:
+                self.uses_file_io_opt = True
+                call = f"_meme_read_file_lines_opt(&({self.gen_expr(expr.filepath, scope)}))"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"{call}.unwrap_or_else(|| {d})"
+                return call
             return f"_meme_read_file_lines(&({self.gen_expr(expr.filepath, scope)}))"
 
         if isinstance(expr, ListFilesExpr):
@@ -579,6 +654,15 @@ class _RustGen:
             tgt = self.gen_expr(expr.target, scope)
             dflt = self.gen_expr(expr.default_val, scope)
             return f"{tgt}.unwrap_or_else(|| {dflt})"
+
+        if isinstance(expr, EmptySetExpr):
+            return f"_MemeSet::<{_rust_type(expr.element_type)}>::new()"
+
+        if isinstance(expr, SetContainsExpr):
+            return f"{self.gen_expr(expr.target, scope)}.contains(&({self.gen_expr(expr.value, scope)}))"
+
+        if isinstance(expr, SetLengthExpr):
+            return f"{self.gen_expr(expr.target, scope)}.len()"
 
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
@@ -654,6 +738,9 @@ class _RustGen:
             tgt = _rust_ident(stmt.target)
             idx = self.gen_expr(stmt.index, scope)
             val = self.gen_expr(stmt.value, scope)
+            if stmt.nested_index is not None:
+                nidx = self.gen_expr(stmt.nested_index, scope)
+                return [f"{pad}{tgt}[({idx}) as usize][({nidx}) as usize] = {val};"]
             return [f"{pad}{tgt}[({idx}) as usize] = {val};"]
 
         if isinstance(stmt, ListRemoveStmt):
@@ -741,6 +828,7 @@ class _RustGen:
             map_t = _map_types_of(col_t)
             col_ident = _rust_ident(stmt.collection)
             item_ident = _rust_ident(stmt.item_var)
+            set_t = _set_type_of(col_t)
             if map_t is not None:
                 sub[stmt.item_var] = map_t[0]  # type: ignore[assignment]
                 lines = [
@@ -757,6 +845,26 @@ class _RustGen:
                     lines.append(f"{pad}        let mut {idx_ident}: i64 = _meme_idx as i64;")
                 else:
                     lines.append(f"{pad}    for mut {item_ident} in _meme_keys.into_iter() {{")
+                for ch in stmt.body:
+                    lines.extend(self.gen_stmt(ch, sub, indent + 2))
+                lines.append(f"{pad}    }}")
+                lines.append(f"{pad}}}")
+                return lines
+            elif set_t is not None:
+                sub[stmt.item_var] = set_t  # type: ignore[assignment]
+                lines = [
+                    f"{pad}{{",
+                    f"{pad}    let mut _meme_items: Vec<_> = {col_ident}.data.clone();",
+                ]
+                if stmt.index_var is not None:
+                    sub[stmt.index_var] = "Int"
+                    idx_ident = _rust_ident(stmt.index_var)
+                    lines.append(
+                        f"{pad}    for (_meme_idx, mut {item_ident}) in _meme_items.into_iter().enumerate() {{"
+                    )
+                    lines.append(f"{pad}        let mut {idx_ident}: i64 = _meme_idx as i64;")
+                else:
+                    lines.append(f"{pad}    for mut {item_ident} in _meme_items.into_iter() {{")
                 for ch in stmt.body:
                     lines.extend(self.gen_stmt(ch, sub, indent + 2))
                 lines.append(f"{pad}    }}")
@@ -822,6 +930,16 @@ class _RustGen:
             return [
                 f"{pad}{_rust_ident(stmt.target)}.insert({self.gen_expr(stmt.key, scope)}, {self.gen_expr(stmt.value, scope)});"
             ]
+
+        if isinstance(stmt, SetAddStmt):
+            tgt = _rust_ident(stmt.target)
+            val = self.gen_expr(stmt.value, scope)
+            return [f"{pad}{tgt}.insert({val});"]
+
+        if isinstance(stmt, SetRemoveStmt):
+            tgt = _rust_ident(stmt.target)
+            val = self.gen_expr(stmt.value, scope)
+            return [f"{pad}{tgt}.remove(&({val}));"]
 
         if isinstance(stmt, WriteFileStmt):
             self.uses_file_io = True
@@ -1282,6 +1400,20 @@ def generate_rust(ir: ProgramIR) -> str:
             record_blocks.append(f'        format!("{r.name}({{}})", _parts.join(", "))')
         record_blocks.append("    }")
         record_blocks.append("}")
+        record_blocks.append(f"impl _MemeOrd for {r_name} {{")
+        record_blocks.append("    fn meme_cmp(&self, other: &Self) -> std::cmp::Ordering {")
+        if not r.fields:
+            record_blocks.append("        std::cmp::Ordering::Equal")
+        else:
+            for f in r.fields:
+                f_id = _rust_ident(f.name)
+                record_blocks.append(f"        match self.{f_id}.meme_cmp(&other.{f_id}) {{")
+                record_blocks.append("            std::cmp::Ordering::Equal => {},")
+                record_blocks.append("            ord => return ord,")
+                record_blocks.append("        }")
+            record_blocks.append("        std::cmp::Ordering::Equal")
+        record_blocks.append("    }")
+        record_blocks.append("}")
         record_blocks.append("")
 
     fn_blocks: list[str] = []
@@ -1354,6 +1486,68 @@ def generate_rust(ir: ProgramIR) -> str:
         "fn _meme_fmt_slice<T: _MemeFmt>(items: &[T]) -> String {",
         "    let parts: Vec<String> = items.iter().map(|x| x.meme_fmt()).collect();",
         "    format!(\"[{}]\", parts.join(\", \"))",
+        "}",
+        "trait _MemeOrd {",
+        "    fn meme_cmp(&self, other: &Self) -> std::cmp::Ordering;",
+        "}",
+        "impl _MemeOrd for i64 {",
+        "    fn meme_cmp(&self, other: &Self) -> std::cmp::Ordering { self.cmp(other) }",
+        "}",
+        "impl _MemeOrd for f64 {",
+        "    fn meme_cmp(&self, other: &Self) -> std::cmp::Ordering { self.total_cmp(other) }",
+        "}",
+        "impl _MemeOrd for bool {",
+        "    fn meme_cmp(&self, other: &Self) -> std::cmp::Ordering { self.cmp(other) }",
+        "}",
+        "impl _MemeOrd for String {",
+        "    fn meme_cmp(&self, other: &Self) -> std::cmp::Ordering { self.cmp(other) }",
+        "}",
+        "impl<T: _MemeOrd> _MemeOrd for Option<T> {",
+        "    fn meme_cmp(&self, other: &Self) -> std::cmp::Ordering {",
+        "        match (self, other) {",
+        "            (None, None) => std::cmp::Ordering::Equal,",
+        "            (None, Some(_)) => std::cmp::Ordering::Less,",
+        "            (Some(_), None) => std::cmp::Ordering::Greater,",
+        "            (Some(a), Some(b)) => a.meme_cmp(b),",
+        "        }",
+        "    }",
+        "}",
+        "impl<T: _MemeOrd> _MemeOrd for Vec<T> {",
+        "    fn meme_cmp(&self, other: &Self) -> std::cmp::Ordering {",
+        "        for (a, b) in self.iter().zip(other.iter()) {",
+        "            let ord = a.meme_cmp(b);",
+        "            if ord != std::cmp::Ordering::Equal { return ord; }",
+        "        }",
+        "        self.len().cmp(&other.len())",
+        "    }",
+        "}",
+        "#[derive(Clone, Debug, PartialEq)]",
+        "struct _MemeSet<T> {",
+        "    data: Vec<T>,",
+        "}",
+        "impl<T: _MemeOrd + Clone> _MemeSet<T> {",
+        "    fn new() -> Self { Self { data: Vec::new() } }",
+        "    fn insert(&mut self, val: T) {",
+        "        match self.data.binary_search_by(|x| x.meme_cmp(&val)) {",
+        "            Ok(_) => {},",
+        "            Err(idx) => self.data.insert(idx, val),",
+        "        }",
+        "    }",
+        "    fn remove(&mut self, val: &T) {",
+        "        if let Ok(idx) = self.data.binary_search_by(|x| x.meme_cmp(val)) {",
+        "            self.data.remove(idx);",
+        "        }",
+        "    }",
+        "    fn contains(&self, val: &T) -> bool {",
+        "        self.data.binary_search_by(|x| x.meme_cmp(val)).is_ok()",
+        "    }",
+        "    fn len(&self) -> i64 { self.data.len() as i64 }",
+        "}",
+        "impl<T: _MemeFmt> _MemeFmt for _MemeSet<T> {",
+        "    fn meme_fmt(&self) -> String {",
+        "        let parts: Vec<String> = self.data.iter().map(|x| x.meme_fmt()).collect();",
+        "        format!(\"{{{}}}\", parts.join(\", \"))",
+        "    }",
         "}",
         "",
     ]
@@ -1601,7 +1795,7 @@ def generate_rust(ir: ProgramIR) -> str:
             ]
         )
 
-    if gen.uses_json_records:
+    if gen.uses_json_records or gen.uses_json_list_opt:
         preamble.extend(_RUST_JSON_PARSER_HELPERS)
 
     if gen.uses_file_io:
@@ -1637,6 +1831,27 @@ def generate_rust(ir: ProgramIR) -> str:
                 "        &raw[..]",
                 "    };",
                 "    s.split('\\n').map(|line| line.to_string()).collect()",
+                "}",
+                "",
+                "fn _meme_read_file_string_opt(path: &str) -> Option<String> {",
+                "    let resolved = _meme_resolve_path(path);",
+                "    if !resolved.is_file() {",
+                "        return None;",
+                "    }",
+                "    std::fs::read_to_string(&resolved).ok()",
+                "}",
+                "",
+                "fn _meme_read_file_lines_opt(path: &str) -> Option<Vec<String>> {",
+                "    let raw = _meme_read_file_string_opt(path)?;",
+                "    if raw.is_empty() {",
+                "        return Some(Vec::new());",
+                "    }",
+                "    let s = if raw.ends_with('\\n') {",
+                "        &raw[..raw.len() - 1]",
+                "    } else {",
+                "        &raw[..]",
+                "    };",
+                "    Some(s.split('\\n').map(|line| line.to_string()).collect())",
                 "}",
                 "",
                 "fn _meme_write_file(path: &str, content: &str) {",
@@ -1929,6 +2144,80 @@ def generate_rust(ir: ProgramIR) -> str:
                 "            println!(\"Unwrap failed: Optional value is nothing\");",
                 "            std::process::exit(1);",
                 "        }",
+                "    }",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_json_list_opt:
+        preamble.extend(
+            [
+                "fn _meme_read_json_list_int_opt(path: &str) -> Option<Vec<i64>> {",
+                "    let jv = _meme_read_json_file(path)?;",
+                "    if let _MemeJV::Arr(items) = jv {",
+                "        let mut out = Vec::new();",
+                "        for item in items {",
+                "            if let _MemeJV::Num(_, true, i) = item {",
+                "                out.push(i);",
+                "            } else {",
+                "                return None;",
+                "            }",
+                "        }",
+                "        Some(out)",
+                "    } else {",
+                "        None",
+                "    }",
+                "}",
+                "",
+                "fn _meme_read_json_list_float_opt(path: &str) -> Option<Vec<f64>> {",
+                "    let jv = _meme_read_json_file(path)?;",
+                "    if let _MemeJV::Arr(items) = jv {",
+                "        let mut out = Vec::new();",
+                "        for item in items {",
+                "            if let _MemeJV::Num(f, _, _) = item {",
+                "                out.push(f);",
+                "            } else {",
+                "                return None;",
+                "            }",
+                "        }",
+                "        Some(out)",
+                "    } else {",
+                "        None",
+                "    }",
+                "}",
+                "",
+                "fn _meme_read_json_list_string_opt(path: &str) -> Option<Vec<String>> {",
+                "    let jv = _meme_read_json_file(path)?;",
+                "    if let _MemeJV::Arr(items) = jv {",
+                "        let mut out = Vec::new();",
+                "        for item in items {",
+                "            if let _MemeJV::Str(s) = item {",
+                "                out.push(s);",
+                "            } else {",
+                "                return None;",
+                "            }",
+                "        }",
+                "        Some(out)",
+                "    } else {",
+                "        None",
+                "    }",
+                "}",
+                "",
+                "fn _meme_read_json_list_bool_opt(path: &str) -> Option<Vec<bool>> {",
+                "    let jv = _meme_read_json_file(path)?;",
+                "    if let _MemeJV::Arr(items) = jv {",
+                "        let mut out = Vec::new();",
+                "        for item in items {",
+                "            if let _MemeJV::Bool(b) = item {",
+                "                out.push(b);",
+                "            } else {",
+                "                return None;",
+                "            }",
+                "        }",
+                "        Some(out)",
+                "    } else {",
+                "        None",
                 "    }",
                 "}",
                 "",

@@ -34,7 +34,9 @@ from memelang.ir.schema import (
     ContinueStmt,
     CopyFileStmt,
     CreateDirectoryStmt,
+    CurrentEpochExpr,
     DeleteFileStmt,
+    EnvVarExpr,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -66,6 +68,11 @@ from memelang.ir.schema import (
     MapGetExpr,
     MapHasKeyExpr,
     MapLiteralExpr,
+    EmptySetExpr,
+    SetAddStmt,
+    SetContainsExpr,
+    SetLengthExpr,
+    SetRemoveStmt,
     MapSetStmt,
     MemeType,
     MoveFileStmt,
@@ -164,6 +171,22 @@ def _map_types_of(type_str: str) -> tuple[str, str] | None:
     return None
 
 
+def _set_types_of(type_str: str) -> str | None:
+    if type_str.startswith("Set<") and type_str.endswith(">"):
+        return type_str[4:-1].strip()
+    return None
+
+
+def _ts_set_cmp_expr(el_t: str) -> str:
+    if el_t == "String":
+        return '(a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)'
+    if el_t in ("Int", "Float"):
+        return '(a: number, b: number) => (a < b ? -1 : a > b ? 1 : 0)'
+    if el_t == "Bool":
+        return '(a: boolean, b: boolean) => (Number(a) - Number(b))'
+    return f"_meme_set_cmp_{el_t}"
+
+
 def _ts_type(t: str) -> str:
     if t == "Int" or t == "Float":
         return "number"
@@ -179,6 +202,8 @@ def _ts_type(t: str) -> str:
     if t.startswith("Map<") and t.endswith(">"):
         k, v = _split_map_types(t)
         return f"Map<{_ts_type(k)}, {_ts_type(v)}>"
+    if t.startswith("Set<") and t.endswith(">"):
+        return f"Array<{_ts_type(t[4:-1].strip())}>"
     if t.startswith("Optional<") and t.endswith(">"):
         inner = t[9:-1]
         return f"({_ts_type(inner)} | null)"
@@ -188,6 +213,8 @@ def _ts_type(t: str) -> str:
 class _TSGen:
     def __init__(self) -> None:
         self.records: dict[str, dict[str, str]] = {}
+        self.uses_set = False
+        self.set_cmp_records: set[str] = set()
         self.func_returns: dict[str, str] = {}
         self.func_params: dict[str, list[FuncParam]] = {}
         self.current_func_return: str | None = None
@@ -228,11 +255,27 @@ class _TSGen:
         if isinstance(expr, (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr)):
             return "Int"
         if isinstance(expr, (StringSliceExpr, StringReplaceExpr, StringUpperExpr, StringLowerExpr,
-                             StringTrimExpr, StringJoinExpr, StringCharAtExpr, ReadFileStringExpr, ArgAtExpr, FormatIntExpr, FormatFloatExpr)):
+                             StringTrimExpr, StringJoinExpr, StringCharAtExpr, ArgAtExpr, FormatIntExpr, FormatFloatExpr)):
             return "String"
-        if isinstance(expr, (StringSplitExpr, ListFilesExpr, ReadFileLinesExpr)):
+        if isinstance(expr, (StringSplitExpr, ListFilesExpr)):
+            return "List<String>"
+        if isinstance(expr, ReadFileStringExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "String"
+            if expr.default_val is not None:
+                return "Optional<String>"
+            return "String"
+        if isinstance(expr, ReadFileLinesExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "List<String>"
+            if expr.default_val is not None:
+                return "Optional<List<String>>"
             return "List<String>"
         if isinstance(expr, ReadJsonListExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return f"List<{expr.element_type}>"
+            if expr.default_val is not None:
+                return f"Optional<List<{expr.element_type}>>"
             return f"List<{expr.element_type}>"
         if isinstance(expr, ReadJsonRecordExpr):
             if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
@@ -242,6 +285,12 @@ class _TSGen:
             if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
                 return f"List<{expr.record_name}>"
             return f"Optional<List<{expr.record_name}>>"
+        if isinstance(expr, CurrentEpochExpr):
+            return "Int"
+        if isinstance(expr, EnvVarExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "String"
+            return "Optional<String>"
         if isinstance(expr, ReadInputExpr):
             return expr.target_type
         if isinstance(expr, CallExpr):
@@ -477,19 +526,50 @@ class _TSGen:
             dec = self.gen_expr(expr.decimals, scope)
             return f"_meme_format_float({tgt}, {dec})"
 
+        if isinstance(expr, CurrentEpochExpr):
+            return "Math.floor(Date.now() / 1000)"
+
+        if isinstance(expr, EnvVarExpr):
+            v = self.gen_expr(expr.var_name, scope)
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope)
+                return f"((process.env[{v}] ?? {d}))"
+            return f"((process.env[{v}] ?? null))"
+
         if isinstance(expr, FileExistsExpr):
             return f"_meme_file_exists({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ReadFileStringExpr):
+            if expr.default_val is not None:
+                p = self.gen_expr(expr.filepath, scope)
+                call = f"_meme_read_file_string_opt({p})"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"((_r => _r !== null ? _r : {d})({call}))"
+                return call
             return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ReadFileLinesExpr):
+            if expr.default_val is not None:
+                p = self.gen_expr(expr.filepath, scope)
+                call = f"_meme_read_file_lines_opt({p})"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"((_r => _r !== null ? _r : {d})({call}))"
+                return call
             return f"_meme_read_file_lines({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ListFilesExpr):
             return f"_meme_list_files({self.gen_expr(expr.path, scope)})"
 
         if isinstance(expr, ReadJsonListExpr):
+            if expr.default_val is not None:
+                p = self.gen_expr(expr.filepath, scope)
+                call = f"_meme_read_json_list_{expr.element_type.lower()}_opt({p})"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"((_r => _r !== null ? _r : {d})({call}))"
+                return call
             return f"_meme_read_json_list_{expr.element_type.lower()}({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ReadJsonRecordExpr):
@@ -536,6 +616,22 @@ class _TSGen:
             if expr.target_type == "Bool":
                 return f"_meme_parse_bool({raw})"
             return raw
+
+        if isinstance(expr, EmptySetExpr):
+            return f"new Array<{_ts_type(expr.element_type)}>()"
+
+        if isinstance(expr, SetContainsExpr):
+            tgt = self.gen_expr(expr.target, scope)
+            v = self.gen_expr(expr.value, scope)
+            tgt_t = self.infer_type(expr.target, scope)
+            el_t = _set_types_of(tgt_t) if _set_types_of(tgt_t) else "String"
+            self.uses_set = True
+            if el_t not in ("String", "Int", "Float", "Bool"):
+                self.set_cmp_records.add(el_t)
+            return f"_meme_set_contains({tgt}, {v}, {_ts_set_cmp_expr(el_t)})"
+
+        if isinstance(expr, SetLengthExpr):
+            return f"({self.gen_expr(expr.target, scope)}).length"
 
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
@@ -618,12 +714,19 @@ class _TSGen:
         if isinstance(stmt, ForEachStmt):
             col_t = scope.get(stmt.collection, "List<Int>")
             map_t = _map_types_of(col_t)
+            set_t = _set_types_of(col_t)
             col_ident = _ts_ident(stmt.collection)
             b_scope = dict(scope)
 
             if map_t is not None:
                 b_scope[stmt.item_var] = map_t[0]
                 iter_expr = f"_meme_map_sorted_keys({col_ident})"
+            elif set_t is not None:
+                self.uses_set = True
+                if set_t not in ("String", "Int", "Float", "Bool"):
+                    self.set_cmp_records.add(set_t)
+                b_scope[stmt.item_var] = set_t
+                iter_expr = f"{col_ident}.slice()"
             else:
                 b_scope[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"
                 iter_expr = f"{col_ident}.slice()"
@@ -735,6 +838,9 @@ class _TSGen:
                 return [f"{pad}{tgt}.set({idx}, {val});"]
             el_t = col_t[5:-1] if col_t.startswith("List<") else "Int"
             val = self.gen_expr(stmt.value, scope, el_t)
+            if stmt.nested_index is not None:
+                nidx = self.gen_expr(stmt.nested_index, scope)
+                return [f"{pad}_meme_list_set({tgt}[{idx}], {nidx}, {val});"]
             return [f"{pad}_meme_list_set({tgt}, {idx}, {val});"]
 
         if isinstance(stmt, ListRemoveStmt):
@@ -773,6 +879,26 @@ class _TSGen:
             key = self.gen_expr(stmt.key, scope, k_t)
             val = self.gen_expr(stmt.value, scope, v_t)
             return [f"{pad}{tgt}.set({key}, {val});"]
+
+        if isinstance(stmt, SetAddStmt):
+            self.uses_set = True
+            tgt = _ts_ident(stmt.target)
+            tgt_t = scope.get(stmt.target, "Set<String>")
+            el_t = _set_types_of(tgt_t) if _set_types_of(tgt_t) else "String"
+            if el_t not in ("String", "Int", "Float", "Bool"):
+                self.set_cmp_records.add(el_t)
+            val = self.gen_expr(stmt.value, scope, el_t)
+            return [f"{pad}{tgt} = _meme_set_add({tgt}, {val}, {_ts_set_cmp_expr(el_t)});"]
+
+        if isinstance(stmt, SetRemoveStmt):
+            self.uses_set = True
+            tgt = _ts_ident(stmt.target)
+            tgt_t = scope.get(stmt.target, "Set<String>")
+            el_t = _set_types_of(tgt_t) if _set_types_of(tgt_t) else "String"
+            if el_t not in ("String", "Int", "Float", "Bool"):
+                self.set_cmp_records.add(el_t)
+            val = self.gen_expr(stmt.value, scope, el_t)
+            return [f"{pad}{tgt} = _meme_set_remove({tgt}, {val}, {_ts_set_cmp_expr(el_t)});"]
 
         if isinstance(stmt, RecordSetFieldStmt):
             tgt = _ts_ident(stmt.target)
@@ -1206,6 +1332,22 @@ def generate_ts(ir: ProgramIR) -> str:
         "    return opt as NonNullable<T>;",
         "}",
         "",
+        "function _meme_set_contains<T>(arr: T[], val: T, cmp: (a: T, b: T) => number): boolean {",
+        "    return arr.some((x) => cmp(x, val) === 0);",
+        "}",
+        "",
+        "function _meme_set_add<T>(arr: T[], val: T, cmp: (a: T, b: T) => number): T[] {",
+        "    if (_meme_set_contains(arr, val, cmp)) return arr;",
+        "    const out = arr.slice();",
+        "    out.push(val);",
+        "    out.sort(cmp);",
+        "    return out;",
+        "}",
+        "",
+        "function _meme_set_remove<T>(arr: T[], val: T, cmp: (a: T, b: T) => number): T[] {",
+        "    return arr.filter((x) => cmp(x, val) !== 0);",
+        "}",
+        "",
         "function _meme_unwrap_or_else<T, D>(opt: T, dflt: () => D): NonNullable<T> | D {",
         "    if (opt !== null && opt !== undefined) {",
         "        return opt as NonNullable<T>;",
@@ -1286,6 +1428,25 @@ def generate_ts(ir: ProgramIR) -> str:
         "    if (raw.length === 0) {",
         "        return [];",
         "    }",
+        "    const s = raw.endsWith(\"\\n\") ? raw.slice(0, -1) : raw;",
+        "    return s.split(\"\\n\");",
+        "}",
+        "",
+        "function _meme_read_file_string_opt(filePath: string): string | null {",
+        "    const rp = _meme_resolve_path(filePath);",
+        "    try {",
+        "        const st = _fs.statSync(rp);",
+        "        if (!st.isFile()) return null;",
+        "        return _fs.readFileSync(rp, \"utf-8\");",
+        "    } catch {",
+        "        return null;",
+        "    }",
+        "}",
+        "",
+        "function _meme_read_file_lines_opt(filePath: string): string[] | null {",
+        "    const raw = _meme_read_file_string_opt(filePath);",
+        "    if (raw === null) return null;",
+        "    if (raw.length === 0) return [];",
         "    const s = raw.endsWith(\"\\n\") ? raw.slice(0, -1) : raw;",
         "    return s.split(\"\\n\");",
         "}",
@@ -1615,6 +1776,78 @@ def generate_ts(ir: ProgramIR) -> str:
         "    return parsed;",
         "}",
         "",
+        "function _meme_read_json_list_int_opt(filePath: string): number[] | null {",
+        "    const raw = _meme_read_file_string_opt(filePath);",
+        "    if (raw === null) return null;",
+        "    let parsed: any;",
+        "    try {",
+        "        parsed = JSON.parse(raw);",
+        "    } catch {",
+        "        return null;",
+        "    }",
+        "    if (!Array.isArray(parsed)) return null;",
+        "    for (const item of parsed) {",
+        "        if (item === null || typeof item !== \"number\" || !Number.isInteger(item) || typeof item === \"boolean\") {",
+        "            return null;",
+        "        }",
+        "    }",
+        "    return parsed;",
+        "}",
+        "",
+        "function _meme_read_json_list_float_opt(filePath: string): number[] | null {",
+        "    const raw = _meme_read_file_string_opt(filePath);",
+        "    if (raw === null) return null;",
+        "    let parsed: any;",
+        "    try {",
+        "        parsed = JSON.parse(raw);",
+        "    } catch {",
+        "        return null;",
+        "    }",
+        "    if (!Array.isArray(parsed)) return null;",
+        "    for (const item of parsed) {",
+        "        if (item === null || typeof item !== \"number\" || typeof item === \"boolean\") {",
+        "            return null;",
+        "        }",
+        "    }",
+        "    return parsed;",
+        "}",
+        "",
+        "function _meme_read_json_list_string_opt(filePath: string): string[] | null {",
+        "    const raw = _meme_read_file_string_opt(filePath);",
+        "    if (raw === null) return null;",
+        "    let parsed: any;",
+        "    try {",
+        "        parsed = JSON.parse(raw);",
+        "    } catch {",
+        "        return null;",
+        "    }",
+        "    if (!Array.isArray(parsed)) return null;",
+        "    for (const item of parsed) {",
+        "        if (typeof item !== \"string\") {",
+        "            return null;",
+        "        }",
+        "    }",
+        "    return parsed;",
+        "}",
+        "",
+        "function _meme_read_json_list_bool_opt(filePath: string): boolean[] | null {",
+        "    const raw = _meme_read_file_string_opt(filePath);",
+        "    if (raw === null) return null;",
+        "    let parsed: any;",
+        "    try {",
+        "        parsed = JSON.parse(raw);",
+        "    } catch {",
+        "        return null;",
+        "    }",
+        "    if (!Array.isArray(parsed)) return null;",
+        "    for (const item of parsed) {",
+        "        if (typeof item !== \"boolean\") {",
+        "            return null;",
+        "        }",
+        "    }",
+        "    return parsed;",
+        "}",
+        "",
     ]
 
     record_blocks: list[str] = []
@@ -1661,6 +1894,35 @@ def generate_ts(ir: ProgramIR) -> str:
     main_lines.append("}")
     main_lines.append("main();")
     main_lines.append("")
+
+    # Record comparators for sets (lexicographic by field order); generated
+    # after statement generation so gen.set_cmp_records is fully populated.
+    for r_name in sorted(gen.set_cmp_records):
+        r_def = next((r for r in records if r.name == r_name), None)
+        if r_def is None:
+            continue
+        cmp_name = f"_meme_set_cmp_{r_name}"
+        if any(b.startswith(f"function {cmp_name}") for b in record_blocks):
+            continue
+        record_blocks.append(
+            f"function {cmp_name}(a: {_ts_ident(r_name)}, b: {_ts_ident(r_name)}): number {{"
+        )
+        for f in r_def.fields:
+            f_ident = _ts_ident(f.name)
+            if f.field_type in ("String", "Int", "Float", "Bool"):
+                record_blocks.append(
+                    f"    if (a.{f_ident} !== b.{f_ident}) return a.{f_ident} < b.{f_ident} ? -1 : 1;"
+                )
+            elif f.field_type.startswith("Optional<"):
+                record_blocks.append(
+                    f"    if ((a.{f_ident} === null) !== (b.{f_ident} === null)) return a.{f_ident} === null ? -1 : 1;"
+                )
+                if not f.field_type.startswith("Optional<List<") and not f.field_type.startswith("Optional<Map<"):
+                    record_blocks.append(
+                        f"    if (a.{f_ident} !== null && a.{f_ident} !== b.{f_ident}) return a.{f_ident} < b.{f_ident} ? -1 : 1;"
+                    )
+        record_blocks.append("    return 0;")
+        record_blocks.append("}")
 
     reader_blocks: list[str] = []
     if gen.uses_json_records:

@@ -20,7 +20,10 @@ from memelang.ir.schema import (
     ContinueStmt,
     CopyFileStmt,
     CreateDirectoryStmt,
+    CurrentEpochExpr,
     DeleteFileStmt,
+    EmptySetExpr,
+    EnvVarExpr,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -79,6 +82,10 @@ from memelang.ir.schema import (
     RecordLiteralExpr,
     RecordSetFieldStmt,
     ReturnStmt,
+    SetAddStmt,
+    SetContainsExpr,
+    SetLengthExpr,
+    SetRemoveStmt,
     SortCollectionStmt,
     StrContainsExpr,
     StrEndsWithExpr,
@@ -161,6 +168,12 @@ def _map_types_of(map_type: str) -> tuple[str, str] | None:
     return None
 
 
+def _set_type_of(set_type: str) -> str | None:
+    if set_type.startswith("Set<") and set_type.endswith(">"):
+        return set_type[4:-1].strip()
+    return None
+
+
 def _cpp_ident(name: str) -> str:
     return f"meme_{name}" if name in _CPP_KEYWORDS or name.startswith("_meme_") else name
 
@@ -175,6 +188,9 @@ def _cpp_type(meme_type: MemeType | str) -> str:
     map_t = _map_types_of(meme_type)
     if map_t is not None:
         return f"std::unordered_map<{_cpp_type(map_t[0])}, {_cpp_type(map_t[1])}>"
+    set_t = _set_type_of(meme_type)
+    if set_t is not None:
+        return f"std::set<{_cpp_type(set_t)}>"
     mapping = {
         "Int": "long long",
         "Float": "double",
@@ -202,6 +218,8 @@ class _CppGen:
         self.uses_is_lower = False
         self.uses_format_float = False
         self.uses_argv = False
+        self.uses_file_io_opt = False
+        self.uses_json_list_opt = False
         self.uses_optional_helpers = False
         self.uses_json_records = False
         self.uses_json_write = False
@@ -222,7 +240,23 @@ class _CppGen:
         if isinstance(expr, RandomListExpr):
             return "List<Int>"
         if isinstance(expr, ReadJsonListExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return f"List<{expr.element_type}>"  # type: ignore[return-value]
+            if expr.default_val is not None:
+                return f"Optional<List<{expr.element_type}>>"  # type: ignore[return-value]
             return f"List<{expr.element_type}>"  # type: ignore[return-value]
+        if isinstance(expr, ReadFileStringExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "String"
+            if expr.default_val is not None:
+                return "Optional<String>"
+            return "String"
+        if isinstance(expr, ReadFileLinesExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "List<String>"
+            if expr.default_val is not None:
+                return "Optional<List<String>>"
+            return "List<String>"
         if isinstance(expr, ReadJsonRecordExpr):
             if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
                 return expr.record_name  # type: ignore[return-value]
@@ -231,6 +265,12 @@ class _CppGen:
             if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
                 return f"List<{expr.record_name}>"  # type: ignore[return-value]
             return f"Optional<List<{expr.record_name}>>"  # type: ignore[return-value]
+        if isinstance(expr, CurrentEpochExpr):
+            return "Int"
+        if isinstance(expr, EnvVarExpr):
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                return "String"
+            return "Optional<String>"
         if isinstance(expr, StringSplitExpr):
             return "List<String>"
         if isinstance(expr, ListFilesExpr):
@@ -252,15 +292,12 @@ class _CppGen:
                 StringTrimExpr,
                 StringJoinExpr,
                 StringCharAtExpr,
-                ReadFileStringExpr,
                 ArgAtExpr,
                 FormatIntExpr,
                 FormatFloatExpr,
             ),
         ):
             return "String"
-        if isinstance(expr, ReadFileLinesExpr):
-            return "List<String>"
         if isinstance(expr, ListIndexExpr):
             col_t = self.infer_type(expr.target, scope)
             if col_t.startswith("List<"):
@@ -298,6 +335,12 @@ class _CppGen:
                 return tgt_t[9:-1]
             if isinstance(expr, OptionalUnwrapOrDefaultExpr):
                 return self.infer_type(expr.default_val, scope)
+            return "Int"
+        if isinstance(expr, EmptySetExpr):
+            return f"Set<{expr.element_type}>"
+        if isinstance(expr, SetContainsExpr):
+            return "Bool"
+        if isinstance(expr, SetLengthExpr):
             return "Int"
         if isinstance(expr, UnaryOpExpr):
             return "Bool" if expr.op == "not" else self.infer_type(expr.operand, scope)
@@ -471,9 +514,26 @@ class _CppGen:
             dec = self.gen_expr(expr.decimals, scope)
             return f"_meme_format_float({tgt}, {dec})"
 
+        if isinstance(expr, CurrentEpochExpr):
+            return "static_cast<long long>(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count())"
+
+        if isinstance(expr, EnvVarExpr):
+            v = self.gen_expr(expr.var_name, scope)
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d = self.gen_expr(expr.default_val, scope)
+                return f"([&]() -> std::string {{ const char* _ev = std::getenv(({v}).c_str()); return _ev != nullptr ? std::string(_ev) : ({d}); }})()"
+            return f"([&]() -> std::optional<std::string> {{ const char* _ev = std::getenv(({v}).c_str()); return _ev != nullptr ? std::optional<std::string>(std::string(_ev)) : std::nullopt; }})()"
+
         if isinstance(expr, ReadJsonListExpr):
             self.uses_str_helpers = True
             self.uses_json_io = True
+            if expr.default_val is not None:
+                self.uses_json_list_opt = True
+                call = f"_meme_read_json_list_{expr.element_type.lower()}_opt({self.gen_expr(expr.filepath, scope)})"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"({call}.value_or({d}))"
+                return call
             return f"_meme_read_json_list_{expr.element_type.lower()}({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ReadJsonRecordExpr):
@@ -506,11 +566,25 @@ class _CppGen:
         if isinstance(expr, ReadFileStringExpr):
             self.uses_str_helpers = True
             self.uses_file_io = True
+            if expr.default_val is not None:
+                self.uses_file_io_opt = True
+                call = f"_meme_read_file_string_opt({self.gen_expr(expr.filepath, scope)})"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"({call}.value_or({d}))"
+                return call
             return f"_meme_read_file_string({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ReadFileLinesExpr):
             self.uses_str_helpers = True
             self.uses_file_io = True
+            if expr.default_val is not None:
+                self.uses_file_io_opt = True
+                call = f"_meme_read_file_lines_opt({self.gen_expr(expr.filepath, scope)})"
+                if not isinstance(expr.default_val, OptionalNoneExpr):
+                    d = self.gen_expr(expr.default_val, scope)
+                    return f"({call}.value_or({d}))"
+                return call
             return f"_meme_read_file_lines({self.gen_expr(expr.filepath, scope)})"
 
         if isinstance(expr, ListFilesExpr):
@@ -589,6 +663,15 @@ class _CppGen:
             dflt = self.gen_expr(expr.default_val, scope)
             return f"_meme_unwrap_or_else({tgt}, [&]() {{ return {dflt}; }})"
 
+        if isinstance(expr, EmptySetExpr):
+            return f"std::set<{_cpp_type(expr.element_type)}>{{}}"
+
+        if isinstance(expr, SetContainsExpr):
+            return f"({self.gen_expr(expr.target, scope)}.contains({self.gen_expr(expr.value, scope)}))"
+
+        if isinstance(expr, SetLengthExpr):
+            return f"(static_cast<long long>({self.gen_expr(expr.target, scope)}.size()))"
+
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
     def gen_stmt(
@@ -658,6 +741,9 @@ class _CppGen:
             tgt = _cpp_ident(stmt.target)
             idx = self.gen_expr(stmt.index, scope)
             val = self.gen_expr(stmt.value, scope)
+            if stmt.nested_index is not None:
+                nidx = self.gen_expr(stmt.nested_index, scope)
+                return [f"{pad}{tgt}.at(static_cast<std::size_t>({idx})).at(static_cast<std::size_t>({nidx})) = {val};"]
             return [f"{pad}{tgt}.at(static_cast<std::size_t>({idx})) = {val};"]
 
         if isinstance(stmt, ListRemoveStmt):
@@ -747,6 +833,7 @@ class _CppGen:
             map_t = _map_types_of(col_t)
             col_ident = _cpp_ident(stmt.collection)
             item_ident = _cpp_ident(stmt.item_var)
+            set_t = _set_type_of(col_t)
             if map_t is not None:
                 el_mtype = map_t[0]
                 sub[stmt.item_var] = el_mtype  # type: ignore[assignment]
@@ -774,6 +861,29 @@ class _CppGen:
                     lines.extend(self.gen_stmt(ch, sub, indent + 2))
                 lines.append(f"{pad}    }}")
                 lines.append(f"{pad}}}")
+                return lines
+            elif set_t is not None:
+                el_mtype = set_t
+                sub[stmt.item_var] = el_mtype  # type: ignore[assignment]
+                el_cpp = _cpp_type(el_mtype)  # type: ignore[arg-type]
+                if stmt.index_var is not None:
+                    sub[stmt.index_var] = "Int"
+                    idx_ident = _cpp_ident(stmt.index_var)
+                    lines = [
+                        f"{pad}{{",
+                        f"{pad}    long long {idx_ident} = 0;",
+                        f"{pad}    for (const auto& {item_ident} : {col_ident}) {{",
+                    ]
+                    for ch in stmt.body:
+                        lines.extend(self.gen_stmt(ch, sub, indent + 2))
+                    lines.append(f"{pad}        ++{idx_ident};")
+                    lines.append(f"{pad}    }}")
+                    lines.append(f"{pad}}}")
+                else:
+                    lines = [f"{pad}for (const auto& {item_ident} : {col_ident}) {{"]
+                    for ch in stmt.body:
+                        lines.extend(self.gen_stmt(ch, sub, indent + 1))
+                    lines.append(f"{pad}}}")
                 return lines
             else:
                 el_mtype = col_t[5:-1] if col_t.startswith("List<") else "Int"
@@ -848,6 +958,16 @@ class _CppGen:
             return [
                 f"{pad}{_cpp_ident(stmt.target)}[{self.gen_expr(stmt.key, scope)}] = {self.gen_expr(stmt.value, scope)};"
             ]
+
+        if isinstance(stmt, SetAddStmt):
+            tgt = _cpp_ident(stmt.target)
+            val = self.gen_expr(stmt.value, scope)
+            return [f"{pad}{tgt}.insert({val});"]
+
+        if isinstance(stmt, SetRemoveStmt):
+            tgt = _cpp_ident(stmt.target)
+            val = self.gen_expr(stmt.value, scope)
+            return [f"{pad}{tgt}.erase({val});"]
 
         if isinstance(stmt, WriteFileStmt):
             self.uses_str_helpers = True
@@ -1272,6 +1392,7 @@ def generate_cpp(ir: ProgramIR) -> str:
         for f in r.fields:
             record_blocks.append(f"    {_cpp_type(f.field_type)} {_cpp_ident(f.name)}{{}};")
         record_blocks.append(f"    bool operator==(const {r_name}&) const = default;")
+        record_blocks.append(f"    auto operator<=>(const {r_name}&) const = default;")
         record_blocks.append("};")
         record_blocks.append(f"inline std::string _meme_fmt(const {r_name}& self) {{")
         if not r.fields:
@@ -1318,6 +1439,7 @@ def generate_cpp(ir: ProgramIR) -> str:
     headers: list[str] = [
         "#include <algorithm>",
         "#include <cctype>",
+        "#include <chrono>",
         "#include <cmath>",
         "#include <cstdlib>",
         "#include <filesystem>",
@@ -1325,6 +1447,7 @@ def generate_cpp(ir: ProgramIR) -> str:
         "#include <iomanip>",
         "#include <iostream>",
         "#include <optional>",
+        "#include <set>",
         "#include <sstream>",
         "#include <string>",
         "#include <unordered_map>",
@@ -1382,6 +1505,19 @@ def generate_cpp(ir: ProgramIR) -> str:
         "std::string _meme_fmt(const std::optional<T>& opt) {",
         "    if (opt.has_value()) return _meme_fmt(*opt);",
         "    return \"None\";",
+        "}",
+        "template <typename T>",
+        "std::string _meme_fmt(const std::set<T>& s) {",
+        "    std::ostringstream oss;",
+        "    oss << '{';",
+        "    bool first = true;",
+        "    for (const auto& el : s) {",
+        "        if (!first) oss << \", \";",
+        "        first = false;",
+        "        oss << _meme_fmt(el);",
+        "    }",
+        "    oss << '}';",
+        "    return oss.str();",
         "}",
         "",
     ]
@@ -1774,7 +1910,7 @@ def generate_cpp(ir: ProgramIR) -> str:
             ]
         )
 
-    if gen.uses_json_records:
+    if gen.uses_json_records or gen.uses_json_list_opt:
         helpers.extend(_CPP_JSON_PARSER_HELPERS)
 
     if gen.uses_file_io:
@@ -1804,6 +1940,45 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    std::string raw = _meme_read_file_string(path);",
                 "    if (raw.empty()) {",
                 "        return {};",
+                "    }",
+                "    if (raw.back() == '\\n') {",
+                "        raw.pop_back();",
+                "    }",
+                "    std::vector<std::string> res;",
+                "    size_t start = 0;",
+                "    while (start <= raw.size()) {",
+                "        size_t pos = raw.find('\\n', start);",
+                "        if (pos == std::string::npos) {",
+                "            res.push_back(raw.substr(start));",
+                "            break;",
+                "        }",
+                "        res.push_back(raw.substr(start, pos - start));",
+                "        start = pos + 1;",
+                "    }",
+                "    return res;",
+                "}",
+                "inline std::optional<std::string> _meme_read_file_string_opt(const std::string& path) {",
+                "    std::error_code ec;",
+                "    std::filesystem::path rp = _meme_resolve_path(path);",
+                "    if (!std::filesystem::is_regular_file(rp, ec)) {",
+                "        return std::nullopt;",
+                "    }",
+                "    std::ifstream ifs(rp, std::ios::binary);",
+                "    if (!ifs) {",
+                "        return std::nullopt;",
+                "    }",
+                "    std::ostringstream ss;",
+                "    ss << ifs.rdbuf();",
+                "    return ss.str();",
+                "}",
+                "inline std::optional<std::vector<std::string>> _meme_read_file_lines_opt(const std::string& path) {",
+                "    auto raw_opt = _meme_read_file_string_opt(path);",
+                "    if (!raw_opt.has_value()) {",
+                "        return std::nullopt;",
+                "    }",
+                "    std::string raw = *raw_opt;",
+                "    if (raw.empty()) {",
+                "        return std::vector<std::string>{};",
                 "    }",
                 "    if (raw.back() == '\\n') {",
                 "        raw.pop_back();",
@@ -2116,6 +2291,53 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    for (const auto& t : _meme_parse_json_tokens(path)) {",
                 "        if (t.kind != _MemeJsonTok::Bool) _meme_json_fail(\"expected Bool element\");",
                 "        out.push_back(t.b);",
+                "    }",
+                "    return out;",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_json_list_opt:
+        helpers.extend(
+            [
+                "inline std::optional<std::vector<long long>> _meme_read_json_list_int_opt(const std::string& path) {",
+                "    auto jv = _meme_read_json_file(path);",
+                "    if (!jv || jv->kind != _MemeJK::Arr) return std::nullopt;",
+                "    std::vector<long long> out;",
+                "    for (const auto& item : jv->arr) {",
+                "        if (item.kind != _MemeJK::Num || !item.is_int) return std::nullopt;",
+                "        out.push_back(item.i_val);",
+                "    }",
+                "    return out;",
+                "}",
+                "inline std::optional<std::vector<double>> _meme_read_json_list_float_opt(const std::string& path) {",
+                "    auto jv = _meme_read_json_file(path);",
+                "    if (!jv || jv->kind != _MemeJK::Arr) return std::nullopt;",
+                "    std::vector<double> out;",
+                "    for (const auto& item : jv->arr) {",
+                "        if (item.kind != _MemeJK::Num) return std::nullopt;",
+                "        out.push_back(item.num);",
+                "    }",
+                "    return out;",
+                "}",
+                "inline std::optional<std::vector<std::string>> _meme_read_json_list_string_opt(const std::string& path) {",
+                "    auto jv = _meme_read_json_file(path);",
+                "    if (!jv || jv->kind != _MemeJK::Arr) return std::nullopt;",
+                "    std::vector<std::string> out;",
+                "    for (const auto& item : jv->arr) {",
+                "        if (item.kind != _MemeJK::Str) return std::nullopt;",
+                "        out.push_back(item.s);",
+                "    }",
+                "    return out;",
+                "}",
+                "inline std::optional<std::vector<bool>> _meme_read_json_list_bool_opt(const std::string& path) {",
+                "    auto jv = _meme_read_json_file(path);",
+                "    if (!jv || jv->kind != _MemeJK::Arr) return std::nullopt;",
+                "    std::vector<bool> out;",
+                "    for (const auto& item : jv->arr) {",
+                "        if (item.kind != _MemeJK::Bool) return std::nullopt;",
+                "        out.push_back(item.b);",
                 "    }",
                 "    return out;",
                 "}",

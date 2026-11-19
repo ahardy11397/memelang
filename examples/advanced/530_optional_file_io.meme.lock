@@ -1,0 +1,987 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/530_optional_file_io.meme": {
+      "source_sha256": "36d885cf7ea31684d9857daa462409bdbfa556860d0db7458cbf3b60141cbdfd",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "write_file",
+          "filepath": {
+            "expr_type": "literal",
+            "value": "tmp_opt_existing_530.txt",
+            "data_type": "String"
+          },
+          "content": {
+            "expr_type": "literal",
+            "value": "hello world\nsecond line",
+            "data_type": "String"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "s_missing",
+          "var_type": "Optional<String>",
+          "value": {
+            "expr_type": "read_file_string",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_nonexistent_530.txt",
+              "data_type": "String"
+            },
+            "default_val": {
+              "expr_type": "optional_none"
+            }
+          },
+          "source_line": 3
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "s_missing"
+            },
+            "negated": false
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "missing string is nothing: true",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 5
+            }
+          ],
+          "else_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "missing string is nothing: false",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 7
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "var_decl",
+          "name": "s_missing_fallback",
+          "var_type": "String",
+          "value": {
+            "expr_type": "read_file_string",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_nonexistent_530.txt",
+              "data_type": "String"
+            },
+            "default_val": {
+              "expr_type": "literal",
+              "value": "default_str",
+              "data_type": "String"
+            }
+          },
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "missing string fallback:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "s_missing_fallback"
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "var_decl",
+          "name": "s_existing",
+          "var_type": "Optional<String>",
+          "value": {
+            "expr_type": "read_file_string",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_opt_existing_530.txt",
+              "data_type": "String"
+            },
+            "default_val": {
+              "expr_type": "optional_none"
+            }
+          },
+          "source_line": 12
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "s_existing"
+            },
+            "negated": false
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "existing string is nothing: true",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 14
+            }
+          ],
+          "else_body": [
+            {
+              "op": "var_decl",
+              "name": "s_val",
+              "var_type": "String",
+              "value": {
+                "expr_type": "optional_unwrap",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "s_existing"
+                }
+              },
+              "source_line": 16
+            },
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "existing string:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "s_val"
+                }
+              ],
+              "source_line": 17
+            }
+          ],
+          "source_line": 13
+        },
+        {
+          "op": "var_decl",
+          "name": "l_missing",
+          "var_type": "Optional<List<String>>",
+          "value": {
+            "expr_type": "read_file_lines",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_nonexistent_530.txt",
+              "data_type": "String"
+            },
+            "default_val": {
+              "expr_type": "optional_none"
+            }
+          },
+          "source_line": 19
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "l_missing"
+            },
+            "negated": false
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "missing lines is nothing: true",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 21
+            }
+          ],
+          "else_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "missing lines is nothing: false",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 23
+            }
+          ],
+          "source_line": 20
+        },
+        {
+          "op": "var_decl",
+          "name": "l_existing",
+          "var_type": "Optional<List<String>>",
+          "value": {
+            "expr_type": "read_file_lines",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_opt_existing_530.txt",
+              "data_type": "String"
+            },
+            "default_val": {
+              "expr_type": "optional_none"
+            }
+          },
+          "source_line": 25
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "l_existing"
+            },
+            "negated": false
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "existing lines is nothing: true",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 27
+            }
+          ],
+          "else_body": [
+            {
+              "op": "var_decl",
+              "name": "lines_val",
+              "var_type": "List<String>",
+              "value": {
+                "expr_type": "optional_unwrap",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "l_existing"
+                }
+              },
+              "source_line": 29
+            },
+            {
+              "op": "for_each",
+              "item_var": "line",
+              "index_var": null,
+              "collection": "lines_val",
+              "body": [
+                {
+                  "op": "print_stmt",
+                  "expressions": [
+                    {
+                      "expr_type": "literal",
+                      "value": "line:",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "line"
+                    }
+                  ],
+                  "source_line": 31
+                }
+              ],
+              "source_line": 30
+            }
+          ],
+          "source_line": 26
+        },
+        {
+          "op": "write_file",
+          "filepath": {
+            "expr_type": "literal",
+            "value": "tmp_opt_valid_530.json",
+            "data_type": "String"
+          },
+          "content": {
+            "expr_type": "literal",
+            "value": "[10, 20, 30]",
+            "data_type": "String"
+          },
+          "source_line": 33
+        },
+        {
+          "op": "var_decl",
+          "name": "j_valid",
+          "var_type": "Optional<List<Int>>",
+          "value": {
+            "expr_type": "read_json_list",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_opt_valid_530.json",
+              "data_type": "String"
+            },
+            "element_type": "Int",
+            "explicit_type": true,
+            "default_val": {
+              "expr_type": "optional_none"
+            }
+          },
+          "source_line": 34
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "j_valid"
+            },
+            "negated": false
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "valid json is nothing: true",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 36
+            }
+          ],
+          "else_body": [
+            {
+              "op": "var_decl",
+              "name": "nums",
+              "var_type": "List<Int>",
+              "value": {
+                "expr_type": "optional_unwrap",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "j_valid"
+                }
+              },
+              "source_line": 38
+            },
+            {
+              "op": "for_each",
+              "item_var": "n",
+              "index_var": null,
+              "collection": "nums",
+              "body": [
+                {
+                  "op": "print_stmt",
+                  "expressions": [
+                    {
+                      "expr_type": "literal",
+                      "value": "num:",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    }
+                  ],
+                  "source_line": 40
+                }
+              ],
+              "source_line": 39
+            }
+          ],
+          "source_line": 35
+        },
+        {
+          "op": "var_decl",
+          "name": "j_missing",
+          "var_type": "Optional<List<Int>>",
+          "value": {
+            "expr_type": "read_json_list",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_nonexistent_530.json",
+              "data_type": "String"
+            },
+            "element_type": "Int",
+            "explicit_type": true,
+            "default_val": {
+              "expr_type": "optional_none"
+            }
+          },
+          "source_line": 42
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "j_missing"
+            },
+            "negated": false
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "missing json is nothing: true",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 44
+            }
+          ],
+          "else_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "missing json is nothing: false",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 46
+            }
+          ],
+          "source_line": 43
+        },
+        {
+          "op": "delete_file",
+          "path": {
+            "expr_type": "literal",
+            "value": "tmp_opt_existing_530.txt",
+            "data_type": "String"
+          },
+          "source_line": 48
+        },
+        {
+          "op": "delete_file",
+          "path": {
+            "expr_type": "literal",
+            "value": "tmp_opt_valid_530.json",
+            "data_type": "String"
+          },
+          "source_line": 49
+        }
+      ],
+      "canonical_meme": "write file \"tmp_opt_existing_530.txt\" with \"hello world\\nsecond line\"\ndefine s_missing: Optional<String> as read string from file \"tmp_nonexistent_530.txt\" or else nothing\nif s_missing is nothing:\n    print \"missing string is nothing: true\"\nelse:\n    print \"missing string is nothing: false\"\ndefine s_missing_fallback: String as read string from file \"tmp_nonexistent_530.txt\" or else \"default_str\"\nprint \"missing string fallback:\", s_missing_fallback\ndefine s_existing: Optional<String> as read string from file \"tmp_opt_existing_530.txt\" or else nothing\nif s_existing is nothing:\n    print \"existing string is nothing: true\"\nelse:\n    define s_val: String as value of s_existing\n    print \"existing string:\", s_val\ndefine l_missing: Optional<List<String>> as read lines from file \"tmp_nonexistent_530.txt\" or else nothing\nif l_missing is nothing:\n    print \"missing lines is nothing: true\"\nelse:\n    print \"missing lines is nothing: false\"\ndefine l_existing: Optional<List<String>> as read lines from file \"tmp_opt_existing_530.txt\" or else nothing\nif l_existing is nothing:\n    print \"existing lines is nothing: true\"\nelse:\n    define list lines_val as value of l_existing\n    for each line in lines_val:\n        print \"line:\", line\nwrite file \"tmp_opt_valid_530.json\" with \"[10, 20, 30]\"\ndefine j_valid: Optional<List<Int>> as read json file \"tmp_opt_valid_530.json\" as List<Int> or else nothing\nif j_valid is nothing:\n    print \"valid json is nothing: true\"\nelse:\n    define list nums as value of j_valid\n    for each n in nums:\n        print \"num:\", n\ndefine j_missing: Optional<List<Int>> as read json file \"tmp_nonexistent_530.json\" as List<Int> or else nothing\nif j_missing is nothing:\n    print \"missing json is nothing: true\"\nelse:\n    print \"missing json is nothing: false\"\ndelete file \"tmp_opt_existing_530.txt\"\ndelete file \"tmp_opt_valid_530.json\"",
+      "ir": {
+        "statements": [
+          {
+            "op": "write_file",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_opt_existing_530.txt",
+              "data_type": "String"
+            },
+            "content": {
+              "expr_type": "literal",
+              "value": "hello world\nsecond line",
+              "data_type": "String"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "s_missing",
+            "var_type": "Optional<String>",
+            "value": {
+              "expr_type": "read_file_string",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tmp_nonexistent_530.txt",
+                "data_type": "String"
+              },
+              "default_val": {
+                "expr_type": "optional_none"
+              }
+            },
+            "source_line": 3
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "s_missing"
+              },
+              "negated": false
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "missing string is nothing: true",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 5
+              }
+            ],
+            "else_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "missing string is nothing: false",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 7
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "var_decl",
+            "name": "s_missing_fallback",
+            "var_type": "String",
+            "value": {
+              "expr_type": "read_file_string",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tmp_nonexistent_530.txt",
+                "data_type": "String"
+              },
+              "default_val": {
+                "expr_type": "literal",
+                "value": "default_str",
+                "data_type": "String"
+              }
+            },
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "missing string fallback:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "s_missing_fallback"
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "var_decl",
+            "name": "s_existing",
+            "var_type": "Optional<String>",
+            "value": {
+              "expr_type": "read_file_string",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tmp_opt_existing_530.txt",
+                "data_type": "String"
+              },
+              "default_val": {
+                "expr_type": "optional_none"
+              }
+            },
+            "source_line": 12
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "s_existing"
+              },
+              "negated": false
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "existing string is nothing: true",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 14
+              }
+            ],
+            "else_body": [
+              {
+                "op": "var_decl",
+                "name": "s_val",
+                "var_type": "String",
+                "value": {
+                  "expr_type": "optional_unwrap",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "s_existing"
+                  }
+                },
+                "source_line": 16
+              },
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "existing string:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "s_val"
+                  }
+                ],
+                "source_line": 17
+              }
+            ],
+            "source_line": 13
+          },
+          {
+            "op": "var_decl",
+            "name": "l_missing",
+            "var_type": "Optional<List<String>>",
+            "value": {
+              "expr_type": "read_file_lines",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tmp_nonexistent_530.txt",
+                "data_type": "String"
+              },
+              "default_val": {
+                "expr_type": "optional_none"
+              }
+            },
+            "source_line": 19
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "l_missing"
+              },
+              "negated": false
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "missing lines is nothing: true",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 21
+              }
+            ],
+            "else_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "missing lines is nothing: false",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 23
+              }
+            ],
+            "source_line": 20
+          },
+          {
+            "op": "var_decl",
+            "name": "l_existing",
+            "var_type": "Optional<List<String>>",
+            "value": {
+              "expr_type": "read_file_lines",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tmp_opt_existing_530.txt",
+                "data_type": "String"
+              },
+              "default_val": {
+                "expr_type": "optional_none"
+              }
+            },
+            "source_line": 25
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "l_existing"
+              },
+              "negated": false
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "existing lines is nothing: true",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 27
+              }
+            ],
+            "else_body": [
+              {
+                "op": "var_decl",
+                "name": "lines_val",
+                "var_type": "List<String>",
+                "value": {
+                  "expr_type": "optional_unwrap",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "l_existing"
+                  }
+                },
+                "source_line": 29
+              },
+              {
+                "op": "for_each",
+                "item_var": "line",
+                "index_var": null,
+                "collection": "lines_val",
+                "body": [
+                  {
+                    "op": "print_stmt",
+                    "expressions": [
+                      {
+                        "expr_type": "literal",
+                        "value": "line:",
+                        "data_type": "String"
+                      },
+                      {
+                        "expr_type": "var_ref",
+                        "name": "line"
+                      }
+                    ],
+                    "source_line": 31
+                  }
+                ],
+                "source_line": 30
+              }
+            ],
+            "source_line": 26
+          },
+          {
+            "op": "write_file",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_opt_valid_530.json",
+              "data_type": "String"
+            },
+            "content": {
+              "expr_type": "literal",
+              "value": "[10, 20, 30]",
+              "data_type": "String"
+            },
+            "source_line": 33
+          },
+          {
+            "op": "var_decl",
+            "name": "j_valid",
+            "var_type": "Optional<List<Int>>",
+            "value": {
+              "expr_type": "read_json_list",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tmp_opt_valid_530.json",
+                "data_type": "String"
+              },
+              "element_type": "Int",
+              "explicit_type": true,
+              "default_val": {
+                "expr_type": "optional_none"
+              }
+            },
+            "source_line": 34
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "j_valid"
+              },
+              "negated": false
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "valid json is nothing: true",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 36
+              }
+            ],
+            "else_body": [
+              {
+                "op": "var_decl",
+                "name": "nums",
+                "var_type": "List<Int>",
+                "value": {
+                  "expr_type": "optional_unwrap",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "j_valid"
+                  }
+                },
+                "source_line": 38
+              },
+              {
+                "op": "for_each",
+                "item_var": "n",
+                "index_var": null,
+                "collection": "nums",
+                "body": [
+                  {
+                    "op": "print_stmt",
+                    "expressions": [
+                      {
+                        "expr_type": "literal",
+                        "value": "num:",
+                        "data_type": "String"
+                      },
+                      {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      }
+                    ],
+                    "source_line": 40
+                  }
+                ],
+                "source_line": 39
+              }
+            ],
+            "source_line": 35
+          },
+          {
+            "op": "var_decl",
+            "name": "j_missing",
+            "var_type": "Optional<List<Int>>",
+            "value": {
+              "expr_type": "read_json_list",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tmp_nonexistent_530.json",
+                "data_type": "String"
+              },
+              "element_type": "Int",
+              "explicit_type": true,
+              "default_val": {
+                "expr_type": "optional_none"
+              }
+            },
+            "source_line": 42
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "j_missing"
+              },
+              "negated": false
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "missing json is nothing: true",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 44
+              }
+            ],
+            "else_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "missing json is nothing: false",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 46
+              }
+            ],
+            "source_line": 43
+          },
+          {
+            "op": "delete_file",
+            "path": {
+              "expr_type": "literal",
+              "value": "tmp_opt_existing_530.txt",
+              "data_type": "String"
+            },
+            "source_line": 48
+          },
+          {
+            "op": "delete_file",
+            "path": {
+              "expr_type": "literal",
+              "value": "tmp_opt_valid_530.json",
+              "data_type": "String"
+            },
+            "source_line": 49
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

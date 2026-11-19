@@ -25,7 +25,10 @@ from memelang.ir.schema import (
     ContinueStmt,
     CopyFileStmt,
     CreateDirectoryStmt,
+    CurrentEpochExpr,
     DeleteFileStmt,
+    EmptySetExpr,
+    EnvVarExpr,
     ExitStmt,
     FailStmt,
     FileExistsExpr,
@@ -84,6 +87,10 @@ from memelang.ir.schema import (
     RecordSetFieldStmt,
     RenameFileStmt,
     ReturnStmt,
+    SetAddStmt,
+    SetContainsExpr,
+    SetLengthExpr,
+    SetRemoveStmt,
     SortCollectionStmt,
     StrContainsExpr,
     StrEndsWithExpr,
@@ -200,6 +207,12 @@ def _optional_type_of(opt_type: MemeType) -> MemeType | None:
     return None
 
 
+def _set_type_of(set_type: MemeType) -> MemeType | None:
+    if set_type.startswith("Set<") and set_type.endswith(">"):
+        return cast(MemeType, set_type[4:-1])
+    return None
+
+
 def _find_collection_mutations(stmts: list[IRStatement], collection: str) -> list[IRStatement]:
     hits: list[IRStatement] = []
     for s in stmts:
@@ -213,6 +226,8 @@ def _find_collection_mutations(stmts: list[IRStatement], collection: str) -> lis
                 ListInsertStmt,
                 ListSetIndexStmt,
                 ListRemoveStmt,
+                SetAddStmt,
+                SetRemoveStmt,
             ),
         ) and s.target == collection:
             hits.append(s)
@@ -613,6 +628,14 @@ class _StaticChecker:
                 )
             self._validate_type(opt_t, stmt_idx, allow_void=False)
             return
+        set_t = _set_type_of(meme_type)
+        if set_t is not None:
+            if set_t not in ("Int", "Float", "Bool", "String") and set_t not in self.records:
+                raise StaticVerificationError(
+                    f"Set element type must be Int, Float, Bool, String, or record, got `{set_t}`", stmt_idx
+                )
+            self._validate_type(set_t, stmt_idx, allow_void=False)
+            return
         raise StaticVerificationError(f"Unknown type `{meme_type}`", stmt_idx)
 
     def infer_expr_type(self, expr: IRExpr, scope: _Scope, stmt_idx: int | None) -> MemeType:
@@ -935,6 +958,15 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"`read_file_string` requires String filepath, got {fp_t}", stmt_idx
                 )
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d_t = self.infer_expr_type(expr.default_val, scope, stmt_idx)
+                if d_t != "String":
+                    raise StaticVerificationError(
+                        f"`read_file_string` fallback must have type String, got {d_t}", stmt_idx
+                    )
+                return "String"
+            if expr.default_val is not None:
+                return "Optional<String>"
             return "String"
 
         if isinstance(expr, ReadFileLinesExpr):
@@ -943,6 +975,15 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"`read_file_lines` requires String filepath, got {fp_t}", stmt_idx
                 )
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d_t = self.infer_expr_type(expr.default_val, scope, stmt_idx)
+                if d_t != "List<String>":
+                    raise StaticVerificationError(
+                        f"`read_file_lines` fallback must have type List<String>, got {d_t}", stmt_idx
+                    )
+                return "List<String>"
+            if expr.default_val is not None:
+                return "Optional<List<String>>"
             return "List<String>"
 
         if isinstance(expr, ListFilesExpr):
@@ -984,7 +1025,17 @@ class _StaticChecker:
                     f"`read_json_list` element_type must be Int, Float, String, or Bool, got {expr.element_type}",
                     stmt_idx,
                 )
-            return cast(MemeType, f"List<{expr.element_type}>")
+            target_list_t = cast(MemeType, f"List<{expr.element_type}>")
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d_t = self.infer_expr_type(expr.default_val, scope, stmt_idx)
+                if d_t != target_list_t:
+                    raise StaticVerificationError(
+                        f"`read_json_list` fallback must have type {target_list_t}, got {d_t}", stmt_idx
+                    )
+                return target_list_t
+            if expr.default_val is not None:
+                return f"Optional<{target_list_t}>"
+            return target_list_t
 
         if isinstance(expr, StringLengthExpr):
             target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
@@ -1075,6 +1126,24 @@ class _StaticChecker:
                     f"`format_float` decimals must be between 0 and 10, got {expr.decimals.value}", stmt_idx
                 )
             return "String"
+
+        if isinstance(expr, CurrentEpochExpr):
+            return "Int"
+
+        if isinstance(expr, EnvVarExpr):
+            v_t = self.infer_expr_type(expr.var_name, scope, stmt_idx)
+            if v_t != "String":
+                raise StaticVerificationError(
+                    f"`{expr.expr_type}` var_name must be String, got {v_t}", stmt_idx
+                )
+            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
+                d_t = self.infer_expr_type(expr.default_val, scope, stmt_idx)
+                if d_t != "String":
+                    raise StaticVerificationError(
+                        f"`{expr.expr_type}` fallback must have type String, got {d_t}", stmt_idx
+                    )
+                return "String"
+            return "Optional<String>"
 
         if isinstance(expr, (ReadJsonRecordExpr, ReadJsonRecordsExpr)):
             fp_t = self.infer_expr_type(expr.filepath, scope, stmt_idx)
@@ -1252,6 +1321,38 @@ class _StaticChecker:
                     stmt_idx,
                 )
             return opt_inner
+
+        if isinstance(expr, EmptySetExpr):
+            self._validate_type(expr.element_type, stmt_idx, allow_void=False)
+            if expr.element_type not in ("Int", "Float", "Bool", "String") and expr.element_type not in self.records:
+                raise StaticVerificationError(
+                    f"Set element type must be Int, Float, Bool, String, or record, got `{expr.element_type}`",
+                    stmt_idx,
+                )
+            return cast(MemeType, f"Set<{expr.element_type}>")
+
+        if isinstance(expr, SetContainsExpr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            set_t = _set_type_of(target_t)
+            if set_t is None:
+                raise StaticVerificationError(
+                    f"`set_contains` requires a Set target, got {target_t}", stmt_idx
+                )
+            val_t = self.infer_expr_type(expr.value, scope, stmt_idx)
+            if val_t != set_t:
+                raise StaticVerificationError(
+                    f"Set contains expected element of type `{set_t}`, got `{val_t}`", stmt_idx
+                )
+            return "Bool"
+
+        if isinstance(expr, SetLengthExpr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            set_t = _set_type_of(target_t)
+            if set_t is None:
+                raise StaticVerificationError(
+                    f"`set_length` requires a Set target, got {target_t}", stmt_idx
+                )
+            return "Int"
 
         raise StaticVerificationError(f"Unsupported expression node: {type(expr)!r}", stmt_idx)
 
@@ -1449,6 +1550,20 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     f"`list_set_index` index must be Int, got {idx_t}", stmt_idx
                 )
+            if stmt.nested_index is not None:
+                inner_elem_t = elem_t
+                nested_elem_t = _element_type_of(inner_elem_t)
+                if nested_elem_t is None:
+                    raise StaticVerificationError(
+                        f"Cannot nested-index into element of {target_t}", stmt_idx
+                    )
+                nidx_t = self.infer_expr_type(stmt.nested_index, scope, stmt_idx)
+                if nidx_t != "Int":
+                    raise StaticVerificationError(
+                        f"`list_set_index` nested index must be Int, got {nidx_t}",
+                        stmt_idx,
+                    )
+                elem_t = nested_elem_t
             neg_idx = _extract_negative_int_literal(stmt.index)
             if neg_idx is not None:
                 raise StaticVerificationError(
@@ -1652,13 +1767,16 @@ class _StaticChecker:
                 )
             elem_t = _element_type_of(col_t)
             map_t = _map_types_of(col_t)
+            set_t = _set_type_of(col_t)
             if elem_t is not None:
                 item_t = elem_t
             elif map_t is not None:
                 item_t = map_t[0]
+            elif set_t is not None:
+                item_t = set_t
             else:
                 raise StaticVerificationError(
-                    f"`for each` requires a List or Map collection, got {col_t}", stmt_idx
+                    f"`for each` requires a List, Map, or Set collection, got {col_t}", stmt_idx
                 )
             loop_scope = _Scope(parent=scope)
             if stmt.index_var is not None:
@@ -1879,6 +1997,42 @@ class _StaticChecker:
                 )
             return False
 
+        if isinstance(stmt, SetAddStmt):
+            target_t = scope.lookup(stmt.target)
+            if target_t is None:
+                raise StaticVerificationError(
+                    f"Cannot add to undeclared variable `{stmt.target}`", stmt_idx
+                )
+            set_t = _set_type_of(target_t)
+            if set_t is None:
+                raise StaticVerificationError(
+                    f"`set_add` requires a Set variable, got {target_t}", stmt_idx
+                )
+            val_t = self.infer_expr_type(stmt.value, scope, stmt_idx)
+            if val_t != set_t:
+                raise StaticVerificationError(
+                    f"Set add expected element of type `{set_t}`, got `{val_t}`", stmt_idx
+                )
+            return False
+
+        if isinstance(stmt, SetRemoveStmt):
+            target_t = scope.lookup(stmt.target)
+            if target_t is None:
+                raise StaticVerificationError(
+                    f"Cannot remove from undeclared variable `{stmt.target}`", stmt_idx
+                )
+            set_t = _set_type_of(target_t)
+            if set_t is None:
+                raise StaticVerificationError(
+                    f"`set_remove` requires a Set variable, got {target_t}", stmt_idx
+                )
+            val_t = self.infer_expr_type(stmt.value, scope, stmt_idx)
+            if val_t != set_t:
+                raise StaticVerificationError(
+                    f"Set remove expected element of type `{set_t}`, got `{val_t}`", stmt_idx
+                )
+            return False
+
         if isinstance(stmt, WriteFileStmt):
             fp_t = self.infer_expr_type(stmt.filepath, scope, stmt_idx)
             if fp_t != "String":
@@ -2055,6 +2209,13 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
         return _expr_references_var(expr.target, name)
     if isinstance(expr, FormatFloatExpr):
         return _expr_references_var(expr.target, name) or _expr_references_var(expr.decimals, name)
+    if isinstance(expr, CurrentEpochExpr):
+        return False
+    if isinstance(expr, EnvVarExpr):
+        ref = _expr_references_var(expr.var_name, name)
+        if expr.default_val is not None:
+            ref = ref or _expr_references_var(expr.default_val, name)
+        return ref
     if isinstance(expr, (ReadJsonRecordExpr, ReadJsonRecordsExpr)):
         ref = _expr_references_var(expr.filepath, name)
         if expr.default_val is not None:
@@ -2069,13 +2230,19 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
     if isinstance(expr, StringCharAtExpr):
         return _expr_references_var(expr.target, name) or _expr_references_var(expr.index, name)
     if isinstance(expr, (FileExistsExpr, ReadFileStringExpr, ReadFileLinesExpr)):
-        return _expr_references_var(expr.filepath, name)
+        ref = _expr_references_var(expr.filepath, name)
+        if getattr(expr, "default_val", None) is not None:
+            ref = ref or _expr_references_var(expr.default_val, name)
+        return ref
     if isinstance(expr, ListFilesExpr):
         return _expr_references_var(expr.path, name)
     if isinstance(expr, ArgAtExpr):
         return _expr_references_var(expr.index, name)
     if isinstance(expr, ReadJsonListExpr):
-        return _expr_references_var(expr.filepath, name)
+        ref = _expr_references_var(expr.filepath, name)
+        if expr.default_val is not None:
+            ref = ref or _expr_references_var(expr.default_val, name)
+        return ref
     if isinstance(expr, StringLengthExpr):
         return _expr_references_var(expr.target, name)
     if isinstance(expr, StringSliceExpr):
@@ -2111,6 +2278,10 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
         return _expr_references_var(expr.target, name)
     if isinstance(expr, OptionalUnwrapOrDefaultExpr):
         return _expr_references_var(expr.target, name) or _expr_references_var(expr.default_val, name)
+    if isinstance(expr, SetContainsExpr):
+        return _expr_references_var(expr.target, name) or _expr_references_var(expr.value, name)
+    if isinstance(expr, SetLengthExpr):
+        return _expr_references_var(expr.target, name)
     return False
 
 
@@ -2149,6 +2320,10 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
             s.target == name
             or _expr_references_var(s.key, name)
             or _expr_references_var(s.value, name)
+        ):
+            return True
+        if isinstance(s, (SetAddStmt, SetRemoveStmt)) and (
+            s.target == name or _expr_references_var(s.value, name)
         ):
             return True
         if isinstance(s, (WriteFileStmt, AppendFileStmt)) and (
@@ -2250,6 +2425,8 @@ def _stmts_mutate_var(stmts: list[IRStatement], name: str) -> bool:
                 FilterCollectionStmt,
                 RecordSetFieldStmt,
                 MapSetStmt,
+                SetAddStmt,
+                SetRemoveStmt,
             ),
         ) and s.target == name:
             return True
