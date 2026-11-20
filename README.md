@@ -132,6 +132,45 @@ uv run meme build EX.meme -o out [--resolve ID=OPT ...] [--cc COMPILER] [--cflag
 - **Zero-LLM Lockfile Contract:** Building an already locked program runs 100% deterministically offline with 0ms inference latency, honoring the exact same zero-LLM lockfile contract as `meme compile`.
 - **Modules & Multi-File Linking:** Programs using `use <module>` (such as `examples/advanced/521_modules/`) compile into a single self-contained native binary with all dependencies linked.
 
+### Test Runner: `meme test`
+
+Execute test suites across `.meme` files with isolated process execution:
+
+```bash
+uv run meme test [PATH] [--target python|rust|cpp|go|c|ts]
+```
+
+- **Usage:** Point `meme test` at a directory (defaults to `tests/`) or specific `.meme` test file.
+- **Cross-Target Parity:** Runs isolated test blocks (`test <name>: ...`) across any of the six backends.
+- **Reporting:** Reports per-case `PASS` / `FAIL` status with source line attribution and exits 0 on all pass, 1 on failure.
+
+---
+
+## Beta Features (v0.2.0-beta)
+
+- **Assertions (`assert`):** First-class runtime invariant assertions with status-1 termination and deterministic diagnostics.
+- **Test Blocks (`test`) & Test Runner (`meme test`):** Isolated test blocks and a built-in cross-target test runner.
+- **Native Binaries (`meme build`):** Direct-to-native binary compilation via the C11 backend with zero runtime dependencies.
+- **Float Formatting:** Deterministic float formatting with specified decimal precision (`format x with N decimals`).
+- **JSON Record Read/Write:** Strongly-typed record serialization and deserialization (`write r as json to file path`, `read json record R from file path or else nothing`).
+- **System Clock & Environment Variables:** Built-in POSIX epoch seconds (`current epoch seconds`) and environment variable lookup (`environment variable name`).
+- **Optional File Readers:** Null-safe file readers returning `Optional<T>` without panicking on missing files.
+- **Sets (`Set<T>`):** First-class generic sets with O(1) membership, idempotent addition, and deterministic sorted iteration.
+- **Two-Dimensional Lists (`List<List<T>>`):** Generic nested lists supporting literals `[[1, 2], [3, 4]]`, indexing `g[i][j]`, and mutation `set g[i][j] to v`.
+
+### CLI Commands
+
+| Command | Description | Example |
+|---|---|---|
+| `meme run` | Synthesize/load lockfile, compile, and execute on target | `uv run meme run app.meme --target python` |
+| `meme compile` | Compile program to target source code | `uv run meme compile app.meme --target rust -o app.rs` |
+| `meme build` | Compile program to standalone native binary via C11 | `uv run meme build app.meme -o app` |
+| `meme test` | Run test suites across `.meme` files on any target | `uv run meme test tests/meme --target go` |
+| `meme check` | Static type checking and verification | `uv run meme check app.meme` |
+| `meme explain` | Inspect canonical form and lock status | `uv run meme explain app.meme` |
+| `meme pull` | Download recommended local compiler model | `uv run meme pull` |
+
+
 ---
 
 ## Local & Cloud LLM Providers (`--provider`)

@@ -2380,6 +2380,12 @@ def generate_c(ir: ProgramIR) -> str:
     for stmt in all_stmts:
         _collect_types_from_stmt(stmt, used_types)
 
+    for r_name in gen.records:
+        used_types.add(r_name)
+        used_types.add(f"Optional<{r_name}>")
+        used_types.add(f"List<{r_name}>")
+        used_types.add(f"Optional<List<{r_name}>>")
+
     # Expand compound types recursively
     expanded = True
     while expanded:

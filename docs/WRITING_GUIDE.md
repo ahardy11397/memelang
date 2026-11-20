@@ -841,6 +841,179 @@ print dist
 
 ---
 
+## 11e. Assert Statements (assert)
+
+Memelang provides runtime assertions for invariant checking and test verification (**offline** and **LLM-voice**).
+
+```meme
+define x: Int as 5
+assert x == 5
+assert x > 0
+print "assertion passed"
+```
+
+### Static Rules & Parity Semantics
+- **Syntax:** `assert <expr>` evaluates `<expr>` which must statically type-check to `Bool`.
+- **Failure Behavior:** If `<expr>` evaluates to `false` at runtime, the program immediately writes an assertion failure message to `stderr` and terminates with status code `1` across all six targets (**Python**, **Rust**, **C++**, **Go**, **C**, **TypeScript**).
+- **Parity Format:** On assertion failure, `stderr` outputs: `ASSERT FAILED line <lineno>: <expr>\n`.
+- **Success:** If `<expr>` evaluates to `true`, execution continues without runtime overhead or output.
+
+---
+
+## 11f. Test Blocks and Test Runner (test, meme test)
+
+Memelang includes first-class test blocks and a dedicated test runner command (`meme test`) (**offline** and **LLM-voice**).
+
+```meme
+function double(n: Int) -> Int:
+    return n * 2
+
+test double_test:
+    define ans: Int as double(4)
+    assert ans == 8
+```
+
+### Static Rules & Parity Semantics
+- **Surface Syntax:** `test <identifier>:` declares an isolated top-level test block. Test block names must match `[a-z_][a-z0-9_]*`.
+- **Top-Level Isolation:** Test blocks are not executed during normal program runs (`meme run` or standard binary execution). They are invoked specifically via the test harness.
+- **Dedicated Test Runner (`meme test`):**
+  ```bash
+  uv run meme test [PATH] [--target python|rust|cpp|go|c|ts]
+  ```
+  `meme test` discovers `.meme` files in `PATH` (or `tests/` by default), compiles test programs, and runs each test block in an isolated process across the requested target backend.
+- **Reporting:** Outputs `PASS <file>::<name>` or `FAIL <file>::<name> (line <N>)`, followed by a summary `Ran N cases, M failed`. Returns exit code `0` when all tests pass, or `1` if any test fails.
+
+---
+
+## 11g. Float Formatting (format ... with N decimals)
+
+Memelang supports deterministic floating-point precision formatting (**offline** and **LLM-voice**).
+
+```meme
+define pi: Float as 3.1415926
+define formatted: String as format pi with 2 decimals
+print formatted
+```
+
+### Static Rules & Parity Semantics
+- **Syntax:** `format <expr> with <N> decimals` takes a `Float` expression and an integer `<N>` representing decimal places.
+- **Return Type:** Returns a `String`.
+- **Cross-Target Parity:** Implements standardized half-away-from-zero rounding across all six targets, ensuring byte-identical float rendering across Python, Rust, C++, Go, C, and TypeScript.
+
+---
+
+## 11h. JSON Record Serialization and Deserialization
+
+Memelang provides built-in strongly-typed JSON serialization and deserialization for user records (**offline** and **LLM-voice**).
+
+```meme
+record ServerConfig:
+    host: String
+    port: Int
+
+define cfg: ServerConfig as ServerConfig(host="localhost", port=8080)
+write cfg as json to file "config.json"
+define loaded: Optional<ServerConfig> as read json record ServerConfig from file "config.json" or else nothing
+if loaded is not nothing:
+    define c: ServerConfig as value of loaded
+    print c.host, c.port
+```
+
+### Static Rules & Parity Semantics
+- **Reading Single Record:** `read json record <RecordType> from file <path> or else nothing` returns `Optional<RecordType>`. If `<path>` is missing, invalid JSON, or does not match the record schema, it safely returns `nothing`.
+- **Reading Record List:** `read json records <RecordType> from file <path> or else nothing` returns `Optional<List<RecordType>>`.
+- **Writing Records:** `write <record-expr> as json to file <path>` serializes `<record-expr>` into `<path>`.
+- **Writing Record Lists:** `write <list-of-records> as json to file <path>` serializes the list as a JSON array.
+- **Field Mappings:** Automatically serializes and deserializes primitive fields (`Int`, `Float`, `String`, `Bool`) and `Optional<T>` fields with proper JSON escaping.
+
+---
+
+## 11i. System Clock and Environment Variables
+
+Memelang exposes system clock time and operating system environment variables (**offline** and **LLM-voice**).
+
+```meme
+define now: Int as current epoch seconds
+assert now > 1700000000
+
+define env_port: Optional<String> as environment variable "APP_PORT"
+define port: String as value of env_port or else "3000"
+print port
+```
+
+### Static Rules & Parity Semantics
+- **Current Epoch Seconds:** `current epoch seconds` returns an `Int` representing POSIX epoch timestamp (seconds since 1970-01-01T00:00:00Z UTC).
+- **Environment Variable:** `environment variable <name-expr>` accepts a `String` variable name and returns `Optional<String>`. Returns `optional <val>` if the environment variable is present in the process environment, or `nothing` if unset.
+
+---
+
+## 11j. Optional File Readers
+
+Memelang provides null-safe file reading operations returning `Optional<T>` (**offline** and **LLM-voice**).
+
+```meme
+define content: Optional<String> as read string from file "missing.txt" or else nothing
+if content is nothing:
+    print "missing file handled"
+
+define lines: Optional<List<String>> as read lines from file "missing.txt" or else nothing
+if lines is nothing:
+    print "missing lines handled"
+```
+
+### Static Rules & Parity Semantics
+- **String Reader:** `read string from file <path> or else nothing` returns `Optional<String>`. If `<path>` exists and is readable, returns `optional <content>`. If `<path>` does not exist or cannot be read, returns `nothing` without terminating the process.
+- **Lines Reader:** `read lines from file <path> or else nothing` returns `Optional<List<String>>`. If `<path>` does not exist or cannot be read, returns `nothing`.
+
+---
+
+## 11k. Sets (Set<T>)
+
+Memelang features first-class generic sets with deterministic sorted iteration order (**offline** and **LLM-voice**).
+
+```meme
+define fruits: Set<String> as empty set of String
+add "banana" to set fruits
+add "apple" to set fruits
+add "apple" to set fruits
+print length of set fruits
+if fruits contains "apple":
+    print "has apple"
+remove "apple" from set fruits
+for each item in fruits:
+    print item
+```
+
+### Static Rules & Parity Semantics
+- **Declaration:** `define <name> as empty set of <T>` or `define <name>: Set<T> as empty set of <T>`.
+- **Set Operations:**
+  - `add <expr> to set <name>`: adds element; idempotent (no duplicates).
+  - `remove <expr> from set <name>`: removes element if present; no-op if absent.
+  - `<name> contains <expr>`: returns `Bool` testing membership. Structural equality applies to records.
+  - `length of set <name>`: returns `Int` count of unique elements.
+- **Deterministic Sorted Iteration:** Iterating over a set (`for each item in set:`) always visits elements in deterministic sorted order (numeric order for numbers, lexicographic byte order for strings, field-order for records) across all six codegen targets.
+
+---
+
+## 11l. Two-Dimensional Lists (List<List<T>>)
+
+Memelang supports generic nested two-dimensional lists (**offline** and **LLM-voice**).
+
+```meme
+define grid: List<List<Int>> as [[1, 2], [3, 4]]
+print grid[0][1]
+set grid[1][0] to 9
+print grid[1][0]
+for each row in grid:
+    print length of row
+```
+
+### Static Rules & Parity Semantics
+- **Literals & Types:** Nested list literals `[[...], [...]]` type-check as `List<List<T>>`. Empty nested lists can be declared with `empty List<List<T>>`.
+- **Jagged Rows:** Rows can have varying lengths (ragged/jagged lists are fully supported).
+- **Indexing & Mutation:** Access elements via `g[i][j]` (0-based) and mutate elements via `set g[i][j] to <val>`. Out-of-bounds indexing triggers `Error: list index out of range` and exits code `1` across all targets.
+- **Iteration:** Rows can be iterated normally using `for each row in grid:`.
+
 ---
 
 ## 12. CLI Cheat Sheet
@@ -976,11 +1149,29 @@ Each construct is labeled **offline** (supported by the zero-dependency `heurist
 | Test optional presence | `x is nothing` / `x is not nothing` | **offline** |
 | Safe unwrap with default | `value of x or else <default>` *(evaluates default only if absent)* | **offline** |
 | Strict unwrap | `value of x` *(exits with code 1 if absent)* | **offline** |
+| Assert statement | `assert <cond>` *(exits code 1 if false)* | **offline** |
+| Test block | `test <name>:` *(run via `meme test`)* | **offline** |
+| Format float | `format <expr> with <N> decimals` | **offline** |
 | Check file exists | `file exists path` | **offline** |
 | Read text file | `read string from file path` | **offline** |
 | Write file (overwrite) | `write file path with content` | **offline** |
 | Append to file | `append content to file path` / `add content to file path` | **offline** |
+| Read string or else nothing | `read string from file path or else nothing` | **offline** |
+| Read lines or else nothing | `read lines from file path or else nothing` | **offline** |
 | Read typed JSON list | `read json file path as List<Int\|Float\|String\|Bool>` / `read JSON number list from path` | **offline** |
+| Read JSON record | `read json record <Type> from file path or else nothing` | **offline** |
+| Read JSON record list | `read json records <Type> from file path or else nothing` | **offline** |
+| Write JSON record or list | `write <expr> as json to file path` | **offline** |
+| Current epoch seconds | `current epoch seconds` | **offline** |
+| Read environment variable | `environment variable <name>` | **offline** |
+| Define empty set | `define s as empty set of <T>` | **offline** |
+| Add element to set | `add <item> to set s` | **offline** |
+| Remove element from set | `remove <item> from set s` | **offline** |
+| Test set membership | `s contains <item>` | **offline** |
+| Set length | `length of set s` | **offline** |
+| 2D list literal | `define grid as [[1, 2], [3, 4]]` | **offline** |
+| 2D list index | `grid[i][j]` | **offline** |
+| Mutate 2D list cell | `set grid[i][j] to <val>` | **offline** |
 | Argument count (`argc`) | `argument count` *(includes program name at index 0)* | **offline** |
 | Read CLI argument | `argument n` *(1-based for user arguments)* | **offline** |
 | Fail (exits code 1) | `fail with "error message"` (**offline**) / `else return "error message"` (**LLM-voice only**) | **offline** / **LLM-voice only** |
