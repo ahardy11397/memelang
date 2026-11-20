@@ -10,3 +10,6 @@
 [submodule "projects/payroll"]
 	path = projects/payroll
 	url = https://github.com/ahardy11397/payroll.git
+[submodule "projects/flight-reservation"]
+	path = projects/flight-reservation
+	url = https://github.com/ahardy11397/flight-reservation.git
