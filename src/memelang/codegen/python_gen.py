@@ -846,6 +846,8 @@ class _PyGen:
         if isinstance(stmt, WriteJsonStmt):
             self.uses_file_io = True
             self.uses_json_write = True
+            self.uses_format_float = True
+            self.uses_math = True
             tgt_t = self.infer_type(stmt.target, scope)
             fp = self.gen_expr(stmt.filepath, scope)
             tgt = self.gen_expr(stmt.target, scope)
@@ -1114,8 +1116,9 @@ def generate_python(ir: ProgramIR) -> str:
         body_lines.append("        _target_test = _meme_sys.argv[2]")
         for tb in test_blocks:
             body_lines.append(f"        if _target_test == {json.dumps(tb.name)}:")
+            tb_scope = dict(gen.symbols)
             for s in tb.body:
-                body_lines.extend(gen.gen_stmt(s, dict(gen.symbols), indent=3))
+                body_lines.extend(gen.gen_stmt(s, tb_scope, indent=3))
             body_lines.append("            return")
         body_lines.append("        _meme_sys.stderr.write(f'Unknown test block: {_target_test}\\n')")
         body_lines.append("        raise _meme_builtins.SystemExit(1)")

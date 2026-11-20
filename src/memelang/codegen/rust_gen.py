@@ -950,6 +950,7 @@ class _RustGen:
         if isinstance(stmt, WriteJsonStmt):
             self.uses_file_io = True
             self.uses_json_write = True
+            self.uses_format_float = True
             tgt_t = self.infer_type(stmt.target, scope)
             fp = self.gen_expr(stmt.filepath, scope)
             tgt = self.gen_expr(stmt.target, scope)

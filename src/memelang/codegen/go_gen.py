@@ -744,6 +744,9 @@ class _GoGen:
 
         if isinstance(stmt, VarDeclStmt):
             val_code = self.gen_expr(stmt.value, scope)
+            if isinstance(stmt.value, VarRefExpr) and stmt.var_type.startswith("List<"):
+                go_t = _go_type(stmt.var_type)
+                val_code = f"append({go_t}{{}}, {val_code}...)"
             scope[stmt.name] = stmt.var_type
             ident = _go_ident(stmt.name)
             go_t = _go_type(stmt.var_type)
@@ -753,7 +756,12 @@ class _GoGen:
             ]
 
         if isinstance(stmt, AssignStmt):
-            return [f"{pad}{_go_ident(stmt.name)} = {self.gen_expr(stmt.value, scope)}"]
+            tgt_t = scope.get(stmt.name, "")
+            val_code = self.gen_expr(stmt.value, scope)
+            if isinstance(stmt.value, VarRefExpr) and tgt_t.startswith("List<"):
+                go_t = _go_type(tgt_t)
+                val_code = f"append({go_t}{{}}, {val_code}...)"
+            return [f"{pad}{_go_ident(stmt.name)} = {val_code}"]
 
         if isinstance(stmt, CompoundAssignStmt):
             ident = _go_ident(stmt.target)
@@ -1090,6 +1098,7 @@ class _GoGen:
         if isinstance(stmt, WriteJsonStmt):
             self.uses_file_io = True
             self.uses_json_write = True
+            self.uses_format_float = True
             tgt_t = self.infer_type(stmt.target, scope)
             fp = self.gen_expr(stmt.filepath, scope)
             tgt = self.gen_expr(stmt.target, scope)

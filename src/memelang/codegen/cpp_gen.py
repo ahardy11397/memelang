@@ -980,6 +980,7 @@ class _CppGen:
             self.uses_str_helpers = True
             self.uses_file_io = True
             self.uses_json_write = True
+            self.uses_format_float = True
             tgt_t = self.infer_type(stmt.target, scope)
             fp = self.gen_expr(stmt.filepath, scope)
             tgt = self.gen_expr(stmt.target, scope)
@@ -1421,8 +1422,8 @@ def generate_cpp(ir: ProgramIR) -> str:
     main_scope: dict[str, MemeType] = {}
     main_lines: list[str] = []
     if test_blocks:
-        main_lines.append("    if (argc > 2 && std::string(argv[1]) == \"--meme-test\") {")
-        main_lines.append("        std::string _meme_target_test = argv[2];")
+        main_lines.append("    if (meme_argc > 2 && std::string(meme_argv[1]) == \"--meme-test\") {")
+        main_lines.append("        std::string _meme_target_test = meme_argv[2];")
         for tb in test_blocks:
             main_lines.append(f"        if (_meme_target_test == {json.dumps(tb.name)}) {{")
             tb_scope = dict(main_scope)
@@ -2394,8 +2395,8 @@ def generate_cpp(ir: ProgramIR) -> str:
             writer_record_blocks.extend(_emit_cpp_json_record_writer(r_name, r_fields))
 
     main_header = (
-        ["int main(int argc, char** argv) {", "    _meme_argv().assign(argv, argv + argc);"]
-        if gen.uses_argv
+        ["int main(int meme_argc, char** meme_argv) {", "    _meme_argv().assign(meme_argv, meme_argv + meme_argc);"]
+        if gen.uses_argv or test_blocks
         else ["int main() {"]
     )
     out = (

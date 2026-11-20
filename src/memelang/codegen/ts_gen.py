@@ -643,11 +643,16 @@ class _TSGen:
             scope[stmt.name] = stmt.var_type
             t = _ts_type(stmt.var_type)
             val = self.gen_expr(stmt.value, scope, stmt.var_type)
+            if isinstance(stmt.value, VarRefExpr) and stmt.var_type.startswith("List<"):
+                val = f"{val}.slice()"
             return [f"{pad}let {name}: {t} = {val};"]
 
         if isinstance(stmt, AssignStmt):
             name = _ts_ident(stmt.name)
-            val = self.gen_expr(stmt.value, scope, scope.get(stmt.name))
+            tgt_t = scope.get(stmt.name, "")
+            val = self.gen_expr(stmt.value, scope, tgt_t)
+            if isinstance(stmt.value, VarRefExpr) and tgt_t.startswith("List<"):
+                val = f"{val}.slice()"
             return [f"{pad}{name} = {val};"]
 
         if isinstance(stmt, CompoundAssignStmt):

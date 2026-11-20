@@ -989,6 +989,10 @@ class _CGen:
             ident = _c_ident(stmt.name)
             c_t = _c_type(stmt.var_type)
             val = self.gen_expr(stmt.value, scope, stmt.var_type)
+            if isinstance(stmt.value, VarRefExpr) and stmt.var_type.startswith("List<"):
+                el_t = stmt.var_type[5:-1]
+                m_type = _mangle_type(el_t)
+                val = f"_meme_list_{m_type}_copy({val})"
             return [
                 f"{pad}{c_t} {ident} = {val};",
                 f"{pad}(void){ident};",
@@ -998,6 +1002,10 @@ class _CGen:
             ident = _c_ident(stmt.name)
             tgt_t = scope.get(stmt.name)
             val = self.gen_expr(stmt.value, scope, tgt_t)
+            if isinstance(stmt.value, VarRefExpr) and tgt_t and tgt_t.startswith("List<"):
+                el_t = tgt_t[5:-1]
+                m_type = _mangle_type(el_t)
+                val = f"_meme_list_{m_type}_copy({val})"
             return [f"{pad}{ident} = {val};"]
 
         if isinstance(stmt, CompoundAssignStmt):
@@ -3394,22 +3402,22 @@ def generate_c(ir: ProgramIR) -> str:
     # Main function
     main_scope: dict[str, MemeType] = {}
     main_lines: list[str] = [
-        "int main(int argc, char** argv) {",
-        "    _meme_argc = argc;",
-        "    _meme_argv = argv;",
+        "int main(int meme_argc, char** meme_argv) {",
+        "    _meme_argc = meme_argc;",
+        "    _meme_argv = meme_argv;",
     ]
     if test_blocks:
-        main_lines.append("    if (argc > 2 && strcmp(argv[1], \"--meme-test\") == 0) {")
+        main_lines.append("    if (meme_argc > 2 && strcmp(meme_argv[1], \"--meme-test\") == 0) {")
         for idx, tb in enumerate(test_blocks):
             pfx = "if" if idx == 0 else "else if"
-            main_lines.append(f"        {pfx} (strcmp(argv[2], {json.dumps(tb.name)}) == 0) {{")
+            main_lines.append(f"        {pfx} (strcmp(meme_argv[2], {json.dumps(tb.name)}) == 0) {{")
             tb_scope = dict(main_scope)
             for s in tb.body:
                 main_lines.extend(gen.gen_stmt(s, tb_scope, indent=3))
             main_lines.append("            return 0;")
             main_lines.append("        }")
         main_lines.append("        else {")
-        main_lines.append("            fprintf(stderr, \"Unknown test block: %s\\n\", argv[2]);")
+        main_lines.append("            fprintf(stderr, \"Unknown test block: %s\\n\", meme_argv[2]);")
         main_lines.append("            exit(1);")
         main_lines.append("        }")
         main_lines.append("    }")
