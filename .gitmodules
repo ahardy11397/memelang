@@ -13,3 +13,6 @@
 [submodule "projects/flight-reservation"]
 	path = projects/flight-reservation
 	url = https://github.com/ahardy11397/flight-reservation.git
+[submodule "projects/spreadsheet-engine"]
+	path = projects/spreadsheet-engine
+	url = https://github.com/ahardy11397/spreadsheet-engine.git
