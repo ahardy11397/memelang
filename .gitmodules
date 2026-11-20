@@ -22,3 +22,9 @@
 [submodule "projects/huffman-compressor"]
 	path = projects/huffman-compressor
 	url = https://github.com/ahardy11397/huffman-compressor.git
+[submodule "projects/markdown-to-html"]
+	path = projects/markdown-to-html
+	url = https://github.com/ahardy11397/markdown-to-html.git
+[submodule "projects/expense-splitter"]
+	path = projects/expense-splitter
+	url = https://github.com/ahardy11397/expense-splitter.git
