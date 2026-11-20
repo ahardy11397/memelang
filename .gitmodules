@@ -1,0 +1,6 @@
+[submodule "projects/card-inventory"]
+	path = projects/card-inventory
+	url = https://github.com/ahardy11397/card-inventory.git
+[submodule "projects/ledger"]
+	path = projects/ledger
+	url = https://github.com/ahardy11397/ledger.git
