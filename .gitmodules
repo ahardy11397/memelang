@@ -16,3 +16,6 @@
 [submodule "projects/spreadsheet-engine"]
 	path = projects/spreadsheet-engine
 	url = https://github.com/ahardy11397/spreadsheet-engine.git
+[submodule "projects/maze-solver"]
+	path = projects/maze-solver
+	url = https://github.com/ahardy11397/maze-solver.git
