@@ -7,3 +7,6 @@
 [submodule "projects/library-system"]
 	path = projects/library-system
 	url = https://github.com/ahardy11397/library-system.git
+[submodule "projects/payroll"]
+	path = projects/payroll
+	url = https://github.com/ahardy11397/payroll.git
