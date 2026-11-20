@@ -19,3 +19,6 @@
 [submodule "projects/maze-solver"]
 	path = projects/maze-solver
 	url = https://github.com/ahardy11397/maze-solver.git
+[submodule "projects/huffman-compressor"]
+	path = projects/huffman-compressor
+	url = https://github.com/ahardy11397/huffman-compressor.git
