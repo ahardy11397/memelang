@@ -1072,6 +1072,20 @@ def generate_python(ir: ProgramIR) -> str:
         else:
             stmt_lines.extend(gen.gen_stmt(stmt, gen.symbols, indent=1))
 
+    test_block_lines: list[str] = []
+    if test_blocks:
+        gen.uses_assert = True
+        test_block_lines.append("    if _meme_builtins.len(_meme_sys.argv) > 2 and _meme_sys.argv[1] == '--meme-test':")
+        test_block_lines.append("        _target_test = _meme_sys.argv[2]")
+        for tb in test_blocks:
+            test_block_lines.append(f"        if _target_test == {json.dumps(tb.name)}:")
+            tb_scope = dict(gen.symbols)
+            for s in tb.body:
+                test_block_lines.extend(gen.gen_stmt(s, tb_scope, indent=3))
+            test_block_lines.append("            return")
+        test_block_lines.append("        _meme_sys.stderr.write(f'Unknown test block: {_target_test}\\n')")
+        test_block_lines.append("        raise _meme_builtins.SystemExit(1)")
+
     if gen.uses_json_records:
         gen.uses_json_io = True
         for r_name in sorted(gen.json_records_read | gen.json_record_lists_read):
@@ -1109,20 +1123,7 @@ def generate_python(ir: ProgramIR) -> str:
 
     body_lines: list[str] = []
     body_lines.extend(func_lines)
-
-    if test_blocks:
-        gen.uses_assert = True
-        body_lines.append("    if _meme_builtins.len(_meme_sys.argv) > 2 and _meme_sys.argv[1] == '--meme-test':")
-        body_lines.append("        _target_test = _meme_sys.argv[2]")
-        for tb in test_blocks:
-            body_lines.append(f"        if _target_test == {json.dumps(tb.name)}:")
-            tb_scope = dict(gen.symbols)
-            for s in tb.body:
-                body_lines.extend(gen.gen_stmt(s, tb_scope, indent=3))
-            body_lines.append("            return")
-        body_lines.append("        _meme_sys.stderr.write(f'Unknown test block: {_target_test}\\n')")
-        body_lines.append("        raise _meme_builtins.SystemExit(1)")
-
+    body_lines.extend(test_block_lines)
     body_lines.extend(stmt_lines)
     if not body_lines:
         body_lines.append("    pass")

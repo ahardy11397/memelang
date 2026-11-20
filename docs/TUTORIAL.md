@@ -108,6 +108,46 @@ uv run meme build tutorial.meme -o app_bin
 - **Zero-LLM Lockfile Contract:** Once locked into `build.lock` (or a custom `--lockfile`), rebuilds never invoke the LLM frontend, guaranteeing fast, reproducible builds.
 - **Modules Linked:** All imported modules (`use simple_math`) are automatically linked into the single resulting native binary.
 
+## Step 6: Testing your programs (`assert`, `meme test`, and JSON round-trip)
+
+Memelang includes built-in test blocks and assertions so you can verify your logic and data serialization:
+
+Create `simple_math_test.meme` alongside `simple_math.meme`:
+
+```meme
+# simple_math_test.meme
+use simple_math
+
+test distance_squared_test:
+    define p: Point as Point(x=3, y=4)
+    define d: Int as distance_squared(p)
+    assert d == 25
+
+test json_point_roundtrip:
+    define original: Point as Point(x=10, y=20)
+    write original as json to file "point.json"
+    define loaded: Optional<Point> as read json record Point from file "point.json" or else nothing
+    assert loaded is not nothing
+    define pt: Point as value of loaded
+    assert pt.x == 10
+    assert pt.y == 20
+```
+
+Run your test suite across any target using `meme test`:
+
+```bash
+uv run meme test simple_math_test.meme --target python
+uv run meme test simple_math_test.meme --target rust
+uv run meme test simple_math_test.meme --target cpp
+```
+
+You should see:
+```text
+PASS simple_math_test.meme::distance_squared_test
+PASS simple_math_test.meme::json_point_roundtrip
+Ran 2 cases, 0 failed
+```
+
 ## What you learned
 - **Modules** (`use simple_math`) keep code organized.
 - **Records** let you model structured data.
@@ -115,6 +155,8 @@ uv run meme build tutorial.meme -o app_bin
 - **Lists** store collections, and `for each` iterates deterministically.
 - **String toolbox** (`split`, `text of`, `integer value of`) bridges text and numbers.
 - **File I/O** (`read string from file`, `write file`) lets programs interact with the filesystem.
+- **Testing & Assertions** (`assert`, `test`, `meme test`) allow isolating and running test suites across backends.
+- **JSON Records** (`write ... as json`, `read json record ...`) enable typed serialization and null-safe round-tripping.
 - **Lockfiles** ensure the same source always produces identical output across targets.
 
 Congratulations! You have built a real‑world Memelang application.
