@@ -31,3 +31,6 @@
 [submodule "projects/project-tracker"]
 	path = projects/project-tracker
 	url = https://github.com/ahardy11397/project-tracker.git
+[submodule "projects/csv-analytics"]
+	path = projects/csv-analytics
+	url = https://github.com/ahardy11397/csv-analytics.git
