@@ -1,0 +1,659 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "/mnt/ssd/projects/meme/tests/meme/01_math_test.meme": {
+      "source_sha256": "239caa5ccb4acd0866fe18dbca928255aae3653b95cea69dd989279b851ff6ff",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "import_stmt",
+          "module": "math_helpers",
+          "source_line": 1
+        },
+        {
+          "op": "test_block_stmt",
+          "name": "addition_test",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "x",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 15,
+                "data_type": "Int"
+              },
+              "source_line": 4
+            },
+            {
+              "op": "var_decl",
+              "name": "y",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 25,
+                "data_type": "Int"
+              },
+              "source_line": 5
+            },
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "call",
+                  "func_name": "add_numbers",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "x"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "y"
+                    }
+                  ]
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 40,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 6,
+              "source_text": "add_numbers(x, y) == 40"
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "test_block_stmt",
+          "name": "multiplication_test",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "x",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 6,
+                "data_type": "Int"
+              },
+              "source_line": 9
+            },
+            {
+              "op": "var_decl",
+              "name": "y",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 7,
+                "data_type": "Int"
+              },
+              "source_line": 10
+            },
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "call",
+                  "func_name": "multiply_numbers",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "x"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "y"
+                    }
+                  ]
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 42,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 11,
+              "source_text": "multiply_numbers(x, y) == 42"
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "use math_helpers\ntest addition_test:\n    define x: Int as 15\n    define y: Int as 25\n    assert add_numbers(x, y) == 40\ntest multiplication_test:\n    define x: Int as 6\n    define y: Int as 7\n    assert multiply_numbers(x, y) == 42",
+      "ir": {
+        "statements": [
+          {
+            "op": "import_stmt",
+            "module": "math_helpers",
+            "source_line": 1
+          },
+          {
+            "op": "test_block_stmt",
+            "name": "addition_test",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "x",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 15,
+                  "data_type": "Int"
+                },
+                "source_line": 4
+              },
+              {
+                "op": "var_decl",
+                "name": "y",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 25,
+                  "data_type": "Int"
+                },
+                "source_line": 5
+              },
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "call",
+                    "func_name": "add_numbers",
+                    "args": [
+                      {
+                        "expr_type": "var_ref",
+                        "name": "x"
+                      },
+                      {
+                        "expr_type": "var_ref",
+                        "name": "y"
+                      }
+                    ]
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 40,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 6,
+                "source_text": "add_numbers(x, y) == 40"
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "test_block_stmt",
+            "name": "multiplication_test",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "x",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                },
+                "source_line": 9
+              },
+              {
+                "op": "var_decl",
+                "name": "y",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 7,
+                  "data_type": "Int"
+                },
+                "source_line": 10
+              },
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "call",
+                    "func_name": "multiply_numbers",
+                    "args": [
+                      {
+                        "expr_type": "var_ref",
+                        "name": "x"
+                      },
+                      {
+                        "expr_type": "var_ref",
+                        "name": "y"
+                      }
+                    ]
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 42,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 11,
+                "source_text": "multiply_numbers(x, y) == 42"
+              }
+            ],
+            "source_line": 8
+          }
+        ],
+        "imported_definitions": [
+          {
+            "op": "func_def",
+            "name": "add_numbers",
+            "params": [
+              {
+                "name": "a",
+                "param_type": "Int"
+              },
+              {
+                "name": "b",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "a"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "b"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "multiply_numbers",
+            "params": [
+              {
+                "name": "a",
+                "param_type": "Int"
+              },
+              {
+                "name": "b",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "a"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "b"
+                  }
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 4
+          }
+        ],
+        "module_files": {
+          "math_helpers.meme": "78f0a12b9be454c728b027e9b92a003ab79a26853b5a621bf2106d2ada18dc3a"
+        }
+      },
+      "module_files": {
+        "math_helpers.meme": "78f0a12b9be454c728b027e9b92a003ab79a26853b5a621bf2106d2ada18dc3a"
+      }
+    },
+    "tests/meme/01_math_test.meme": {
+      "source_sha256": "239caa5ccb4acd0866fe18dbca928255aae3653b95cea69dd989279b851ff6ff",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "import_stmt",
+          "module": "math_helpers",
+          "source_line": 1
+        },
+        {
+          "op": "test_block_stmt",
+          "name": "addition_test",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "x",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 15,
+                "data_type": "Int"
+              },
+              "source_line": 4
+            },
+            {
+              "op": "var_decl",
+              "name": "y",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 25,
+                "data_type": "Int"
+              },
+              "source_line": 5
+            },
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "call",
+                  "func_name": "add_numbers",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "x"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "y"
+                    }
+                  ]
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 40,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 6,
+              "source_text": "add_numbers(x, y) == 40"
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "test_block_stmt",
+          "name": "multiplication_test",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "x",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 6,
+                "data_type": "Int"
+              },
+              "source_line": 9
+            },
+            {
+              "op": "var_decl",
+              "name": "y",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 7,
+                "data_type": "Int"
+              },
+              "source_line": 10
+            },
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "call",
+                  "func_name": "multiply_numbers",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "x"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "y"
+                    }
+                  ]
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 42,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 11,
+              "source_text": "multiply_numbers(x, y) == 42"
+            }
+          ],
+          "source_line": 8
+        }
+      ],
+      "canonical_meme": "use math_helpers\ntest addition_test:\n    define x: Int as 15\n    define y: Int as 25\n    assert add_numbers(x, y) == 40\ntest multiplication_test:\n    define x: Int as 6\n    define y: Int as 7\n    assert multiply_numbers(x, y) == 42",
+      "ir": {
+        "statements": [
+          {
+            "op": "import_stmt",
+            "module": "math_helpers",
+            "source_line": 1
+          },
+          {
+            "op": "test_block_stmt",
+            "name": "addition_test",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "x",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 15,
+                  "data_type": "Int"
+                },
+                "source_line": 4
+              },
+              {
+                "op": "var_decl",
+                "name": "y",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 25,
+                  "data_type": "Int"
+                },
+                "source_line": 5
+              },
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "call",
+                    "func_name": "add_numbers",
+                    "args": [
+                      {
+                        "expr_type": "var_ref",
+                        "name": "x"
+                      },
+                      {
+                        "expr_type": "var_ref",
+                        "name": "y"
+                      }
+                    ]
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 40,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 6,
+                "source_text": "add_numbers(x, y) == 40"
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "test_block_stmt",
+            "name": "multiplication_test",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "x",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                },
+                "source_line": 9
+              },
+              {
+                "op": "var_decl",
+                "name": "y",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 7,
+                  "data_type": "Int"
+                },
+                "source_line": 10
+              },
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "call",
+                    "func_name": "multiply_numbers",
+                    "args": [
+                      {
+                        "expr_type": "var_ref",
+                        "name": "x"
+                      },
+                      {
+                        "expr_type": "var_ref",
+                        "name": "y"
+                      }
+                    ]
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 42,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 11,
+                "source_text": "multiply_numbers(x, y) == 42"
+              }
+            ],
+            "source_line": 8
+          }
+        ],
+        "imported_definitions": [
+          {
+            "op": "func_def",
+            "name": "add_numbers",
+            "params": [
+              {
+                "name": "a",
+                "param_type": "Int"
+              },
+              {
+                "name": "b",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "a"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "b"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "multiply_numbers",
+            "params": [
+              {
+                "name": "a",
+                "param_type": "Int"
+              },
+              {
+                "name": "b",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "a"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "b"
+                  }
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 4
+          }
+        ],
+        "module_files": {
+          "math_helpers.meme": "78f0a12b9be454c728b027e9b92a003ab79a26853b5a621bf2106d2ada18dc3a"
+        }
+      },
+      "module_files": {
+        "math_helpers.meme": "78f0a12b9be454c728b027e9b92a003ab79a26853b5a621bf2106d2ada18dc3a"
+      }
+    }
+  }
+}

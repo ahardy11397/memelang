@@ -128,6 +128,7 @@ uv run meme build EX.meme -o out [--resolve ID=OPT ...] [--cc COMPILER] [--cflag
 
 - **Usage:** Point `meme build` at any `.meme` file and provide the `-o/--output` binary destination.
 - **Compiler Requirements:** Invokes a standard C compiler (`cc` by default, falling back to `gcc`). Override the compiler with `--cc <bin>` and compilation flags with `--cflags "..."` (default flags: `-std=c11 -O2`).
+- **Frontend Provider Default:** Defaults to the built-in deterministic `heuristic` provider (zero-LLM by default). Override with `--provider <provider>` if needed.
 - **Exit-Code Semantics:** Programs using `exit with code N` propagate the exit status directly to the operating system process exit code.
 - **Zero-LLM Lockfile Contract:** Building an already locked program runs 100% deterministically offline with 0ms inference latency, honoring the exact same zero-LLM lockfile contract as `meme compile`.
 - **Modules & Multi-File Linking:** Programs using `use <module>` (such as `examples/advanced/521_modules/`) compile into a single self-contained native binary with all dependencies linked.
@@ -141,6 +142,7 @@ uv run meme test [PATH] [--target python|rust|cpp|go|c|ts]
 ```
 
 - **Usage:** Point `meme test` at a directory (defaults to `tests/`) or specific `.meme` test file.
+- **Frontend Provider Default:** Defaults to the built-in `heuristic` provider (zero-LLM by default); `--provider` still overrides. Lockfiles are treated as advisory: if a test file's lock hash does not match current source, it recompiles silently and prints `note: lock stale for <file>, recompiled` to stderr.
 - **Cross-Target Parity:** Runs isolated test blocks (`test <name>: ...`) across any of the six backends.
 - **Reporting:** Reports per-case `PASS` / `FAIL` status with source line attribution and exits 0 on all pass, 1 on failure.
 
@@ -175,7 +177,9 @@ uv run meme test [PATH] [--target python|rust|cpp|go|c|ts]
 
 ## Local & Cloud LLM Providers (`--provider`)
 
-By default (`--provider auto`), `meme` checks `MEME_PROVIDER`, auto-discovers any cached GGUF model in `~/.cache/memelang/models/` (or `MEME_MODEL_DIR`), probes local Ollama (`http://127.0.0.1:11434`), and falls back cleanly to the built-in zero-dependency `heuristic` frontend.
+For `meme compile`, `meme run`, `meme check`, and `meme explain`, the default is `--provider auto`: `meme` checks `MEME_PROVIDER`, auto-discovers any cached GGUF model in `~/.cache/memelang/models/` (or `MEME_MODEL_DIR`), probes local Ollama (`http://127.0.0.1:11434`), and falls back cleanly to the built-in zero-dependency `heuristic` frontend.
+
+For `meme build` and `meme test`, the default is `heuristic` (zero-LLM by default). `--provider` can still be specified explicitly to override in both commands.
 
 * **Zero-Config In-Process GGUF (Recommended — ~2 GB VRAM / CPU):**
   ```bash

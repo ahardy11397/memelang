@@ -26,6 +26,7 @@ from memelang.llm import (
     DEFAULT_GGUF_REPO,
     ExampleRetriever,
     LLMProviderError,
+    ParseError,
     get_provider,
     pull_gguf_model,
 )
@@ -166,12 +167,12 @@ def _load_or_synthesize_program(
     return outcome.program, outcome.ambiguities
 
 
-def _add_shared_args(sub: argparse.ArgumentParser) -> None:
+def _add_shared_args(sub: argparse.ArgumentParser, default_provider: str = "auto") -> None:
     sub.add_argument("source", type=Path, help="Path to `.meme` source file")
     sub.add_argument(
         "--provider",
-        default="auto",
-        help="LLM frontend provider: auto, heuristic, ollama[:model], openai-local:<model>, llama-cpp:<gguf>, gemini[:model]",
+        default=default_provider,
+        help=f"LLM frontend provider: auto, heuristic, ollama[:model], openai-local:<model>, llama-cpp:<gguf>, gemini[:model] (default: {default_provider})",
     )
     sub.add_argument(
         "--lockfile",
@@ -247,7 +248,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_build = subparsers.add_parser(
         "build", help="Compile a .meme file to a native executable via the C backend"
     )
-    _add_shared_args(p_build)
+    _add_shared_args(p_build, default_provider="heuristic")
     p_build.add_argument("-o", "--output", type=Path, required=True, help="Output binary path")
     p_build.add_argument(
         "--resolve",
@@ -365,13 +366,56 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     lockfile_path = Path(str(meme_file) + ".lock")
 
-                program, ambiguities = _load_or_synthesize_program(
-                    source_path=meme_file,
-                    lockfile_path=lockfile_path,
-                    provider_spec=getattr(args, "provider", "heuristic"),
-                    resolutions={},
-                    interactive=False,
-                )
+                source_text = meme_file.read_text(encoding="utf-8")
+                is_stale = False
+                cached_program = None
+
+                if lockfile_path.is_file():
+                    try:
+                        lock_mgr = LockfileManager(lockfile_path)
+                        source_key = _compute_source_key(meme_file)
+                        current_hash = lock_mgr.compute_source_hash(source_text)
+                        entry = lock_mgr.get_entry(source_key)
+                        if entry is not None:
+                            if entry.source_sha256 != current_hash or not lock_mgr._check_module_files(entry, source_key):
+                                is_stale = True
+                            else:
+                                cached_program = lock_mgr.get_cached_program(source_key, source_text)
+                                if cached_program is None:
+                                    is_stale = True
+                        else:
+                            doc = lock_mgr._load_doc()
+                            for k, v in doc.entries.items():
+                                if Path(k).name == meme_file.name and v.source_sha256 != current_hash:
+                                    is_stale = True
+                                    break
+                    except Exception:
+                        is_stale = True
+
+                quiet = os.environ.get("MEME_QUIET_PROMPTS", "").strip().lower() in ("1", "true", "yes")
+
+                if is_stale:
+                    if not quiet:
+                        print(f"note: lock stale for {meme_file}, recompiled", file=sys.stderr)
+                    retriever = ExampleRetriever()
+                    retriever.index_corpus()
+                    provider = get_provider(getattr(args, "provider", "heuristic"), retriever=retriever)
+                    try:
+                        synthesis = provider.synthesize(source_text, source_path=meme_file)
+                    except TypeError:
+                        synthesis = provider.synthesize(source_text)
+                    outcome = verify_synthesis(synthesis, source_path=meme_file)
+                    program, ambiguities = outcome.program, outcome.ambiguities
+                elif cached_program is not None:
+                    program, ambiguities = cached_program, []
+                else:
+                    program, ambiguities = _load_or_synthesize_program(
+                        source_path=meme_file,
+                        lockfile_path=lockfile_path,
+                        provider_spec=getattr(args, "provider", "heuristic"),
+                        resolutions={},
+                        interactive=False,
+                    )
                 if program is None:
                     for diag in ambiguities:
                         print(_format_ambiguity(diag), file=sys.stderr)
@@ -519,6 +563,9 @@ def main(argv: list[str] | None = None) -> int:
     except StaticVerificationError as exc:
         loc = f" at statement {exc.statement_index}" if exc.statement_index else ""
         print(f"[Static Verification Error{loc}] {exc.message}", file=sys.stderr)
+        return 1
+    except ParseError as exc:
+        print(f"[Parse Error] {exc}", file=sys.stderr)
         return 1
     except LLMProviderError as exc:
         print(f"[LLM Provider Error] {exc}", file=sys.stderr)

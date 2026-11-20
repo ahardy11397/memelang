@@ -40,31 +40,29 @@ function parse_point(line: String) -> Point:
     define y as integer value of parts[1]
     return Point(x=x, y=y)
 
-function main() -> Int:
-    define path as "points.csv"
-    if not (file exists path):
-        print "points.csv not found"
-        return 1
-    define content as read string from file path
-    define lines as split content by "\n"
-    define points as empty List<Point>
-    for each raw in lines:
-        if length of string raw == 0:
-            continue
-        define pt as parse_point(raw)
-        append pt to points
-    define distances as empty List<Int>
-    for each p in points:
-        define d as distance_squared(p)
-        append d to distances
-    # write results to a file
-    define out as ""
-    for i from 0 to length of distances - 1:
-        define line as text of distances[i] + "\n"
-        set out to out + line
-    write file "distances.txt" with out
-    print "Wrote distances.txt"
-    return 0
+define path as "points.csv"
+if not (file exists path):
+    print "points.csv not found"
+    exit with code 1
+define content as read string from file path
+define lines as split content by "\n"
+define points as empty List<Point>
+for each raw in lines:
+    if length of string raw == 0:
+        continue
+    define pt as parse_point(raw)
+    append pt to points
+define distances as empty List<Int>
+for each p in points:
+    define d as distance_squared(p)
+    append d to distances
+# write results to a file
+define out as ""
+for i from 0 to length of distances - 1:
+    define line as text of distances[i] + "\n"
+    set out to out + line
+write file "distances.txt" with out
+print "Wrote distances.txt"
 ```
 Place this file alongside `simple_math.meme`.
 

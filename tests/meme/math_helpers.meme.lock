@@ -1,0 +1,309 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "/mnt/ssd/projects/meme/tests/meme/math_helpers.meme": {
+      "source_sha256": "78f0a12b9be454c728b027e9b92a003ab79a26853b5a621bf2106d2ada18dc3a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "add_numbers",
+          "params": [
+            {
+              "name": "a",
+              "param_type": "Int"
+            },
+            {
+              "name": "b",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "a"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "b"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "func_def",
+          "name": "multiply_numbers",
+          "params": [
+            {
+              "name": "a",
+              "param_type": "Int"
+            },
+            {
+              "name": "b",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "a"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "b"
+                }
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 4
+        }
+      ],
+      "canonical_meme": "function add_numbers(a: Int, b: Int) -> Int:\n    return a + b\nfunction multiply_numbers(a: Int, b: Int) -> Int:\n    return a * b",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "add_numbers",
+            "params": [
+              {
+                "name": "a",
+                "param_type": "Int"
+              },
+              {
+                "name": "b",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "a"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "b"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "multiply_numbers",
+            "params": [
+              {
+                "name": "a",
+                "param_type": "Int"
+              },
+              {
+                "name": "b",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "a"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "b"
+                  }
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 4
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    },
+    "tests/meme/math_helpers.meme": {
+      "source_sha256": "78f0a12b9be454c728b027e9b92a003ab79a26853b5a621bf2106d2ada18dc3a",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "add_numbers",
+          "params": [
+            {
+              "name": "a",
+              "param_type": "Int"
+            },
+            {
+              "name": "b",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "a"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "b"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "func_def",
+          "name": "multiply_numbers",
+          "params": [
+            {
+              "name": "a",
+              "param_type": "Int"
+            },
+            {
+              "name": "b",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "a"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "b"
+                }
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 4
+        }
+      ],
+      "canonical_meme": "function add_numbers(a: Int, b: Int) -> Int:\n    return a + b\nfunction multiply_numbers(a: Int, b: Int) -> Int:\n    return a * b",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "add_numbers",
+            "params": [
+              {
+                "name": "a",
+                "param_type": "Int"
+              },
+              {
+                "name": "b",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "a"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "b"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "multiply_numbers",
+            "params": [
+              {
+                "name": "a",
+                "param_type": "Int"
+              },
+              {
+                "name": "b",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "a"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "b"
+                  }
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 4
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import httpx
 
-from memelang.llm.base import LLMProvider, LLMProviderError, build_compiler_messages
+from memelang.llm.base import LLMProvider, LLMProviderError, ParseError, build_compiler_messages
 from memelang.llm.gemini import GeminiProvider
 from memelang.llm.heuristic import HeuristicProvider
 from memelang.llm.llama_cpp import (
@@ -102,6 +102,7 @@ __all__ = [
     "LlamaCppProvider",
     "OllamaProvider",
     "OpenAILocalProvider",
+    "ParseError",
     "build_compiler_messages",
     "find_cached_gguf",
     "get_model_cache_dir",

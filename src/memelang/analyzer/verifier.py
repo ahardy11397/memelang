@@ -1861,6 +1861,11 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     "Nested function definitions are not supported", stmt_idx
                 )
+            if stmt.name == "main":
+                raise StaticVerificationError(
+                    "Error: do not define main() — Memelang programs are top-level statements; use 'call <fn>(...)' or top-level code",
+                    stmt_idx,
+                )
             if stmt.name in self.functions:
                 raise StaticVerificationError(
                     f"Duplicate function definition `{stmt.name}`", stmt_idx

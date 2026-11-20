@@ -122,7 +122,10 @@ from memelang.ir.schema import (
     WriteFileStmt,
     WriteJsonStmt,
 )
-from memelang.llm.base import LLMProviderError, has_executable_content
+from memelang.llm.base import LLMProviderError, ParseError, has_executable_content
+
+# In heuristic frontend, all parse/syntax failures are ParseErrors (subclass of LLMProviderError)
+LLMProviderError = ParseError
 
 _VALID_TYPES: set[str] = {
     "Int",

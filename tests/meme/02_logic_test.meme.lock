@@ -1,0 +1,401 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "/mnt/ssd/projects/meme/tests/meme/02_logic_test.meme": {
+      "source_sha256": "aacbb6ec26fcb37504c4c635b518a59f5e2fec0888731175feddcac6973c1cd5",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "test_block_stmt",
+          "name": "boolean_logic",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "flag",
+              "var_type": "Bool",
+              "value": {
+                "expr_type": "literal",
+                "value": true,
+                "data_type": "Bool"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "flag"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              },
+              "source_line": 3,
+              "source_text": "flag is true"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "test_block_stmt",
+          "name": "list_operations",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "items",
+              "var_type": "List<Int>",
+              "value": {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              },
+              "source_line": 6
+            },
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "items"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 7,
+              "source_text": "length of items == 3"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "test boolean_logic:\n    define flag: Bool as true\n    assert flag == true\ntest list_operations:\n    define list items as [1, 2, 3]\n    assert length of items == 3",
+      "ir": {
+        "statements": [
+          {
+            "op": "test_block_stmt",
+            "name": "boolean_logic",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "flag",
+                "var_type": "Bool",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "flag"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                },
+                "source_line": 3,
+                "source_text": "flag is true"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "test_block_stmt",
+            "name": "list_operations",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "items",
+                "var_type": "List<Int>",
+                "value": {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                },
+                "source_line": 6
+              },
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "list_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "items"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 7,
+                "source_text": "length of items == 3"
+              }
+            ],
+            "source_line": 5
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    },
+    "tests/meme/02_logic_test.meme": {
+      "source_sha256": "aacbb6ec26fcb37504c4c635b518a59f5e2fec0888731175feddcac6973c1cd5",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "test_block_stmt",
+          "name": "boolean_logic",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "flag",
+              "var_type": "Bool",
+              "value": {
+                "expr_type": "literal",
+                "value": true,
+                "data_type": "Bool"
+              },
+              "source_line": 2
+            },
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "flag"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                }
+              },
+              "source_line": 3,
+              "source_text": "flag is true"
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "test_block_stmt",
+          "name": "list_operations",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "items",
+              "var_type": "List<Int>",
+              "value": {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              },
+              "source_line": 6
+            },
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "items"
+                  }
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 7,
+              "source_text": "length of items == 3"
+            }
+          ],
+          "source_line": 5
+        }
+      ],
+      "canonical_meme": "test boolean_logic:\n    define flag: Bool as true\n    assert flag == true\ntest list_operations:\n    define list items as [1, 2, 3]\n    assert length of items == 3",
+      "ir": {
+        "statements": [
+          {
+            "op": "test_block_stmt",
+            "name": "boolean_logic",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "flag",
+                "var_type": "Bool",
+                "value": {
+                  "expr_type": "literal",
+                  "value": true,
+                  "data_type": "Bool"
+                },
+                "source_line": 2
+              },
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "flag"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  }
+                },
+                "source_line": 3,
+                "source_text": "flag is true"
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "test_block_stmt",
+            "name": "list_operations",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "items",
+                "var_type": "List<Int>",
+                "value": {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                },
+                "source_line": 6
+              },
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "list_length",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "items"
+                    }
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 7,
+                "source_text": "length of items == 3"
+              }
+            ],
+            "source_line": 5
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

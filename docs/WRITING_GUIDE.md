@@ -80,13 +80,13 @@ class bank-account
     else
       return balance - amount - 10
 
-  define function main
-    define initial_balance from user "Opening balance?"
-    define dep_amount from user "Deposit amount?"
-    define with_amount from user "Withdrawal amount?"
-    define step1 as deposit from initial_balance, dep_amount
-    define final_balance as withdraw from step1, with_amount
-    print final_balance
+  # Top-level statements run directly (do not define main()):
+  define initial_balance from user "Opening balance?"
+  define dep_amount from user "Deposit amount?"
+  define with_amount from user "Withdrawal amount?"
+  define step1 as deposit from initial_balance, dep_amount
+  define final_balance as withdraw from step1, with_amount
+  print final_balance
 ```
 
 ---
@@ -106,14 +106,14 @@ class my-program                ← optional class wrapper (LLM-voice only), keb
   define function helper with a, b    ← untyped params (LLM-voice only; types inferred)
     return a + b
 
-  define function main          ← entry point (LLM-voice only); runs last, after helpers
-    ...
+  # Top-level code runs directly after helpers (do not define main())
+  ...
 ```
 
 - `this runs in the shell` marks the program as interactive (reads from the user; **LLM-voice only**).
 - `class <kebab-name>` groups helper functions (**LLM-voice only**). It compiles to plain functions in the
   target language — it is an organizational device, not objects.
-- `define function main` is the entry point (**LLM-voice only**). Its body becomes the top-level program.
+- **Top-level execution:** Memelang programs are top-level statements. Defining a `function main()` is rejected by the static verifier (`Error: do not define main() — Memelang programs are top-level statements; use 'call <fn>(...)' or top-level code`). In conversational LLM voice, any legacy `define function main` block unwrapped into top-level statements.
 - Indentation (2 spaces) defines block nesting. No colons or braces needed.
 - `# ...` lines and inline trailing `# ...` comments (outside string literals) are ignored in both **offline** and **LLM-voice** modes.
 
@@ -424,10 +424,12 @@ define function withdraw with balance, amount
   else
     return balance - amount - 10
 
-define function main
-  define result as withdraw from 100, 30
-  print result
+# Call helpers from top-level code (do not define main()):
+define result as withdraw from 100, 30
+print result
 ```
+
+> **Note on `main()`:** Memelang programs are top-level statements; defining a function named `main()` is rejected by the static verifier (`Error: do not define main() — Memelang programs are top-level statements; use 'call <fn>(...)' or top-level code`). Invoke helpers from top-level code or use `call <fn>(...)`.
 
 - In **LLM-voice only**, untyped parameters infer their type from use (`Float` by default; write
   `with balance as Int` style annotations or the word *integer* when you need `Int`).
@@ -1019,13 +1021,17 @@ for each row in grid:
 ## 12. CLI Cheat Sheet
 
 ```bash
-uv run meme compile app.meme --target rust      # compile (writes build.lock)
-uv run meme run app.meme --target python        # compile + execute
+uv run meme compile app.meme --target rust      # compile (writes build.lock, defaults to auto provider)
+uv run meme run app.meme --target python        # compile + execute (defaults to auto provider)
 uv run meme run app.meme --target cpp --resolve 2=3
 uv run meme check app.meme                      # static check only
 uv run meme explain app.meme                    # show canonical form + lock status
+uv run meme build app.meme -o app               # compile to standalone native C binary (defaults to heuristic provider)
+uv run meme test tests/meme --target python     # run test suites (defaults to heuristic provider, advisory locks)
 
-# Providers
+# Providers:
+# compile, run, check, explain default to --provider auto (LLM-first)
+# build and test default to --provider heuristic (zero-LLM by default)
 uv run meme run app.meme --provider heuristic          # offline, structured English
 uv run meme run app.meme --provider ollama:qwen2.5-coder:3b
 uv run meme run app.meme --provider gemini:gemini-2.5-flash
@@ -1071,12 +1077,12 @@ class exam-scorer
     define total as a + b + c
     return total / 3
 
-  define function main
-    define first from user "First score? "
-    define second from user "Second score? "
-    define third from user "Third score? "
-    define top_avg as average3 from first, second, third
-    print top_avg
+  # Top-level code runs directly after helpers (do not define main()):
+  define first from user "First score? "
+  define second from user "Second score? "
+  define third from user "Third score? "
+  define top_avg as average3 from first, second, third
+  print top_avg
 ```
 
 Run it on any target — the lockfile guarantees the same program, the backend is your

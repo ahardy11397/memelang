@@ -108,7 +108,22 @@ class LockfileManager:
 
     def get_entry(self, source_key: str) -> LockEntry | None:
         doc = self._load_doc()
-        return doc.entries.get(source_key)
+        if source_key in doc.entries:
+            return doc.entries[source_key]
+        source_p = Path(source_key)
+        try:
+            cand_abs = source_p.resolve().as_posix()
+            if cand_abs in doc.entries:
+                return doc.entries[cand_abs]
+        except Exception:
+            pass
+        for k, v in doc.entries.items():
+            try:
+                if Path(k).resolve() == source_p.resolve():
+                    return v
+            except Exception:
+                pass
+        return None
 
     def _resolve_source_path(self, source_key: str) -> Path:
         source_path = Path(source_key)

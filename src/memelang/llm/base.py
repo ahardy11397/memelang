@@ -16,6 +16,10 @@ class LLMProviderError(Exception):
     """Raised when an LLM frontend provider cannot be reached, configured, or parsed."""
 
 
+class ParseError(LLMProviderError):
+    """Raised when the deterministic heuristic parser cannot parse source code."""
+
+
 class LLMProvider(Protocol):
     name: str
 
