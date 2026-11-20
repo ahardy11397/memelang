@@ -28,3 +28,6 @@
 [submodule "projects/expense-splitter"]
 	path = projects/expense-splitter
 	url = https://github.com/ahardy11397/expense-splitter.git
+[submodule "projects/project-tracker"]
+	path = projects/project-tracker
+	url = https://github.com/ahardy11397/project-tracker.git
