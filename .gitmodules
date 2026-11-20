@@ -4,3 +4,6 @@
 [submodule "projects/ledger"]
 	path = projects/ledger
 	url = https://github.com/ahardy11397/ledger.git
+[submodule "projects/library-system"]
+	path = projects/library-system
+	url = https://github.com/ahardy11397/library-system.git
