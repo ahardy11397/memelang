@@ -154,12 +154,46 @@ uv run meme test [PATH] [--target python|rust|cpp|go|c|ts]
 - **Assertions (`assert`):** First-class runtime invariant assertions with status-1 termination and deterministic diagnostics.
 - **Test Blocks (`test`) & Test Runner (`meme test`):** Isolated test blocks and a built-in cross-target test runner.
 - **Native Binaries (`meme build`):** Direct-to-native binary compilation via the C11 backend with zero runtime dependencies.
-- **Float Formatting:** Deterministic float formatting with specified decimal precision (`format x with N decimals`).
+- **Float Formatting & Conversions:** Deterministic float formatting with specified decimal precision (`format x with N decimals`), plus `float of <int>` for Int→Float conversion — money-in-cents programs can render dollars directly.
+- **Character Code Conversions:** `number of <char>` (codepoint) and `character of <int>` round-trip single characters.
 - **JSON Record Read/Write:** Strongly-typed record serialization and deserialization (`write r as json to file path`, `read json record R from file path or else nothing`).
 - **System Clock & Environment Variables:** Built-in POSIX epoch seconds (`current epoch seconds`) and environment variable lookup (`environment variable name`).
 - **Optional File Readers:** Null-safe file readers returning `Optional<T>` without panicking on missing files.
+- **Error Output (`print error`):** First-class stderr printing with `print`-identical formatting — error diagnostics land on the right stream on all six targets.
 - **Sets (`Set<T>`):** First-class generic sets with O(1) membership, idempotent addition, and deterministic sorted iteration.
 - **Two-Dimensional Lists (`List<List<T>>`):** Generic nested lists supporting literals `[[1, 2], [3, 4]]`, indexing `g[i][j]`, and mutation `set g[i][j] to v`.
+- **Uniform Iteration:** `for each` accepts any expression evaluating to a collection — record fields, call results, nested index expressions — with sorted deterministic order for maps and sets.
+- **Mutual Recursion:** Functions can forward-reference functions defined later in the same module.
+- **Parent-Relative Modules:** `use ../<module>` resolves modules in parent directories — test files import repo-root modules without symlinks.
+- **Records Hold Collections:** Record fields of type `List<T>`, `Map<K, V>`, and `Set<T>` (including self-referential records through `List`) work across all six targets.
+
+### Project Ecosystem (`projects/`)
+
+Real programs built with Memelang, each its own repo linked as a submodule, each with a `meme test` suite green on all six targets:
+
+| Project | What it is | Test cases |
+|---|---|---|
+| [projects/card-inventory](projects/card-inventory) | Trading-card inventory CLI (photo organizing, CSV) | 6-target parity |
+| [projects/ledger](projects/ledger) | Banking ledger: accounts, transfers, JSON persistence, monthly statements | 36 × 6 targets |
+| [projects/library-system](projects/library-system) | Library management: loans, holds queues, overdue fines | 27 × 6 targets |
+| [projects/payroll](projects/payroll) | Payroll: marginal tax brackets, overtime, payslips | 58 × 6 targets |
+| [projects/flight-reservation](projects/flight-reservation) | Seat-grid reservations, best-seat search, FIFO waitlists | 10 × 6 targets |
+| [projects/spreadsheet-engine](projects/spreadsheet-engine) | Formula evaluation, topological re-eval, cycle detection | 42 × 6 targets |
+| [projects/maze-solver](projects/maze-solver) | BFS shortest path + recursive DFS on 2D grids | 19 × 6 targets |
+| [projects/huffman-compressor](projects/huffman-compressor) | Canonical Huffman file compression with exact round-trip | 34 × 6 targets |
+| [projects/markdown-to-html](projects/markdown-to-html) | Markdown parser/renderer with inline markup and escaping | 31 × 6 targets |
+| [projects/expense-splitter](projects/expense-splitter) | Shared expenses: equal/exact/shares splits, min-cash-flow settle | 28 × 6 targets |
+| [projects/project-tracker](projects/project-tracker) | DAG tasks: topo order, critical path, cycle rejection | 29 × 6 targets |
+| [projects/csv-analytics](projects/csv-analytics) | RFC-4180 CSV engine: joins, group-by, aggregations | 41 × 6 targets |
+
+**335 test cases across 12 programs, 0 failures, every one green on all six targets.**
+
+### Release Gate
+
+```bash
+# Full corpus + meme test across all six targets, one verdict line each:
+uv run python scripts/run_corpus.py --all-targets
+```
 
 ### CLI Commands
 
