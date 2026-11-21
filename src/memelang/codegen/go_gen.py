@@ -252,6 +252,8 @@ class _GoGen:
         self.uses_optional_helpers = False
         self.uses_map_helpers = False
         self.uses_set = False
+        self.uses_set_copy = False
+        self.uses_map_copy = False
         self.uses_json_records = False
         self.uses_json_write = False
         self.json_records_read: set[str] = set()
@@ -447,7 +449,7 @@ class _GoGen:
                 self.uses_math = True
                 return f"math.Mod({left}, {right})"
             if expr.op in ("==", "!="):
-                if left_t.startswith("List<") or left_t.startswith("Map<"):
+                if left_t.startswith("List<") or left_t.startswith("Map<") or left_t.startswith("Set<") or left_t in self.records:
                     self.uses_reflect = True
                     if expr.op == "==":
                         return f"reflect.DeepEqual({left}, {right})"
@@ -1238,6 +1240,16 @@ class _GoGen:
         lines = [f"func {_go_ident(fn.name)}({params_str}){ret_type_str} {{"]
         for p in fn.params:
             lines.append(f"    _ = {_go_ident(p.name)}")
+            p_id = _go_ident(p.name)
+            if p.param_type.startswith("List<"):
+                lines.append(f"    {p_id} = append({_go_type(p.param_type)}(nil), {p_id}...)")
+            elif p.param_type.startswith("Set<"):
+                self.uses_set = True
+                self.uses_set_copy = True
+                lines.append(f"    {p_id} = _meme_copy_set({p_id})")
+            elif p.param_type.startswith("Map<"):
+                self.uses_map_copy = True
+                lines.append(f"    {p_id} = _meme_copy_map({p_id})")
         for ch in fn.body:
             lines.extend(self.gen_stmt(ch, fn_scope, indent=1))
         if fn.return_type != "Void" and not (fn.body and isinstance(fn.body[-1], ReturnStmt)):
@@ -2395,6 +2407,32 @@ def generate_go(ir: ProgramIR) -> str:
             [
                 "// Set representation: map[T]bool with sorted-key iteration.",
                 "type _MemeSet[T comparable] map[T]bool",
+                "",
+            ]
+        )
+
+    if gen.uses_set_copy:
+        helpers.extend(
+            [
+                "func _meme_copy_set[T comparable](s _MemeSet[T]) _MemeSet[T] {",
+                "    if s == nil { return nil }",
+                "    res := make(_MemeSet[T], len(s))",
+                "    for k, v := range s { res[k] = v }",
+                "    return res",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_map_copy:
+        helpers.extend(
+            [
+                "func _meme_copy_map[K comparable, V any](m map[K]V) map[K]V {",
+                "    if m == nil { return nil }",
+                "    res := make(map[K]V, len(m))",
+                "    for k, v := range m { res[k] = v }",
+                "    return res",
+                "}",
                 "",
             ]
         )

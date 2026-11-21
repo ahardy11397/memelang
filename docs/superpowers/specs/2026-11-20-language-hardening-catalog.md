@@ -37,14 +37,15 @@ work everywhere, and tooling that respects the zero-LLM contract.
    same module (two-pass definition resolution).
 
 ### Records / type system (C target gaps)
-7. **Records with List fields don't compile on C** (huffman workaround:
+7. [IMPLEMENTED] **Records with List fields don't compile on C** (huffman workaround:
    parallel scalar lists).
-8. **`Optional<Map<K,V>>` and `Optional<List<...>>` don't compile on C**
+   → FIX: c_gen emits copy/eq/fmt for collection fields (List, Map, Set) and supports recursive records through List (`record Node: children: List<Node>`).
+8. [IMPLEMENTED] **`Optional<Map<K,V>>` and `Optional<List<...>>` don't compile on C**
    (missing eq/copy helpers for those inner types).
-   → FIX both in c_gen: emit copy/eq/fmt helpers for record fields that
-   are collections, and for Optional-of-collection.
-9. **Rust: Set-valued function args not cloned** (spreadsheet workaround:
+   → FIX: c_gen emits copy/eq/fmt helpers for Optional-of-collection.
+9. [IMPLEMENTED] **Rust: Set-valued function args not cloned** (spreadsheet workaround:
    List<String> instead).
+   → FIX: rust_gen clones Set-valued args on reference; value semantics preserved across all 6 targets.
 
 ### Tooling contract
 10. **`meme build`/`meme test` default to the LLM provider** and silently
@@ -63,7 +64,7 @@ work everywhere, and tooling that respects the zero-LLM contract.
     is always a mistake).
 
 ### Module system
-13. **`use` resolves only in the importing file's directory** — tests
+13. [IMPLEMENTED] **`use` resolves only in the importing file's directory** — tests
     needed symlinks to root modules (library-system, ledger). → ADD:
     `use ../<module>` relative parent resolution.
 

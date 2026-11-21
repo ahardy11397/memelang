@@ -465,6 +465,25 @@ class _CGen:
         self.json_record_lists_read: set[str] = set()
         self.json_records_write: set[str] = set()
 
+    def _maybe_copy_val(self, val: str, t: str) -> str:
+        if t.startswith("List<") and t.endswith(">"):
+            el_t = t[5:-1]
+            return f"_meme_list_{_mangle_type(el_t)}_copy({val})"
+        if t.startswith("Map<") and t.endswith(">"):
+            mt = _map_types_of(t)
+            if mt:
+                return f"_meme_map_{_mangle_type(mt[0])}_{_mangle_type(mt[1])}_copy({val})"
+        if t.startswith("Set<") and t.endswith(">"):
+            st = _set_types_of(t)
+            if st:
+                return f"_meme_set_{_mangle_type(st)}_copy({val})"
+        if t in self.records:
+            return f"{_c_ident(t)}_copy({val})"
+        if t.startswith("Optional<") and t.endswith(">"):
+            inner = t[9:-1]
+            return f"_meme_opt_{_mangle_type(inner)}_copy({val})"
+        return val
+
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> MemeType:
         if isinstance(expr, FloatOfExpr):
             return "Float"
@@ -562,8 +581,12 @@ class _CGen:
             target_t = self.infer_type(expr.target, scope)
             mt = _map_types_of(target_t)
             return mt[1] if mt else "String"
-        if isinstance(expr, MapHasKeyExpr):
+        if isinstance(expr, (MapHasKeyExpr, SetContainsExpr)):
             return "Bool"
+        if isinstance(expr, EmptySetExpr):
+            return f"Set<{expr.element_type}>"
+        if isinstance(expr, SetLengthExpr):
+            return "Int"
         if isinstance(expr, OptionalNoneExpr):
             return "Optional<Void>"
         if isinstance(expr, OptionalWrapExpr):
@@ -652,12 +675,46 @@ class _CGen:
                 if expr.op == ">=":
                     return f"(strcmp({left}, {right}) >= 0)"
 
-            if left_t in self.records:
-                rec_name = _c_ident(left_t)
+            cmp_t = left_t if left_t not in ("Int", "Optional<Void>") else self.infer_type(expr.right, scope)
+            if cmp_t in self.records:
+                rec_name = _c_ident(cmp_t)
                 if expr.op == "==":
                     return f"{rec_name}_eq({left}, {right})"
                 if expr.op == "!=":
                     return f"(!{rec_name}_eq({left}, {right}))"
+
+            if cmp_t.startswith("Optional<") and cmp_t.endswith(">"):
+                inner = cmp_t[9:-1]
+                m_type = _mangle_type(inner)
+                if expr.op == "==":
+                    return f"_meme_opt_{m_type}_eq({left}, {right})"
+                if expr.op == "!=":
+                    return f"(!_meme_opt_{m_type}_eq({left}, {right}))"
+
+            if cmp_t.startswith("List<") and cmp_t.endswith(">"):
+                el_t = cmp_t[5:-1]
+                m_type = _mangle_type(el_t)
+                if expr.op == "==":
+                    return f"_meme_list_{m_type}_eq({left}, {right})"
+                if expr.op == "!=":
+                    return f"(!_meme_list_{m_type}_eq({left}, {right}))"
+
+            if cmp_t.startswith("Map<") and cmp_t.endswith(">"):
+                map_t = _map_types_of(cmp_t)
+                m_k = _mangle_type(map_t[0]) if map_t else "Int"
+                m_v = _mangle_type(map_t[1]) if map_t else "String"
+                if expr.op == "==":
+                    return f"_meme_map_{m_k}_{m_v}_eq({left}, {right})"
+                if expr.op == "!=":
+                    return f"(!_meme_map_{m_k}_{m_v}_eq({left}, {right}))"
+
+            if cmp_t.startswith("Set<") and cmp_t.endswith(">"):
+                el_t = cmp_t[4:-1]
+                m_type = _mangle_type(el_t)
+                if expr.op == "==":
+                    return f"_meme_set_{m_type}_eq({left}, {right})"
+                if expr.op == "!=":
+                    return f"(!_meme_set_{m_type}_eq({left}, {right}))"
 
             if expr.op == "/" and left_t == "Int":
                 self.uses_int_div = True
@@ -919,11 +976,15 @@ class _CGen:
                 ]
             else:
                 ordered_fields = [(f.name, f.value) for f in expr.fields]
-            field_inits = ", ".join(
-                f".{_c_ident(fname)} = {self.gen_expr(fval, scope, rec_def.get(fname) if rec_def else None)}"
-                for fname, fval in ordered_fields
-            )
-            return f"({_c_ident(expr.record_name)}){{ {field_inits} }}"
+            field_inits: list[str] = []
+            for fname, fval in ordered_fields:
+                f_t = rec_def.get(fname) if rec_def else None
+                f_ident = _c_ident(fname)
+                val_str = self.gen_expr(fval, scope, f_t)
+                if f_t and isinstance(fval, VarRefExpr):
+                    val_str = self._maybe_copy_val(val_str, f_t)
+                field_inits.append(f".{f_ident} = {val_str}")
+            return f"({_c_ident(expr.record_name)}){{ {', '.join(field_inits)} }}"
 
         if isinstance(expr, RecordFieldExpr):
             return f"{self.gen_expr(expr.target, scope)}.{_c_ident(expr.field_name)}"
@@ -1014,10 +1075,8 @@ class _CGen:
             ident = _c_ident(stmt.name)
             c_t = _c_type(stmt.var_type)
             val = self.gen_expr(stmt.value, scope, stmt.var_type)
-            if isinstance(stmt.value, VarRefExpr) and stmt.var_type.startswith("List<"):
-                el_t = stmt.var_type[5:-1]
-                m_type = _mangle_type(el_t)
-                val = f"_meme_list_{m_type}_copy({val})"
+            if isinstance(stmt.value, VarRefExpr):
+                val = self._maybe_copy_val(val, stmt.var_type)
             return [
                 f"{pad}{c_t} {ident} = {val};",
                 f"{pad}(void){ident};",
@@ -1027,10 +1086,8 @@ class _CGen:
             ident = _c_ident(stmt.name)
             tgt_t = scope.get(stmt.name)
             val = self.gen_expr(stmt.value, scope, tgt_t)
-            if isinstance(stmt.value, VarRefExpr) and tgt_t and tgt_t.startswith("List<"):
-                el_t = tgt_t[5:-1]
-                m_type = _mangle_type(el_t)
-                val = f"_meme_list_{m_type}_copy({val})"
+            if isinstance(stmt.value, VarRefExpr) and tgt_t:
+                val = self._maybe_copy_val(val, tgt_t)
             return [f"{pad}{ident} = {val};"]
 
         if isinstance(stmt, CompoundAssignStmt):
@@ -1352,6 +1409,8 @@ class _CGen:
             rec_t = scope.get(stmt.target, "")
             expected_f_t = self.records.get(rec_t, {}).get(stmt.field_name)
             val = self.gen_expr(stmt.value, scope, expected_f_t)
+            if expected_f_t and isinstance(stmt.value, VarRefExpr):
+                val = self._maybe_copy_val(val, expected_f_t)
             return [f"{pad}{tgt}.{fld} = {val};"]
 
         if isinstance(stmt, MapSetStmt):
@@ -1484,6 +1543,9 @@ class _CGen:
         map_t = _map_types_of(meme_type)
         if map_t is not None:
             return f"_meme_fmt_map_{_mangle_type(map_t[0])}_{_mangle_type(map_t[1])}"
+        set_t = _set_types_of(meme_type)
+        if set_t is not None:
+            return f"_meme_fmt_set_{_mangle_type(set_t)}"
         return f"_meme_fmt_{_c_ident(meme_type)}"
 
     def gen_func(self, fn: FuncDefStmt) -> list[str]:
@@ -1495,7 +1557,15 @@ class _CGen:
         c_ret = _c_type(fn.return_type)
         lines = [f"{c_ret} {_c_ident(fn.name)}({params}) {{"]
         for p in fn.params:
-            lines.append(f"    (void){_c_ident(p.name)};")
+            p_ident = _c_ident(p.name)
+            lines.append(f"    (void){p_ident};")
+            if (
+                p.param_type.startswith("List<")
+                or p.param_type.startswith("Map<")
+                or p.param_type.startswith("Set<")
+                or p.param_type in self.records
+            ):
+                lines.append(f"    {p_ident} = {self._maybe_copy_val(p_ident, p.param_type)};")
         for ch in fn.body:
             lines.extend(self.gen_stmt(ch, fn_scope, indent=1))
         if fn.return_type != "Void" and not (fn.body and isinstance(fn.body[-1], ReturnStmt)):
@@ -1504,14 +1574,114 @@ class _CGen:
         self.current_func_return = None
         return lines
 
-def _emit_list_type(el_t: str, gen: _CGen) -> list[str]:
+def _c_copy_expr(t: str, val: str, gen: _CGen) -> str:
+    if t.startswith("List<") and t.endswith(">"):
+        el_t = t[5:-1]
+        return f"_meme_list_{_mangle_type(el_t)}_copy({val})"
+    if t.startswith("Map<") and t.endswith(">"):
+        mt = _map_types_of(t)
+        if mt:
+            return f"_meme_map_{_mangle_type(mt[0])}_{_mangle_type(mt[1])}_copy({val})"
+    if t.startswith("Set<") and t.endswith(">"):
+        st = _set_types_of(t)
+        if st:
+            return f"_meme_set_{_mangle_type(st)}_copy({val})"
+    if t in gen.records:
+        return f"{_c_ident(t)}_copy({val})"
+    if t.startswith("Optional<") and t.endswith(">"):
+        inner = t[9:-1]
+        return f"_meme_opt_{_mangle_type(inner)}_copy({val})"
+    return val
+
+
+def _sort_records_by_deps(records: list[RecordDefStmt]) -> list[RecordDefStmt]:
+    rec_by_name = {r.name: r for r in records}
+    deps: dict[str, set[str]] = {r.name: set() for r in records}
+    for r in records:
+        for f in r.fields:
+            if f.field_type in rec_by_name:
+                deps[r.name].add(f.field_type)
+            elif f.field_type.startswith("Optional<") and f.field_type.endswith(">"):
+                inner = f.field_type[9:-1]
+                if inner in rec_by_name:
+                    deps[r.name].add(inner)
+            elif f.field_type.startswith("Map<") and f.field_type.endswith(">"):
+                mt = _map_types_of(f.field_type)
+                if mt:
+                    if mt[0] in rec_by_name:
+                        deps[r.name].add(mt[0])
+                    if mt[1] in rec_by_name:
+                        deps[r.name].add(mt[1])
+    sorted_recs: list[RecordDefStmt] = []
+    visited: set[str] = set()
+    visiting: set[str] = set()
+
+    def visit(name: str) -> None:
+        if name in visited:
+            return
+        if name in visiting:
+            return
+        visiting.add(name)
+        for dep in sorted(deps.get(name, set())):
+            if dep in rec_by_name:
+                visit(dep)
+        visiting.remove(name)
+        visited.add(name)
+        sorted_recs.append(rec_by_name[name])
+
+    for r in records:
+        if r.name not in visited:
+            visit(r.name)
+    return sorted_recs
+
+
+def _emit_list_struct(el_t: str) -> list[str]:
+    m_type = _mangle_type(el_t)
+    c_elem = _c_type(el_t)
+    return [
+        f"// List<{el_t}>",
+        "typedef struct {",
+        f"    {c_elem}* data;",
+        "    int64_t len;",
+        "    int64_t cap;",
+        f"}} meme_list_{m_type};",
+    ]
+
+
+def _emit_list_proto(el_t: str, gen: _CGen) -> list[str]:
+    m_type = _mangle_type(el_t)
+    c_elem = _c_type(el_t)
+    is_sortable = el_t in ("Int", "Float", "String", "Bool")
+    sort_proto: list[str] = []
+    if is_sortable:
+        sort_proto.extend([
+            f"static void _meme_merge_sort_{m_type}({c_elem}* arr, {c_elem}* temp, int64_t left, int64_t right, bool desc);",
+            f"static inline void _meme_list_{m_type}_sort(meme_list_{m_type}* l, bool desc);",
+        ])
+    return [
+        f"static inline meme_list_{m_type} _meme_list_{m_type}_new(void);",
+        f"static inline meme_list_{m_type} _meme_list_{m_type}_create(int64_t count, {c_elem} const* items);",
+        f"static inline meme_list_{m_type} _meme_list_{m_type}_copy(meme_list_{m_type} l);",
+        f"static inline void _meme_list_{m_type}_append(meme_list_{m_type}* l, {c_elem} val);",
+        f"static inline void _meme_list_{m_type}_insert(meme_list_{m_type}* l, int64_t idx, {c_elem} val);",
+        f"static inline {c_elem} _meme_list_{m_type}_get(meme_list_{m_type} l, int64_t idx);",
+        f"static inline void _meme_list_{m_type}_set(meme_list_{m_type}* l, int64_t idx, {c_elem} val);",
+        f"static inline void _meme_list_{m_type}_remove(meme_list_{m_type}* l, int64_t idx);",
+        f"static inline void _meme_list_{m_type}_remove_last(meme_list_{m_type}* l);",
+        f"static inline const char* _meme_fmt_list_{m_type}(meme_list_{m_type} l);",
+        f"static inline bool _meme_list_{m_type}_eq(meme_list_{m_type} a, meme_list_{m_type} b);",
+        *sort_proto,
+    ]
+
+
+def _emit_list_body(el_t: str, gen: _CGen) -> list[str]:
     m_type = _mangle_type(el_t)
     c_elem = _c_type(el_t)
     is_sortable = el_t in ("Int", "Float", "String", "Bool")
     elem_fmt_call = gen._fmt_function_name(el_t)
 
     if el_t == "String":
-        elem_eq = "(strcmp(a.data[i], b.data[i]) == 0)"
+        elem_eq = '(strcmp(a.data[i] ? a.data[i] : "", b.data[i] ? b.data[i] : "") == 0)'
     elif el_t in gen.records:
         elem_eq = f"{_c_ident(el_t)}_eq(a.data[i], b.data[i])"
     elif el_t.startswith("List<") and el_t.endswith(">"):
@@ -1521,135 +1691,182 @@ def _emit_list_type(el_t: str, gen: _CGen) -> list[str]:
         inner_map = _map_types_of(el_t)
         inner_m = f"{_mangle_type(inner_map[0])}_{_mangle_type(inner_map[1])}" if inner_map else "unknown"
         elem_eq = f"_meme_map_{inner_m}_eq(a.data[i], b.data[i])"
+    elif el_t.startswith("Set<") and el_t.endswith(">"):
+        st = _set_types_of(el_t)
+        elem_eq = f"_meme_set_{_mangle_type(st)}_eq(a.data[i], b.data[i])"
     elif el_t.startswith("Optional<") and el_t.endswith(">"):
         inner_m = _mangle_type(el_t[9:-1])
         elem_eq = f"_meme_opt_{inner_m}_eq(a.data[i], b.data[i])"
     else:
         elem_eq = "(a.data[i] == b.data[i])"
 
+    copy_expr = _c_copy_expr(el_t, "l.data[i]", gen)
+    if copy_expr == "l.data[i]":
+        copy_block = [f"    if (l.len > 0 && l.data) {{ memcpy(res.data, l.data, sizeof({c_elem}) * l.len); }}"]
+    else:
+        copy_block = [
+            "    if (l.len > 0 && l.data) {",
+            f"        for (int64_t i = 0; i < l.len; ++i) {{ res.data[i] = {copy_expr}; }}",
+            "    }",
+        ]
+
     list_lines = [
-        f"// List<{el_t}>",
-        f"typedef struct {{",
-        f"    {c_elem}* data;",
-        f"    int64_t len;",
-        f"    int64_t cap;",
-        f"}} meme_list_{m_type};",
         f"static inline meme_list_{m_type} _meme_list_{m_type}_new(void) {{",
         f"    meme_list_{m_type} l;",
-        f"    l.data = NULL; l.len = 0; l.cap = 0;",
-        f"    return l;",
-        f"}}",
+        "    l.data = NULL; l.len = 0; l.cap = 0;",
+        "    return l;",
+        "}",
         f"static inline meme_list_{m_type} _meme_list_{m_type}_create(int64_t count, {c_elem} const* items) {{",
         f"    meme_list_{m_type} l;",
-        f"    l.len = count;",
-        f"    l.cap = count > 0 ? count : 4;",
+        "    l.len = count;",
+        "    l.cap = count > 0 ? count : 4;",
         f"    l.data = ({c_elem}*)malloc(sizeof({c_elem}) * l.cap);",
         f"    if (count > 0 && items) {{ memcpy(l.data, items, sizeof({c_elem}) * count); }}",
-        f"    return l;",
-        f"}}",
+        "    return l;",
+        "}",
         f"static inline meme_list_{m_type} _meme_list_{m_type}_copy(meme_list_{m_type} l) {{",
         f"    meme_list_{m_type} res;",
-        f"    res.len = l.len;",
-        f"    res.cap = l.len > 0 ? l.len : 4;",
+        "    res.len = l.len;",
+        "    res.cap = l.len > 0 ? l.len : 4;",
         f"    res.data = ({c_elem}*)malloc(sizeof({c_elem}) * res.cap);",
-        f"    if (l.len > 0 && l.data) {{ memcpy(res.data, l.data, sizeof({c_elem}) * l.len); }}",
-        f"    return res;",
-        f"}}",
+        *copy_block,
+        "    return res;",
+        "}",
         f"static inline void _meme_list_{m_type}_append(meme_list_{m_type}* l, {c_elem} val) {{",
-        f"    if (l->len >= l->cap) {{",
-        f"        l->cap = l->cap == 0 ? 4 : l->cap * 2;",
+        "    if (l->len >= l->cap) {",
+        "        l->cap = l->cap == 0 ? 4 : l->cap * 2;",
         f"        l->data = ({c_elem}*)realloc(l->data, sizeof({c_elem}) * l->cap);",
-        f"    }}",
-        f"    l->data[l->len++] = val;",
-        f"}}",
+        "    }",
+        "    l->data[l->len++] = val;",
+        "}",
         f"static inline void _meme_list_{m_type}_insert(meme_list_{m_type}* l, int64_t idx, {c_elem} val) {{",
-        f"    if (idx < 0) idx = 0;",
-        f"    if (idx > l->len) idx = l->len;",
-        f"    if (l->len >= l->cap) {{",
-        f"        l->cap = l->cap == 0 ? 4 : l->cap * 2;",
+        "    if (idx < 0) idx = 0;",
+        "    if (idx > l->len) idx = l->len;",
+        "    if (l->len >= l->cap) {",
+        "        l->cap = l->cap == 0 ? 4 : l->cap * 2;",
         f"        l->data = ({c_elem}*)realloc(l->data, sizeof({c_elem}) * l->cap);",
-        f"    }}",
-        f"    for (int64_t i = l->len; i > idx; --i) l->data[i] = l->data[i - 1];",
-        f"    l->data[idx] = val;",
-        f"    l->len++;",
-        f"}}",
+        "    }",
+        "    for (int64_t i = l->len; i > idx; --i) l->data[i] = l->data[i - 1];",
+        "    l->data[idx] = val;",
+        "    l->len++;",
+        "}",
         f"static inline {c_elem} _meme_list_{m_type}_get(meme_list_{m_type} l, int64_t idx) {{",
-        f"    if (idx < 0 || idx >= l.len) {{",
-        f"        printf(\"Error: list index out of range\\n\");",
-        f"        exit(1);",
-        f"    }}",
-        f"    return l.data[idx];",
-        f"}}",
+        "    if (idx < 0 || idx >= l.len) {",
+        '        printf("Error: list index out of range\\n");',
+        "        exit(1);",
+        "    }",
+        "    return l.data[idx];",
+        "}",
         f"static inline void _meme_list_{m_type}_set(meme_list_{m_type}* l, int64_t idx, {c_elem} val) {{",
-        f"    if (idx < 0 || idx >= l->len) {{",
-        f"        printf(\"Error: list index out of range\\n\");",
-        f"        exit(1);",
-        f"    }}",
-        f"    l->data[idx] = val;",
-        f"}}",
+        "    if (idx < 0 || idx >= l->len) {",
+        '        printf("Error: list index out of range\\n");',
+        "        exit(1);",
+        "    }",
+        "    l->data[idx] = val;",
+        "}",
         f"static inline void _meme_list_{m_type}_remove(meme_list_{m_type}* l, int64_t idx) {{",
-        f"    if (idx < 0 || idx >= l->len) {{",
-        f"        printf(\"Error: list index out of range\\n\");",
-        f"        exit(1);",
-        f"    }}",
-        f"    for (int64_t i = idx; i < l->len - 1; ++i) l->data[i] = l->data[i + 1];",
-        f"    l->len--;",
-        f"}}",
+        "    if (idx < 0 || idx >= l->len) {",
+        '        printf("Error: list index out of range\\n");',
+        "        exit(1);",
+        "    }",
+        "    for (int64_t i = idx; i < l->len - 1; ++i) l->data[i] = l->data[i + 1];",
+        "    l->len--;",
+        "}",
         f"static inline void _meme_list_{m_type}_remove_last(meme_list_{m_type}* l) {{",
-        f"    if (l->len <= 0) {{",
-        f"        printf(\"Error: list index out of range\\n\");",
-        f"        exit(1);",
-        f"    }}",
-        f"    l->len--;",
-        f"}}",
+        "    if (l->len <= 0) {",
+        '        printf("Error: list index out of range\\n");',
+        "        exit(1);",
+        "    }",
+        "    l->len--;",
+        "}",
         f"static inline const char* _meme_fmt_list_{m_type}(meme_list_{m_type} l) {{",
-        f"    _MemeSB sb = _meme_sb_new();",
-        f"    _meme_sb_append_char(&sb, '[');",
-        f"    for (int64_t i = 0; i < l.len; ++i) {{",
-        f"        if (i > 0) _meme_sb_append(&sb, \", \");",
+        "    _MemeSB sb = _meme_sb_new();",
+        "    _meme_sb_append_char(&sb, '[');",
+        "    for (int64_t i = 0; i < l.len; ++i) {",
+        '        if (i > 0) _meme_sb_append(&sb, ", ");',
         f"        _meme_sb_append(&sb, {elem_fmt_call}(l.data[i]));",
-        f"    }}",
-        f"    _meme_sb_append_char(&sb, ']');",
-        f"    return sb.data;",
-        f"}}",
+        "    }",
+        "    _meme_sb_append_char(&sb, ']');",
+        "    return sb.data;",
+        "}",
         f"static inline bool _meme_list_{m_type}_eq(meme_list_{m_type} a, meme_list_{m_type} b) {{",
-        f"    if (a.len != b.len) return false;",
-        f"    for (int64_t i = 0; i < a.len; ++i) {{",
+        "    if (a.len != b.len) return false;",
+        "    for (int64_t i = 0; i < a.len; ++i) {",
         f"        if (!{elem_eq}) return false;",
-        f"    }}",
-        f"    return true;",
-        f"}}",
+        "    }",
+        "    return true;",
+        "}",
     ]
 
     if is_sortable:
         cmp_fn = f"_cmp_{el_t}"
         list_lines.extend([
             f"static void _meme_merge_sort_{m_type}({c_elem}* arr, {c_elem}* temp, int64_t left, int64_t right, bool desc) {{",
-            f"    if (left >= right) return;",
-            f"    int64_t mid = left + (right - left) / 2;",
+            "    if (left >= right) return;",
+            "    int64_t mid = left + (right - left) / 2;",
             f"    _meme_merge_sort_{m_type}(arr, temp, left, mid, desc);",
             f"    _meme_merge_sort_{m_type}(arr, temp, mid + 1, right, desc);",
-            f"    int64_t i = left, j = mid + 1, k = left;",
-            f"    while (i <= mid && j <= right) {{",
+            "    int64_t i = left, j = mid + 1, k = left;",
+            "    while (i <= mid && j <= right) {",
             f"        bool take_left = !desc ? ({cmp_fn}(arr[i], arr[j]) <= 0) : ({cmp_fn}(arr[i], arr[j]) >= 0);",
-            f"        if (take_left) temp[k++] = arr[i++];",
-            f"        else temp[k++] = arr[j++];",
-            f"    }}",
-            f"    while (i <= mid) temp[k++] = arr[i++];",
-            f"    while (j <= right) temp[k++] = arr[j++];",
-            f"    for (i = left; i <= right; i++) arr[i] = temp[i];",
-            f"}}",
+            "        if (take_left) temp[k++] = arr[i++];",
+            "        else temp[k++] = arr[j++];",
+            "    }",
+            "    while (i <= mid) temp[k++] = arr[i++];",
+            "    while (j <= right) temp[k++] = arr[j++];",
+            "    for (i = left; i <= right; i++) arr[i] = temp[i];",
+            "}",
             f"static inline void _meme_list_{m_type}_sort(meme_list_{m_type}* l, bool desc) {{",
-            f"    if (l->len <= 1) return;",
+            "    if (l->len <= 1) return;",
             f"    {c_elem}* temp = ({c_elem}*)malloc(sizeof({c_elem}) * l->len);",
             f"    _meme_merge_sort_{m_type}(l->data, temp, 0, l->len - 1, desc);",
-            f"    free(temp);",
-            f"}}",
+            "    free(temp);",
+            "}",
         ])
     return list_lines
 
 
-def _emit_map_type(k_t: str, v_t: str, gen: _CGen) -> list[str]:
+def _emit_list_type(el_t: str, gen: _CGen) -> list[str]:
+    return _emit_list_struct(el_t) + _emit_list_proto(el_t, gen) + _emit_list_body(el_t, gen)
+
+
+def _emit_map_struct(k_t: str, v_t: str) -> list[str]:
+    m_type = f"{_mangle_type(k_t)}_{_mangle_type(v_t)}"
+    c_k_t = _c_type(k_t)
+    c_v_t = _c_type(v_t)
+    return [
+        f"// Map<{k_t}, {v_t}>",
+        "typedef struct {",
+        f"    {c_k_t} key;",
+        f"    {c_v_t} value;",
+        f"}} meme_entry_{m_type};",
+        "typedef struct {",
+        f"    meme_entry_{m_type}* data;",
+        "    int64_t len;",
+        "    int64_t cap;",
+        f"}} meme_map_{m_type};",
+    ]
+
+
+def _emit_map_proto(k_t: str, v_t: str, gen: _CGen) -> list[str]:
+    m_type = f"{_mangle_type(k_t)}_{_mangle_type(v_t)}"
+    c_k_t = _c_type(k_t)
+    c_v_t = _c_type(v_t)
+    return [
+        f"static inline meme_map_{m_type} _meme_map_{m_type}_new(void);",
+        f"static inline meme_map_{m_type} _meme_map_{m_type}_copy(meme_map_{m_type} m);",
+        f"static inline int64_t _meme_map_{m_type}_find(const meme_map_{m_type}* m, {c_k_t} key);",
+        f"static inline void _meme_map_{m_type}_set(meme_map_{m_type}* m, {c_k_t} key, {c_v_t} value);",
+        f"static inline bool _meme_map_{m_type}_has_key(meme_map_{m_type} m, {c_k_t} key);",
+        f"static inline {c_v_t} _meme_map_{m_type}_get(meme_map_{m_type} m, {c_k_t} key);",
+        f"static inline {c_v_t} _meme_map_{m_type}_get_default(meme_map_{m_type} m, {c_k_t} key, {c_v_t} default_val);",
+        f"static inline meme_map_{m_type} _meme_map_{m_type}_literal(int64_t count, const meme_entry_{m_type}* entries);",
+        f"static inline const char* _meme_fmt_map_{m_type}(meme_map_{m_type} m);",
+        f"static inline bool _meme_map_{m_type}_eq(meme_map_{m_type} a, meme_map_{m_type} b);",
+    ]
+
+
+def _emit_map_body(k_t: str, v_t: str, gen: _CGen) -> list[str]:
     m_type = f"{_mangle_type(k_t)}_{_mangle_type(v_t)}"
     c_k_t = _c_type(k_t)
     c_v_t = _c_type(v_t)
@@ -1658,123 +1875,186 @@ def _emit_map_type(k_t: str, v_t: str, gen: _CGen) -> list[str]:
     v_fmt_call = gen._fmt_function_name(v_t)
 
     if v_t == "String":
-        val_eq = "(strcmp(a.data[i].value, b.data[i].value) == 0)"
+        val_eq = '(strcmp(a.data[i].value ? a.data[i].value : "", b.data[i].value ? b.data[i].value : "") == 0)'
     elif v_t in gen.records:
         val_eq = f"{_c_ident(v_t)}_eq(a.data[i].value, b.data[i].value)"
-    elif v_t.startswith("List<"):
+    elif v_t.startswith("List<") and v_t.endswith(">"):
         el_t = v_t[5:-1]
         val_eq = f"_meme_list_{_mangle_type(el_t)}_eq(a.data[i].value, b.data[i].value)"
+    elif v_t.startswith("Map<") and v_t.endswith(">"):
+        mt = _map_types_of(v_t)
+        m_k = _mangle_type(mt[0]) if mt else "Int"
+        m_v = _mangle_type(mt[1]) if mt else "String"
+        val_eq = f"_meme_map_{m_k}_{m_v}_eq(a.data[i].value, b.data[i].value)"
+    elif v_t.startswith("Set<") and v_t.endswith(">"):
+        st = _set_types_of(v_t)
+        val_eq = f"_meme_set_{_mangle_type(st)}_eq(a.data[i].value, b.data[i].value)"
+    elif v_t.startswith("Optional<") and v_t.endswith(">"):
+        inner = v_t[9:-1]
+        val_eq = f"_meme_opt_{_mangle_type(inner)}_eq(a.data[i].value, b.data[i].value)"
     else:
         val_eq = "(a.data[i].value == b.data[i].value)"
 
+    k_copy = _c_copy_expr(k_t, "m.data[i].key", gen)
+    v_copy = _c_copy_expr(v_t, "m.data[i].value", gen)
+    if k_copy == "m.data[i].key" and v_copy == "m.data[i].value":
+        copy_block = [f"    if (m.len > 0 && m.data) {{ memcpy(res.data, m.data, sizeof(meme_entry_{m_type}) * m.len); }}"]
+    else:
+        copy_block = [
+            "    if (m.len > 0 && m.data) {",
+            "        for (int64_t i = 0; i < m.len; ++i) {",
+            f"            res.data[i].key = {k_copy};",
+            f"            res.data[i].value = {v_copy};",
+            "        }",
+            "    }",
+        ]
+
     return [
-        f"// Map<{k_t}, {v_t}>",
-        f"typedef struct {{",
-        f"    {c_k_t} key;",
-        f"    {c_v_t} value;",
-        f"}} meme_entry_{m_type};",
-        f"typedef struct {{",
-        f"    meme_entry_{m_type}* data;",
-        f"    int64_t len;",
-        f"    int64_t cap;",
-        f"}} meme_map_{m_type};",
         f"static inline meme_map_{m_type} _meme_map_{m_type}_new(void) {{",
         f"    meme_map_{m_type} m;",
-        f"    m.data = NULL; m.len = 0; m.cap = 0;",
-        f"    return m;",
-        f"}}",
+        "    m.data = NULL; m.len = 0; m.cap = 0;",
+        "    return m;",
+        "}",
         f"static inline meme_map_{m_type} _meme_map_{m_type}_copy(meme_map_{m_type} m) {{",
         f"    meme_map_{m_type} res;",
-        f"    res.len = m.len;",
-        f"    res.cap = m.len > 0 ? m.len : 4;",
+        "    res.len = m.len;",
+        "    res.cap = m.len > 0 ? m.len : 4;",
         f"    res.data = (meme_entry_{m_type}*)malloc(sizeof(meme_entry_{m_type}) * res.cap);",
-        f"    if (m.len > 0 && m.data) {{ memcpy(res.data, m.data, sizeof(meme_entry_{m_type}) * m.len); }}",
-        f"    return res;",
-        f"}}",
+        *copy_block,
+        "    return res;",
+        "}",
         f"static inline int64_t _meme_map_{m_type}_find(const meme_map_{m_type}* m, {c_k_t} key) {{",
-        f"    int64_t lo = 0, hi = m->len - 1;",
-        f"    while (lo <= hi) {{",
-        f"        int64_t mid = lo + (hi - lo) / 2;",
+        "    int64_t lo = 0, hi = m->len - 1;",
+        "    while (lo <= hi) {",
+        "        int64_t mid = lo + (hi - lo) / 2;",
         f"        int cmp = {cmp_fn}(m->data[mid].key, key);",
-        f"        if (cmp == 0) return mid;",
-        f"        if (cmp < 0) lo = mid + 1;",
-        f"        else hi = mid - 1;",
-        f"    }}",
-        f"    return -1 - lo;",
-        f"}}",
+        "        if (cmp == 0) return mid;",
+        "        if (cmp < 0) lo = mid + 1;",
+        "        else hi = mid - 1;",
+        "    }",
+        "    return -1 - lo;",
+        "}",
         f"static inline void _meme_map_{m_type}_set(meme_map_{m_type}* m, {c_k_t} key, {c_v_t} value) {{",
         f"    int64_t idx = _meme_map_{m_type}_find(m, key);",
-        f"    if (idx >= 0) {{",
-        f"        m->data[idx].value = value;",
-        f"    }} else {{",
-        f"        int64_t ins = -1 - idx;",
-        f"        if (m->len >= m->cap) {{",
-        f"            m->cap = m->cap == 0 ? 4 : m->cap * 2;",
+        "    if (idx >= 0) {",
+        "        m->data[idx].value = value;",
+        "    } else {",
+        "        int64_t ins = -1 - idx;",
+        "        if (m->len >= m->cap) {",
+        "            m->cap = m->cap == 0 ? 4 : m->cap * 2;",
         f"            m->data = (meme_entry_{m_type}*)realloc(m->data, sizeof(meme_entry_{m_type}) * m->cap);",
-        f"        }}",
-        f"        for (int64_t i = m->len; i > ins; --i) m->data[i] = m->data[i - 1];",
-        f"        m->data[ins].key = key;",
-        f"        m->data[ins].value = value;",
-        f"        m->len++;",
-        f"    }}",
-        f"}}",
+        "        }",
+        "        for (int64_t i = m->len; i > ins; --i) m->data[i] = m->data[i - 1];",
+        "        m->data[ins].key = key;",
+        "        m->data[ins].value = value;",
+        "        m->len++;",
+        "    }",
+        "}",
         f"static inline bool _meme_map_{m_type}_has_key(meme_map_{m_type} m, {c_k_t} key) {{",
         f"    return _meme_map_{m_type}_find(&m, key) >= 0;",
-        f"}}",
+        "}",
         f"static inline {c_v_t} _meme_map_{m_type}_get(meme_map_{m_type} m, {c_k_t} key) {{",
         f"    int64_t idx = _meme_map_{m_type}_find(&m, key);",
-        f"    if (idx < 0) {{",
-        f"        printf(\"Error: key not found in map\\n\");",
-        f"        exit(1);",
-        f"    }}",
-        f"    return m.data[idx].value;",
-        f"}}",
+        "    if (idx < 0) {",
+        '        printf("Error: key not found in map\\n");',
+        "        exit(1);",
+        "    }",
+        "    return m.data[idx].value;",
+        "}",
         f"static inline {c_v_t} _meme_map_{m_type}_get_default(meme_map_{m_type} m, {c_k_t} key, {c_v_t} default_val) {{",
         f"    int64_t idx = _meme_map_{m_type}_find(&m, key);",
-        f"    if (idx >= 0) return m.data[idx].value;",
-        f"    return default_val;",
-        f"}}",
+        "    if (idx >= 0) return m.data[idx].value;",
+        "    return default_val;",
+        "}",
         f"static inline meme_map_{m_type} _meme_map_{m_type}_literal(int64_t count, const meme_entry_{m_type}* entries) {{",
         f"    meme_map_{m_type} res = _meme_map_{m_type}_new();",
-        f"    for (int64_t i = 0; i < count; ++i) {{",
+        "    for (int64_t i = 0; i < count; ++i) {",
         f"        _meme_map_{m_type}_set(&res, entries[i].key, entries[i].value);",
-        f"    }}",
-        f"    return res;",
-        f"}}",
+        "    }",
+        "    return res;",
+        "}",
         f"static inline const char* _meme_fmt_map_{m_type}(meme_map_{m_type} m) {{",
-        f"    _MemeSB sb = _meme_sb_new();",
-        f"    _meme_sb_append_char(&sb, '{{');",
-        f"    for (int64_t i = 0; i < m.len; ++i) {{",
-        f"        if (i > 0) _meme_sb_append(&sb, \", \");",
+        "    _MemeSB sb = _meme_sb_new();",
+        "    _meme_sb_append_char(&sb, '{');",
+        "    for (int64_t i = 0; i < m.len; ++i) {",
+        '        if (i > 0) _meme_sb_append(&sb, ", ");',
         f"        _meme_sb_append(&sb, {k_fmt_call}(m.data[i].key));",
-        f"        _meme_sb_append(&sb, \": \");",
+        '        _meme_sb_append(&sb, ": ");',
         f"        _meme_sb_append(&sb, {v_fmt_call}(m.data[i].value));",
-        f"    }}",
-        f"    _meme_sb_append_char(&sb, '}}');",
-        f"    return sb.data;",
-        f"}}",
+        "    }",
+        "    _meme_sb_append_char(&sb, '}');",
+        "    return sb.data;",
+        "}",
         f"static inline bool _meme_map_{m_type}_eq(meme_map_{m_type} a, meme_map_{m_type} b) {{",
-        f"    if (a.len != b.len) return false;",
-        f"    for (int64_t i = 0; i < a.len; ++i) {{",
+        "    if (a.len != b.len) return false;",
+        "    for (int64_t i = 0; i < a.len; ++i) {",
         f"        if ({cmp_fn}(a.data[i].key, b.data[i].key) != 0) return false;",
         f"        if (!{val_eq}) return false;",
-        f"    }}",
-        f"    return true;",
-        f"}}",
+        "    }",
+        "    return true;",
+        "}",
     ]
 
 
-def _emit_set_type(el_t: str, gen: _CGen) -> list[str]:
+def _emit_map_type(k_t: str, v_t: str, gen: _CGen) -> list[str]:
+    return _emit_map_struct(k_t, v_t) + _emit_map_proto(k_t, v_t, gen) + _emit_map_body(k_t, v_t, gen)
+
+
+def _emit_set_struct(el_t: str) -> list[str]:
+    m_type = _mangle_type(el_t)
+    c_el = _c_type(el_t)
+    return [
+        f"// Set<{el_t}>",
+        "typedef struct {",
+        f"    {c_el}* data;",
+        "    int64_t len;",
+        "    int64_t cap;",
+        f"}} meme_set_{m_type};",
+    ]
+
+
+def _emit_set_proto(el_t: str, gen: _CGen) -> list[str]:
+    m_type = _mangle_type(el_t)
+    c_el = _c_type(el_t)
+    cmp_proto: list[str] = []
+    if el_t in gen.records:
+        cmp_proto.append(f"static inline int _meme_set_cmp_{m_type}({_c_ident(el_t)} a, {_c_ident(el_t)} b);")
+    return [
+        *cmp_proto,
+        f"static inline meme_set_{m_type} _meme_set_{m_type}_new(void);",
+        f"static inline int64_t _meme_set_{m_type}_find(const meme_set_{m_type}* s, {c_el} val);",
+        f"static inline void _meme_set_{m_type}_add(meme_set_{m_type}* s, {c_el} val);",
+        f"static inline void _meme_set_{m_type}_remove(meme_set_{m_type}* s, {c_el} val);",
+        f"static inline bool _meme_set_{m_type}_contains(meme_set_{m_type} s, {c_el} val);",
+        f"static inline meme_set_{m_type} _meme_set_{m_type}_copy(meme_set_{m_type} s);",
+        f"static inline const char* _meme_set_{m_type}_fmt(meme_set_{m_type} s);",
+        f"static inline const char* _meme_fmt_set_{m_type}(meme_set_{m_type} s);",
+        f"static inline bool _meme_set_{m_type}_eq(meme_set_{m_type} a, meme_set_{m_type} b);",
+    ]
+
+
+def _emit_set_body(el_t: str, gen: _CGen) -> list[str]:
     m_type = _mangle_type(el_t)
     c_el = _c_type(el_t)
     fmt_call = gen._fmt_function_name(el_t)
     if el_t == "String":
-        elem_eq = "(strcmp(a.data[i], b.data[i]) == 0)"
+        elem_eq = '(strcmp(a.data[i] ? a.data[i] : "", b.data[i] ? b.data[i] : "") == 0)'
     elif el_t in gen.records:
         elem_eq = f"{_c_ident(el_t)}_eq(a.data[i], b.data[i])"
-    elif el_t.startswith("List<"):
+    elif el_t.startswith("List<") and el_t.endswith(">"):
         inner = el_t[5:-1]
         elem_eq = f"_meme_list_{_mangle_type(inner)}_eq(a.data[i], b.data[i])"
+    elif el_t.startswith("Map<") and el_t.endswith(">"):
+        mt = _map_types_of(el_t)
+        m_k = _mangle_type(mt[0]) if mt else "Int"
+        m_v = _mangle_type(mt[1]) if mt else "String"
+        elem_eq = f"_meme_map_{m_k}_{m_v}_eq(a.data[i], b.data[i])"
+    elif el_t.startswith("Set<") and el_t.endswith(">"):
+        inner = _set_types_of(el_t)
+        elem_eq = f"_meme_set_{_mangle_type(inner)}_eq(a.data[i], b.data[i])"
+    elif el_t.startswith("Optional<") and el_t.endswith(">"):
+        inner = el_t[9:-1]
+        elem_eq = f"_meme_opt_{_mangle_type(inner)}_eq(a.data[i], b.data[i])"
     else:
         elem_eq = "(a.data[i] == b.data[i])"
 
@@ -1785,153 +2065,229 @@ def _emit_set_type(el_t: str, gen: _CGen) -> list[str]:
             f_ident = _c_ident(f_name)
             if f_type == "String":
                 field_cmps.append(
-                    f"    {{ int _c = strcmp((a.{f_ident} ? a.{f_ident} : \"\"), (b.{f_ident} ? b.{f_ident} : \"\")); if (_c != 0) return _c; }}"
+                    f'    {{ int _c = strcmp((a.{f_ident} ? a.{f_ident} : ""), (b.{f_ident} ? b.{f_ident} : "")); if (_c != 0) return _c; }}'
                 )
             elif f_type in ("Int", "Float", "Bool"):
                 field_cmps.append(
-                    f"    {{ if (a.{f_ident} != b.{f_ident}) return (a.{f_ident} > b.{f_ident}) - (a.{f_ident} < b.{f_ident}); }}"
+                    f'    {{ if (a.{f_ident} != b.{f_ident}) return (a.{f_ident} > b.{f_ident}) - (a.{f_ident} < b.{f_ident}); }}'
                 )
             elif f_type.startswith("Optional<"):
                 field_cmps.append(
-                    f"    {{ if (a.{f_ident}.present != b.{f_ident}.present) return a.{f_ident}.present ? 1 : -1; }}"
+                    f'    {{ if (a.{f_ident}.present != b.{f_ident}.present) return a.{f_ident}.present ? 1 : -1; }}'
                 )
                 if f_type.startswith("Optional<List<"):
                     continue
                 inner_v_t = f_type[9:-1]
                 if inner_v_t == "String":
                     field_cmps.append(
-                        f"    {{ if (a.{f_ident}.present) {{ int _c = strcmp(a.{f_ident}.value, b.{f_ident}.value); if (_c != 0) return _c; }} }}"
+                        f'    {{ if (a.{f_ident}.present) {{ int _c = strcmp(a.{f_ident}.value, b.{f_ident}.value); if (_c != 0) return _c; }} }}'
                     )
                 elif inner_v_t in ("Int", "Float", "Bool"):
                     field_cmps.append(
-                        f"    {{ if (a.{f_ident}.present && a.{f_ident}.value != b.{f_ident}.value) return (a.{f_ident}.value > b.{f_ident}.value) - (a.{f_ident}.value < b.{f_ident}.value); }}"
+                        f'    {{ if (a.{f_ident}.present && a.{f_ident}.value != b.{f_ident}.value) return (a.{f_ident}.value > b.{f_ident}.value) - (a.{f_ident}.value < b.{f_ident}.value); }}'
                     )
         cmp_lines = [
             f"static inline int _meme_set_cmp_{m_type}({_c_ident(el_t)} a, {_c_ident(el_t)} b) {{",
             *field_cmps,
-            f"    return 0;",
-            f"}}",
+            "    return 0;",
+            "}",
         ]
     else:
         cmp_fn = f"_cmp_{el_t}"
         cmp_lines = []
 
+    copy_expr = _c_copy_expr(el_t, "s.data[i]", gen)
+    if copy_expr == "s.data[i]":
+        copy_block = [f"    if (s.len > 0 && s.data) {{ memcpy(res.data, s.data, sizeof({c_el}) * s.len); }}"]
+    else:
+        copy_block = [
+            "    if (s.len > 0 && s.data) {",
+            f"        for (int64_t i = 0; i < s.len; ++i) {{ res.data[i] = {copy_expr}; }}",
+            "    }",
+        ]
+
     return [
-        f"// Set<{el_t}>",
-        f"typedef struct {{",
-        f"    {c_el}* data;",
-        f"    int64_t len;",
-        f"    int64_t cap;",
-        f"}} meme_set_{m_type};",
+        *cmp_lines,
         f"static inline meme_set_{m_type} _meme_set_{m_type}_new(void) {{",
         f"    meme_set_{m_type} s = {{ .data = NULL, .len = 0, .cap = 0 }};",
-        f"    return s;",
-        f"}}",
-        *cmp_lines,
+        "    return s;",
+        "}",
         f"static inline int64_t _meme_set_{m_type}_find(const meme_set_{m_type}* s, {c_el} val) {{",
-        f"    int64_t lo = 0, hi = s->len - 1;",
-        f"    while (lo <= hi) {{",
-        f"        int64_t mid = lo + (hi - lo) / 2;",
+        "    int64_t lo = 0, hi = s->len - 1;",
+        "    while (lo <= hi) {",
+        "        int64_t mid = lo + (hi - lo) / 2;",
         f"        int cmp = {cmp_fn}(s->data[mid], val);",
-        f"        if (cmp == 0) return mid;",
-        f"        if (cmp < 0) lo = mid + 1;",
-        f"        else hi = mid - 1;",
-        f"    }}",
-        f"    return -1 - lo;",
-        f"}}",
+        "        if (cmp == 0) return mid;",
+        "        if (cmp < 0) lo = mid + 1;",
+        "        else hi = mid - 1;",
+        "    }",
+        "    return -1 - lo;",
+        "}",
         f"static inline void _meme_set_{m_type}_add(meme_set_{m_type}* s, {c_el} val) {{",
         f"    int64_t idx = _meme_set_{m_type}_find(s, val);",
-        f"    if (idx >= 0) return;",
-        f"    int64_t ins = -1 - idx;",
-        f"    if (s->len >= s->cap) {{",
-        f"        s->cap = s->cap == 0 ? 4 : s->cap * 2;",
+        "    if (idx >= 0) return;",
+        "    int64_t ins = -1 - idx;",
+        "    if (s->len >= s->cap) {",
+        "        s->cap = s->cap == 0 ? 4 : s->cap * 2;",
         f"        s->data = ({c_el}*)realloc(s->data, sizeof({c_el}) * s->cap);",
-        f"    }}",
-        f"    for (int64_t i = s->len; i > ins; --i) s->data[i] = s->data[i - 1];",
-        f"    s->data[ins] = val;",
-        f"    s->len++;",
-        f"}}",
+        "    }",
+        "    for (int64_t i = s->len; i > ins; --i) s->data[i] = s->data[i - 1];",
+        "    s->data[ins] = val;",
+        "    s->len++;",
+        "}",
         f"static inline void _meme_set_{m_type}_remove(meme_set_{m_type}* s, {c_el} val) {{",
         f"    int64_t idx = _meme_set_{m_type}_find(s, val);",
-        f"    if (idx < 0) return;",
-        f"    for (int64_t i = idx; i < s->len - 1; ++i) s->data[i] = s->data[i + 1];",
-        f"    s->len--;",
-        f"}}",
+        "    if (idx < 0) return;",
+        "    for (int64_t i = idx; i < s->len - 1; ++i) s->data[i] = s->data[i + 1];",
+        "    s->len--;",
+        "}",
         f"static inline bool _meme_set_{m_type}_contains(meme_set_{m_type} s, {c_el} val) {{",
         f"    return _meme_set_{m_type}_find(&s, val) >= 0;",
-        f"}}",
+        "}",
         f"static inline meme_set_{m_type} _meme_set_{m_type}_copy(meme_set_{m_type} s) {{",
         f"    meme_set_{m_type} res;",
-        f"    res.len = s.len;",
-        f"    res.cap = s.len > 0 ? s.len : 4;",
+        "    res.len = s.len;",
+        "    res.cap = s.len > 0 ? s.len : 4;",
         f"    res.data = ({c_el}*)malloc(sizeof({c_el}) * res.cap);",
-        f"    if (s.len > 0 && s.data) {{ memcpy(res.data, s.data, sizeof({c_el}) * s.len); }}",
-        f"    return res;",
-        f"}}",
+        *copy_block,
+        "    return res;",
+        "}",
         f"static inline const char* _meme_set_{m_type}_fmt(meme_set_{m_type} s) {{",
-        f"    _MemeSB sb = _meme_sb_new();",
-        f"    _meme_sb_append(&sb, \"{{\");",
-        f"    for (int64_t i = 0; i < s.len; ++i) {{",
-        f"        if (i > 0) _meme_sb_append(&sb, \", \");",
+        "    _MemeSB sb = _meme_sb_new();",
+        '    _meme_sb_append(&sb, "{");',
+        "    for (int64_t i = 0; i < s.len; ++i) {",
+        '        if (i > 0) _meme_sb_append(&sb, ", ");',
         f"        _meme_sb_append(&sb, {fmt_call}(s.data[i]));",
-        f"    }}",
-        f"    _meme_sb_append(&sb, \"}}\");",
-        f"    return sb.data;",
-        f"}}",
+        "    }",
+        '    _meme_sb_append(&sb, "}");',
+        "    return sb.data;",
+        "}",
+        f"static inline const char* _meme_fmt_set_{m_type}(meme_set_{m_type} s) {{",
+        f"    return _meme_set_{m_type}_fmt(s);",
+        "}",
+        f"static inline bool _meme_set_{m_type}_eq(meme_set_{m_type} a, meme_set_{m_type} b) {{",
+        "    if (a.len != b.len) return false;",
+        "    for (int64_t i = 0; i < a.len; ++i) {",
+        f"        if (!{elem_eq}) return false;",
+        "    }",
+        "    return true;",
+        "}",
     ]
 
 
-def _emit_opt_type(inner: str, gen: _CGen) -> list[str]:
+def _emit_set_type(el_t: str, gen: _CGen) -> list[str]:
+    return _emit_set_struct(el_t) + _emit_set_proto(el_t, gen) + _emit_set_body(el_t, gen)
+
+
+def _emit_opt_struct(inner: str) -> list[str]:
+    m_type = _mangle_type(inner)
+    c_inner = _c_type(inner)
+    return [
+        f"// Optional<{inner}>",
+        "typedef struct {",
+        "    bool present;",
+        f"    {c_inner} value;",
+        f"}} meme_opt_{m_type};",
+    ]
+
+
+def _emit_opt_proto(inner: str, gen: _CGen) -> list[str]:
+    m_type = _mangle_type(inner)
+    c_inner = _c_type(inner)
+    return [
+        f"static inline meme_opt_{m_type} _meme_opt_{m_type}_some({c_inner} val);",
+        f"static inline {c_inner} _meme_opt_{m_type}_unwrap(meme_opt_{m_type} opt);",
+        f"static inline meme_opt_{m_type} _meme_opt_{m_type}_copy(meme_opt_{m_type} opt);",
+        f"static inline const char* _meme_fmt_opt_{m_type}(meme_opt_{m_type} opt);",
+        f"static inline bool _meme_opt_{m_type}_eq(meme_opt_{m_type} a, meme_opt_{m_type} b);",
+    ]
+
+
+def _emit_opt_body(inner: str, gen: _CGen) -> list[str]:
     m_type = _mangle_type(inner)
     c_inner = _c_type(inner)
     inner_fmt_call = gen._fmt_function_name(inner)
 
     if inner == "String":
-        val_eq = "(strcmp(a.value, b.value) == 0)"
+        val_eq = '(strcmp(a.value ? a.value : "", b.value ? b.value : "") == 0)'
     elif inner in gen.records:
         val_eq = f"{_c_ident(inner)}_eq(a.value, b.value)"
-    elif inner.startswith("List<"):
+    elif inner.startswith("List<") and inner.endswith(">"):
         el_t = inner[5:-1]
         val_eq = f"_meme_list_{_mangle_type(el_t)}_eq(a.value, b.value)"
+    elif inner.startswith("Map<") and inner.endswith(">"):
+        mt = _map_types_of(inner)
+        m_k = _mangle_type(mt[0]) if mt else "Int"
+        m_v = _mangle_type(mt[1]) if mt else "String"
+        val_eq = f"_meme_map_{m_k}_{m_v}_eq(a.value, b.value)"
+    elif inner.startswith("Set<") and inner.endswith(">"):
+        st = _set_types_of(inner)
+        val_eq = f"_meme_set_{_mangle_type(st)}_eq(a.value, b.value)"
+    elif inner.startswith("Optional<") and inner.endswith(">"):
+        inner_sub = inner[9:-1]
+        val_eq = f"_meme_opt_{_mangle_type(inner_sub)}_eq(a.value, b.value)"
     else:
         val_eq = "(a.value == b.value)"
 
+    copy_call = _c_copy_expr(inner, "opt.value", gen)
+
     return [
-        f"// Optional<{inner}>",
-        f"typedef struct {{",
-        f"    bool present;",
-        f"    {c_inner} value;",
-        f"}} meme_opt_{m_type};",
         f"static inline meme_opt_{m_type} _meme_opt_{m_type}_some({c_inner} val) {{",
         f"    meme_opt_{m_type} o;",
-        f"    o.present = true; o.value = val;",
-        f"    return o;",
-        f"}}",
+        "    o.present = true; o.value = val;",
+        "    return o;",
+        "}",
         f"static inline {c_inner} _meme_opt_{m_type}_unwrap(meme_opt_{m_type} opt) {{",
-        f"    if (!opt.present) {{",
-        f"        printf(\"Unwrap failed: Optional value is nothing\\n\");",
-        f"        exit(1);",
-        f"    }}",
-        f"    return opt.value;",
-        f"}}",
+        "    if (!opt.present) {",
+        '        printf("Unwrap failed: Optional value is nothing\\n");',
+        "        exit(1);",
+        "    }",
+        "    return opt.value;",
+        "}",
+        f"static inline meme_opt_{m_type} _meme_opt_{m_type}_copy(meme_opt_{m_type} opt) {{",
+        "    if (!opt.present) return opt;",
+        f"    meme_opt_{m_type} res;",
+        "    res.present = true;",
+        f"    res.value = {copy_call};",
+        "    return res;",
+        "}",
         f"static inline const char* _meme_fmt_opt_{m_type}(meme_opt_{m_type} opt) {{",
         f"    if (opt.present) return {inner_fmt_call}(opt.value);",
-        f"    return \"None\";",
-        f"}}",
+        '    return "None";',
+        "}",
         f"static inline bool _meme_opt_{m_type}_eq(meme_opt_{m_type} a, meme_opt_{m_type} b) {{",
-        f"    if (a.present != b.present) return false;",
-        f"    if (!a.present) return true;",
+        "    if (a.present != b.present) return false;",
+        "    if (!a.present) return true;",
         f"    return {val_eq};",
-        f"}}",
+        "}",
     ]
 
 
-def _emit_record(r: RecordDefStmt, gen: _CGen) -> list[str]:
+def _emit_opt_type(inner: str, gen: _CGen) -> list[str]:
+    return _emit_opt_struct(inner) + _emit_opt_proto(inner, gen) + _emit_opt_body(inner, gen)
+
+
+def _emit_record_decl(r: RecordDefStmt, gen: _CGen) -> list[str]:
     r_ident = _c_ident(r.name)
     lines = [f"struct {r_ident} {{"]
     for f in r.fields:
         lines.append(f"    {_c_type(f.field_type)} {_c_ident(f.name)};")
     lines.append("};")
+    return lines
+
+
+def _emit_record_proto(r: RecordDefStmt, gen: _CGen) -> list[str]:
+    r_ident = _c_ident(r.name)
+    return [
+        f"static inline bool {r_ident}_eq({r_ident} a, {r_ident} b);",
+        f"static inline {r_ident} {r_ident}_copy({r_ident} r);",
+        f"static inline const char* _meme_fmt_{r_ident}({r_ident} r);",
+    ]
+
+
+def _emit_record_body(r: RecordDefStmt, gen: _CGen) -> list[str]:
+    r_ident = _c_ident(r.name)
+    lines: list[str] = []
 
     # Record equality
     lines.append(f"static inline bool {r_ident}_eq({r_ident} a, {r_ident} b) {{")
@@ -1942,24 +2298,43 @@ def _emit_record(r: RecordDefStmt, gen: _CGen) -> list[str]:
         for f in r.fields:
             f_ident = _c_ident(f.name)
             if f.field_type == "String":
-                conds.append(f"(strcmp(a.{f_ident} ? a.{f_ident} : \"\", b.{f_ident} ? b.{f_ident} : \"\") == 0)")
+                conds.append(f'(strcmp(a.{f_ident} ? a.{f_ident} : "", b.{f_ident} ? b.{f_ident} : "") == 0)')
             elif f.field_type in gen.records:
                 conds.append(f"{_c_ident(f.field_type)}_eq(a.{f_ident}, b.{f_ident})")
-            elif f.field_type.startswith("List<"):
+            elif f.field_type.startswith("List<") and f.field_type.endswith(">"):
                 el_t = f.field_type[5:-1]
                 conds.append(f"_meme_list_{_mangle_type(el_t)}_eq(a.{f_ident}, b.{f_ident})")
-            elif f.field_type.startswith("Optional<"):
-                el_t = f.field_type[9:-1]
-                conds.append(f"_meme_opt_{_mangle_type(el_t)}_eq(a.{f_ident}, b.{f_ident})")
+            elif f.field_type.startswith("Map<") and f.field_type.endswith(">"):
+                mt = _map_types_of(f.field_type)
+                m_k = _mangle_type(mt[0]) if mt else "Int"
+                m_v = _mangle_type(mt[1]) if mt else "String"
+                conds.append(f"_meme_map_{m_k}_{m_v}_eq(a.{f_ident}, b.{f_ident})")
+            elif f.field_type.startswith("Set<") and f.field_type.endswith(">"):
+                st = _set_types_of(f.field_type)
+                conds.append(f"_meme_set_{_mangle_type(st)}_eq(a.{f_ident}, b.{f_ident})")
+            elif f.field_type.startswith("Optional<") and f.field_type.endswith(">"):
+                inner = f.field_type[9:-1]
+                conds.append(f"_meme_opt_{_mangle_type(inner)}_eq(a.{f_ident}, b.{f_ident})")
             else:
                 conds.append(f"(a.{f_ident} == b.{f_ident})")
         lines.append(f"    return {' && '.join(conds)};")
     lines.append("}")
 
+    # Record copy
+    lines.append(f"static inline {r_ident} {r_ident}_copy({r_ident} r) {{")
+    lines.append(f"    {r_ident} res = r;")
+    for f in r.fields:
+        f_ident = _c_ident(f.name)
+        copy_expr = _c_copy_expr(f.field_type, f"r.{f_ident}", gen)
+        if copy_expr != f"r.{f_ident}":
+            lines.append(f"    res.{f_ident} = {copy_expr};")
+    lines.append("    return res;")
+    lines.append("}")
+
     # Record formatting
     lines.append(f"static inline const char* _meme_fmt_{r_ident}({r_ident} r) {{")
     if not r.fields:
-        lines.append(f"    (void)r; return \"{r.name}()\";")
+        lines.append(f'    (void)r; return "{r.name}()";')
     else:
         lines.append("    _MemeSB sb = _meme_sb_new();")
         lines.append(f'    _meme_sb_append(&sb, "{r.name}(");')
@@ -1969,11 +2344,15 @@ def _emit_record(r: RecordDefStmt, gen: _CGen) -> list[str]:
             if idx > 0:
                 lines.append('    _meme_sb_append(&sb, ", ");')
             lines.append(f'    _meme_sb_append(&sb, "{f.name}=");')
-            lines.append(f'    _meme_sb_append(&sb, {fmt_fn}(r.{f_ident}));')
+            lines.append(f"    _meme_sb_append(&sb, {fmt_fn}(r.{f_ident}));")
         lines.append("    _meme_sb_append_char(&sb, ')');")
         lines.append("    return sb.data;")
     lines.append("}")
     return lines
+
+
+def _emit_record(r: RecordDefStmt, gen: _CGen) -> list[str]:
+    return _emit_record_decl(r, gen) + _emit_record_proto(r, gen) + _emit_record_body(r, gen)
 
 
 _C_JSON_PARSER_HELPERS = [
@@ -2499,8 +2878,9 @@ def generate_c(ir: ProgramIR) -> str:
     ]
 
     # Forward typedefs for records so containers can reference them
+    sorted_records = _sort_records_by_deps(records)
     record_fwd_decls: list[str] = []
-    for r in records:
+    for r in sorted_records:
         r_ident = _c_ident(r.name)
         record_fwd_decls.append(f"typedef struct {r_ident} {r_ident};")
     if record_fwd_decls:
@@ -3316,12 +3696,62 @@ def generate_c(ir: ProgramIR) -> str:
         "",
     ]
 
-    # Primitive list types
-    primitive_lists: list[str] = []
+        # Struct declarations in dependency order
+    struct_decls: list[str] = []
     for el_t in list_elem_types:
-        if el_t not in gen.records:
-            primitive_lists.extend(_emit_list_type(el_t, gen))
-            primitive_lists.append("")
+        struct_decls.extend(_emit_list_struct(el_t))
+    struct_decls.append("")
+
+    for el_t in set_elem_types:
+        struct_decls.extend(_emit_set_struct(el_t))
+    struct_decls.append("")
+
+    for k_t, v_t in map_types:
+        if k_t not in gen.records and v_t not in gen.records:
+            struct_decls.extend(_emit_map_struct(k_t, v_t))
+    struct_decls.append("")
+
+    # Non-record optionals (primitives, lists, sets, non-record maps)
+    for inner in opt_types:
+        if inner not in gen.records and not (inner.startswith("Map<") and any(r in inner for r in gen.records)):
+            struct_decls.extend(_emit_opt_struct(inner))
+    struct_decls.append("")
+
+    # Records and record optionals
+    for r in sorted_records:
+        struct_decls.extend(_emit_record_decl(r, gen))
+        if r.name in opt_types:
+            struct_decls.extend(_emit_opt_struct(r.name))
+        struct_decls.append("")
+
+    # Record maps
+    for k_t, v_t in map_types:
+        if k_t in gen.records or v_t in gen.records:
+            struct_decls.extend(_emit_map_struct(k_t, v_t))
+            struct_decls.append("")
+
+    # Any remaining optionals
+    emitted_opts = {inner for inner in opt_types if inner not in gen.records and not (inner.startswith("Map<") and any(r in inner for r in gen.records))}
+    emitted_opts.update(r.name for r in sorted_records if r.name in opt_types)
+    for inner in opt_types:
+        if inner not in emitted_opts:
+            struct_decls.extend(_emit_opt_struct(inner))
+            struct_decls.append("")
+
+    # Prototypes for all container & record helpers
+    all_protos: list[str] = []
+    for el_t in list_elem_types:
+        all_protos.extend(_emit_list_proto(el_t, gen))
+    for el_t in set_elem_types:
+        all_protos.extend(_emit_set_proto(el_t, gen))
+    for k_t, v_t in map_types:
+        all_protos.extend(_emit_map_proto(k_t, v_t, gen))
+    for inner in opt_types:
+        all_protos.extend(_emit_opt_proto(inner, gen))
+    for r in sorted_records:
+        all_protos.extend(_emit_record_proto(r, gen))
+    if all_protos:
+        all_protos.append("")
 
     # Specialized JSON readers for primitive element types
     json_readers = [
@@ -3429,60 +3859,23 @@ def generate_c(ir: ProgramIR) -> str:
         "",
     ]
 
-    # Primitive maps
-    primitive_maps: list[str] = []
-    for k_t, v_t in map_types:
-        if v_t not in gen.records:
-            primitive_maps.extend(_emit_map_type(k_t, v_t, gen))
-            primitive_maps.append("")
-
-    # Primitive optionals
-    primitive_opts: list[str] = []
-    for inner in opt_types:
-        if inner not in gen.records and not inner.startswith("List<"):
-            primitive_opts.extend(_emit_opt_type(inner, gen))
-            primitive_opts.append("")
-
-    # Record definitions, eq, and formatters
-    record_blocks: list[str] = []
-    for r in records:
-        record_blocks.extend(_emit_record(r, gen))
-        record_blocks.append("")
-
-    # Record lists
-    record_lists: list[str] = []
+    # Helper function bodies
+    helper_bodies: list[str] = []
     for el_t in list_elem_types:
-        if el_t in gen.records:
-            record_lists.extend(_emit_list_type(el_t, gen))
-            record_lists.append("")
-
-    # Record maps
-    record_maps: list[str] = []
+        helper_bodies.extend(_emit_list_body(el_t, gen))
+        helper_bodies.append("")
+    for el_t in set_elem_types:
+        helper_bodies.extend(_emit_set_body(el_t, gen))
+        helper_bodies.append("")
     for k_t, v_t in map_types:
-        if v_t in gen.records:
-            record_maps.extend(_emit_map_type(k_t, v_t, gen))
-            record_maps.append("")
-
-    # Record sets (element is a record — needs the record struct + eq)
-    record_sets: list[str] = []
-    for el_t in set_elem_types:
-        if el_t in gen.records or el_t.startswith("List<"):
-            record_sets.extend(_emit_set_type(el_t, gen))
-            record_sets.append("")
-
-    # Primitive sets
-    primitive_sets: list[str] = []
-    for el_t in set_elem_types:
-        if el_t not in gen.records and not el_t.startswith("List<"):
-            primitive_sets.extend(_emit_set_type(el_t, gen))
-            primitive_sets.append("")
-
-    # Record optionals
-    record_opts: list[str] = []
+        helper_bodies.extend(_emit_map_body(k_t, v_t, gen))
+        helper_bodies.append("")
     for inner in opt_types:
-        if inner in gen.records or inner.startswith("List<"):
-            record_opts.extend(_emit_opt_type(inner, gen))
-            record_opts.append("")
+        helper_bodies.extend(_emit_opt_body(inner, gen))
+        helper_bodies.append("")
+    for r in sorted_records:
+        helper_bodies.extend(_emit_record_body(r, gen))
+        helper_bodies.append("")
 
     # Function declarations and definitions
     fn_fwd_decls: list[str] = []
@@ -3785,19 +4178,13 @@ def generate_c(ir: ProgramIR) -> str:
         + argv_helpers
         + random_helpers
         + json_helpers
-        + primitive_lists
-        + primitive_sets
+        + struct_decls
+        + all_protos
         + json_readers
         + str_container_helpers
         + file_container_helpers
-        + primitive_maps
-        + primitive_opts
         + env_helpers
-        + record_blocks
-        + record_lists
-        + record_maps
-        + record_sets
-        + record_opts
+        + helper_bodies
         + record_readers
         + record_writers
         + opt_file_helpers

@@ -596,6 +596,10 @@ record User:
     is_active: Bool
 ```
 
+Records can contain scalar fields (`Int`, `Float`, `Bool`, `String`), collection fields (`List<T>`, `Map<K, V>`, `Set<T>`), and `Optional<T>` fields. Records may also be recursively structured through collections or options (such as a tree node: `record Node: val: Int, children: List<Node>`).
+
+> **Empty collections as general expressions:** `empty List<T>`, `empty Set<T>` (or `empty set of <T>`), and `empty Map<K, V>` are general expressions. They parse and evaluate anywhere an expression is expected — including inside record literal field initializers (`Node(value=1, children=empty List<Node>)`), function call arguments (`foo(empty Map<Int, String>)`), list literals (`[empty List<Int>]`), return statements, and comparison expressions.
+
 Construct a record using `RecordName(field1=val1, field2=val2)`:
 
 ```meme
@@ -882,8 +886,8 @@ print dist
 ```
 
 ### Static Rules & Parity Semantics
-- **Surface Syntax:** `use <module>` must be a top-level statement. The `<module>` specifier is a bare identifier (no quotes, no path separators `/`, and no `.meme` extension). The compiler resolves `<module>.meme`.
-- **Relative Resolution:** Modules are resolved relative to the importing file's directory **only**. Missing module files produce a static verifier error explicitly naming the expected path.
+- **Surface Syntax:** `use <module>` must be a top-level statement. The `<module>` specifier can be a bare identifier (e.g. `use math_ops`) or a parent-relative path like `use ../common_lib` or `use ../../shared/math_ops` (one or more leading `../`). No quotes or `.meme` extension. The compiler resolves `<module>.meme`.
+- **Relative Resolution:** Modules are resolved: (1) in the directory containing the importing file, and (2) if not found and the specifier starts with `../`, relative to the parent directory recursively for each `../` prefix. Missing module files produce a static verifier error explicitly naming the expected path.
 - **Importable Items:** Only top-level function declarations (`function ...`) and record definitions (`record ...`) (plus nested `use` statements) are permitted inside modules. Modules cannot contain top-level executable statements (`print`, loops, assignments); attempting to do so triggers a static verifier error.
 - **Flat Namespace & Hard Collisions:** All imported functions and records enter the importing file's flat namespace. If an imported symbol name collides with another imported symbol, a local definition, or a local variable, the static verifier halts with a clear collision error (no silent shadowing).
 - **No Re-export:** Imports are strictly non-transitive. If module `B` imports module `A`, another file `C` that imports `B` does not gain access to `A`'s symbols; `C` must write `use A` itself to use `A` directly.
@@ -1163,12 +1167,13 @@ Each construct is labeled **offline** (supported by the zero-dependency `heurist
 
 | I want to... | Write | Voice |
 |---|---|---|
-| Import module | `use <module>` *(bare identifier, top-level only)* | **offline** |
+| Import module | `use <module>` / `use ../<module>` *(bare identifier or parent-relative `../` path, top-level only)* | **offline** |
 | Interactive header | `this runs in the shell` | **LLM-voice only** |
 | Declare a variable | `define x as <expr>` / `define x: <Type> as <expr>` | **offline** |
 | Reassign a variable | `set x to <expr>` *(always `set ... to`, never `set ... as`)* | **offline** |
 | Compound assignment (`Int`/`Float`) | `add <expr> to x` / `subtract <expr> from x` / `multiply x by <expr>` / `divide x by <expr>` | **offline** |
 | Declare an empty list | `define list out as empty List<Int>` (**offline**) / `define out as empty` (**LLM-voice only**) | **offline** / **LLM-voice only** |
+| Empty collection expressions | `empty List<T>` / `empty Set<T>` / `empty set of <T>` / `empty Map<K, V>` *(general expressions; valid anywhere an expression is expected, including record initializers, call arguments, list literals)* | **offline** |
 | Read input | `define x: <Type> as read <Int\|Float\|Bool\|String> with prompt "Prompt? "` (**offline**) / `define x from user "Prompt? "` (**LLM-voice only**) | **offline** / **LLM-voice only** |
 | Print | `print x` / `print "a, ", b` | **offline** |
 | Branch | `if <cond>[:]` / `else if <cond>[:]` / `else[:]` (indentation) | **offline** |

@@ -1013,6 +1013,12 @@ class _TSGen:
             fn_scope[p.name] = p.param_type
 
         lines = [f"function {fn_name}({params_str}): {ret_t} {{"]
+        for p in fn.params:
+            p_id = _ts_ident(p.name)
+            if p.param_type.startswith("List<") or p.param_type.startswith("Set<"):
+                lines.append(f"    {p_id} = {p_id}.slice();")
+            elif p.param_type.startswith("Map<"):
+                lines.append(f"    {p_id} = new Map({p_id});")
         for ch in fn.body:
             lines.extend(self.gen_stmt(ch, fn_scope, indent=1))
         if fn.return_type != "Void" and not (fn.body and isinstance(fn.body[-1], ReturnStmt)):

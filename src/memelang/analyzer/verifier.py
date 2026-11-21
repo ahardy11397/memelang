@@ -1989,15 +1989,21 @@ class _StaticChecker:
                     "Nested record definitions inside functions are not supported",
                     stmt_idx,
                 )
-            if stmt.name in self.records:
+            if stmt.name in self.records and self.records[stmt.name]:
                 raise StaticVerificationError(
                     f"Duplicate record definition `{stmt.name}`", stmt_idx
                 )
+            self.records[stmt.name] = {}
             fields: dict[str, MemeType] = {}
             for f in stmt.fields:
                 if f.field_type == "Void":
                     raise StaticVerificationError(
                         f"Record field `{f.name}` cannot have type Void", stmt_idx
+                    )
+                if f.field_type == stmt.name:
+                    raise StaticVerificationError(
+                        f"Record `{stmt.name}` cannot contain itself directly by value (use List<{stmt.name}> or Optional<{stmt.name}>)",
+                        stmt_idx,
                     )
                 self._validate_type(f.field_type, stmt_idx, allow_void=False)
                 if f.name in fields:
@@ -2624,7 +2630,13 @@ def _resolve_and_verify_modules(
 
         target_path = importing_dir / f"{mod_name}.meme"
         if not target_path.is_file():
-            raise StaticVerificationError(f"Module file not found: {target_path}")
+            cand = (importing_dir / f"{mod_name}.meme").resolve()
+            if cand.is_file():
+                target_path = cand
+            else:
+                raise StaticVerificationError(f"Module file not found: {target_path}")
+        else:
+            target_path = target_path.resolve()
 
         text = target_path.read_text(encoding="utf-8")
         normalized = text.replace("\r\n", "\n").replace("\r", "\n").rstrip("\n")
@@ -2632,7 +2644,11 @@ def _resolve_and_verify_modules(
         try:
             rel_path = target_path.relative_to(root_dir).as_posix()
         except ValueError:
-            rel_path = target_path.as_posix()
+            try:
+                rel_path = target_path.relative_to(Path.cwd().resolve()).as_posix()
+            except ValueError:
+                import os
+                rel_path = os.path.relpath(target_path, root_dir).replace("\\", "/")
 
         from memelang.llm.heuristic import HeuristicProvider
 
@@ -2725,6 +2741,10 @@ def _resolve_and_verify_modules(
 
         # Check records
         for r in m.records:
+            if r.name in mod_checker.records and mod_checker.records[r.name]:
+                raise StaticVerificationError(f"Duplicate record definition `{r.name}`", None)
+            mod_checker.records[r.name] = {}
+        for r in m.records:
             mod_checker.check_stmt(r, _Scope(), stmt_idx=None, is_top_level=True)
             m.record_defs[r.name] = mod_checker.records[r.name]
 
@@ -2767,7 +2787,7 @@ def verify_program(program: ProgramIR, source_path: Path | str | None = None) ->
         root_path = Path(source_path).resolve() if source_path else Path.cwd().resolve()
         root_dir = root_path.parent if (root_path.is_file() or root_path.suffix == ".meme") else root_path
         first_mod = next(s.module for s in program.statements if isinstance(s, ImportStmt))
-        first_mod_path = root_dir / f"{first_mod}.meme"
+        first_mod_path = (root_dir / f"{first_mod}.meme").resolve()
 
         if source_path is not None or first_mod_path.is_file() or not program.imported_definitions:
             imported_defs, mod_files, imp_funcs, imp_recs = _resolve_and_verify_modules(
@@ -2791,6 +2811,13 @@ def verify_program(program: ProgramIR, source_path: Path | str | None = None) ->
                 checker.functions[d.name] = ([p.param_type for p in d.params], d.return_type)
 
     # Pass 1: register all records
+    for idx, stmt in enumerate(program.statements, start=1):
+        if isinstance(stmt, RecordDefStmt):
+            if stmt.name in checker.records and checker.records[stmt.name]:
+                raise StaticVerificationError(
+                    f"Duplicate record definition `{stmt.name}`", idx
+                )
+            checker.records[stmt.name] = {}
     for idx, stmt in enumerate(program.statements, start=1):
         if isinstance(stmt, RecordDefStmt):
             checker.check_stmt(stmt, root_scope, stmt_idx=idx, is_top_level=True)

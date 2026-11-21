@@ -140,9 +140,16 @@ class LockfileManager:
         source_path = self._resolve_source_path(source_key)
         source_dir = source_path.parent if (source_path.is_file() or source_path.suffix == ".meme") else source_path
         for rel_path, expected_hash in mod_files.items():
-            mod_path = source_dir / rel_path
+            mod_path = (source_dir / rel_path).resolve()
             if not mod_path.is_file():
-                return False
+                cand_cwd = (Path.cwd() / rel_path).resolve()
+                cand_lock = (self.lockfile_path.parent / rel_path).resolve()
+                if cand_cwd.is_file():
+                    mod_path = cand_cwd
+                elif cand_lock.is_file():
+                    mod_path = cand_lock
+                else:
+                    return False
             try:
                 mod_text = mod_path.read_text(encoding="utf-8")
                 if self.compute_source_hash(mod_text) != expected_hash:

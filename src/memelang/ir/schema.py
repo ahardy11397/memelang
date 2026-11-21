@@ -801,8 +801,9 @@ class ImportStmt(IRNode):
 
     @model_validator(mode="after")
     def _validate_module(self) -> ImportStmt:
-        if not self.module.isidentifier() or not self.module.isascii():
-            raise ValueError(f"Module name must be a bare identifier, got {self.module!r}")
+        import re
+        if not re.fullmatch(r"(?:\.\./)*[A-Za-z_]\w*", self.module):
+            raise ValueError(f"Module name must be a bare identifier or parent-relative path like '../foo', got {self.module!r}")
         return self
 
 

@@ -833,6 +833,14 @@ class _PyGen:
             for p in stmt.params:
                 fn_scope[p.name] = p.param_type
             lines = [f"{pad}def {_py_ident(stmt.name)}({params}):"]
+            for p in stmt.params:
+                p_id = _py_ident(p.name)
+                if p.param_type.startswith("List<"):
+                    lines.append(f"{pad}    {p_id} = _meme_builtins.list({p_id})")
+                elif p.param_type.startswith("Set<"):
+                    lines.append(f"{pad}    {p_id} = _meme_builtins.set({p_id})")
+                elif p.param_type.startswith("Map<"):
+                    lines.append(f"{pad}    {p_id} = _meme_builtins.dict({p_id})")
             if stmt.body:
                 for ch in stmt.body:
                     lines.extend(self.gen_stmt(ch, fn_scope, indent + 1))

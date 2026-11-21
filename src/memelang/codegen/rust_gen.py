@@ -382,7 +382,7 @@ class _RustGen:
         if isinstance(expr, VarRefExpr):
             ident = _rust_ident(expr.name)
             t = scope.get(expr.name, "Int")
-            if t == "String" or t.startswith("List<") or t.startswith("Map<") or t.startswith("Optional<") or t in self.records:
+            if t == "String" or t.startswith("List<") or t.startswith("Map<") or t.startswith("Set<") or t.startswith("Optional<") or t in self.records:
                 return f"{ident}.clone()"
             return ident
 
@@ -1589,6 +1589,32 @@ def generate_rust(ir: ProgramIR) -> str:
         "    fn meme_fmt(&self) -> String {",
         "        let parts: Vec<String> = self.data.iter().map(|x| x.meme_fmt()).collect();",
         "        format!(\"{{{}}}\", parts.join(\", \"))",
+        "    }",
+        "}",
+        "impl<T: _MemeOrd> _MemeOrd for _MemeSet<T> {",
+        "    fn meme_cmp(&self, other: &Self) -> std::cmp::Ordering {",
+        "        for (a, b) in self.data.iter().zip(other.data.iter()) {",
+        "            let ord = a.meme_cmp(b);",
+        "            if ord != std::cmp::Ordering::Equal { return ord; }",
+        "        }",
+        "        self.data.len().cmp(&other.data.len())",
+        "    }",
+        "}",
+        "impl<K: _MemeOrd + Clone + std::cmp::Eq + std::hash::Hash, V: _MemeOrd> _MemeOrd for std::collections::HashMap<K, V> {",
+        "    fn meme_cmp(&self, other: &Self) -> std::cmp::Ordering {",
+        "        let mut keys_a: Vec<&K> = self.keys().collect();",
+        "        keys_a.sort_by(|a, b| a.meme_cmp(b));",
+        "        let mut keys_b: Vec<&K> = other.keys().collect();",
+        "        keys_b.sort_by(|a, b| a.meme_cmp(b));",
+        "        for (ka, kb) in keys_a.iter().zip(keys_b.iter()) {",
+        "            let k_ord = ka.meme_cmp(kb);",
+        "            if k_ord != std::cmp::Ordering::Equal { return k_ord; }",
+        "            let va = &self[*ka];",
+        "            let vb = &other[*kb];",
+        "            let v_ord = va.meme_cmp(vb);",
+        "            if v_ord != std::cmp::Ordering::Equal { return v_ord; }",
+        "        }",
+        "        self.len().cmp(&other.len())",
         "    }",
         "}",
         "",

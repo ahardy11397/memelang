@@ -110,7 +110,7 @@ uv run meme build tutorial.meme -o app_bin
 
 Memelang includes built-in test blocks and assertions so you can verify your logic and data serialization:
 
-Create `simple_math_test.meme` alongside `simple_math.meme`:
+Create `simple_math_test.meme` alongside `simple_math.meme` (or in a subdirectory like `tests/test_math.meme` using `use ../simple_math`):
 
 ```meme
 # simple_math_test.meme

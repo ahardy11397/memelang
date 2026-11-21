@@ -1,0 +1,58 @@
+# Tree structure demonstrating records with collections and options.
+record TreeNode:
+    name: String
+    weight: Int
+    tags: Set<String>
+    metadata: Map<String, Int>
+    children: List<TreeNode>
+    parent_name: Optional<String>
+
+function count_subtree(node: TreeNode) -> Int:
+    define count: Int as 1
+    for each child in node.children:
+        set count to count + count_subtree(child)
+    return count
+
+function total_weight(node: TreeNode) -> Int:
+    define total: Int as node.weight
+    for each child in node.children:
+        set total to total + total_weight(child)
+    return total
+
+define empty_nodes: List<TreeNode> as empty List<TreeNode>
+
+define leaf_a_tags: Set<String> as empty set of String
+add "ui" to leaf_a_tags
+add "frontend" to leaf_a_tags
+
+define leaf_a_meta: Map<String, Int> as {"depth": 2, "priority": 1}
+define leaf_a: TreeNode as TreeNode(name="Button", weight=10, tags=leaf_a_tags, metadata=leaf_a_meta, children=empty_nodes, parent_name=optional "Panel")
+
+define leaf_b_tags: Set<String> as empty set of String
+add "ui" to leaf_b_tags
+add "text" to leaf_b_tags
+
+define leaf_b_meta: Map<String, Int> as {"depth": 2, "priority": 2}
+define leaf_b: TreeNode as TreeNode(name="Label", weight=5, tags=leaf_b_tags, metadata=leaf_b_meta, children=empty_nodes, parent_name=optional "Panel")
+
+define panel_tags: Set<String> as empty set of String
+add "container" to panel_tags
+add "layout" to panel_tags
+
+define panel_meta: Map<String, Int> as {"depth": 1}
+define panel: TreeNode as TreeNode(name="Panel", weight=20, tags=panel_tags, metadata=panel_meta, children=[leaf_a, leaf_b], parent_name=optional "Window")
+
+define root_tags: Set<String> as empty set of String
+add "window" to root_tags
+add "root" to root_tags
+
+define root_meta: Map<String, Int> as {"depth": 0}
+define root: TreeNode as TreeNode(name="Window", weight=50, tags=root_tags, metadata=root_meta, children=[panel], parent_name=nothing)
+
+print "Subtree count:", count_subtree(root)
+print "Total weight:", total_weight(root)
+print "Root has parent:", root.parent_name is not nothing
+print "Panel parent:", value of panel.parent_name or else "none"
+print "Panel children count:", length of panel.children
+print "Button priority:", leaf_a.metadata["priority"]
+print "Button has ui tag:", leaf_a.tags contains "ui"

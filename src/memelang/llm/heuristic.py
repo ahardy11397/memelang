@@ -534,6 +534,36 @@ class _ExprParser:
                 break
         return node
 
+    def parse_type(self) -> str:
+        ident_tok = self.consume("IDENT")
+        base = ident_tok.val
+        if base.lower() == "list":
+            base = "List"
+        elif base.lower() == "map":
+            base = "Map"
+        elif base.lower() == "set":
+            base = "Set"
+        elif base.lower() == "optional":
+            base = "Optional"
+        elif base.lower() == "int":
+            base = "Int"
+        elif base.lower() == "float":
+            base = "Float"
+        elif base.lower() == "string":
+            base = "String"
+        elif base.lower() == "bool":
+            base = "Bool"
+
+        if (nxt := self.peek()) and nxt.kind == "OP" and nxt.val == "<":
+            self.consume("OP", "<")
+            args = [self.parse_type()]
+            while (nxt := self.peek()) and nxt.kind == "OP" and nxt.val == ",":
+                self.consume("OP", ",")
+                args.append(self.parse_type())
+            self.consume("OP", ">")
+            return f"{base}<{', '.join(args)}>"
+        return base
+
     def parse_primary(self) -> IRExpr:
         t = self.peek()
         if t is None:
@@ -612,6 +642,55 @@ class _ExprParser:
             return MapLiteralExpr(key_type=k_guessed, value_type=v_guessed, entries=entries)
 
         if t.kind == "IDENT":
+            if (
+                t.val.lower() == "empty"
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+            ):
+                nxt1 = self.tokens[self.pos + 1]
+                # Check for `empty set of <Type>`
+                if (
+                    nxt1.val.lower() == "set"
+                    and self.pos + 2 < len(self.tokens)
+                    and self.tokens[self.pos + 2].kind == "IDENT"
+                    and self.tokens[self.pos + 2].val.lower() == "of"
+                ):
+                    self.consume("IDENT", "empty")
+                    self.consume("IDENT")  # "set"
+                    self.consume("IDENT")  # "of"
+                    el_t = _normalize_type(self.parse_type())
+                    if not _is_valid_type(el_t, self.records):
+                        raise LLMProviderError(f"Unknown set element type {el_t!r}")
+                    return EmptySetExpr(element_type=cast(MemeType, el_t))
+
+                # Check for `empty List<T>`, `empty Map<K, V>`, `empty Set<T>`
+                if (
+                    nxt1.val.lower() in ("list", "map", "set")
+                    and self.pos + 2 < len(self.tokens)
+                    and self.tokens[self.pos + 2].kind == "OP"
+                    and self.tokens[self.pos + 2].val == "<"
+                ):
+                    self.consume("IDENT", "empty")
+                    t_str = self.parse_type()
+                    if t_str.startswith("List<") and t_str.endswith(">"):
+                        el_t = _normalize_type(t_str[5:-1])
+                        if not _is_valid_type(el_t, self.records):
+                            raise LLMProviderError(f"Unknown list element type {el_t!r}")
+                        return ListLiteralExpr(elements=[], element_type=cast(MemeType, el_t))
+                    elif t_str.startswith("Map<") and t_str.endswith(">"):
+                        norm_m = _normalize_type(t_str)
+                        mt = _map_types_of(norm_m)
+                        if mt is None or not _is_valid_type(mt[0], self.records) or not _is_valid_type(mt[1], self.records):
+                            raise LLMProviderError(f"Invalid map type {t_str!r}")
+                        return MapLiteralExpr(key_type=mt[0], value_type=mt[1], entries=[])
+                    elif t_str.startswith("Set<") and t_str.endswith(">"):
+                        el_t = _normalize_type(t_str[4:-1])
+                        if not _is_valid_type(el_t, self.records):
+                            raise LLMProviderError(f"Unknown set element type {el_t!r}")
+                        return EmptySetExpr(element_type=cast(MemeType, el_t))
+                    else:
+                        raise LLMProviderError(f"Unexpected empty collection type: {t_str!r}")
+
             if t.val == "nothing" and t.val not in self.symbols:
                 self.consume()
                 return OptionalNoneExpr()
@@ -2632,7 +2711,7 @@ class HeuristicProvider:
             return CallStmt(func_name=fn_name, args=args, source_line=line.lineno)
 
         # `use <module>`
-        m_use = re.fullmatch(r"use\s+([A-Za-z_]\w*)", text, flags=re.IGNORECASE)
+        m_use = re.fullmatch(r"use\s+((?:\.\./)*[A-Za-z_]\w*)", text, flags=re.IGNORECASE)
         if m_use:
             mod_name = m_use.group(1)
             self._load_module_symbols(mod_name)
@@ -2641,7 +2720,7 @@ class HeuristicProvider:
         if m_use_invalid:
             raw_mod = m_use_invalid.group(1).strip()
             raise LLMProviderError(
-                f"Invalid module name {raw_mod!r} at line {line.lineno}: module name must be a bare identifier (no quotes, paths, or dots)"
+                f"Invalid module name {raw_mod!r} at line {line.lineno}: module name must be a bare identifier or parent-relative path like '../foo'"
             )
 
         # Freeform `<name> = <expr>`
@@ -2666,7 +2745,9 @@ class HeuristicProvider:
         source_dir = getattr(self, "_source_dir", Path.cwd())
         mod_file = source_dir / f"{mod_name}.meme"
         if not mod_file.is_file():
-            return
+            mod_file = (source_dir / f"{mod_name}.meme").resolve()
+            if not mod_file.is_file():
+                return
         try:
             content = mod_file.read_text(encoding="utf-8")
         except OSError:

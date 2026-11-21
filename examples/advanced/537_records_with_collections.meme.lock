@@ -1,0 +1,1731 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/537_records_with_collections.meme": {
+      "source_sha256": "84d57e836f387ce3d5aa52c99b2f214d485d98b470858b7fe40b71a40a86ccad",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "TreeNode",
+          "fields": [
+            {
+              "name": "name",
+              "field_type": "String"
+            },
+            {
+              "name": "weight",
+              "field_type": "Int"
+            },
+            {
+              "name": "tags",
+              "field_type": "Set<String>"
+            },
+            {
+              "name": "metadata",
+              "field_type": "Map<String, Int>"
+            },
+            {
+              "name": "children",
+              "field_type": "List<TreeNode>"
+            },
+            {
+              "name": "parent_name",
+              "field_type": "Optional<String>"
+            }
+          ],
+          "source_line": 2
+        },
+        {
+          "op": "func_def",
+          "name": "count_subtree",
+          "params": [
+            {
+              "name": "node",
+              "param_type": "TreeNode"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "count",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "source_line": 11
+            },
+            {
+              "op": "for_each",
+              "item_var": "child",
+              "index_var": null,
+              "collection": "node.children",
+              "collection_expr": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "node"
+                },
+                "field_name": "children"
+              },
+              "body": [
+                {
+                  "op": "assign",
+                  "name": "count",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "count"
+                    },
+                    "right": {
+                      "expr_type": "call",
+                      "func_name": "count_subtree",
+                      "args": [
+                        {
+                          "expr_type": "var_ref",
+                          "name": "child"
+                        }
+                      ]
+                    }
+                  },
+                  "source_line": 13
+                }
+              ],
+              "source_line": 12
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "count"
+              },
+              "source_line": 14
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "func_def",
+          "name": "total_weight",
+          "params": [
+            {
+              "name": "node",
+              "param_type": "TreeNode"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "total",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "node"
+                },
+                "field_name": "weight"
+              },
+              "source_line": 17
+            },
+            {
+              "op": "for_each",
+              "item_var": "child",
+              "index_var": null,
+              "collection": "node.children",
+              "collection_expr": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "node"
+                },
+                "field_name": "children"
+              },
+              "body": [
+                {
+                  "op": "assign",
+                  "name": "total",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "total"
+                    },
+                    "right": {
+                      "expr_type": "call",
+                      "func_name": "total_weight",
+                      "args": [
+                        {
+                          "expr_type": "var_ref",
+                          "name": "child"
+                        }
+                      ]
+                    }
+                  },
+                  "source_line": 19
+                }
+              ],
+              "source_line": 18
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "total"
+              },
+              "source_line": 20
+            }
+          ],
+          "source_line": 16
+        },
+        {
+          "op": "var_decl",
+          "name": "empty_nodes",
+          "var_type": "List<TreeNode>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "TreeNode"
+          },
+          "source_line": 22
+        },
+        {
+          "op": "var_decl",
+          "name": "leaf_a_tags",
+          "var_type": "Set<String>",
+          "value": {
+            "expr_type": "empty_set",
+            "element_type": "String"
+          },
+          "source_line": 24
+        },
+        {
+          "op": "set_add",
+          "target": "leaf_a_tags",
+          "value": {
+            "expr_type": "literal",
+            "value": "ui",
+            "data_type": "String"
+          },
+          "source_line": 25
+        },
+        {
+          "op": "set_add",
+          "target": "leaf_a_tags",
+          "value": {
+            "expr_type": "literal",
+            "value": "frontend",
+            "data_type": "String"
+          },
+          "source_line": 26
+        },
+        {
+          "op": "var_decl",
+          "name": "leaf_a_meta",
+          "var_type": "Map<String, Int>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "Int",
+            "entries": [
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "depth",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "priority",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 28
+        },
+        {
+          "op": "var_decl",
+          "name": "leaf_a",
+          "var_type": "TreeNode",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "TreeNode",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Button",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "weight",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 10,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "tags",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "leaf_a_tags"
+                }
+              },
+              {
+                "name": "metadata",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "leaf_a_meta"
+                }
+              },
+              {
+                "name": "children",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "empty_nodes"
+                }
+              },
+              {
+                "name": "parent_name",
+                "value": {
+                  "expr_type": "optional_wrap",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Panel",
+                    "data_type": "String"
+                  }
+                }
+              }
+            ]
+          },
+          "source_line": 29
+        },
+        {
+          "op": "var_decl",
+          "name": "leaf_b_tags",
+          "var_type": "Set<String>",
+          "value": {
+            "expr_type": "empty_set",
+            "element_type": "String"
+          },
+          "source_line": 31
+        },
+        {
+          "op": "set_add",
+          "target": "leaf_b_tags",
+          "value": {
+            "expr_type": "literal",
+            "value": "ui",
+            "data_type": "String"
+          },
+          "source_line": 32
+        },
+        {
+          "op": "set_add",
+          "target": "leaf_b_tags",
+          "value": {
+            "expr_type": "literal",
+            "value": "text",
+            "data_type": "String"
+          },
+          "source_line": 33
+        },
+        {
+          "op": "var_decl",
+          "name": "leaf_b_meta",
+          "var_type": "Map<String, Int>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "Int",
+            "entries": [
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "depth",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "priority",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 35
+        },
+        {
+          "op": "var_decl",
+          "name": "leaf_b",
+          "var_type": "TreeNode",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "TreeNode",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Label",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "weight",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 5,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "tags",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "leaf_b_tags"
+                }
+              },
+              {
+                "name": "metadata",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "leaf_b_meta"
+                }
+              },
+              {
+                "name": "children",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "empty_nodes"
+                }
+              },
+              {
+                "name": "parent_name",
+                "value": {
+                  "expr_type": "optional_wrap",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Panel",
+                    "data_type": "String"
+                  }
+                }
+              }
+            ]
+          },
+          "source_line": 36
+        },
+        {
+          "op": "var_decl",
+          "name": "panel_tags",
+          "var_type": "Set<String>",
+          "value": {
+            "expr_type": "empty_set",
+            "element_type": "String"
+          },
+          "source_line": 38
+        },
+        {
+          "op": "set_add",
+          "target": "panel_tags",
+          "value": {
+            "expr_type": "literal",
+            "value": "container",
+            "data_type": "String"
+          },
+          "source_line": 39
+        },
+        {
+          "op": "set_add",
+          "target": "panel_tags",
+          "value": {
+            "expr_type": "literal",
+            "value": "layout",
+            "data_type": "String"
+          },
+          "source_line": 40
+        },
+        {
+          "op": "var_decl",
+          "name": "panel_meta",
+          "var_type": "Map<String, Int>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "Int",
+            "entries": [
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "depth",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 42
+        },
+        {
+          "op": "var_decl",
+          "name": "panel",
+          "var_type": "TreeNode",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "TreeNode",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Panel",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "weight",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 20,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "tags",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "panel_tags"
+                }
+              },
+              {
+                "name": "metadata",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "panel_meta"
+                }
+              },
+              {
+                "name": "children",
+                "value": {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "leaf_a"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "leaf_b"
+                    }
+                  ],
+                  "element_type": "TreeNode"
+                }
+              },
+              {
+                "name": "parent_name",
+                "value": {
+                  "expr_type": "optional_wrap",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Window",
+                    "data_type": "String"
+                  }
+                }
+              }
+            ]
+          },
+          "source_line": 43
+        },
+        {
+          "op": "var_decl",
+          "name": "root_tags",
+          "var_type": "Set<String>",
+          "value": {
+            "expr_type": "empty_set",
+            "element_type": "String"
+          },
+          "source_line": 45
+        },
+        {
+          "op": "set_add",
+          "target": "root_tags",
+          "value": {
+            "expr_type": "literal",
+            "value": "window",
+            "data_type": "String"
+          },
+          "source_line": 46
+        },
+        {
+          "op": "set_add",
+          "target": "root_tags",
+          "value": {
+            "expr_type": "literal",
+            "value": "root",
+            "data_type": "String"
+          },
+          "source_line": 47
+        },
+        {
+          "op": "var_decl",
+          "name": "root_meta",
+          "var_type": "Map<String, Int>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "Int",
+            "entries": [
+              {
+                "key": {
+                  "expr_type": "literal",
+                  "value": "depth",
+                  "data_type": "String"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 49
+        },
+        {
+          "op": "var_decl",
+          "name": "root",
+          "var_type": "TreeNode",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "TreeNode",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Window",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "weight",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 50,
+                  "data_type": "Int"
+                }
+              },
+              {
+                "name": "tags",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "root_tags"
+                }
+              },
+              {
+                "name": "metadata",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "root_meta"
+                }
+              },
+              {
+                "name": "children",
+                "value": {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "panel"
+                    }
+                  ],
+                  "element_type": "TreeNode"
+                }
+              },
+              {
+                "name": "parent_name",
+                "value": {
+                  "expr_type": "optional_none"
+                }
+              }
+            ]
+          },
+          "source_line": 50
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Subtree count:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "count_subtree",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "root"
+                }
+              ]
+            }
+          ],
+          "source_line": 52
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Total weight:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "total_weight",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "root"
+                }
+              ]
+            }
+          ],
+          "source_line": 53
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Root has parent:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "root"
+                },
+                "field_name": "parent_name"
+              },
+              "negated": true
+            }
+          ],
+          "source_line": 54
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Panel parent:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "optional_unwrap_or_default",
+              "target": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "panel"
+                },
+                "field_name": "parent_name"
+              },
+              "default_val": {
+                "expr_type": "literal",
+                "value": "none",
+                "data_type": "String"
+              }
+            }
+          ],
+          "source_line": 55
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Panel children count:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "panel"
+                },
+                "field_name": "children"
+              }
+            }
+          ],
+          "source_line": 56
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Button priority:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "map_get",
+              "target": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "leaf_a"
+                },
+                "field_name": "metadata"
+              },
+              "key": {
+                "expr_type": "literal",
+                "value": "priority",
+                "data_type": "String"
+              },
+              "default_val": null
+            }
+          ],
+          "source_line": 57
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Button has ui tag:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "set_contains",
+              "target": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "leaf_a"
+                },
+                "field_name": "tags"
+              },
+              "value": {
+                "expr_type": "literal",
+                "value": "ui",
+                "data_type": "String"
+              }
+            }
+          ],
+          "source_line": 58
+        }
+      ],
+      "canonical_meme": "record TreeNode:\n    name: String\n    weight: Int\n    tags: Set<String>\n    metadata: Map<String, Int>\n    children: List<TreeNode>\n    parent_name: Optional<String>\nfunction count_subtree(node: TreeNode) -> Int:\n    define count: Int as 1\n    for each child in node.children:\n        set count to count + count_subtree(child)\n    return count\nfunction total_weight(node: TreeNode) -> Int:\n    define total: Int as node.weight\n    for each child in node.children:\n        set total to total + total_weight(child)\n    return total\ndefine list empty_nodes as empty List<TreeNode>\ndefine leaf_a_tags as empty set of String\nadd \"ui\" to set leaf_a_tags\nadd \"frontend\" to set leaf_a_tags\ndefine leaf_a_meta: Map<String, Int> as {\"depth\": 2, \"priority\": 1}\ndefine leaf_a: TreeNode as TreeNode(name=\"Button\", weight=10, tags=leaf_a_tags, metadata=leaf_a_meta, children=empty_nodes, parent_name=optional \"Panel\")\ndefine leaf_b_tags as empty set of String\nadd \"ui\" to set leaf_b_tags\nadd \"text\" to set leaf_b_tags\ndefine leaf_b_meta: Map<String, Int> as {\"depth\": 2, \"priority\": 2}\ndefine leaf_b: TreeNode as TreeNode(name=\"Label\", weight=5, tags=leaf_b_tags, metadata=leaf_b_meta, children=empty_nodes, parent_name=optional \"Panel\")\ndefine panel_tags as empty set of String\nadd \"container\" to set panel_tags\nadd \"layout\" to set panel_tags\ndefine panel_meta: Map<String, Int> as {\"depth\": 1}\ndefine panel: TreeNode as TreeNode(name=\"Panel\", weight=20, tags=panel_tags, metadata=panel_meta, children=[leaf_a, leaf_b], parent_name=optional \"Window\")\ndefine root_tags as empty set of String\nadd \"window\" to set root_tags\nadd \"root\" to set root_tags\ndefine root_meta: Map<String, Int> as {\"depth\": 0}\ndefine root: TreeNode as TreeNode(name=\"Window\", weight=50, tags=root_tags, metadata=root_meta, children=[panel], parent_name=nothing)\nprint \"Subtree count:\", count_subtree(root)\nprint \"Total weight:\", total_weight(root)\nprint \"Root has parent:\", root.parent_name is not nothing\nprint \"Panel parent:\", value of panel.parent_name or else \"none\"\nprint \"Panel children count:\", length of panel.children\nprint \"Button priority:\", leaf_a.metadata[\"priority\"]\nprint \"Button has ui tag:\", leaf_a.tags contains \"ui\"",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "TreeNode",
+            "fields": [
+              {
+                "name": "name",
+                "field_type": "String"
+              },
+              {
+                "name": "weight",
+                "field_type": "Int"
+              },
+              {
+                "name": "tags",
+                "field_type": "Set<String>"
+              },
+              {
+                "name": "metadata",
+                "field_type": "Map<String, Int>"
+              },
+              {
+                "name": "children",
+                "field_type": "List<TreeNode>"
+              },
+              {
+                "name": "parent_name",
+                "field_type": "Optional<String>"
+              }
+            ],
+            "source_line": 2
+          },
+          {
+            "op": "func_def",
+            "name": "count_subtree",
+            "params": [
+              {
+                "name": "node",
+                "param_type": "TreeNode"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "count",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "source_line": 11
+              },
+              {
+                "op": "for_each",
+                "item_var": "child",
+                "index_var": null,
+                "collection": "node.children",
+                "collection_expr": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "node"
+                  },
+                  "field_name": "children"
+                },
+                "body": [
+                  {
+                    "op": "assign",
+                    "name": "count",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "count"
+                      },
+                      "right": {
+                        "expr_type": "call",
+                        "func_name": "count_subtree",
+                        "args": [
+                          {
+                            "expr_type": "var_ref",
+                            "name": "child"
+                          }
+                        ]
+                      }
+                    },
+                    "source_line": 13
+                  }
+                ],
+                "source_line": 12
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "count"
+                },
+                "source_line": 14
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "func_def",
+            "name": "total_weight",
+            "params": [
+              {
+                "name": "node",
+                "param_type": "TreeNode"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "total",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "node"
+                  },
+                  "field_name": "weight"
+                },
+                "source_line": 17
+              },
+              {
+                "op": "for_each",
+                "item_var": "child",
+                "index_var": null,
+                "collection": "node.children",
+                "collection_expr": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "node"
+                  },
+                  "field_name": "children"
+                },
+                "body": [
+                  {
+                    "op": "assign",
+                    "name": "total",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "total"
+                      },
+                      "right": {
+                        "expr_type": "call",
+                        "func_name": "total_weight",
+                        "args": [
+                          {
+                            "expr_type": "var_ref",
+                            "name": "child"
+                          }
+                        ]
+                      }
+                    },
+                    "source_line": 19
+                  }
+                ],
+                "source_line": 18
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "total"
+                },
+                "source_line": 20
+              }
+            ],
+            "source_line": 16
+          },
+          {
+            "op": "var_decl",
+            "name": "empty_nodes",
+            "var_type": "List<TreeNode>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "TreeNode"
+            },
+            "source_line": 22
+          },
+          {
+            "op": "var_decl",
+            "name": "leaf_a_tags",
+            "var_type": "Set<String>",
+            "value": {
+              "expr_type": "empty_set",
+              "element_type": "String"
+            },
+            "source_line": 24
+          },
+          {
+            "op": "set_add",
+            "target": "leaf_a_tags",
+            "value": {
+              "expr_type": "literal",
+              "value": "ui",
+              "data_type": "String"
+            },
+            "source_line": 25
+          },
+          {
+            "op": "set_add",
+            "target": "leaf_a_tags",
+            "value": {
+              "expr_type": "literal",
+              "value": "frontend",
+              "data_type": "String"
+            },
+            "source_line": 26
+          },
+          {
+            "op": "var_decl",
+            "name": "leaf_a_meta",
+            "var_type": "Map<String, Int>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "Int",
+              "entries": [
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "depth",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "priority",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 28
+          },
+          {
+            "op": "var_decl",
+            "name": "leaf_a",
+            "var_type": "TreeNode",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "TreeNode",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Button",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "weight",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "tags",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "leaf_a_tags"
+                  }
+                },
+                {
+                  "name": "metadata",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "leaf_a_meta"
+                  }
+                },
+                {
+                  "name": "children",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "empty_nodes"
+                  }
+                },
+                {
+                  "name": "parent_name",
+                  "value": {
+                    "expr_type": "optional_wrap",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "Panel",
+                      "data_type": "String"
+                    }
+                  }
+                }
+              ]
+            },
+            "source_line": 29
+          },
+          {
+            "op": "var_decl",
+            "name": "leaf_b_tags",
+            "var_type": "Set<String>",
+            "value": {
+              "expr_type": "empty_set",
+              "element_type": "String"
+            },
+            "source_line": 31
+          },
+          {
+            "op": "set_add",
+            "target": "leaf_b_tags",
+            "value": {
+              "expr_type": "literal",
+              "value": "ui",
+              "data_type": "String"
+            },
+            "source_line": 32
+          },
+          {
+            "op": "set_add",
+            "target": "leaf_b_tags",
+            "value": {
+              "expr_type": "literal",
+              "value": "text",
+              "data_type": "String"
+            },
+            "source_line": 33
+          },
+          {
+            "op": "var_decl",
+            "name": "leaf_b_meta",
+            "var_type": "Map<String, Int>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "Int",
+              "entries": [
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "depth",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "priority",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 35
+          },
+          {
+            "op": "var_decl",
+            "name": "leaf_b",
+            "var_type": "TreeNode",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "TreeNode",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Label",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "weight",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 5,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "tags",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "leaf_b_tags"
+                  }
+                },
+                {
+                  "name": "metadata",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "leaf_b_meta"
+                  }
+                },
+                {
+                  "name": "children",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "empty_nodes"
+                  }
+                },
+                {
+                  "name": "parent_name",
+                  "value": {
+                    "expr_type": "optional_wrap",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "Panel",
+                      "data_type": "String"
+                    }
+                  }
+                }
+              ]
+            },
+            "source_line": 36
+          },
+          {
+            "op": "var_decl",
+            "name": "panel_tags",
+            "var_type": "Set<String>",
+            "value": {
+              "expr_type": "empty_set",
+              "element_type": "String"
+            },
+            "source_line": 38
+          },
+          {
+            "op": "set_add",
+            "target": "panel_tags",
+            "value": {
+              "expr_type": "literal",
+              "value": "container",
+              "data_type": "String"
+            },
+            "source_line": 39
+          },
+          {
+            "op": "set_add",
+            "target": "panel_tags",
+            "value": {
+              "expr_type": "literal",
+              "value": "layout",
+              "data_type": "String"
+            },
+            "source_line": 40
+          },
+          {
+            "op": "var_decl",
+            "name": "panel_meta",
+            "var_type": "Map<String, Int>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "Int",
+              "entries": [
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "depth",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 42
+          },
+          {
+            "op": "var_decl",
+            "name": "panel",
+            "var_type": "TreeNode",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "TreeNode",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Panel",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "weight",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 20,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "tags",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "panel_tags"
+                  }
+                },
+                {
+                  "name": "metadata",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "panel_meta"
+                  }
+                },
+                {
+                  "name": "children",
+                  "value": {
+                    "expr_type": "list_literal",
+                    "elements": [
+                      {
+                        "expr_type": "var_ref",
+                        "name": "leaf_a"
+                      },
+                      {
+                        "expr_type": "var_ref",
+                        "name": "leaf_b"
+                      }
+                    ],
+                    "element_type": "TreeNode"
+                  }
+                },
+                {
+                  "name": "parent_name",
+                  "value": {
+                    "expr_type": "optional_wrap",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "Window",
+                      "data_type": "String"
+                    }
+                  }
+                }
+              ]
+            },
+            "source_line": 43
+          },
+          {
+            "op": "var_decl",
+            "name": "root_tags",
+            "var_type": "Set<String>",
+            "value": {
+              "expr_type": "empty_set",
+              "element_type": "String"
+            },
+            "source_line": 45
+          },
+          {
+            "op": "set_add",
+            "target": "root_tags",
+            "value": {
+              "expr_type": "literal",
+              "value": "window",
+              "data_type": "String"
+            },
+            "source_line": 46
+          },
+          {
+            "op": "set_add",
+            "target": "root_tags",
+            "value": {
+              "expr_type": "literal",
+              "value": "root",
+              "data_type": "String"
+            },
+            "source_line": 47
+          },
+          {
+            "op": "var_decl",
+            "name": "root_meta",
+            "var_type": "Map<String, Int>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "Int",
+              "entries": [
+                {
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "depth",
+                    "data_type": "String"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 49
+          },
+          {
+            "op": "var_decl",
+            "name": "root",
+            "var_type": "TreeNode",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "TreeNode",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Window",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "weight",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 50,
+                    "data_type": "Int"
+                  }
+                },
+                {
+                  "name": "tags",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "root_tags"
+                  }
+                },
+                {
+                  "name": "metadata",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "root_meta"
+                  }
+                },
+                {
+                  "name": "children",
+                  "value": {
+                    "expr_type": "list_literal",
+                    "elements": [
+                      {
+                        "expr_type": "var_ref",
+                        "name": "panel"
+                      }
+                    ],
+                    "element_type": "TreeNode"
+                  }
+                },
+                {
+                  "name": "parent_name",
+                  "value": {
+                    "expr_type": "optional_none"
+                  }
+                }
+              ]
+            },
+            "source_line": 50
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Subtree count:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "count_subtree",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "root"
+                  }
+                ]
+              }
+            ],
+            "source_line": 52
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Total weight:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "total_weight",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "root"
+                  }
+                ]
+              }
+            ],
+            "source_line": 53
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Root has parent:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "optional_is_nothing",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "root"
+                  },
+                  "field_name": "parent_name"
+                },
+                "negated": true
+              }
+            ],
+            "source_line": 54
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Panel parent:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "optional_unwrap_or_default",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "panel"
+                  },
+                  "field_name": "parent_name"
+                },
+                "default_val": {
+                  "expr_type": "literal",
+                  "value": "none",
+                  "data_type": "String"
+                }
+              }
+            ],
+            "source_line": 55
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Panel children count:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "panel"
+                  },
+                  "field_name": "children"
+                }
+              }
+            ],
+            "source_line": 56
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Button priority:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "map_get",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "leaf_a"
+                  },
+                  "field_name": "metadata"
+                },
+                "key": {
+                  "expr_type": "literal",
+                  "value": "priority",
+                  "data_type": "String"
+                },
+                "default_val": null
+              }
+            ],
+            "source_line": 57
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Button has ui tag:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "set_contains",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "leaf_a"
+                  },
+                  "field_name": "tags"
+                },
+                "value": {
+                  "expr_type": "literal",
+                  "value": "ui",
+                  "data_type": "String"
+                }
+              }
+            ],
+            "source_line": 58
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}
