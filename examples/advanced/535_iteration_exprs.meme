@@ -1,0 +1,22 @@
+# for each over collection expressions:
+# record fields (t.deps), function call results (get_items()), nested index expressions (grid[0])
+record Task:
+    name: String
+    deps: List<String>
+
+function get_items() -> List<Int>:
+    return [10, 20, 30]
+
+define t: Task as Task(name="release", deps=["build", "test", "deploy"])
+for each d in t.deps:
+    print "dep:", d
+
+for each item in get_items():
+    print "item:", item
+
+define grid: List<List<Int>> as [[1, 2, 3], [4, 5, 6]]
+for each cell in grid[0]:
+    print "cell:", cell
+
+for each index i item d in t.deps:
+    print "idx:", i, d

@@ -1,0 +1,13 @@
+define cents: Int as 1999
+define dollars: Float as float of cents / 100.0
+print "cents:", cents
+print "dollars:", "$" + (format dollars with 2 decimals)
+print "format int as float:", format float of 12345 with 2 decimals
+
+define code_a: Int as number of "A"
+define char_a: String as character of 65
+print "code_a:", code_a
+print "char_a:", char_a
+
+define roundtrip: Int as number of character of 90
+print "roundtrip 90:", roundtrip

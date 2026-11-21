@@ -15,6 +15,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     CallStmt,
+    CharacterOfExpr,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -31,6 +32,7 @@ from memelang.ir.schema import (
     ForEachStmt,
     FormatIntExpr,
     FormatFloatExpr,
+    FloatOfExpr,
     ForRangeStmt,
     FuncDefStmt,
     FuncParam,
@@ -58,6 +60,7 @@ from memelang.ir.schema import (
     MapSetStmt,
     MemeType,
     MoveFileStmt,
+    NumberOfExpr,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
@@ -226,6 +229,8 @@ class _GoGen:
         self.uses_is_upper = False
         self.uses_is_lower = False
         self.uses_format_float = False
+        self.uses_number_of = False
+        self.uses_character_of = False
         self.uses_time = False
         self.uses_env = False
         self.uses_env_or = False
@@ -257,6 +262,12 @@ class _GoGen:
         self.records: dict[str, dict[str, MemeType]] = {}
 
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> MemeType:
+        if isinstance(expr, FloatOfExpr):
+            return "Float"
+        if isinstance(expr, NumberOfExpr):
+            return "Int"
+        if isinstance(expr, CharacterOfExpr):
+            return "String"
         if isinstance(expr, LiteralExpr):
             return expr.data_type
         if isinstance(expr, ListLiteralExpr):
@@ -578,6 +589,19 @@ class _GoGen:
             tgt = self.gen_expr(expr.target, scope)
             dec = self.gen_expr(expr.decimals, scope)
             return f"_meme_format_float({tgt}, {dec})"
+
+        if isinstance(expr, FloatOfExpr):
+            return f"float64({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, NumberOfExpr):
+            self.uses_number_of = True
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_number_of({tgt})"
+
+        if isinstance(expr, CharacterOfExpr):
+            self.uses_character_of = True
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_character_of({tgt})"
 
         if isinstance(expr, CurrentEpochExpr):
             self.uses_time = True
@@ -934,23 +958,34 @@ class _GoGen:
             return lines
 
         if isinstance(stmt, ForEachStmt):
+            col_expr = (
+                stmt.collection_expr
+                if stmt.collection_expr is not None
+                else VarRefExpr(name=stmt.collection)
+            )
             sub = dict(scope)
-            col_t = scope.get(stmt.collection, "List<Int>")
+            col_t = self.infer_type(col_expr, scope)
             map_t = _map_types_of(col_t)
-            col_ident = _go_ident(stmt.collection)
+            col_ident = (
+                _go_ident(stmt.collection)
+                if isinstance(col_expr, VarRefExpr)
+                else "_meme_col"
+            )
             item_ident = _go_ident(stmt.item_var)
             set_t = _set_type_of(col_t)
             if map_t is not None:
                 self.uses_sort = True
                 sub[stmt.item_var] = map_t[0]  # type: ignore[assignment]
                 k_go = _go_type(map_t[0])
-                lines = [
-                    f"{pad}{{",
+                lines = [f"{pad}{{"]
+                if not isinstance(col_expr, VarRefExpr):
+                    lines.append(f"{pad}    _meme_col := {self.gen_expr(col_expr, scope)}")
+                lines.extend([
                     f"{pad}    _meme_keys := make([]{k_go}, 0, len({col_ident}))",
                     f"{pad}    for _k := range {col_ident} {{",
                     f"{pad}        _meme_keys = append(_meme_keys, _k)",
                     f"{pad}    }}",
-                ]
+                ])
                 if map_t[0] == "Bool":
                     lines.append(
                         f"{pad}    sort.SliceStable(_meme_keys, func(i, j int) bool {{ return !_meme_keys[i] && _meme_keys[j] }})"
@@ -980,13 +1015,15 @@ class _GoGen:
                 el_mtype = set_t
                 sub[stmt.item_var] = el_mtype  # type: ignore[assignment]
                 el_go = _go_type(el_mtype)
-                lines = [
-                    f"{pad}{{",
+                lines = [f"{pad}{{"]
+                if not isinstance(col_expr, VarRefExpr):
+                    lines.append(f"{pad}    _meme_col := {self.gen_expr(col_expr, scope)}")
+                lines.extend([
                     f"{pad}    _meme_items := make([]{el_go}, 0, len({col_ident}))",
                     f"{pad}    for _it := range {col_ident} {{",
                     f"{pad}        _meme_items = append(_meme_items, _it)",
                     f"{pad}    }}",
-                ]
+                ])
                 if el_mtype == "Bool":
                     lines.append(
                         f"{pad}    sort.SliceStable(_meme_items, func(i, j int) bool {{ return !_meme_items[i] && _meme_items[j] }})"
@@ -1022,23 +1059,47 @@ class _GoGen:
             else:
                 elem_t = col_t[5:-1] if col_t.startswith("List<") else "Int"
                 sub[stmt.item_var] = elem_t  # type: ignore[assignment]
-                if stmt.index_var is not None:
-                    sub[stmt.index_var] = "Int"
-                    idx_ident = _go_ident(stmt.index_var)
-                    lines = [
-                        f"{pad}for _meme_idx, {item_ident} := range {col_ident} {{",
-                        f"{pad}    _ = {item_ident}",
-                        f"{pad}    {idx_ident} := int64(_meme_idx)",
-                        f"{pad}    _ = {idx_ident}",
-                    ]
+                if isinstance(col_expr, VarRefExpr):
+                    if stmt.index_var is not None:
+                        sub[stmt.index_var] = "Int"
+                        idx_ident = _go_ident(stmt.index_var)
+                        lines = [
+                            f"{pad}for _meme_idx, {item_ident} := range {col_ident} {{",
+                            f"{pad}    _ = {item_ident}",
+                            f"{pad}    {idx_ident} := int64(_meme_idx)",
+                            f"{pad}    _ = {idx_ident}",
+                        ]
+                    else:
+                        lines = [
+                            f"{pad}for _, {item_ident} := range {col_ident} {{",
+                            f"{pad}    _ = {item_ident}",
+                        ]
+                    for ch in stmt.body:
+                        lines.extend(self.gen_stmt(ch, sub, indent + 1))
+                    lines.append(f"{pad}}}")
+                    return lines
                 else:
                     lines = [
-                        f"{pad}for _, {item_ident} := range {col_ident} {{",
-                        f"{pad}    _ = {item_ident}",
+                        f"{pad}{{",
+                        f"{pad}    _meme_col := {self.gen_expr(col_expr, scope)}",
                     ]
-                for ch in stmt.body:
-                    lines.extend(self.gen_stmt(ch, sub, indent + 1))
-                lines.append(f"{pad}}}")
+                    if stmt.index_var is not None:
+                        sub[stmt.index_var] = "Int"
+                        idx_ident = _go_ident(stmt.index_var)
+                        lines.append(
+                            f"{pad}    for _meme_idx, {item_ident} := range _meme_col {{"
+                        )
+                        lines.append(f"{pad}        _ = {item_ident}")
+                        lines.append(f"{pad}        {idx_ident} := int64(_meme_idx)")
+                        lines.append(f"{pad}        _ = {idx_ident}")
+                    else:
+                        lines.append(f"{pad}    for _, {item_ident} := range _meme_col {{")
+                        lines.append(f"{pad}        _ = {item_ident}")
+                    for ch in stmt.body:
+                        lines.extend(self.gen_stmt(ch, sub, indent + 2))
+                    lines.append(f"{pad}    }}")
+                    lines.append(f"{pad}}}")
+                    return lines
                 return lines
 
         if isinstance(stmt, ForRangeStmt):
@@ -1651,6 +1712,41 @@ def generate_go(ir: ProgramIR) -> str:
                 "        os.Exit(1)",
                 "    }",
                 "    return string(s[idx])",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_number_of:
+        gen.uses_fmt = True
+        gen.uses_os = True
+        helpers.extend(
+            [
+                "func _meme_number_of(s string) int64 {",
+                "    if len(s) == 0 {",
+                '        fmt.Println("Error: empty string in number of")',
+                "        os.Exit(1)",
+                "    }",
+                "    for _, r := range s {",
+                "        return int64(r)",
+                "    }",
+                "    return 0",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_character_of:
+        gen.uses_fmt = True
+        gen.uses_os = True
+        helpers.extend(
+            [
+                "func _meme_character_of(cp int64) string {",
+                "    if cp < 0 || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF) {",
+                '        fmt.Printf("Error: invalid codepoint %d\\n", cp)',
+                "        os.Exit(1)",
+                "    }",
+                "    return string(rune(cp))",
                 "}",
                 "",
             ]

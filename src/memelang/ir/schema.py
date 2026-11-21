@@ -319,6 +319,21 @@ class FormatFloatExpr(IRNode):
     decimals: IRExpr
 
 
+class FloatOfExpr(IRNode):
+    expr_type: Literal["float_of"] = "float_of"
+    target: IRExpr
+
+
+class NumberOfExpr(IRNode):
+    expr_type: Literal["number_of"] = "number_of"
+    target: IRExpr
+
+
+class CharacterOfExpr(IRNode):
+    expr_type: Literal["character_of"] = "character_of"
+    target: IRExpr
+
+
 class RecordFieldInit(IRNode):
     name: str
     value: IRExpr
@@ -451,6 +466,9 @@ IRExpr = Annotated[
     | ParseIntOrDefaultExpr
     | FormatIntExpr
     | FormatFloatExpr
+    | FloatOfExpr
+    | NumberOfExpr
+    | CharacterOfExpr
     | IsDigitExpr
     | IsLetterExpr
     | IsUpperExpr
@@ -633,7 +651,8 @@ class ForEachStmt(IRNode):
     op: Literal["for_each"] = "for_each"
     item_var: str
     index_var: str | None = None
-    collection: str
+    collection: str = ""
+    collection_expr: IRExpr | None = None
     body: list[IRStatement]
     source_line: int | None = None
 

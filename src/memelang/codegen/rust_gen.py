@@ -15,6 +15,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     CallStmt,
+    CharacterOfExpr,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -31,6 +32,7 @@ from memelang.ir.schema import (
     ForEachStmt,
     FormatIntExpr,
     FormatFloatExpr,
+    FloatOfExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -57,6 +59,7 @@ from memelang.ir.schema import (
     MapSetStmt,
     MemeType,
     MoveFileStmt,
+    NumberOfExpr,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
@@ -214,6 +217,8 @@ class _RustGen:
         self.uses_is_upper = False
         self.uses_is_lower = False
         self.uses_format_float = False
+        self.uses_number_of = False
+        self.uses_character_of = False
         self.uses_file_io_opt = False
         self.uses_json_list_opt = False
         self.uses_optional_helpers = False
@@ -227,6 +232,12 @@ class _RustGen:
         self.records: dict[str, dict[str, MemeType]] = {}
 
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> MemeType:
+        if isinstance(expr, FloatOfExpr):
+            return "Float"
+        if isinstance(expr, NumberOfExpr):
+            return "Int"
+        if isinstance(expr, CharacterOfExpr):
+            return "String"
         if isinstance(expr, LiteralExpr):
             return expr.data_type
         if isinstance(expr, ListLiteralExpr):
@@ -524,6 +535,19 @@ class _RustGen:
             tgt = self.gen_expr(expr.target, scope)
             dec = self.gen_expr(expr.decimals, scope)
             return f"_meme_format_float({tgt}, {dec})"
+
+        if isinstance(expr, FloatOfExpr):
+            return f"({self.gen_expr(expr.target, scope)} as f64)"
+
+        if isinstance(expr, NumberOfExpr):
+            self.uses_number_of = True
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_number_of(&({tgt}))"
+
+        if isinstance(expr, CharacterOfExpr):
+            self.uses_character_of = True
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_character_of({tgt})"
 
         if isinstance(expr, CurrentEpochExpr):
             return "std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0)"
@@ -831,10 +855,19 @@ class _RustGen:
             return lines
 
         if isinstance(stmt, ForEachStmt):
+            col_expr = (
+                stmt.collection_expr
+                if stmt.collection_expr is not None
+                else VarRefExpr(name=stmt.collection)
+            )
             sub = dict(scope)
-            col_t = scope.get(stmt.collection, "List<Int>")
+            col_t = self.infer_type(col_expr, scope)
             map_t = _map_types_of(col_t)
-            col_ident = _rust_ident(stmt.collection)
+            col_ident = (
+                _rust_ident(stmt.collection)
+                if isinstance(col_expr, VarRefExpr)
+                else f"({self.gen_expr(col_expr, scope)})"
+            )
             item_ident = _rust_ident(stmt.item_var)
             set_t = _set_type_of(col_t)
             if map_t is not None:
@@ -1662,6 +1695,40 @@ def generate_rust(ir: ProgramIR) -> str:
                 "        std::process::exit(1);",
                 "    }",
                 "    (bytes[idx as usize] as char).to_string()",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_number_of:
+        preamble.extend(
+            [
+                "fn _meme_number_of(s: &str) -> i64 {",
+                "    if s.is_empty() {",
+                "        println!(\"Error: empty string in number of\");",
+                "        std::process::exit(1);",
+                "    }",
+                "    s.chars().next().unwrap() as u32 as i64",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_character_of:
+        preamble.extend(
+            [
+                "fn _meme_character_of(cp: i64) -> String {",
+                "    if cp < 0 || cp > 0x10FFFF || (0xD800..=0xDFFF).contains(&cp) {",
+                "        println!(\"Error: invalid codepoint {}\", cp);",
+                "        std::process::exit(1);",
+                "    }",
+                "    match char::from_u32(cp as u32) {",
+                "        Some(c) => c.to_string(),",
+                "        None => {",
+                "            println!(\"Error: invalid codepoint {}\", cp);",
+                "            std::process::exit(1);",
+                "        }",
+                "    }",
                 "}",
                 "",
             ]

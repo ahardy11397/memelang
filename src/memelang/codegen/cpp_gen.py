@@ -15,6 +15,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     CallStmt,
+    CharacterOfExpr,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -31,6 +32,7 @@ from memelang.ir.schema import (
     ForEachStmt,
     FormatIntExpr,
     FormatFloatExpr,
+    FloatOfExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -57,6 +59,7 @@ from memelang.ir.schema import (
     MapSetStmt,
     MemeType,
     MoveFileStmt,
+    NumberOfExpr,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
@@ -232,6 +235,12 @@ class _CppGen:
         self.records: dict[str, dict[str, MemeType]] = {}
 
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> MemeType:
+        if isinstance(expr, FloatOfExpr):
+            return "Float"
+        if isinstance(expr, NumberOfExpr):
+            return "Int"
+        if isinstance(expr, CharacterOfExpr):
+            return "String"
         if isinstance(expr, LiteralExpr):
             return expr.data_type
         if isinstance(expr, ListLiteralExpr):
@@ -514,6 +523,19 @@ class _CppGen:
             tgt = self.gen_expr(expr.target, scope)
             dec = self.gen_expr(expr.decimals, scope)
             return f"_meme_format_float({tgt}, {dec})"
+
+        if isinstance(expr, FloatOfExpr):
+            return f"static_cast<double>({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, NumberOfExpr):
+            self.uses_str_helpers = True
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_number_of({tgt})"
+
+        if isinstance(expr, CharacterOfExpr):
+            self.uses_str_helpers = True
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_character_of({tgt})"
 
         if isinstance(expr, CurrentEpochExpr):
             return "static_cast<long long>(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count())"
@@ -838,10 +860,19 @@ class _CppGen:
             return lines
 
         if isinstance(stmt, ForEachStmt):
+            col_expr = (
+                stmt.collection_expr
+                if stmt.collection_expr is not None
+                else VarRefExpr(name=stmt.collection)
+            )
             sub = dict(scope)
-            col_t = scope.get(stmt.collection, "List<Int>")
+            col_t = self.infer_type(col_expr, scope)
             map_t = _map_types_of(col_t)
-            col_ident = _cpp_ident(stmt.collection)
+            col_ident = (
+                _cpp_ident(stmt.collection)
+                if isinstance(col_expr, VarRefExpr)
+                else f"({self.gen_expr(col_expr, scope)})"
+            )
             item_ident = _cpp_ident(stmt.item_var)
             set_t = _set_type_of(col_t)
             if map_t is not None:
@@ -850,9 +881,10 @@ class _CppGen:
                 el_cpp = _cpp_type(el_mtype)  # type: ignore[arg-type]
                 lines = [
                     f"{pad}{{",
+                    f"{pad}    const auto& _meme_col = {col_ident};",
                     f"{pad}    std::vector<{el_cpp}> _meme_keys;",
-                    f"{pad}    _meme_keys.reserve({col_ident}.size());",
-                    f"{pad}    for (const auto& _meme_kv : {col_ident}) {{ _meme_keys.push_back(_meme_kv.first); }}",
+                    f"{pad}    _meme_keys.reserve(_meme_col.size());",
+                    f"{pad}    for (const auto& _meme_kv : _meme_col) {{ _meme_keys.push_back(_meme_kv.first); }}",
                     f"{pad}    std::sort(_meme_keys.begin(), _meme_keys.end());",
                 ]
                 if stmt.index_var is not None:
@@ -1424,6 +1456,13 @@ def generate_cpp(ir: ProgramIR) -> str:
         record_blocks.append("}")
         record_blocks.append("")
 
+    fn_fwd_decls: list[str] = []
+    for fn in funcs:
+        params = ", ".join(f"{_cpp_type(p.param_type)} {_cpp_ident(p.name)}" for p in fn.params)
+        fn_fwd_decls.append(f"{_cpp_type(fn.return_type)} {_cpp_ident(fn.name)}({params});")
+    if fn_fwd_decls:
+        fn_fwd_decls.append("")
+
     fn_blocks: list[str] = []
     for fn in funcs:
         fn_blocks.extend(gen.gen_func(fn))
@@ -1898,6 +1937,48 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        std::exit(1);",
                 "    }",
                 "    return std::string(1, s[static_cast<std::size_t>(idx)]);",
+                "}",
+                "inline long long _meme_number_of(const std::string& s) {",
+                "    if (s.empty()) {",
+                "        std::cout << \"Error: empty string in number of\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    const unsigned char* p = reinterpret_cast<const unsigned char*>(s.data());",
+                "    unsigned char c = p[0];",
+                "    if (c < 0x80) return c;",
+                "    if ((c & 0xE0) == 0xC0 && s.size() >= 2) {",
+                "        return ((c & 0x1F) << 6) | (p[1] & 0x3F);",
+                "    }",
+                "    if ((c & 0xF0) == 0xE0 && s.size() >= 3) {",
+                "        return ((c & 0x0F) << 12) | ((p[1] & 0x3F) << 6) | (p[2] & 0x3F);",
+                "    }",
+                "    if ((c & 0xF8) == 0xF0 && s.size() >= 4) {",
+                "        return ((c & 0x07) << 18) | ((p[1] & 0x3F) << 12) | ((p[2] & 0x3F) << 6) | (p[3] & 0x3F);",
+                "    }",
+                "    return c;",
+                "}",
+                "inline std::string _meme_character_of(long long cp) {",
+                "    if (cp < 0 || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {",
+                "        std::cout << \"Error: invalid codepoint \" << cp << \"\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    std::string res;",
+                "    if (cp <= 0x7F) {",
+                "        res.push_back(static_cast<char>(cp));",
+                "    } else if (cp <= 0x7FF) {",
+                "        res.push_back(static_cast<char>(0xC0 | (cp >> 6)));",
+                "        res.push_back(static_cast<char>(0x80 | (cp & 0x3F)));",
+                "    } else if (cp <= 0xFFFF) {",
+                "        res.push_back(static_cast<char>(0xE0 | (cp >> 12)));",
+                "        res.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));",
+                "        res.push_back(static_cast<char>(0x80 | (cp & 0x3F)));",
+                "    } else {",
+                "        res.push_back(static_cast<char>(0xF0 | (cp >> 18)));",
+                "        res.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3F)));",
+                "        res.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));",
+                "        res.push_back(static_cast<char>(0x80 | (cp & 0x3F)));",
+                "    }",
+                "    return res;",
                 "}",
                 "",
             ]
@@ -2415,6 +2496,7 @@ def generate_cpp(ir: ProgramIR) -> str:
         + record_blocks
         + reader_record_blocks
         + writer_record_blocks
+        + fn_fwd_decls
         + fn_blocks
         + main_header
         + main_lines

@@ -29,6 +29,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     CallStmt,
+    CharacterOfExpr,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -44,6 +45,7 @@ from memelang.ir.schema import (
     ForEachStmt,
     FormatIntExpr,
     FormatFloatExpr,
+    FloatOfExpr,
     ForRangeStmt,
     FuncDefStmt,
     FuncParam,
@@ -64,6 +66,7 @@ from memelang.ir.schema import (
     ListRemoveStmt,
     ListSetIndexStmt,
     LiteralExpr,
+    NumberOfExpr,
     MapEntry,
     MapGetExpr,
     MapHasKeyExpr,
@@ -227,6 +230,12 @@ class _TSGen:
         self._match_counter = 0
 
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> str:
+        if isinstance(expr, FloatOfExpr):
+            return "Float"
+        if isinstance(expr, NumberOfExpr):
+            return "Int"
+        if isinstance(expr, CharacterOfExpr):
+            return "String"
         if isinstance(expr, LiteralExpr):
             return expr.data_type
         if isinstance(expr, VarRefExpr):
@@ -527,6 +536,15 @@ class _TSGen:
             dec = self.gen_expr(expr.decimals, scope)
             return f"_meme_format_float({tgt}, {dec})"
 
+        if isinstance(expr, FloatOfExpr):
+            return f"Number({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, NumberOfExpr):
+            return f"_meme_number_of({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, CharacterOfExpr):
+            return f"_meme_character_of({self.gen_expr(expr.target, scope)})"
+
         if isinstance(expr, CurrentEpochExpr):
             return "Math.floor(Date.now() / 1000)"
 
@@ -724,10 +742,19 @@ class _TSGen:
             return lines
 
         if isinstance(stmt, ForEachStmt):
-            col_t = scope.get(stmt.collection, "List<Int>")
+            col_expr = (
+                stmt.collection_expr
+                if stmt.collection_expr is not None
+                else VarRefExpr(name=stmt.collection)
+            )
+            col_t = self.infer_type(col_expr, scope)
             map_t = _map_types_of(col_t)
             set_t = _set_types_of(col_t)
-            col_ident = _ts_ident(stmt.collection)
+            col_ident = (
+                _ts_ident(stmt.collection)
+                if isinstance(col_expr, VarRefExpr)
+                else f"({self.gen_expr(col_expr, scope)})"
+            )
             b_scope = dict(scope)
 
             if map_t is not None:
@@ -1373,6 +1400,22 @@ def generate_ts(ir: ProgramIR) -> str:
         "        process.exit(1);",
         "    }",
         "    return s.charAt(idx);",
+        "}",
+        "",
+        "function _meme_number_of(s: string): number {",
+        "    if (s.length === 0) {",
+        "        console.log(\"Error: empty string in number of\");",
+        "        process.exit(1);",
+        "    }",
+        "    return s.codePointAt(0)!;",
+        "}",
+        "",
+        "function _meme_character_of(cp: number): string {",
+        "    if (cp < 0 || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {",
+        "        console.log(`Error: invalid codepoint ${cp}`);",
+        "        process.exit(1);",
+        "    }",
+        "    return String.fromCodePoint(cp);",
         "}",
         "",
         "function _meme_str_slice(s: string, start: number, end: number): string {",

@@ -28,6 +28,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     CallStmt,
+    CharacterOfExpr,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -43,6 +44,7 @@ from memelang.ir.schema import (
     ForEachStmt,
     FormatIntExpr,
     FormatFloatExpr,
+    FloatOfExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -74,6 +76,7 @@ from memelang.ir.schema import (
     MapSetStmt,
     MemeType,
     MoveFileStmt,
+    NumberOfExpr,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
@@ -369,6 +372,8 @@ def _collect_types_from_stmt(stmt: IRStatement, out: set[str]) -> None:
         for s in stmt.default_body:
             _collect_types_from_stmt(s, out)
     elif isinstance(stmt, ForEachStmt):
+        if stmt.collection_expr is not None:
+            _collect_types_from_expr(stmt.collection_expr, out)
         for s in stmt.body:
             _collect_types_from_stmt(s, out)
     elif isinstance(stmt, ForRangeStmt):
@@ -461,6 +466,12 @@ class _CGen:
         self.json_records_write: set[str] = set()
 
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> MemeType:
+        if isinstance(expr, FloatOfExpr):
+            return "Float"
+        if isinstance(expr, NumberOfExpr):
+            return "Int"
+        if isinstance(expr, CharacterOfExpr):
+            return "String"
         if isinstance(expr, LiteralExpr):
             return expr.data_type
         if isinstance(expr, ListLiteralExpr):
@@ -790,6 +801,19 @@ class _CGen:
             tgt = self.gen_expr(expr.target, scope)
             dec = self.gen_expr(expr.decimals, scope)
             return f"_meme_format_float({tgt}, {dec})"
+
+        if isinstance(expr, FloatOfExpr):
+            return f"((double)({self.gen_expr(expr.target, scope, 'Int')}))"
+
+        if isinstance(expr, NumberOfExpr):
+            self.uses_str_helpers = True
+            tgt = self.gen_expr(expr.target, scope, "String")
+            return f"_meme_number_of({tgt})"
+
+        if isinstance(expr, CharacterOfExpr):
+            self.uses_str_helpers = True
+            tgt = self.gen_expr(expr.target, scope, "Int")
+            return f"_meme_character_of({tgt})"
 
         if isinstance(expr, CurrentEpochExpr):
             return "(int64_t)time(NULL)"
@@ -1202,9 +1226,18 @@ class _CGen:
             return lines
 
         if isinstance(stmt, ForEachStmt):
+            col_expr = (
+                stmt.collection_expr
+                if stmt.collection_expr is not None
+                else VarRefExpr(name=stmt.collection)
+            )
             sub = dict(scope)
-            col_t = scope.get(stmt.collection, "List<Int>")
-            col_ident = _c_ident(stmt.collection)
+            col_t = self.infer_type(col_expr, scope)
+            col_ident = (
+                _c_ident(stmt.collection)
+                if isinstance(col_expr, VarRefExpr)
+                else f"({self.gen_expr(col_expr, scope)})"
+            )
             item_ident = _c_ident(stmt.item_var)
             map_t = _map_types_of(col_t)
 
@@ -2664,6 +2697,53 @@ def generate_c(ir: ProgramIR) -> str:
         "    res[0] = s[idx];",
         "    res[1] = '\\0';",
         "    return res;",
+        "}",
+        "static inline int64_t _meme_number_of(const char* s) {",
+        "    if (s == NULL || s[0] == '\\0') {",
+        "        printf(\"Error: empty string in number of\\n\");",
+        "        exit(1);",
+        "    }",
+        "    const unsigned char* p = (const unsigned char*)s;",
+        "    unsigned char c = p[0];",
+        "    if (c < 0x80) return (int64_t)c;",
+        "    if ((c & 0xE0) == 0xC0 && p[1] != '\\0') {",
+        "        return (int64_t)(((c & 0x1F) << 6) | (p[1] & 0x3F));",
+        "    }",
+        "    if ((c & 0xF0) == 0xE0 && p[1] != '\\0' && p[2] != '\\0') {",
+        "        return (int64_t)(((c & 0x0F) << 12) | ((p[1] & 0x3F) << 6) | (p[2] & 0x3F));",
+        "    }",
+        "    if ((c & 0xF8) == 0xF0 && p[1] != '\\0' && p[2] != '\\0' && p[3] != '\\0') {",
+        "        return (int64_t)(((c & 0x07) << 18) | ((p[1] & 0x3F) << 12) | ((p[2] & 0x3F) << 6) | (p[3] & 0x3F));",
+        "    }",
+        "    return (int64_t)c;",
+        "}",
+        "static inline const char* _meme_character_of(int64_t cp) {",
+        "    if (cp < 0 || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {",
+        "        printf(\"Error: invalid codepoint %lld\\n\", (long long)cp);",
+        "        exit(1);",
+        "    }",
+        "    char* buf = (char*)malloc(5);",
+        "    if (buf == NULL) { exit(1); }",
+        "    if (cp <= 0x7F) {",
+        "        buf[0] = (char)cp;",
+        "        buf[1] = '\\0';",
+        "    } else if (cp <= 0x7FF) {",
+        "        buf[0] = (char)(0xC0 | (cp >> 6));",
+        "        buf[1] = (char)(0x80 | (cp & 0x3F));",
+        "        buf[2] = '\\0';",
+        "    } else if (cp <= 0xFFFF) {",
+        "        buf[0] = (char)(0xE0 | (cp >> 12));",
+        "        buf[1] = (char)(0x80 | ((cp >> 6) & 0x3F));",
+        "        buf[2] = (char)(0x80 | (cp & 0x3F));",
+        "        buf[3] = '\\0';",
+        "    } else {",
+        "        buf[0] = (char)(0xF0 | (cp >> 18));",
+        "        buf[1] = (char)(0x80 | ((cp >> 12) & 0x3F));",
+        "        buf[2] = (char)(0x80 | ((cp >> 6) & 0x3F));",
+        "        buf[3] = (char)(0x80 | (cp & 0x3F));",
+        "        buf[4] = '\\0';",
+        "    }",
+        "    return buf;",
         "}",
         "static inline const char* _meme_str_upper(const char* s) {",
         "    if (!s) return \"\";",

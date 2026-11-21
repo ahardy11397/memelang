@@ -238,6 +238,11 @@ for each index i item n in numbers:
 
 `for each` works on both `List<T>` (iterating a snapshot of elements) and `Map<K, V>` (iterating a **sorted snapshot of keys** `K` for deterministic cross-target output parity across Python, Rust, C++, and Go). When `index <i> item <x>` (or `<i>, <x>`) is specified, `<i>` is bound as a 0-based `Int` index alongside `<x>`.
 
+`for each` iterates directly over any collection expression without requiring an intermediate variable binding:
+- Record-field chains: `for each d in t.deps:`
+- Function call results: `for each item in get_items():`
+- Nested indexing expressions: `for each cell in grid[0]:`
+
 **While loop** (**offline** & **LLM-voice**):
 
 ```meme
@@ -410,6 +415,8 @@ define label: String as text of qty                # format Int -> String (plain
 - **`char at <index> of <target>` (`string_char_at`)**: returns a single-character `String` at 0-based `<index>`. Out-of-range indices print `Error: string index <index> out of range` to stdout and exit immediately with status code `1` across all three targets.
 - **`integer value of <string-expr>` (`parse_int`)**: parses a signed 64-bit decimal integer (`Int`) from `<string-expr>` after trimming leading and trailing ASCII whitespace. Negative numbers (`-`) and positive numbers are supported. If `<string-expr>` contains invalid text or is empty after trimming, execution terminates immediately with exit code `1` and outputs `Error parsing integer: <original-string>` to stdout across all six targets (deterministic fail-style runtime error consistent with missing-file reads and unwrap on absent Optionals). Offline heuristic synonyms: `integer of <expr>`.
 - **`text of <int-expr>` (`format_int`)**: formats an `Int` expression into its plain decimal string representation (`String`), matching `_meme_fmt` integral rendering exactly across all six targets. Offline heuristic synonyms: `string of <expr>`, `text from <expr>`, `string from <expr>`.
+- **`number of <string-expr>` (`number_of`)**: returns the `Int` Unicode codepoint of the first character of `<string-expr>`. Empty or multi-character literal strings are rejected statically by the verifier (`StaticVerificationError`). At runtime, an empty string prints `Error: empty string in number of` to stdout and terminates execution with status code `1` across all six targets.
+- **`character of <int-expr>` (`character_of`)**: returns a single-character `String` containing the character for the given Unicode codepoint in `0..0x10FFFF`. Invalid codepoints (negative numbers or values exceeding `0x10FFFF` or surrogate range `0xD800..0xDFFF`) terminate execution with status code `1` and output `Error: invalid codepoint <cp>` across all six targets. ASCII 32..126 round-trip parity is exhaustively tested and guaranteed across all backends (Unicode parity is best-effort across backends). Synonyms: `char of <expr>`.
 
 ---
 
@@ -487,6 +494,24 @@ call log_message("system initialized")
 ```
 
 For `Void` functions, `call` is the natural way to execute procedures. If the called function returns a non-`Void` value (such as a status code), its return value is safely discarded. This retires the earlier `define rc as func(...)` workaround idiom (though assigning the return value still works).
+
+### Mutual Recursion and Forward References
+
+Functions in the same file or imported module support **forward references** and **mutual recursion** via two-pass definition resolution. A function can call another function defined later in the same file without forward declaration boilerplate:
+
+```meme
+function is_even(n: Int) -> Bool:
+    if n == 0:
+        return true
+    return is_odd(n - 1)
+
+function is_odd(n: Int) -> Bool:
+    if n == 0:
+        return false
+    return is_even(n - 1)
+```
+
+Static verification resolves top-level function signatures in a first pass before checking function bodies in a second pass, and backends emit appropriate forward declarations across all targets (such as C and C++).
 
 ---
 
@@ -924,6 +949,7 @@ print formatted
 
 ### Static Rules & Parity Semantics
 - **Syntax:** `format <expr> with <N> decimals` takes a `Float` expression and an integer `<N>` representing decimal places.
+- **Int to Float conversion:** `float of <int-expr>` converts an `Int` expression to `Float` (exact value with no precision loss for |x| < 2^53). This enables formatting integer amounts directly: `format float of cents with 2 decimals`.
 - **Return Type:** Returns a `String`.
 - **Cross-Target Parity:** Implements standardized half-away-from-zero rounding across all six targets, ensuring byte-identical float rendering across Python, Rust, C++, Go, C, and TypeScript.
 
@@ -1148,8 +1174,8 @@ Each construct is labeled **offline** (supported by the zero-dependency `heurist
 | Branch | `if <cond>[:]` / `else if <cond>[:]` / `else[:]` (indentation) | **offline** |
 | Match / Switch | `match <expr>[:]` / `when <literal>[:]` / `otherwise[:]` | **offline** |
 | Count 1..N inclusive | `for i from 1 to N[:]` | **offline** |
-| Iterate a list or map | `for each x in col[:]` *(two words `for each`; `foreach` is **LLM-voice only**; iterates sorted keys on `Map<K, V>`)* | **offline** |
-| Iterate with 0-based index | `for each index i item x in col[:]` / `for each i, x in col[:]` | **offline** |
+| Iterate a list, map, or collection expression | `for each x in <col-expr>[:]` *(two words `for each`; `foreach` is **LLM-voice only**; collection can be variable or expression like `t.deps`, `get_items()`, `grid[0]`; iterates sorted keys on `Map<K, V>`)* | **offline** |
+| Iterate with 0-based index | `for each index i item x in <col-expr>[:]` / `for each i, x in <col-expr>[:]` | **offline** |
 | Repeat while | `while <cond>[:]` | **offline** |
 | Exit loop early | `break` | **offline** |
 | Skip to next iteration | `continue` | **offline** |
@@ -1167,7 +1193,7 @@ Each construct is labeled **offline** (supported by the zero-dependency `heurist
 | String replace | `replace old with new in s` | **offline** |
 | String split & join | `split s by sep` / `join items with sep` | **offline** |
 | String index of | `index of sub in s` *(0-based `Int`, `-1` if absent)* | **offline** |
-| Define a function | `function f(a: Int, b: Int) -> Int:` (**offline**, explicit types required) / `define function f with a, b` (**LLM-voice only**, defaults params to `Float`) | **offline** / **LLM-voice only** |
+| Define a function | `function f(a: Int, b: Int) -> Int:` (**offline**, explicit types required; forward references & mutual recursion supported) / `define function f with a, b` (**LLM-voice only**, defaults params to `Float`) | **offline** / **LLM-voice only** |
 | Call a function | `define r: Int as f(a, b)` (**offline**) / `define r as f from a, b` (**LLM-voice only**) | **offline** / **LLM-voice only** |
 | Define a record | `record User:\n    id: Int\n    name: String` | **offline** |
 | Instantiate a record | `define u as User(id=1, name="Alice")` | **offline** |
@@ -1183,6 +1209,9 @@ Each construct is labeled **offline** (supported by the zero-dependency `heurist
 | Strict unwrap | `value of x` *(exits with code 1 if absent)* | **offline** |
 | Assert statement | `assert <cond>` *(exits code 1 if false)* | **offline** |
 | Test block | `test <name>:` *(run via `meme test`)* | **offline** |
+| Int to Float | `float of <int-expr>` | **offline** |
+| String to codepoint | `number of <string-expr>` | **offline** |
+| Codepoint to String | `character of <int-expr>` | **offline** |
 | Format float | `format <expr> with <N> decimals` | **offline** |
 | Check file exists | `file exists path` | **offline** |
 | Read text file | `read string from file path` | **offline** |

@@ -20,6 +20,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     CallStmt,
+    CharacterOfExpr,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -33,6 +34,7 @@ from memelang.ir.schema import (
     FailStmt,
     FileExistsExpr,
     FilterCollectionStmt,
+    FloatOfExpr,
     ForEachStmt,
     FormatIntExpr,
     FormatFloatExpr,
@@ -62,6 +64,7 @@ from memelang.ir.schema import (
     MapSetStmt,
     MemeType,
     MoveFileStmt,
+    NumberOfExpr,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
@@ -597,6 +600,35 @@ class _StaticChecker:
         self.functions: dict[str, tuple[list[MemeType], MemeType]] = {}
         self.records: dict[str, dict[str, MemeType]] = {}
 
+    def register_func_signature(
+        self, stmt: FuncDefStmt, stmt_idx: int | None = None
+    ) -> None:
+        if stmt.name == "main":
+            raise StaticVerificationError(
+                "Error: do not define main() — Memelang programs are top-level statements; use 'call <fn>(...)' or top-level code",
+                stmt_idx,
+            )
+        if stmt.name in self.functions:
+            raise StaticVerificationError(
+                f"Duplicate function definition `{stmt.name}`", stmt_idx
+            )
+        param_types: list[MemeType] = []
+        fn_param_names: set[str] = set()
+        for p in stmt.params:
+            if p.param_type == "Void":
+                raise StaticVerificationError(
+                    f"Parameter `{p.name}` cannot have type Void", stmt_idx
+                )
+            self._validate_type(p.param_type, stmt_idx, allow_void=False)
+            if p.name in fn_param_names:
+                raise StaticVerificationError(
+                    f"Duplicate parameter name `{p.name}` in function `{stmt.name}`", stmt_idx
+                )
+            fn_param_names.add(p.name)
+            param_types.append(p.param_type)
+        self._validate_type(stmt.return_type, stmt_idx, allow_void=True)
+        self.functions[stmt.name] = (param_types, stmt.return_type)
+
     def _validate_type(
         self, meme_type: MemeType, stmt_idx: int | None, allow_void: bool = False
     ) -> None:
@@ -1099,6 +1131,42 @@ class _StaticChecker:
                     f"`{expr.expr_type}` requires String target, got {t_t}", stmt_idx
                 )
             return "Bool"
+
+        if isinstance(expr, FloatOfExpr):
+            t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if t_t != "Int":
+                raise StaticVerificationError(
+                    f"`float of` requires Int target, got {t_t}", stmt_idx
+                )
+            return "Float"
+
+        if isinstance(expr, NumberOfExpr):
+            t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if t_t != "String":
+                raise StaticVerificationError(
+                    f"`number of` requires String target, got {t_t}", stmt_idx
+                )
+            if isinstance(expr.target, LiteralExpr) and expr.target.data_type == "String":
+                if not isinstance(expr.target.value, str) or len(expr.target.value) != 1:
+                    raise StaticVerificationError(
+                        f"`number of` requires a single-character string literal, got {expr.target.value!r}",
+                        stmt_idx,
+                    )
+            return "Int"
+
+        if isinstance(expr, CharacterOfExpr):
+            t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if t_t != "Int":
+                raise StaticVerificationError(
+                    f"`character of` requires Int target, got {t_t}", stmt_idx
+                )
+            if isinstance(expr.target, LiteralExpr) and expr.target.data_type == "Int":
+                val = expr.target.value
+                if isinstance(val, int) and (val < 0 or val > 0x10FFFF or (0xD800 <= val <= 0xDFFF)):
+                    raise StaticVerificationError(
+                        f"`character of` codepoint out of range: {val}", stmt_idx
+                    )
+            return "String"
 
         if isinstance(expr, FormatIntExpr):
             t_t = self.infer_expr_type(expr.target, scope, stmt_idx)
@@ -1762,11 +1830,12 @@ class _StaticChecker:
             return all_cases_ret and bool(stmt.default_body) and default_ret
 
         if isinstance(stmt, ForEachStmt):
-            col_t = scope.lookup(stmt.collection)
-            if col_t is None:
-                raise StaticVerificationError(
-                    f"`for each` references undeclared collection `{stmt.collection}`", stmt_idx
-                )
+            col_expr = (
+                stmt.collection_expr
+                if stmt.collection_expr is not None
+                else VarRefExpr(name=stmt.collection)
+            )
+            col_t = self.infer_expr_type(col_expr, scope, stmt_idx)
             elem_t = _element_type_of(col_t)
             map_t = _map_types_of(col_t)
             set_t = _set_type_of(col_t)
@@ -1863,31 +1932,13 @@ class _StaticChecker:
                 raise StaticVerificationError(
                     "Nested function definitions are not supported", stmt_idx
                 )
-            if stmt.name == "main":
-                raise StaticVerificationError(
-                    "Error: do not define main() — Memelang programs are top-level statements; use 'call <fn>(...)' or top-level code",
-                    stmt_idx,
-                )
-            if stmt.name in self.functions:
-                raise StaticVerificationError(
-                    f"Duplicate function definition `{stmt.name}`", stmt_idx
-                )
-            param_types: list[MemeType] = []
+            if stmt.name not in self.functions:
+                self.register_func_signature(stmt, stmt_idx)
+
+            param_types, ret_t = self.functions[stmt.name]
             fn_scope = _Scope(parent=None)
             for p in stmt.params:
-                if p.param_type == "Void":
-                    raise StaticVerificationError(
-                        f"Parameter `{p.name}` cannot have type Void", stmt_idx
-                    )
-                self._validate_type(p.param_type, stmt_idx, allow_void=False)
-                if p.name in fn_scope.symbols:
-                    raise StaticVerificationError(
-                        f"Duplicate parameter name `{p.name}` in function `{stmt.name}`", stmt_idx
-                    )
-                param_types.append(p.param_type)
                 fn_scope.define(p.name, p.param_type)
-            self._validate_type(stmt.return_type, stmt_idx, allow_void=True)
-            self.functions[stmt.name] = (param_types, stmt.return_type)
 
             saw_return = False
             for child in stmt.body:
@@ -2211,6 +2262,9 @@ def _expr_references_var(expr: IRExpr, name: str) -> bool:
             IsLetterExpr,
             IsUpperExpr,
             IsLowerExpr,
+            FloatOfExpr,
+            NumberOfExpr,
+            CharacterOfExpr,
         ),
     ):
         return _expr_references_var(expr.target, name)
@@ -2398,10 +2452,14 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
             or _stmts_reference_var(s.default_body, name)
         ):
             return True
-        if isinstance(s, ForEachStmt) and (
-            s.collection == name or _stmts_reference_var(s.body, name)
-        ):
-            return True
+        if isinstance(s, ForEachStmt):
+            col_e = (
+                s.collection_expr
+                if s.collection_expr is not None
+                else VarRefExpr(name=s.collection)
+            )
+            if _expr_references_var(col_e, name) or _stmts_reference_var(s.body, name):
+                return True
         if isinstance(s, ForRangeStmt) and (
             _expr_references_var(s.start, name)
             or _expr_references_var(s.end, name)
@@ -2670,10 +2728,14 @@ def _resolve_and_verify_modules(
             mod_checker.check_stmt(r, _Scope(), stmt_idx=None, is_top_level=True)
             m.record_defs[r.name] = mod_checker.records[r.name]
 
+        # Register function signatures for mutual recursion
+        for f in m.functions:
+            mod_checker.register_func_signature(f, stmt_idx=None)
+            m.func_defs[f.name] = mod_checker.functions[f.name]
+
         # Check functions
         for f in m.functions:
             mod_checker.check_stmt(f, _Scope(), stmt_idx=None, is_top_level=True)
-            m.func_defs[f.name] = mod_checker.functions[f.name]
 
     # Collect symbols visible to root (from root's direct imports only!)
     root_imported_funcs: dict[str, tuple[list[MemeType], MemeType]] = {}
@@ -2728,7 +2790,20 @@ def verify_program(program: ProgramIR, source_path: Path | str | None = None) ->
             elif isinstance(d, FuncDefStmt):
                 checker.functions[d.name] = ([p.param_type for p in d.params], d.return_type)
 
+    # Pass 1: register all records
     for idx, stmt in enumerate(program.statements, start=1):
+        if isinstance(stmt, RecordDefStmt):
+            checker.check_stmt(stmt, root_scope, stmt_idx=idx, is_top_level=True)
+
+    # Pass 1: register all top-level function signatures for mutual recursion
+    for idx, stmt in enumerate(program.statements, start=1):
+        if isinstance(stmt, FuncDefStmt):
+            checker.register_func_signature(stmt, stmt_idx=idx)
+
+    # Pass 2: check all statements in sequence
+    for idx, stmt in enumerate(program.statements, start=1):
+        if isinstance(stmt, RecordDefStmt):
+            continue
         checker.check_stmt(stmt, root_scope, stmt_idx=idx, is_top_level=True)
     return program
 
@@ -2772,8 +2847,10 @@ def verify_synthesis(
             continue
 
         if detect_implicit_ambiguities:
-            if isinstance(item, ForEachStmt) and _find_collection_mutations(
-                item.body, item.collection
+            if (
+                isinstance(item, ForEachStmt)
+                and (item.collection_expr is None or isinstance(item.collection_expr, VarRefExpr))
+                and _find_collection_mutations(item.body, item.collection)
             ):
                 following = [
                     x for x in items_in[idx + 1 :] if not isinstance(x, AmbiguityDiagnostic)

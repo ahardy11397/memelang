@@ -1,0 +1,581 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/535_iteration_exprs.meme": {
+      "source_sha256": "53fa97b40c2d7191cc15f7a10d875b5ccde2240b44bc398dec2aadede169be00",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "Task",
+          "fields": [
+            {
+              "name": "name",
+              "field_type": "String"
+            },
+            {
+              "name": "deps",
+              "field_type": "List<String>"
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "func_def",
+          "name": "get_items",
+          "params": [],
+          "return_type": "List<Int>",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 10,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 20,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 30,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "var_decl",
+          "name": "t",
+          "var_type": "Task",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Task",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "release",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "deps",
+                "value": {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": "build",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "test",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": "deploy",
+                      "data_type": "String"
+                    }
+                  ],
+                  "element_type": "String"
+                }
+              }
+            ]
+          },
+          "source_line": 10
+        },
+        {
+          "op": "for_each",
+          "item_var": "d",
+          "index_var": null,
+          "collection": "t.deps",
+          "collection_expr": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "t"
+            },
+            "field_name": "deps"
+          },
+          "body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "dep:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "d"
+                }
+              ],
+              "source_line": 12
+            }
+          ],
+          "source_line": 11
+        },
+        {
+          "op": "for_each",
+          "item_var": "item",
+          "index_var": null,
+          "collection": "get_items()",
+          "collection_expr": {
+            "expr_type": "call",
+            "func_name": "get_items",
+            "args": []
+          },
+          "body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "item:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "item"
+                }
+              ],
+              "source_line": 15
+            }
+          ],
+          "source_line": 14
+        },
+        {
+          "op": "var_decl",
+          "name": "grid",
+          "var_type": "List<List<Int>>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 1,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              },
+              {
+                "expr_type": "list_literal",
+                "elements": [
+                  {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 5,
+                    "data_type": "Int"
+                  },
+                  {
+                    "expr_type": "literal",
+                    "value": 6,
+                    "data_type": "Int"
+                  }
+                ],
+                "element_type": "Int"
+              }
+            ],
+            "element_type": "List<Int>"
+          },
+          "source_line": 17
+        },
+        {
+          "op": "for_each",
+          "item_var": "cell",
+          "index_var": null,
+          "collection": "grid[0]",
+          "collection_expr": {
+            "expr_type": "list_index",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "grid"
+            },
+            "index": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            }
+          },
+          "body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "cell:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "cell"
+                }
+              ],
+              "source_line": 19
+            }
+          ],
+          "source_line": 18
+        },
+        {
+          "op": "for_each",
+          "item_var": "d",
+          "index_var": "i",
+          "collection": "t.deps",
+          "collection_expr": {
+            "expr_type": "record_field",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "t"
+            },
+            "field_name": "deps"
+          },
+          "body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "idx:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "i"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "d"
+                }
+              ],
+              "source_line": 22
+            }
+          ],
+          "source_line": 21
+        }
+      ],
+      "canonical_meme": "record Task:\n    name: String\n    deps: List<String>\nfunction get_items() -> List<Int>:\n    return [10, 20, 30]\ndefine t: Task as Task(name=\"release\", deps=[\"build\", \"test\", \"deploy\"])\nfor each d in t.deps:\n    print \"dep:\", d\nfor each item in get_items():\n    print \"item:\", item\ndefine list grid as [[1, 2, 3], [4, 5, 6]]\nfor each cell in grid[0]:\n    print \"cell:\", cell\nfor each index i item d in t.deps:\n    print \"idx:\", i, d",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "Task",
+            "fields": [
+              {
+                "name": "name",
+                "field_type": "String"
+              },
+              {
+                "name": "deps",
+                "field_type": "List<String>"
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "func_def",
+            "name": "get_items",
+            "params": [],
+            "return_type": "List<Int>",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 10,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 20,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 30,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "var_decl",
+            "name": "t",
+            "var_type": "Task",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Task",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "release",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "deps",
+                  "value": {
+                    "expr_type": "list_literal",
+                    "elements": [
+                      {
+                        "expr_type": "literal",
+                        "value": "build",
+                        "data_type": "String"
+                      },
+                      {
+                        "expr_type": "literal",
+                        "value": "test",
+                        "data_type": "String"
+                      },
+                      {
+                        "expr_type": "literal",
+                        "value": "deploy",
+                        "data_type": "String"
+                      }
+                    ],
+                    "element_type": "String"
+                  }
+                }
+              ]
+            },
+            "source_line": 10
+          },
+          {
+            "op": "for_each",
+            "item_var": "d",
+            "index_var": null,
+            "collection": "t.deps",
+            "collection_expr": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "t"
+              },
+              "field_name": "deps"
+            },
+            "body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "dep:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "d"
+                  }
+                ],
+                "source_line": 12
+              }
+            ],
+            "source_line": 11
+          },
+          {
+            "op": "for_each",
+            "item_var": "item",
+            "index_var": null,
+            "collection": "get_items()",
+            "collection_expr": {
+              "expr_type": "call",
+              "func_name": "get_items",
+              "args": []
+            },
+            "body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "item:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "item"
+                  }
+                ],
+                "source_line": 15
+              }
+            ],
+            "source_line": 14
+          },
+          {
+            "op": "var_decl",
+            "name": "grid",
+            "var_type": "List<List<Int>>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 2,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                },
+                {
+                  "expr_type": "list_literal",
+                  "elements": [
+                    {
+                      "expr_type": "literal",
+                      "value": 4,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 5,
+                      "data_type": "Int"
+                    },
+                    {
+                      "expr_type": "literal",
+                      "value": 6,
+                      "data_type": "Int"
+                    }
+                  ],
+                  "element_type": "Int"
+                }
+              ],
+              "element_type": "List<Int>"
+            },
+            "source_line": 17
+          },
+          {
+            "op": "for_each",
+            "item_var": "cell",
+            "index_var": null,
+            "collection": "grid[0]",
+            "collection_expr": {
+              "expr_type": "list_index",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "grid"
+              },
+              "index": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            },
+            "body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "cell:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "cell"
+                  }
+                ],
+                "source_line": 19
+              }
+            ],
+            "source_line": 18
+          },
+          {
+            "op": "for_each",
+            "item_var": "d",
+            "index_var": "i",
+            "collection": "t.deps",
+            "collection_expr": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "t"
+              },
+              "field_name": "deps"
+            },
+            "body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "idx:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "i"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "d"
+                  }
+                ],
+                "source_line": 22
+              }
+            ],
+            "source_line": 21
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

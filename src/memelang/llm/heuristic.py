@@ -23,6 +23,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     CallStmt,
+    CharacterOfExpr,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -36,6 +37,7 @@ from memelang.ir.schema import (
     FailStmt,
     FileExistsExpr,
     FilterCollectionStmt,
+    FloatOfExpr,
     ForEachStmt,
     FormatIntExpr,
     FormatFloatExpr,
@@ -66,6 +68,7 @@ from memelang.ir.schema import (
     MapSetStmt,
     MemeType,
     MoveFileStmt,
+    NumberOfExpr,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
@@ -741,6 +744,42 @@ class _ExprParser:
                 self.consume("IDENT")
                 tgt_e = self.parse_unary()
                 return IsLowerExpr(target=tgt_e)
+
+            if (
+                t.val.lower() == "float"
+                and t.val not in self.symbols
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() in ("of", "from")
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                tgt_e = self.parse_unary()
+                return FloatOfExpr(target=tgt_e)
+
+            if (
+                t.val.lower() == "number"
+                and t.val not in self.symbols
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() in ("of", "from")
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                tgt_e = self.parse_unary()
+                return NumberOfExpr(target=tgt_e)
+
+            if (
+                t.val.lower() in ("character", "char")
+                and t.val not in self.symbols
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() in ("of", "from")
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                tgt_e = self.parse_unary()
+                return CharacterOfExpr(target=tgt_e)
 
             if (
                 t.val.lower() in ("text", "string")
@@ -1440,6 +1479,39 @@ def _split_top_level_commas(text: str) -> list[str]:
     return [p for p in parts if p]
 
 
+def _split_unquoted_colon(text: str) -> tuple[str, str | None]:
+    cur: list[str] = []
+    depth = 0
+    in_str: str | None = None
+    escape = False
+    for idx, ch in enumerate(text):
+        if in_str:
+            cur.append(ch)
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == in_str:
+                in_str = None
+            continue
+        if ch in ('"', "'"):
+            in_str = ch
+            cur.append(ch)
+        elif ch in "([{":
+            depth += 1
+            cur.append(ch)
+        elif ch in ")]}":
+            depth = max(0, depth - 1)
+            cur.append(ch)
+        elif ch == ":" and depth == 0:
+            before = "".join(cur).strip()
+            after = text[idx + 1 :].strip()
+            return before, (after if after else None)
+        else:
+            cur.append(ch)
+    return "".join(cur).strip(), None
+
+
 def _map_types_of(map_type: str) -> tuple[str, str] | None:
     if map_type.startswith("Map<") and map_type.endswith(">"):
         inner = map_type[4:-1]
@@ -1513,6 +1585,8 @@ def _guess_expr_type(
         if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
             return f"List<{expr.record_name}>"
         return f"Optional<List<{expr.record_name}>>"
+    if isinstance(expr, FloatOfExpr):
+        return "Float"
     if isinstance(expr, CurrentEpochExpr):
         return "Int"
     if isinstance(expr, EnvVarExpr):
@@ -1536,12 +1610,13 @@ def _guess_expr_type(
             ArgAtExpr,
             FormatIntExpr,
             FormatFloatExpr,
+            CharacterOfExpr,
         ),
     ):
         return "String"
     if isinstance(
         expr,
-        (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr, SetLengthExpr),
+        (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr, SetLengthExpr, NumberOfExpr),
     ):
         return "Int"
     if isinstance(expr, ReadInputExpr):
@@ -1673,6 +1748,34 @@ class HeuristicProvider:
         symbols: dict[str, MemeType] = {}
         self._func_returns: dict[str, MemeType] = {}
         self._records: dict[str, dict[str, MemeType]] = {}
+
+        # Pre-scan top-level records and function signatures to support forward references / mutual recursion
+        base_ind = lines[0].indent
+        for idx, line_obj in enumerate(lines):
+            if line_obj.indent != base_ind:
+                continue
+            l_text = line_obj.text
+            m_fn_scan = re.fullmatch(
+                r"function\s+([A-Za-z_]\w*)\s*\((.*?)\)(?:\s*->\s*([A-Za-z0-9_<>,\s]+))?\s*:?",
+                l_text,
+            )
+            if m_fn_scan:
+                fn_name = m_fn_scan.group(1)
+                ret_str = _normalize_type((m_fn_scan.group(3) or "Void").strip())
+                self._func_returns[fn_name] = cast(MemeType, ret_str)
+            m_rec_scan = re.fullmatch(r"record\s+([A-Za-z_]\w*)\s*:?", l_text, flags=re.IGNORECASE)
+            if m_rec_scan:
+                rec_name = m_rec_scan.group(1)
+                fields: dict[str, MemeType] = {}
+                j = idx + 1
+                while j < len(lines) and lines[j].indent > base_ind:
+                    fl = lines[j].text
+                    if ":" in fl:
+                        fn, _, ft = fl.partition(":")
+                        fields[fn.strip()] = cast(MemeType, _normalize_type(ft.strip()))
+                    j += 1
+                self._records[rec_name] = fields
+
         items, _ = self._parse_block(lines, 0, lines[0].indent, symbols, top_level=True)
 
         # Post-process top-level AmbiguityDiagnostic candidates with replaces_whole_program=True
@@ -1717,9 +1820,9 @@ class HeuristicProvider:
             text = line.text
             stmt_num = len(items) + 1
 
-            # 1. `for each [index <i> item] <var> in <col>[:]` (check both inline and indented ambiguous sort!)
+            # 1. `for each [index <i> item] <var> in <col_expr>[:]` (check both inline and indented ambiguous sort!)
             m_foreach = re.fullmatch(
-                r"for\s+each\s+(?:index\s+([A-Za-z_]\w*)\s+item\s+([A-Za-z_]\w*)|([A-Za-z_]\w*)\s*,\s*([A-Za-z_]\w*)|([A-Za-z_]\w*))\s+in\s+([A-Za-z_]\w*)(?:\s*:\s*(.+))?:?",
+                r"for\s+each\s+(?:index\s+([A-Za-z_]\w*)\s+item\s+([A-Za-z_]\w*)|([A-Za-z_]\w*)\s*,\s*([A-Za-z_]\w*)|([A-Za-z_]\w*))\s+in\s+(.+)",
                 text,
                 flags=re.IGNORECASE,
             )
@@ -1733,8 +1836,8 @@ class HeuristicProvider:
                 else:
                     index_var = None
                     item_var = m_foreach.group(5)
-                col_name = m_foreach.group(6)
-                inline_body_txt = m_foreach.group(7)
+                rest = m_foreach.group(6).strip()
+                col_expr_str, inline_body_txt = _split_unquoted_colon(rest)
 
                 # Check if single-child body is an ambiguous `sort [from A to B]`
                 child_lines: list[_SourceLine] = []
@@ -1748,7 +1851,10 @@ class HeuristicProvider:
                         child_lines.append(lines[j])
                         j += 1
 
-                if top_level and len(child_lines) == 1 and index_var is None:
+                col_e = _parse_expr(col_expr_str, symbols, self._func_returns, self._records)
+                col_name = col_e.name if isinstance(col_e, VarRefExpr) else col_expr_str
+
+                if top_level and len(child_lines) == 1 and index_var is None and isinstance(col_e, VarRefExpr):
                     m_amb_sort = re.fullmatch(
                         r"sort(?:\s+" + re.escape(col_name) + r")?(?:\s+from\s+(.+?)\s+to\s+(.+))?",
                         child_lines[0].text,
@@ -1783,11 +1889,7 @@ class HeuristicProvider:
                         i = next_i if inline_body_txt else (next_i + len(child_lines))
                         continue
 
-                if col_name not in symbols:
-                    raise LLMProviderError(
-                        f"Cannot iterate over undeclared collection {col_name!r} at line {line.lineno}"
-                    )
-                col_t = symbols[col_name]
+                col_t = _guess_expr_type(col_e, symbols, self._func_returns, self._records)
                 map_t = _map_types_of(col_t)
                 set_t = _set_type_of(col_t)
                 if col_t.startswith("List<"):
@@ -1798,7 +1900,7 @@ class HeuristicProvider:
                     el_t = cast(MemeType, set_t)
                 else:
                     raise LLMProviderError(
-                        f"Cannot iterate over non-collection {col_name!r} of type {col_t!r} at line {line.lineno}"
+                        f"Cannot iterate over non-collection {col_expr_str!r} of type {col_t!r} at line {line.lineno}"
                     )
                 loop_syms = dict(symbols)
                 if index_var is not None:
@@ -1818,6 +1920,7 @@ class HeuristicProvider:
                         item_var=item_var,
                         index_var=index_var,
                         collection=col_name,
+                        collection_expr=col_e,
                         body=[cast(IRStatement, s) for s in sub_items],
                         source_line=line.lineno,
                     )
@@ -2655,6 +2758,9 @@ class HeuristicProvider:
                 IsLetterExpr,
                 IsUpperExpr,
                 IsLowerExpr,
+                FloatOfExpr,
+                NumberOfExpr,
+                CharacterOfExpr,
             ),
         ):
             return HeuristicProvider._find_free_var(expr.target, symbols)

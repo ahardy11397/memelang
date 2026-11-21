@@ -35,7 +35,7 @@ un-op ::= "\"-\"" | "\"not\""
 sort-dir ::= "\"ascending\"" | "\"descending\""
 opt-source-line ::= (ws "," ws "\"source_line\"" ws ":" ws (pos-int | "null"))?
 
-ir-expr ::= literal-expr | list-literal-expr | var-ref-expr | random-int-expr | random-list-expr | binary-op-expr | unary-op-expr | list-length-expr | list-index-expr | string-length-expr | string-slice-expr | parse-int-expr | parse-int-or-default-expr | format-int-expr | format-float-expr | is-digit-expr | is-letter-expr | is-upper-expr | is-lower-expr | call-expr | read-input-expr | str-ends-with-expr | str-contains-expr | str-starts-with-expr | string-replace-expr | string-upper-expr | string-lower-expr | string-trim-expr | string-split-expr | string-join-expr | string-index-of-expr | string-char-at-expr | file-exists-expr | read-file-string-expr | read-file-lines-expr | list-files-expr | arg-count-expr | arg-at-expr | read-json-list-expr | read-json-record-expr | read-json-records-expr | record-literal-expr | record-field-expr | map-literal-expr | map-get-expr | map-has-key-expr | optional-none-expr | optional-wrap-expr | optional-is-nothing-expr | optional-unwrap-expr | optional-unwrap-or-default-expr
+ir-expr ::= literal-expr | list-literal-expr | var-ref-expr | random-int-expr | random-list-expr | binary-op-expr | unary-op-expr | list-length-expr | list-index-expr | string-length-expr | string-slice-expr | parse-int-expr | parse-int-or-default-expr | format-int-expr | format-float-expr | float-of-expr | number-of-expr | character-of-expr | is-digit-expr | is-letter-expr | is-upper-expr | is-lower-expr | call-expr | read-input-expr | str-ends-with-expr | str-contains-expr | str-starts-with-expr | string-replace-expr | string-upper-expr | string-lower-expr | string-trim-expr | string-split-expr | string-join-expr | string-index-of-expr | string-char-at-expr | file-exists-expr | read-file-string-expr | read-file-lines-expr | list-files-expr | arg-count-expr | arg-at-expr | read-json-list-expr | read-json-record-expr | read-json-records-expr | record-literal-expr | record-field-expr | map-literal-expr | map-get-expr | map-has-key-expr | optional-none-expr | optional-wrap-expr | optional-is-nothing-expr | optional-unwrap-expr | optional-unwrap-or-default-expr
 expr-list ::= "[" ws (ir-expr (ws "," ws ir-expr)*)? ws "]"
 
 int-lit-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"literal\"" ws "," ws "\"value\"" ws ":" ws integer ws "," ws "\"data_type\"" ws ":" ws "\"Int\"" ws "}"
@@ -68,6 +68,9 @@ parse-int-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"parse_int\"" ws "," ws "\
 parse-int-or-default-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"parse_int_or_default\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"default_val\"" ws ":" ws int-expr ws "}"
 format-int-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"format_int\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
 format-float-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"format_float\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"decimals\"" ws ":" ws int-expr ws "}"
+float-of-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"float_of\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
+number-of-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"number_of\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
+character-of-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"character_of\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
 is-digit-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"is_digit\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
 is-letter-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"is_letter\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
 is-upper-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"is_upper\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"

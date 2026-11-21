@@ -1,0 +1,19 @@
+# Mutual recursion: forward references between functions in the same file.
+# is_even calls is_odd (defined later in the file), and is_odd calls is_even.
+
+function is_even(n: Int) -> Bool:
+    if n == 0:
+        return true
+    return is_odd(n - 1)
+
+function is_odd(n: Int) -> Bool:
+    if n == 0:
+        return false
+    return is_even(n - 1)
+
+print "0 is even:", is_even(0)
+print "0 is odd:", is_odd(0)
+print "4 is even:", is_even(4)
+print "4 is odd:", is_odd(4)
+print "7 is even:", is_even(7)
+print "7 is odd:", is_odd(7)

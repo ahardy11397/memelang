@@ -13,6 +13,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     CallStmt,
+    CharacterOfExpr,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -26,6 +27,7 @@ from memelang.ir.schema import (
     FailStmt,
     FileExistsExpr,
     FilterCollectionStmt,
+    FloatOfExpr,
     ForEachStmt,
     FormatIntExpr,
     FormatFloatExpr,
@@ -54,6 +56,7 @@ from memelang.ir.schema import (
     MapLiteralExpr,
     MapSetStmt,
     MoveFileStmt,
+    NumberOfExpr,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
@@ -318,6 +321,18 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
         res = f"format {format_expr(expr.target, 6)} with {format_expr(expr.decimals, 6)} decimals"
         return f"({res})" if parent_prec > 5 else res
 
+    if isinstance(expr, FloatOfExpr):
+        res = f"float of {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, NumberOfExpr):
+        res = f"number of {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, CharacterOfExpr):
+        res = f"character of {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
     if isinstance(expr, CurrentEpochExpr):
         return "current epoch seconds"
 
@@ -486,12 +501,17 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
         return lines
 
     if isinstance(stmt, ForEachStmt):
+        col_repr = (
+            format_expr(stmt.collection_expr)
+            if stmt.collection_expr is not None
+            else stmt.collection
+        )
         if stmt.index_var is not None:
             lines = [
-                f"{pad}for each index {stmt.index_var} item {stmt.item_var} in {stmt.collection}:"
+                f"{pad}for each index {stmt.index_var} item {stmt.item_var} in {col_repr}:"
             ]
         else:
-            lines = [f"{pad}for each {stmt.item_var} in {stmt.collection}:"]
+            lines = [f"{pad}for each {stmt.item_var} in {col_repr}:"]
         for child in stmt.body:
             lines.extend(_format_stmt(child, indent + 1))
         return lines

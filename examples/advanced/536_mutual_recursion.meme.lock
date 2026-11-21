@@ -1,0 +1,549 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/536_mutual_recursion.meme": {
+      "source_sha256": "4e50f4a96d1439153f1225c1ff732f6f5f9e40bf171441e338a29034b1d6687c",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "is_even",
+          "params": [
+            {
+              "name": "n",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": true,
+                    "data_type": "Bool"
+                  },
+                  "source_line": 6
+                }
+              ],
+              "else_body": [],
+              "source_line": 5
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "call",
+                "func_name": "is_odd",
+                "args": [
+                  {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  }
+                ]
+              },
+              "source_line": 7
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "func_def",
+          "name": "is_odd",
+          "params": [
+            {
+              "name": "n",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Bool",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": false,
+                    "data_type": "Bool"
+                  },
+                  "source_line": 11
+                }
+              ],
+              "else_body": [],
+              "source_line": 10
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "call",
+                "func_name": "is_even",
+                "args": [
+                  {
+                    "expr_type": "binary_op",
+                    "op": "-",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "right": {
+                      "expr_type": "literal",
+                      "value": 1,
+                      "data_type": "Int"
+                    }
+                  }
+                ]
+              },
+              "source_line": 12
+            }
+          ],
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "0 is even:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_even",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 14
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "0 is odd:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_odd",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 15
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "4 is even:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_even",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 16
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "4 is odd:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_odd",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 4,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 17
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "7 is even:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_even",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 7,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 18
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "7 is odd:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "is_odd",
+              "args": [
+                {
+                  "expr_type": "literal",
+                  "value": 7,
+                  "data_type": "Int"
+                }
+              ]
+            }
+          ],
+          "source_line": 19
+        }
+      ],
+      "canonical_meme": "function is_even(n: Int) -> Bool:\n    if n == 0:\n        return true\n    return is_odd(n - 1)\nfunction is_odd(n: Int) -> Bool:\n    if n == 0:\n        return false\n    return is_even(n - 1)\nprint \"0 is even:\", is_even(0)\nprint \"0 is odd:\", is_odd(0)\nprint \"4 is even:\", is_even(4)\nprint \"4 is odd:\", is_odd(4)\nprint \"7 is even:\", is_even(7)\nprint \"7 is odd:\", is_odd(7)",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "is_even",
+            "params": [
+              {
+                "name": "n",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": true,
+                      "data_type": "Bool"
+                    },
+                    "source_line": 6
+                  }
+                ],
+                "else_body": [],
+                "source_line": 5
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "call",
+                  "func_name": "is_odd",
+                  "args": [
+                    {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  ]
+                },
+                "source_line": 7
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "func_def",
+            "name": "is_odd",
+            "params": [
+              {
+                "name": "n",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Bool",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "literal",
+                      "value": false,
+                      "data_type": "Bool"
+                    },
+                    "source_line": 11
+                  }
+                ],
+                "else_body": [],
+                "source_line": 10
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "call",
+                  "func_name": "is_even",
+                  "args": [
+                    {
+                      "expr_type": "binary_op",
+                      "op": "-",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "right": {
+                        "expr_type": "literal",
+                        "value": 1,
+                        "data_type": "Int"
+                      }
+                    }
+                  ]
+                },
+                "source_line": 12
+              }
+            ],
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "0 is even:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_even",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 14
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "0 is odd:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_odd",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 15
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "4 is even:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_even",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 16
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "4 is odd:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_odd",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 4,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 17
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "7 is even:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_even",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 7,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 18
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "7 is odd:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "is_odd",
+                "args": [
+                  {
+                    "expr_type": "literal",
+                    "value": 7,
+                    "data_type": "Int"
+                  }
+                ]
+              }
+            ],
+            "source_line": 19
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

@@ -1,0 +1,415 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/534_conversions.meme": {
+      "source_sha256": "af628db77120de492b64fd0ac66bda6f21067b82b1b92e3b668c14baf645a700",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "cents",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 1999,
+            "data_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "dollars",
+          "var_type": "Float",
+          "value": {
+            "expr_type": "binary_op",
+            "op": "/",
+            "left": {
+              "expr_type": "float_of",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "cents"
+              }
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 100.0,
+              "data_type": "Float"
+            }
+          },
+          "source_line": 2
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "cents:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "cents"
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "dollars:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "binary_op",
+              "op": "+",
+              "left": {
+                "expr_type": "literal",
+                "value": "$",
+                "data_type": "String"
+              },
+              "right": {
+                "expr_type": "format_float",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "dollars"
+                },
+                "decimals": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              }
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "format int as float:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "format_float",
+              "target": {
+                "expr_type": "float_of",
+                "target": {
+                  "expr_type": "literal",
+                  "value": 12345,
+                  "data_type": "Int"
+                }
+              },
+              "decimals": {
+                "expr_type": "literal",
+                "value": 2,
+                "data_type": "Int"
+              }
+            }
+          ],
+          "source_line": 5
+        },
+        {
+          "op": "var_decl",
+          "name": "code_a",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "number_of",
+            "target": {
+              "expr_type": "literal",
+              "value": "A",
+              "data_type": "String"
+            }
+          },
+          "source_line": 7
+        },
+        {
+          "op": "var_decl",
+          "name": "char_a",
+          "var_type": "String",
+          "value": {
+            "expr_type": "character_of",
+            "target": {
+              "expr_type": "literal",
+              "value": 65,
+              "data_type": "Int"
+            }
+          },
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "code_a:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "code_a"
+            }
+          ],
+          "source_line": 9
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "char_a:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "char_a"
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "var_decl",
+          "name": "roundtrip",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "number_of",
+            "target": {
+              "expr_type": "character_of",
+              "target": {
+                "expr_type": "literal",
+                "value": 90,
+                "data_type": "Int"
+              }
+            }
+          },
+          "source_line": 12
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "roundtrip 90:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "roundtrip"
+            }
+          ],
+          "source_line": 13
+        }
+      ],
+      "canonical_meme": "define cents: Int as 1999\ndefine dollars: Float as float of cents / 100.0\nprint \"cents:\", cents\nprint \"dollars:\", \"$\" + format dollars with 2 decimals\nprint \"format int as float:\", format (float of 12345) with 2 decimals\ndefine code_a: Int as number of \"A\"\ndefine char_a: String as character of 65\nprint \"code_a:\", code_a\nprint \"char_a:\", char_a\ndefine roundtrip: Int as number of (character of 90)\nprint \"roundtrip 90:\", roundtrip",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "cents",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 1999,
+              "data_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "dollars",
+            "var_type": "Float",
+            "value": {
+              "expr_type": "binary_op",
+              "op": "/",
+              "left": {
+                "expr_type": "float_of",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "cents"
+                }
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 100.0,
+                "data_type": "Float"
+              }
+            },
+            "source_line": 2
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "cents:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "cents"
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "dollars:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "literal",
+                  "value": "$",
+                  "data_type": "String"
+                },
+                "right": {
+                  "expr_type": "format_float",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "dollars"
+                  },
+                  "decimals": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                }
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "format int as float:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "format_float",
+                "target": {
+                  "expr_type": "float_of",
+                  "target": {
+                    "expr_type": "literal",
+                    "value": 12345,
+                    "data_type": "Int"
+                  }
+                },
+                "decimals": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              }
+            ],
+            "source_line": 5
+          },
+          {
+            "op": "var_decl",
+            "name": "code_a",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "number_of",
+              "target": {
+                "expr_type": "literal",
+                "value": "A",
+                "data_type": "String"
+              }
+            },
+            "source_line": 7
+          },
+          {
+            "op": "var_decl",
+            "name": "char_a",
+            "var_type": "String",
+            "value": {
+              "expr_type": "character_of",
+              "target": {
+                "expr_type": "literal",
+                "value": 65,
+                "data_type": "Int"
+              }
+            },
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "code_a:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "code_a"
+              }
+            ],
+            "source_line": 9
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "char_a:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "char_a"
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "var_decl",
+            "name": "roundtrip",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "number_of",
+              "target": {
+                "expr_type": "character_of",
+                "target": {
+                  "expr_type": "literal",
+                  "value": 90,
+                  "data_type": "Int"
+                }
+              }
+            },
+            "source_line": 12
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "roundtrip 90:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "roundtrip"
+              }
+            ],
+            "source_line": 13
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

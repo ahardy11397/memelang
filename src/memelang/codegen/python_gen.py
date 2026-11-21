@@ -16,6 +16,7 @@ from memelang.ir.schema import (
     BreakStmt,
     CallExpr,
     CallStmt,
+    CharacterOfExpr,
     ClampCollectionStmt,
     CompoundAssignStmt,
     ContinueStmt,
@@ -32,6 +33,7 @@ from memelang.ir.schema import (
     ForEachStmt,
     FormatIntExpr,
     FormatFloatExpr,
+    FloatOfExpr,
     ForRangeStmt,
     FuncDefStmt,
     IRExpr,
@@ -58,6 +60,7 @@ from memelang.ir.schema import (
     MapSetStmt,
     MemeType,
     MoveFileStmt,
+    NumberOfExpr,
     OptionalIsNothingExpr,
     OptionalNoneExpr,
     OptionalUnwrapExpr,
@@ -155,6 +158,8 @@ class _PyGen:
         self.uses_is_upper = False
         self.uses_is_lower = False
         self.uses_format_float = False
+        self.uses_number_of = False
+        self.uses_character_of = False
         self.uses_time = False
         self.uses_env = False
         self.uses_argv = False
@@ -177,6 +182,12 @@ class _PyGen:
         self.records: dict[str, dict[str, MemeType]] = {}
 
     def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> MemeType:
+        if isinstance(expr, FloatOfExpr):
+            return "Float"
+        if isinstance(expr, NumberOfExpr):
+            return "Int"
+        if isinstance(expr, CharacterOfExpr):
+            return "String"
         if isinstance(expr, LiteralExpr):
             return expr.data_type
         if isinstance(expr, ListLiteralExpr):
@@ -448,6 +459,17 @@ class _PyGen:
             self.uses_format_float = True
             self.uses_math = True
             return f"_meme_format_float({self.gen_expr(expr.target, scope)}, {self.gen_expr(expr.decimals, scope)})"
+
+        if isinstance(expr, FloatOfExpr):
+            return f"_meme_builtins.float({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, NumberOfExpr):
+            self.uses_number_of = True
+            return f"_meme_number_of({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, CharacterOfExpr):
+            self.uses_character_of = True
+            return f"_meme_character_of({self.gen_expr(expr.target, scope)})"
 
         if isinstance(expr, CurrentEpochExpr):
             self.uses_time = True
@@ -738,19 +760,29 @@ class _PyGen:
             return lines
 
         if isinstance(stmt, ForEachStmt):
+            col_expr = (
+                stmt.collection_expr
+                if stmt.collection_expr is not None
+                else VarRefExpr(name=stmt.collection)
+            )
             sub = dict(scope)
-            col_t = scope.get(stmt.collection, "List<Int>")
+            col_t = self.infer_type(col_expr, scope)
             map_t = _map_types_of(col_t)
             set_t = _set_type_of(col_t)
+            col_py = (
+                _py_ident(stmt.collection)
+                if isinstance(col_expr, VarRefExpr)
+                else f"({self.gen_expr(col_expr, scope)})"
+            )
             if map_t is not None:
                 sub[stmt.item_var] = map_t[0]  # type: ignore[assignment]
-                iter_expr = f"_meme_builtins.sorted({_py_ident(stmt.collection)}.keys())"
+                iter_expr = f"_meme_builtins.sorted({col_py}.keys())"
             elif set_t is not None:
                 sub[stmt.item_var] = set_t  # type: ignore[assignment]
-                iter_expr = f"_meme_builtins.sorted({_py_ident(stmt.collection)})"
+                iter_expr = f"_meme_builtins.sorted({col_py})"
             else:
                 sub[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[assignment]
-                iter_expr = f"{_py_ident(stmt.collection)}[:]"
+                iter_expr = f"({col_py})[:]"
             if stmt.index_var is not None:
                 sub[stmt.index_var] = "Int"
                 lines = [
@@ -1207,6 +1239,31 @@ def generate_python(ir: ProgramIR) -> str:
                 "        _meme_builtins.print(f'Error: string index {_i} out of range')",
                 "        raise _meme_builtins.SystemExit(1)",
                 "    return s[_i]",
+                "",
+            ]
+        )
+
+    if gen.uses_number_of:
+        header.extend(
+            [
+                "def _meme_number_of(s: str) -> int:",
+                "    if _meme_builtins.len(s) == 0:",
+                "        _meme_builtins.print('Error: empty string in number of')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    return _meme_builtins.ord(s[0])",
+                "",
+            ]
+        )
+
+    if gen.uses_character_of:
+        header.extend(
+            [
+                "def _meme_character_of(cp: int) -> str:",
+                "    _cp = _meme_builtins.int(cp)",
+                "    if _cp < 0 or _cp > 0x10FFFF or (0xD800 <= _cp <= 0xDFFF):",
+                "        _meme_builtins.print(f'Error: invalid codepoint {_cp}')",
+                "        raise _meme_builtins.SystemExit(1)",
+                "    return _meme_builtins.chr(_cp)",
                 "",
             ]
         )
