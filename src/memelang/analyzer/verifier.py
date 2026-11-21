@@ -2620,14 +2620,7 @@ def _resolve_and_verify_modules(
     visited: set[str] = set()
     topo_order: list[str] = []
 
-    def _load_and_traverse(mod_name: str, importing_dir: Path, stack: list[str]) -> None:
-        if mod_name in stack:
-            cycle_start = stack.index(mod_name)
-            cycle = [*stack[cycle_start:], mod_name]
-            raise StaticVerificationError(f"Circular import detected: {' -> '.join(cycle)}")
-        if mod_name in visited:
-            return
-
+    def _load_and_traverse(mod_name: str, importing_dir: Path, stack: list[str], stack_names: list[str]) -> None:
         target_path = importing_dir / f"{mod_name}.meme"
         if not target_path.is_file():
             cand = (importing_dir / f"{mod_name}.meme").resolve()
@@ -2637,6 +2630,15 @@ def _resolve_and_verify_modules(
                 raise StaticVerificationError(f"Module file not found: {target_path}")
         else:
             target_path = target_path.resolve()
+
+        canon_key = str(target_path)
+        if canon_key in stack:
+            cycle_start = stack.index(canon_key)
+            cycle = [*stack_names[cycle_start:], mod_name]
+            raise StaticVerificationError(f"Circular import detected: {' -> '.join(cycle)}")
+        if canon_key in visited:
+            module_map[mod_name] = module_map[canon_key]
+            return
 
         text = target_path.read_text(encoding="utf-8")
         normalized = text.replace("\r\n", "\n").replace("\r", "\n").rstrip("\n")
@@ -2681,19 +2683,23 @@ def _resolve_and_verify_modules(
             functions=mod_funcs,
         )
         module_map[mod_name] = mod_data
+        module_map[canon_key] = mod_data
 
-        stack.append(mod_name)
+        stack.append(canon_key)
+        stack_names.append(mod_name)
         mod_dir = target_path.parent
         for dep in mod_imports:
-            _load_and_traverse(dep, mod_dir, stack)
+            _load_and_traverse(dep, mod_dir, stack, stack_names)
         stack.pop()
+        stack_names.pop()
 
-        visited.add(mod_name)
-        topo_order.append(mod_name)
+        visited.add(canon_key)
+        topo_order.append(canon_key)
 
     initial_stack = [root_name]
+    initial_names = [root_name]
     for mod in root_imports:
-        _load_and_traverse(mod, root_dir, initial_stack)
+        _load_and_traverse(mod, root_dir, initial_stack, initial_names)
 
     # Global collision check across modules in topological order
     all_def_origins: dict[str, str] = {}
@@ -2704,7 +2710,7 @@ def _resolve_and_verify_modules(
                 prev_mod = all_def_origins[r.name]
                 if prev_mod != mod_name:
                     raise StaticVerificationError(
-                        f"Collision: `{r.name}` is defined in both module `{mod_name}` and module `{prev_mod}`"
+                        f"Collision: `{r.name}` is defined in both module `{m.name}` and module `{module_map[prev_mod].name}`"
                     )
             all_def_origins[r.name] = mod_name
         for f in m.functions:
@@ -2712,7 +2718,7 @@ def _resolve_and_verify_modules(
                 prev_mod = all_def_origins[f.name]
                 if prev_mod != mod_name:
                     raise StaticVerificationError(
-                        f"Collision: `{f.name}` is defined in both module `{mod_name}` and module `{prev_mod}`"
+                        f"Collision: `{f.name}` is defined in both module `{m.name}` and module `{module_map[prev_mod].name}`"
                     )
             all_def_origins[f.name] = mod_name
 
@@ -2720,11 +2726,11 @@ def _resolve_and_verify_modules(
     for s in root_statements:
         if isinstance(s, (RecordDefStmt, FuncDefStmt)) and s.name in all_def_origins:
             raise StaticVerificationError(
-                f"Collision: imported `{s.name}` from module `{all_def_origins[s.name]}` collides with local definition"
+                f"Collision: imported `{s.name}` from module `{module_map[all_def_origins[s.name]].name}` collides with local definition"
             )
         if isinstance(s, VarDeclStmt) and s.name in all_def_origins:
             raise StaticVerificationError(
-                f"Collision: local variable `{s.name}` collides with imported definition from module `{all_def_origins[s.name]}`"
+                f"Collision: local variable `{s.name}` collides with imported definition from module `{module_map[all_def_origins[s.name]].name}`"
             )
 
     # Verify each module in topological order (deps verified before dependents)
