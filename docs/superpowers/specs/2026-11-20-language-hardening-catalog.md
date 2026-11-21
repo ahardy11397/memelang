@@ -1,6 +1,8 @@
-# Language Hardening Catalog — post-beta gap analysis
+# Language Hardening Catalog — COMPLETE (all items fixed)
 
-Date: 2026-11-20. Source: findings from building 12 real programs
+Date: 2026-11-20. STATUS: ALL 13 items fixed and verified (commits
+2e20962, ab55d3c, 329d552, 9b26246, 098b490 + 6E nested-empty follow-up);
+all 12 programs retrofitted and re-verified on six targets. Source: findings from building 12 real programs
 (ledger, library-system, payroll, flight-reservation, spreadsheet-engine,
 maze-solver, huffman-compressor, markdown-to-html, expense-splitter +
 project-tracker, csv-analytics in flight).
