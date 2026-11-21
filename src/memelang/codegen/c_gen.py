@@ -81,6 +81,7 @@ from memelang.ir.schema import (
     OptionalWrapExpr,
     ParseIntExpr,
     ParseIntOrDefaultExpr,
+    PrintErrorStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -379,7 +380,7 @@ def _collect_types_from_stmt(stmt: IRStatement, out: set[str]) -> None:
         _collect_types_from_expr(stmt.condition, out)
         for s in stmt.body:
             _collect_types_from_stmt(s, out)
-    elif isinstance(stmt, PrintStmt):
+    elif isinstance(stmt, (PrintStmt, PrintErrorStmt)):
         for e in stmt.expressions:
             _collect_types_from_expr(e, out)
     elif isinstance(stmt, ReturnStmt):
@@ -1142,6 +1143,17 @@ class _CGen:
                 fmts.append(f"{fmt_fn}({self.gen_expr(e, scope)})")
             fmt_str = " ".join(["%s"] * len(stmt.expressions)) + "\\n"
             return [f'{pad}printf("{fmt_str}", {", ".join(fmts)});']
+
+        if isinstance(stmt, PrintErrorStmt):
+            if not stmt.expressions:
+                return [f'{pad}fprintf(stderr, "\\n");']
+            fmts: list[str] = []
+            for e in stmt.expressions:
+                t = self.infer_type(e, scope)
+                fmt_fn = self._fmt_function_name(t)
+                fmts.append(f"{fmt_fn}({self.gen_expr(e, scope)})")
+            fmt_str = " ".join(["%s"] * len(stmt.expressions)) + "\\n"
+            return [f'{pad}fprintf(stderr, "{fmt_str}", {", ".join(fmts)});']
 
         if isinstance(stmt, IfStmt):
             lines = [f"{pad}if ({self.gen_expr(stmt.condition, scope)}) {{"]

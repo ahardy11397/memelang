@@ -69,6 +69,7 @@ from memelang.ir.schema import (
     OptionalWrapExpr,
     ParseIntExpr,
     ParseIntOrDefaultExpr,
+    PrintErrorStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -1649,9 +1650,10 @@ class _StaticChecker:
                 )
             return False
 
-        if isinstance(stmt, PrintStmt):
+        if isinstance(stmt, (PrintStmt, PrintErrorStmt)):
+            kw = "print error" if isinstance(stmt, PrintErrorStmt) else "print"
             if not stmt.expressions:
-                raise StaticVerificationError("`print` requires at least one expression", stmt_idx)
+                raise StaticVerificationError(f"`{kw}` requires at least one expression", stmt_idx)
             for e in stmt.expressions:
                 self.infer_expr_type(e, scope, stmt_idx)
             return False
@@ -2369,7 +2371,7 @@ def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
             return True
         if isinstance(s, TestBlockStmt) and _stmts_reference_var(s.body, name):
             return True
-        if isinstance(s, PrintStmt) and any(
+        if isinstance(s, (PrintStmt, PrintErrorStmt)) and any(
             _expr_references_var(e, name) for e in s.expressions
         ):
             return True

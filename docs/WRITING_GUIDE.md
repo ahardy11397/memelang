@@ -767,6 +767,31 @@ else:
 
 - **`argument count`** — returns `Int` equal to `argc` (**including the program name** at index `0`). When invoked with no user arguments, `argument count` is `1`. When invoked with `K` user arguments, `argument count` is `1 + K`.
 - **`argument <n>`** — returns `String` at integer index `<n>`. User arguments are **1-based** (`argument 1` is the first user argument, `argument 2` is the second, and `argument 0` is the program path/name). If `<n>` is out of range (`< 0` or `>= argument count`), the program prints `Error: argument index <n> out of range` to stdout and exits immediately with status code `1` across all four targets (Python, Rust, C++, Go). Negative literal indices are rejected statically by the verifier.
+- **Forwarding arguments with `meme run`:** To pass command-line arguments to a program executed via `meme run`, separate compiler options from program arguments using a literal `--`:
+  ```bash
+  uv run meme run app.meme --target python -- hello world
+  ```
+  Everything following `--` is forwarded as the program's argv. `argument count` and `argument <n>` see exactly those forwarded arguments, matching the behavior of binaries produced by `meme build app.meme -o app && ./app hello world` across all six runtime targets.
+
+### Standard Error Output (11b.7)
+
+Memelang provides the `print error` statement for outputting diagnostics, warnings, and error messages to standard error (`stderr`) (**offline** & **LLM-voice**):
+
+```meme
+print error "fatal: configuration file not found"
+print error "failed at index:", idx, "with code:", err_code
+```
+
+- **`print error <expr1>, <expr2>, ...`** — formats and joins expressions with a space delimiter and prints the formatted line to `stderr` with a trailing newline.
+- Formatting and expression joining follow identical semantics to standard `print` (`_meme_fmt`), only the output stream differs (`stderr` instead of `stdout`).
+- **Cross-target parity across all six targets:**
+  - **Python:** `_meme_builtins.print(..., file=_meme_sys.stderr)`
+  - **Rust:** `eprintln!(...)`
+  - **C++:** `std::cerr << ... << '\n';`
+  - **Go:** `fmt.Fprintln(os.Stderr, ...)`
+  - **C:** `fprintf(stderr, "%s ...\n", ...);`
+  - **TypeScript:** `process.stderr.write(...)`
+- **Diagnostic preference:** While `fail with <msg>` also halts execution with an error message (to stdout for backward compatibility), `print error` is the preferred mechanism for stderr diagnostics, logging, and error reporting.
 
 ---
 
@@ -1023,6 +1048,7 @@ for each row in grid:
 ```bash
 uv run meme compile app.meme --target rust      # compile (writes build.lock, defaults to auto provider)
 uv run meme run app.meme --target python        # compile + execute (defaults to auto provider)
+uv run meme run app.meme --target python -- arg1 arg2  # compile + execute forwarding argv after --
 uv run meme run app.meme --target cpp --resolve 2=3
 uv run meme check app.meme                      # static check only
 uv run meme explain app.meme                    # show canonical form + lock status

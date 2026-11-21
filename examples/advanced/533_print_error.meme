@@ -1,0 +1,7 @@
+define code: Int as 404
+define detail: String as "resource not found"
+
+print "starting diagnostic run"
+print error "warning: diagnostic check triggered"
+print error "error", code, detail
+print "finished diagnostic run"

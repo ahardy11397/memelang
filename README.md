@@ -51,6 +51,7 @@ uv run meme run examples/random_sort_structured.meme --target python
 uv run meme run examples/hello.meme --target go
 uv run meme run examples/hello.meme --target c
 uv run meme run examples/hello.meme --target ts
+uv run meme run examples/hello.meme --target python -- arg1 arg2  # forwards argv after -- to program
 
 # Compile standalone Go source (package main, func main):
 uv run meme compile examples/hello.meme --target go -o hello.go

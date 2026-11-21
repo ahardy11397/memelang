@@ -42,7 +42,7 @@ function parse_point(line: String) -> Point:
 
 define path as "points.csv"
 if not (file exists path):
-    print "points.csv not found"
+    print error "points.csv not found"
     exit with code 1
 define content as read string from file path
 define lines as split content by "\n"

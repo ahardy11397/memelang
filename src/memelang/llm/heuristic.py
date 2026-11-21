@@ -73,6 +73,7 @@ from memelang.ir.schema import (
     OptionalWrapExpr,
     ParseIntExpr,
     ParseIntOrDefaultExpr,
+    PrintErrorStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -2484,6 +2485,14 @@ class HeuristicProvider:
                 condition=_pe(cond_str),
                 source_line=line.lineno,
                 source_text=cond_str,
+            )
+
+        # `print error <expr1>, <expr2>, ...`
+        m_print_err = re.fullmatch(r"print\s+error\s+(.+)", text, flags=re.IGNORECASE)
+        if m_print_err:
+            chunks = _split_top_level_commas(m_print_err.group(1))
+            return PrintErrorStmt(
+                expressions=[_pe(c) for c in chunks], source_line=line.lineno
             )
 
         # `print <expr1>, <expr2>, ...`

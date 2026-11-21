@@ -1,0 +1,169 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/533_print_error.meme": {
+      "source_sha256": "46500a06584441e295fc772200014721da52f5c84e821f131171666ae82770f3",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "code",
+          "var_type": "Int",
+          "value": {
+            "expr_type": "literal",
+            "value": 404,
+            "data_type": "Int"
+          },
+          "source_line": 1
+        },
+        {
+          "op": "var_decl",
+          "name": "detail",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "resource not found",
+            "data_type": "String"
+          },
+          "source_line": 2
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "starting diagnostic run",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "print_error_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "warning: diagnostic check triggered",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 5
+        },
+        {
+          "op": "print_error_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "error",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "code"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "detail"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "finished diagnostic run",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "define code: Int as 404\ndefine detail: String as \"resource not found\"\nprint \"starting diagnostic run\"\nprint error \"warning: diagnostic check triggered\"\nprint error \"error\", code, detail\nprint \"finished diagnostic run\"",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "code",
+            "var_type": "Int",
+            "value": {
+              "expr_type": "literal",
+              "value": 404,
+              "data_type": "Int"
+            },
+            "source_line": 1
+          },
+          {
+            "op": "var_decl",
+            "name": "detail",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "resource not found",
+              "data_type": "String"
+            },
+            "source_line": 2
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "starting diagnostic run",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "print_error_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "warning: diagnostic check triggered",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 5
+          },
+          {
+            "op": "print_error_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "error",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "code"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "detail"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "finished diagnostic run",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 7
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

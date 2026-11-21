@@ -65,6 +65,7 @@ from memelang.ir.schema import (
     OptionalWrapExpr,
     ParseIntExpr,
     ParseIntOrDefaultExpr,
+    PrintErrorStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -889,6 +890,16 @@ class _GoGen:
             self.uses_strings = True
             args = ", ".join(f"_meme_fmt({self.gen_expr(e, scope)})" for e in stmt.expressions)
             return [f"{pad}fmt.Println(strings.Join([]string{{{args}}}, \" \"))"]
+
+        if isinstance(stmt, PrintErrorStmt):
+            self.uses_os = True
+            self.uses_fmt = True
+            self.uses_meme_fmt = True
+            if len(stmt.expressions) == 1:
+                return [f"{pad}fmt.Fprintln(os.Stderr, _meme_fmt({self.gen_expr(stmt.expressions[0], scope)}))"]
+            self.uses_strings = True
+            args = ", ".join(f"_meme_fmt({self.gen_expr(e, scope)})" for e in stmt.expressions)
+            return [f"{pad}fmt.Fprintln(os.Stderr, strings.Join([]string{{{args}}}, \" \"))"]
 
         if isinstance(stmt, IfStmt):
             lines = [f"{pad}if {self.gen_expr(stmt.condition, scope)} {{"]

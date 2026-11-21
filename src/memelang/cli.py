@@ -326,7 +326,20 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
-    args = parser.parse_args(argv)
+
+    raw_argv = list(sys.argv[1:] if argv is None else argv)
+    forwarded_argv: list[str] = []
+    if "--" in raw_argv:
+        dash_idx = raw_argv.index("--")
+        forwarded_argv = raw_argv[dash_idx + 1 :]
+        cli_argv = raw_argv[:dash_idx]
+    else:
+        cli_argv = raw_argv
+
+    args = parser.parse_args(cli_argv)
+
+    if forwarded_argv and args.command != "run":
+        parser.error(f"unrecognized arguments: -- {' '.join(forwarded_argv)}")
 
     try:
         if args.command == "pull":
@@ -540,11 +553,15 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.command == "run":
             use_interactive = sys.stdin.isatty() and program_uses_input(program)
+            run_kwargs: dict[str, object] = {}
+            if forwarded_argv:
+                run_kwargs["argv"] = forwarded_argv
             exec_res = execute_ir(
                 program,
                 target,
                 interactive_io=use_interactive,
                 source_dir=args.source.resolve().parent,
+                **run_kwargs,
             )
             if exec_res.stdout:
                 sys.stdout.write(exec_res.stdout)

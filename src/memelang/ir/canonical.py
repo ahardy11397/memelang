@@ -61,6 +61,7 @@ from memelang.ir.schema import (
     OptionalWrapExpr,
     ParseIntExpr,
     ParseIntOrDefaultExpr,
+    PrintErrorStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -457,6 +458,10 @@ def _format_stmt(stmt: IRStatement, indent: int = 0) -> list[str]:
     if isinstance(stmt, PrintStmt):
         exprs = ", ".join(format_expr(e) for e in stmt.expressions)
         return [f"{pad}print {exprs}"]
+
+    if isinstance(stmt, PrintErrorStmt):
+        exprs = ", ".join(format_expr(e) for e in stmt.expressions)
+        return [f"{pad}print error {exprs}"]
 
     if isinstance(stmt, IfStmt):
         lines = [f"{pad}if {format_expr(stmt.condition)}:"]

@@ -64,6 +64,7 @@ from memelang.ir.schema import (
     OptionalWrapExpr,
     ParseIntExpr,
     ParseIntOrDefaultExpr,
+    PrintErrorStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -780,6 +781,13 @@ class _RustGen:
             fmt_str = " ".join("{}" for _ in stmt.expressions)
             args = ", ".join(self._fmt_expr_for_print(e, scope) for e in stmt.expressions)
             return [f'{pad}println!("{fmt_str}", {args});']
+
+        if isinstance(stmt, PrintErrorStmt):
+            if len(stmt.expressions) == 1:
+                return [f"{pad}eprintln!(\"{{}}\", {self._fmt_expr_for_print(stmt.expressions[0], scope)});"]
+            fmt_str = " ".join("{}" for _ in stmt.expressions)
+            args = ", ".join(self._fmt_expr_for_print(e, scope) for e in stmt.expressions)
+            return [f'{pad}eprintln!("{fmt_str}", {args});']
 
         if isinstance(stmt, IfStmt):
             lines = [f"{pad}if {self.gen_expr(stmt.condition, scope)} {{"]

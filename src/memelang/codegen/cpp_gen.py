@@ -64,6 +64,7 @@ from memelang.ir.schema import (
     OptionalWrapExpr,
     ParseIntExpr,
     ParseIntOrDefaultExpr,
+    PrintErrorStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -785,6 +786,15 @@ class _CppGen:
                 parts.append(f"_meme_fmt({self.gen_expr(e, scope)})")
             chain = " << ".join(parts)
             return [f"{pad}std::cout << {chain} << '\\n';"]
+
+        if isinstance(stmt, PrintErrorStmt):
+            parts: list[str] = []
+            for idx, e in enumerate(stmt.expressions):
+                if idx > 0:
+                    parts.append('" "')
+                parts.append(f"_meme_fmt({self.gen_expr(e, scope)})")
+            chain = " << ".join(parts)
+            return [f"{pad}std::cerr << {chain} << '\\n';"]
 
         if isinstance(stmt, IfStmt):
             lines = [f"{pad}if ({self.gen_expr(stmt.condition, scope)}) {{"]

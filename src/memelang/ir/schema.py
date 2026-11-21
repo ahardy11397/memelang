@@ -602,6 +602,12 @@ class PrintStmt(IRNode):
     source_line: int | None = None
 
 
+class PrintErrorStmt(IRNode):
+    op: Literal["print_error_stmt"] = "print_error_stmt"
+    expressions: list[IRExpr]
+    source_line: int | None = None
+
+
 class IfStmt(IRNode):
     op: Literal["if_stmt"] = "if_stmt"
     condition: IRExpr
@@ -804,6 +810,7 @@ IRStatement = Annotated[
     | AssertStmt
     | TestBlockStmt
     | PrintStmt
+    | PrintErrorStmt
     | IfStmt
     | SwitchStmt
     | ForEachStmt
@@ -949,6 +956,7 @@ ExitStmt.model_rebuild()
 AssertStmt.model_rebuild()
 TestBlockStmt.model_rebuild()
 PrintStmt.model_rebuild()
+PrintErrorStmt.model_rebuild()
 IfStmt.model_rebuild()
 SwitchCase.model_rebuild()
 SwitchStmt.model_rebuild()

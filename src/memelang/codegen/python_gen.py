@@ -65,6 +65,7 @@ from memelang.ir.schema import (
     OptionalWrapExpr,
     ParseIntExpr,
     ParseIntOrDefaultExpr,
+    PrintErrorStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -158,6 +159,7 @@ class _PyGen:
         self.uses_env = False
         self.uses_argv = False
         self.uses_assert = False
+        self.uses_stderr = False
         self.uses_input = False
         self.uses_input_helpers = False
         self.uses_str_split = False
@@ -690,6 +692,11 @@ class _PyGen:
             parts = ", ".join(f"_meme_fmt({self.gen_expr(e, scope)})" for e in stmt.expressions)
             return [f"{pad}_meme_builtins.print({parts})"]
 
+        if isinstance(stmt, PrintErrorStmt):
+            self.uses_stderr = True
+            parts = ", ".join(f"_meme_fmt({self.gen_expr(e, scope)})" for e in stmt.expressions)
+            return [f"{pad}_meme_builtins.print({parts}, file=_meme_sys.stderr)"]
+
         if isinstance(stmt, IfStmt):
             lines = [f"{pad}if {self.gen_expr(stmt.condition, scope)}:"]
             then_scope = dict(scope)
@@ -1135,7 +1142,7 @@ def generate_python(ir: ProgramIR) -> str:
         header.append("import json as _meme_json")
     if gen.uses_json_io or gen.uses_file_io or gen.uses_input or gen.uses_env:
         header.append("import os as _meme_os")
-    if gen.uses_json_io or gen.uses_file_io or gen.uses_argv or gen.uses_assert:
+    if gen.uses_json_io or gen.uses_file_io or gen.uses_argv or gen.uses_assert or gen.uses_stderr:
         header.append("import sys as _meme_sys")
     if gen.uses_file_io:
         header.append("import shutil as _shutil")

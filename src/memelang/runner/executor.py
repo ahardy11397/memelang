@@ -61,6 +61,7 @@ from memelang.ir.schema import (
     OptionalWrapExpr,
     ParseIntExpr,
     ParseIntOrDefaultExpr,
+    PrintErrorStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -270,7 +271,7 @@ def _stmts_use_input(stmts: list[IRStatement]) -> bool:
             return True
         if isinstance(s, FilterCollectionStmt) and _expr_uses_input(s.predicate):
             return True
-        if isinstance(s, PrintStmt) and any(_expr_uses_input(e) for e in s.expressions):
+        if isinstance(s, (PrintStmt, PrintErrorStmt)) and any(_expr_uses_input(e) for e in s.expressions):
             return True
         if isinstance(s, ReturnStmt) and s.value is not None and _expr_uses_input(s.value):
             return True

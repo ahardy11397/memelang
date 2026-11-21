@@ -109,7 +109,7 @@ optional-is-nothing-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"optional_is_not
 optional-unwrap-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"optional_unwrap\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "}"
 optional-unwrap-or-default-expr ::= "{" ws "\"expr_type\"" ws ":" ws "\"optional_unwrap_or_default\"" ws "," ws "\"target\"" ws ":" ws ir-expr ws "," ws "\"default_val\"" ws ":" ws ir-expr ws "}"
 
-body-stmt ::= var-decl-stmt | assign-stmt | compound-assign-stmt | sort-stmt | clamp-stmt | filter-stmt | append-stmt | insert-stmt | set-index-stmt | remove-stmt | record-set-field-stmt | map-set-stmt | write-file-stmt | write-json-stmt | append-file-stmt | copy-file-stmt | move-file-stmt | rename-file-stmt | delete-file-stmt | create-directory-stmt | fail-stmt | exit-stmt | print-stmt | if-stmt | switch-stmt | for-each-stmt | for-range-stmt | while-stmt | loop-break-stmt | loop-continue-stmt | return-stmt | call-stmt
+body-stmt ::= var-decl-stmt | assign-stmt | compound-assign-stmt | sort-stmt | clamp-stmt | filter-stmt | append-stmt | insert-stmt | set-index-stmt | remove-stmt | record-set-field-stmt | map-set-stmt | write-file-stmt | write-json-stmt | append-file-stmt | copy-file-stmt | move-file-stmt | rename-file-stmt | delete-file-stmt | create-directory-stmt | fail-stmt | exit-stmt | print-stmt | print-error-stmt | if-stmt | switch-stmt | for-each-stmt | for-range-stmt | while-stmt | loop-break-stmt | loop-continue-stmt | return-stmt | call-stmt
 ir-stmt ::= body-stmt | func-def-stmt | record-def-stmt | import-stmt
 stmt-list ::= "[" ws (body-stmt (ws "," ws body-stmt)*)? ws "]"
 func-param ::= "{" ws "\"name\"" ws ":" ws ident-str ws "," ws "\"param_type\"" ws ":" ws non-void-type ws "}"
@@ -140,6 +140,7 @@ create-directory-stmt ::= "{" ws "\"op\"" ws ":" ws "\"create_directory\"" ws ",
 fail-stmt ::= "{" ws "\"op\"" ws ":" ws "\"fail_stmt\"" ws "," ws "\"message\"" ws ":" ws ir-expr opt-source-line ws "}"
 exit-stmt ::= "{" ws "\"op\"" ws ":" ws "\"exit_stmt\"" ws "," ws "\"code\"" ws ":" ws int-expr opt-source-line ws "}"
 print-stmt ::= "{" ws "\"op\"" ws ":" ws "\"print_stmt\"" ws "," ws "\"expressions\"" ws ":" ws "[" ws ir-expr (ws "," ws ir-expr)* ws "]" opt-source-line ws "}"
+print-error-stmt ::= "{" ws "\"op\"" ws ":" ws "\"print_error_stmt\"" ws "," ws "\"expressions\"" ws ":" ws "[" ws ir-expr (ws "," ws ir-expr)* ws "]" opt-source-line ws "}"
 if-stmt ::= "{" ws "\"op\"" ws ":" ws "\"if_stmt\"" ws "," ws "\"condition\"" ws ":" ws bool-expr ws "," ws "\"then_body\"" ws ":" ws stmt-list (ws "," ws "\"else_body\"" ws ":" ws stmt-list)? opt-source-line ws "}"
 switch-case ::= "{" ws "\"value\"" ws ":" ws ir-expr ws "," ws "\"body\"" ws ":" ws stmt-list ws "}"
 switch-cases ::= "[" ws (switch-case (ws "," ws switch-case)*)? ws "]"

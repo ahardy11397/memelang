@@ -83,6 +83,7 @@ from memelang.ir.schema import (
     OptionalWrapExpr,
     ParseIntExpr,
     ParseIntOrDefaultExpr,
+    PrintErrorStmt,
     PrintStmt,
     ProgramIR,
     RandomIntExpr,
@@ -674,6 +675,12 @@ class _TSGen:
                 return [f'{pad}console.log("");']
             args = ", ".join(f"_meme_fmt({self.gen_expr(e, scope)})" for e in stmt.expressions)
             return [f"{pad}console.log([{args}].join(\" \"));"]
+
+        if isinstance(stmt, PrintErrorStmt):
+            if not stmt.expressions:
+                return [f'{pad}process.stderr.write("\\n");']
+            args = ", ".join(f"_meme_fmt({self.gen_expr(e, scope)})" for e in stmt.expressions)
+            return [f'{pad}process.stderr.write([{args}].join(" ") + "\\n");']
 
         if isinstance(stmt, IfStmt):
             cond = self.gen_expr(stmt.condition, scope)

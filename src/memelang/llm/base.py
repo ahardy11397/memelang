@@ -110,6 +110,7 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"op": "exit_stmt", "code": <Int expr>}` (`exit with code <int-expr>`, exits immediately with status code `code & 0xFF`; counts as returning on that branch!)
 - `{"op": "assert_stmt", "condition": <Bool expr>, "source_line": 1}` (`assert <condition>`, prints `ASSERT FAILED line <n>: <condition>` to stderr and exits 1 on failure)
 - `{"op": "print_stmt", "expressions": [<expr>, ...]}`
+- `{"op": "print_error_stmt", "expressions": [<expr>, ...]}` (`print error <expr>, ...`, prints formatted line to stderr with trailing newline)
 - `{"op": "if_stmt", "condition": <expr>, "then_body": [...], "else_body": [...]}`
 - `{"op": "switch_stmt", "target": <expr>, "cases": [{"value": <literal expr>, "body": [...]}, ...], "default_body": [...]}` (`match <scalar-expr>:` with `when <literal>:` cases and optional `otherwise:` block)
 - `{"op": "for_each", "item_var": "n", "index_var": "i", "collection": "nums", "body": [...]}` (`index_var` is optional string or `null`, 0-based `"Int"`; `collection` can be `List<T>` or `Map<K, V>` where `item_var` receives sorted keys `K`)
