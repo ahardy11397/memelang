@@ -166,6 +166,8 @@ uv run meme test [PATH] [--target python|rust|cpp|go|c|ts]
 - **Mutual Recursion:** Functions can forward-reference functions defined later in the same module.
 - **Parent-Relative Modules:** `use ../<module>` resolves modules in parent directories — test files import repo-root modules without symlinks.
 - **Records Hold Collections:** Record fields of type `List<T>`, `Map<K, V>`, and `Set<T>` (including self-referential records through `List`) work across all six targets.
+- **Recursive Records (`Optional<T>` self-reference):** Records can reference themselves through `Optional<T>` fields (`record Node: parent: Optional<Node>`) — indirection is handled per-target (`Option<Box<T>>` on rust, pointers on cpp/c), user code stays identical across all six targets.
+- **JSON Records with Collections & Nested Records:** `write ... as json` / `read json record ...` serialize record fields of type `List<T>`, `Set<T>`, `Map<K, V>` (including record-valued maps), nested record fields, and `Optional` of either — all-or-nothing reads, deterministic sorted ordering, byte-identical output on all six targets.
 
 ### Project Ecosystem (`projects/`)
 
