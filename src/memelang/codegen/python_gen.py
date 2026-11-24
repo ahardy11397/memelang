@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import keyword
 
-from memelang.codegen.base import BaseGen, _map_types_of, _set_type_of
+from memelang.codegen.base import BaseGen, _get_transitive_json_records, _map_types_of, _set_type_of
 from memelang.ir.canonical import format_expr
 from memelang.ir.schema import (
     AppendFileStmt,
@@ -807,6 +807,129 @@ class _PyGen(BaseGen):
         raise TypeError(f"Unsupported IRStatement: {type(stmt)!r}")
 
 
+def _py_json_decode_val(val_var: str, ftype: str, indent: str) -> tuple[str, list[str]]:
+    if ftype == "Int":
+        return val_var, [
+            f"{indent}if type({val_var}) is not int or isinstance({val_var}, bool): return None"
+        ]
+    if ftype == "Float":
+        return f"float({val_var})", [
+            f"{indent}if isinstance({val_var}, bool) or not isinstance({val_var}, (int, float)): return None"
+        ]
+    if ftype == "String":
+        return val_var, [
+            f"{indent}if not isinstance({val_var}, str): return None"
+        ]
+    if ftype == "Bool":
+        return val_var, [
+            f"{indent}if not isinstance({val_var}, bool): return None"
+        ]
+    if ftype.startswith("Optional<") and ftype.endswith(">"):
+        inner = ftype[9:-1]
+        temp_opt = f"_opt_{abs(hash(ftype + val_var)) % 1000000}"
+        inner_expr, inner_code = _py_json_decode_val(val_var, inner, indent + "    ")
+        code = [
+            f"{indent}if {val_var} is None:",
+            f"{indent}    {temp_opt} = None",
+            f"{indent}else:",
+            *inner_code,
+            f"{indent}    {temp_opt} = {inner_expr}",
+        ]
+        return temp_opt, code
+    if ftype.startswith("List<") and ftype.endswith(">"):
+        el_t = ftype[5:-1]
+        temp_list = f"_l_{abs(hash(ftype + val_var)) % 1000000}"
+        temp_it = f"_it_{abs(hash(ftype + val_var)) % 1000000}"
+        el_expr, el_code = _py_json_decode_val(temp_it, el_t, indent + "    ")
+        code = [
+            f"{indent}if not isinstance({val_var}, list): return None",
+            f"{indent}{temp_list} = []",
+            f"{indent}for {temp_it} in {val_var}:",
+            *el_code,
+            f"{indent}    {temp_list}.append({el_expr})",
+        ]
+        return temp_list, code
+    if ftype.startswith("Set<") and ftype.endswith(">"):
+        el_t = ftype[4:-1]
+        temp_set = f"_s_{abs(hash(ftype + val_var)) % 1000000}"
+        temp_it = f"_it_{abs(hash(ftype + val_var)) % 1000000}"
+        el_expr, el_code = _py_json_decode_val(temp_it, el_t, indent + "    ")
+        code = [
+            f"{indent}if not isinstance({val_var}, list): return None",
+            f"{indent}{temp_set} = set()",
+            f"{indent}for {temp_it} in {val_var}:",
+            *el_code,
+            f"{indent}    {temp_set}.add({el_expr})",
+        ]
+        return temp_set, code
+    if ftype.startswith("Map<") and ftype.endswith(">"):
+        mt = _map_types_of(ftype)
+        assert mt is not None
+        k_t, v_t = mt
+        temp_map = f"_m_{abs(hash(ftype + val_var)) % 1000000}"
+        temp_k = f"_k_{abs(hash(ftype + val_var)) % 1000000}"
+        temp_v = f"_v_{abs(hash(ftype + val_var)) % 1000000}"
+        v_expr, v_code = _py_json_decode_val(temp_v, v_t, indent + "    ")
+        code = [
+            f"{indent}if not isinstance({val_var}, dict): return None",
+            f"{indent}{temp_map} = {{}}",
+            f"{indent}for {temp_k}, {temp_v} in {val_var}.items():",
+        ]
+        if k_t == "Int":
+            code.extend([
+                f"{indent}    try:",
+                f"{indent}        _parsed_k = int({temp_k})",
+                f"{indent}    except Exception:",
+                f"{indent}        return None",
+            ])
+            key_access = "_parsed_k"
+        else:
+            code.append(f"{indent}    _parsed_k = {temp_k}")
+            key_access = "_parsed_k"
+        code.extend(v_code)
+        code.append(f"{indent}    {temp_map}[{key_access}] = {v_expr}")
+        return temp_map, code
+    r_ident = _py_ident(ftype)
+    temp_rec = f"_rec_{abs(hash(ftype + val_var)) % 1000000}"
+    code = [
+        f"{indent}{temp_rec} = _meme_parse_record_{r_ident}({val_var})",
+        f"{indent}if {temp_rec} is None: return None",
+    ]
+    return temp_rec, code
+
+
+def _py_json_serialize_val(val_expr: str, ftype: str) -> str:
+    if ftype == "Int":
+        return f"str({val_expr})"
+    if ftype == "Float":
+        return f"_meme_format_json_float({val_expr})"
+    if ftype == "String":
+        return f"_meme_escape_json_str({val_expr})"
+    if ftype == "Bool":
+        return f"('true' if {val_expr} else 'false')"
+    if ftype.startswith("Optional<") and ftype.endswith(">"):
+        inner = ftype[9:-1]
+        inner_code = _py_json_serialize_val(val_expr, inner)
+        return f"('null' if {val_expr} is None else {inner_code})"
+    if ftype.startswith("List<") and ftype.endswith(">"):
+        el_t = ftype[5:-1]
+        el_code = _py_json_serialize_val("_x", el_t)
+        return f"'[' + ','.join({el_code} for _x in {val_expr}) + ']'"
+    if ftype.startswith("Set<") and ftype.endswith(">"):
+        el_t = ftype[4:-1]
+        el_code = _py_json_serialize_val("_x", el_t)
+        return f"'[' + ','.join({el_code} for _x in sorted({val_expr})) + ']'"
+    if ftype.startswith("Map<") and ftype.endswith(">"):
+        mt = _map_types_of(ftype)
+        assert mt is not None
+        k_t, v_t = mt
+        k_str = f"_meme_escape_json_str(str(_k))"
+        v_str = _py_json_serialize_val(f"{val_expr}[_k]", v_t)
+        return f"'{{' + ','.join({k_str} + ':' + {v_str} for _k in sorted({val_expr}.keys())) + '}}'"
+    r_ident = _py_ident(ftype)
+    return f"_meme_serialize_json_record_{r_ident}({val_expr})"
+
+
 def _emit_py_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> list[str]:
     lines = [
         f"def _meme_parse_record_{r_name}(_d):",
@@ -815,62 +938,18 @@ def _emit_py_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> lis
         "    _kwargs = {}",
     ]
     for fname, ftype in fields.items():
-        if ftype == "Int":
-            lines.extend([
-                f"    if {json.dumps(fname)} not in _d: return None",
-                f"    _v = _d[{json.dumps(fname)}]",
-                "    if type(_v) is not int or isinstance(_v, bool): return None",
-                f"    _kwargs[{json.dumps(fname)}] = _v",
-            ])
-        elif ftype == "Float":
-            lines.extend([
-                f"    if {json.dumps(fname)} not in _d: return None",
-                f"    _v = _d[{json.dumps(fname)}]",
-                "    if isinstance(_v, bool) or not isinstance(_v, (int, float)): return None",
-                f"    _kwargs[{json.dumps(fname)}] = float(_v)",
-            ])
-        elif ftype == "String":
-            lines.extend([
-                f"    if {json.dumps(fname)} not in _d: return None",
-                f"    _v = _d[{json.dumps(fname)}]",
-                "    if not isinstance(_v, str): return None",
-                f"    _kwargs[{json.dumps(fname)}] = _v",
-            ])
-        elif ftype == "Bool":
-            lines.extend([
-                f"    if {json.dumps(fname)} not in _d: return None",
-                f"    _v = _d[{json.dumps(fname)}]",
-                "    if not isinstance(_v, bool): return None",
-                f"    _kwargs[{json.dumps(fname)}] = _v",
-            ])
-        elif ftype.startswith("Optional<"):
-            inner = ftype[9:-1]
-            lines.extend([
-                f"    if {json.dumps(fname)} not in _d or _d[{json.dumps(fname)}] is None:",
-                f"        _kwargs[{json.dumps(fname)}] = None",
-                "    else:",
-                f"        _v = _d[{json.dumps(fname)}]",
-            ])
-            if inner == "Int":
-                lines.extend([
-                    "        if type(_v) is not int or isinstance(_v, bool): return None",
-                    f"        _kwargs[{json.dumps(fname)}] = _v",
-                ])
-            elif inner == "Float":
-                lines.extend([
-                    "        if isinstance(_v, bool) or not isinstance(_v, (int, float)): return None",
-                    f"        _kwargs[{json.dumps(fname)}] = float(_v)",
-                ])
-            elif inner == "String":
-                lines.extend([
-                    "        if not isinstance(_v, str): return None",
-                    f"        _kwargs[{json.dumps(fname)}] = _v",
-                ])
-            elif inner == "Bool":
-                lines.extend([
-                    "        if not isinstance(_v, bool): return None",
-                    f"        _kwargs[{json.dumps(fname)}] = _v",
-                ])
+        fn_str = json.dumps(fname)
+        lines.append(f"    if {fn_str} not in _d:")
+        if ftype.startswith("Optional<"):
+            lines.append(f"        _kwargs[{fn_str}] = None")
+        else:
+            lines.append("        return None")
+        lines.append("    else:")
+        lines.append(f"        _v = _d[{fn_str}]")
+        dec_expr, dec_code = _py_json_decode_val("_v", ftype, "        ")
+        lines.extend(dec_code)
+        lines.append(f"        _kwargs[{fn_str}] = {dec_expr}")
+
     lines.append(f"    return {r_name}(**_kwargs)")
     lines.append("")
     lines.extend([
@@ -909,29 +988,7 @@ def _emit_py_json_record_writer(r_name: str, fields: dict[str, MemeType]) -> lis
     ]
     for fname, ftype in fields.items():
         k_prefix = json.dumps(fname) + ":"
-        if ftype == "Int":
-            val_code = f"str(rec.{fname})"
-        elif ftype == "Float":
-            val_code = f"_meme_format_json_float(rec.{fname})"
-        elif ftype == "String":
-            val_code = f"_meme_escape_json_str(rec.{fname})"
-        elif ftype == "Bool":
-            val_code = f"('true' if rec.{fname} else 'false')"
-        elif ftype.startswith("Optional<"):
-            inner = ftype[9:-1]
-            if inner == "Int":
-                inner_code = f"str(rec.{fname})"
-            elif inner == "Float":
-                inner_code = f"_meme_format_json_float(rec.{fname})"
-            elif inner == "String":
-                inner_code = f"_meme_escape_json_str(rec.{fname})"
-            elif inner == "Bool":
-                inner_code = f"('true' if rec.{fname} else 'false')"
-            else:
-                inner_code = f"str(rec.{fname})"
-            val_code = f"('null' if rec.{fname} is None else {inner_code})"
-        else:
-            val_code = f"str(rec.{fname})"
+        val_code = _py_json_serialize_val(f"rec.{fname}", ftype)
         lines.append(f"    parts.append({json.dumps(k_prefix)} + {val_code})")
     lines.extend([
         "    return '{' + ','.join(parts) + '}'",
@@ -987,7 +1044,8 @@ def generate_python(ir: ProgramIR) -> str:
 
     if gen.uses_json_records:
         gen.uses_json_io = True
-        for r_name in sorted(gen.json_records_read | gen.json_record_lists_read):
+        all_read = _get_transitive_json_records(gen.json_records_read | gen.json_record_lists_read, gen.records)
+        for r_name in sorted(all_read):
             r_fields = gen.records.get(r_name, {})
             record_lines.extend(_emit_py_json_record_reader(r_name, r_fields))
 
@@ -1016,7 +1074,8 @@ def generate_python(ir: ProgramIR) -> str:
             "    return ''.join(out)",
             "",
         ])
-        for r_name in sorted(gen.json_records_write):
+        all_write = _get_transitive_json_records(gen.json_records_write, gen.records)
+        for r_name in sorted(all_write):
             r_fields = gen.records.get(r_name, {})
             record_lines.extend(_emit_py_json_record_writer(r_name, r_fields))
 

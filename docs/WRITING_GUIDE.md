@@ -596,7 +596,7 @@ record User:
     is_active: Bool
 ```
 
-Records can contain scalar fields (`Int`, `Float`, `Bool`, `String`), collection fields (`List<T>`, `Map<K, V>`, `Set<T>`), and `Optional<T>` fields. Records may also be recursively structured through collections or options (such as a tree node: `record Node: val: Int, children: List<Node>`).
+Records can contain scalar fields (`Int`, `Float`, `Bool`, `String`), collection fields (`List<T>`, `Map<K, V>`, `Set<T>`), and `Optional<T>` fields. Records may also be directly recursive via `Optional<Record>` indirection (e.g., `parent: Optional<Node>`), or indirectly through collections (`children: List<Node>`). Across all six targets (Python, Rust, C++, Go, C, TypeScript), recursive records use safe pointer/heap indirection (heap-allocated `Box` in Rust, `_MemeBoxOpt` pointer in C++, heap pointers in C/Go, objects/references in Python/TypeScript) preventing infinite struct size.
 
 > **Empty collections as general expressions:** `empty List<T>`, `empty Set<T>` (or `empty set of <T>`), and `empty Map<K, V>` are general expressions. They parse and evaluate anywhere an expression is expected — including inside record literal field initializers (`Node(value=1, children=empty List<Node>)`), function call arguments (`foo(empty Map<Int, String>)`), list literals (`[empty List<Int>]`), return statements, and comparison expressions.
 
@@ -981,7 +981,8 @@ if loaded is not nothing:
 - **Reading Record List:** `read json records <RecordType> from file <path> or else nothing` returns `Optional<List<RecordType>>`.
 - **Writing Records:** `write <record-expr> as json to file <path>` serializes `<record-expr>` into `<path>`.
 - **Writing Record Lists:** `write <list-of-records> as json to file <path>` serializes the list as a JSON array.
-- **Field Mappings:** Automatically serializes and deserializes primitive fields (`Int`, `Float`, `String`, `Bool`) and `Optional<T>` fields with proper JSON escaping.
+- **Field Mappings:** Automatically serializes and deserializes primitive fields (`Int`, `Float`, `String`, `Bool`), collection fields (`List<T>`, `Set<T>`, `Map<String, T>`, `Map<Int, T>`), nested records (`RecordType`), optional records (`Optional<RecordType>`), and collections of records (`List<RecordType>`, `Set<RecordType>`, `Map<String, RecordType>`) with proper JSON escaping and recursive composition across all six targets.
+- **Recursive Records in JSON:** Recursive records such as `record Node: name: String, parent: Optional<Node>, children: List<Node>` can be serialized to JSON and deserialized back into structured records round-trip.
 
 ---
 

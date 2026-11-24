@@ -140,6 +140,39 @@ def escape_str(val: str, ctrl_mode: str) -> str:
     return "".join(out)
 
 
+def _get_transitive_json_records(initial: set[str], records: dict[str, dict[str, MemeType]]) -> set[str]:
+    result = set(initial)
+    queue = list(initial)
+    while queue:
+        rec = queue.pop()
+        for ftype in records.get(rec, {}).values():
+            base = ftype[9:-1] if ftype.startswith("Optional<") and ftype.endswith(">") else ftype
+            if base in records:
+                if base not in result:
+                    result.add(base)
+                    queue.append(base)
+            elif base.startswith("List<") and base.endswith(">"):
+                el = base[5:-1]
+                el_base = el[9:-1] if el.startswith("Optional<") and el.endswith(">") else el
+                if el_base in records and el_base not in result:
+                    result.add(el_base)
+                    queue.append(el_base)
+            elif base.startswith("Set<") and base.endswith(">"):
+                el = base[4:-1]
+                if el in records and el not in result:
+                    result.add(el)
+                    queue.append(el)
+            elif base.startswith("Map<") and base.endswith(">"):
+                mt = _map_types_of(base)
+                if mt:
+                    _, v_t = mt
+                    v_base = v_t[9:-1] if v_t.startswith("Optional<") and v_t.endswith(">") else v_t
+                    if v_base in records and v_base not in result:
+                        result.add(v_base)
+                        queue.append(v_base)
+    return result
+
+
 class BaseGen:
     """Common base class for target code generators.
 

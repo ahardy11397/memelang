@@ -17,7 +17,13 @@ import math
 import re
 from typing import Any
 
-from memelang.codegen.base import BaseGen, _map_types_of, _set_types_of, escape_str
+from memelang.codegen.base import (
+    BaseGen,
+    _get_transitive_json_records,
+    _map_types_of,
+    _set_types_of,
+    escape_str,
+)
 from memelang.ir.canonical import format_expr
 from memelang.ir.schema import (
     AppendFileStmt,
@@ -899,6 +905,10 @@ class _CGen(BaseGen):
             inner_t = tgt_t[9:-1] if tgt_t.startswith("Optional<") else "Int"
             tgt = self.gen_expr(expr.target, scope)
             def_val = self.gen_expr(expr.default_val, scope, inner_t)
+            if inner_t in self.records:
+                if isinstance(expr.default_val, VarRefExpr):
+                    def_val = self._maybe_copy_val(def_val, inner_t)
+                return f"(({tgt}).present ? *({tgt}).value : ({def_val}))"
             return f"(({tgt}).present ? ({tgt}).value : ({def_val}))"
 
         raise NotImplementedError(f"Unsupported expression: {type(expr).__name__}")
@@ -1437,10 +1447,6 @@ def _sort_records_by_deps(records: list[RecordDefStmt]) -> list[RecordDefStmt]:
         for f in r.fields:
             if f.field_type in rec_by_name:
                 deps[r.name].add(f.field_type)
-            elif f.field_type.startswith("Optional<") and f.field_type.endswith(">"):
-                inner = f.field_type[9:-1]
-                if inner in rec_by_name:
-                    deps[r.name].add(inner)
             elif f.field_type.startswith("Map<") and f.field_type.endswith(">"):
                 mt = _map_types_of(f.field_type)
                 if mt:
@@ -2015,9 +2021,12 @@ def _emit_set_type(el_t: str, gen: _CGen) -> list[str]:
     return _emit_set_struct(el_t) + _emit_set_proto(el_t, gen) + _emit_set_body(el_t, gen)
 
 
-def _emit_opt_struct(inner: str) -> list[str]:
+def _emit_opt_struct(inner: str, gen: _CGen | None = None) -> list[str]:
     m_type = _mangle_type(inner)
-    c_inner = _c_type(inner)
+    if gen and inner in gen.records:
+        c_inner = f"{_c_ident(inner)}*"
+    else:
+        c_inner = _c_type(inner)
     return [
         f"// Optional<{inner}>",
         "typedef struct {",
@@ -2044,10 +2053,45 @@ def _emit_opt_body(inner: str, gen: _CGen) -> list[str]:
     c_inner = _c_type(inner)
     inner_fmt_call = gen._fmt_function_name(inner)
 
-    if inner == "String":
-        val_eq = '(strcmp(a.value ? a.value : "", b.value ? b.value : "") == 0)'
-    elif inner in gen.records:
-        val_eq = f"{_c_ident(inner)}_eq(a.value, b.value)"
+    if inner in gen.records:
+        r_id = _c_ident(inner)
+        return [
+            f"static inline meme_opt_{m_type} _meme_opt_{m_type}_some({c_inner} val) {{",
+            f"    meme_opt_{m_type} o;",
+            "    o.present = true;",
+            f"    o.value = ({c_inner}*)malloc(sizeof({c_inner}));",
+            f"    *o.value = {r_id}_copy(val);",
+            "    return o;",
+            "}",
+            f"static inline {c_inner} _meme_opt_{m_type}_unwrap(meme_opt_{m_type} opt) {{",
+            "    if (!opt.present || opt.value == NULL) {",
+            '        printf("Unwrap failed: Optional value is nothing\\n");',
+            "        exit(1);",
+            "    }",
+            f"    return {r_id}_copy(*opt.value);",
+            "}",
+            f"static inline meme_opt_{m_type} _meme_opt_{m_type}_copy(meme_opt_{m_type} opt) {{",
+            "    if (!opt.present || opt.value == NULL) {",
+            f"        meme_opt_{m_type} r = {{0}};",
+            "        return r;",
+            "    }",
+            f"    meme_opt_{m_type} res;",
+            "    res.present = true;",
+            f"    res.value = ({c_inner}*)malloc(sizeof({c_inner}));",
+            f"    *res.value = {r_id}_copy(*opt.value);",
+            "    return res;",
+            "}",
+            f"static inline const char* _meme_fmt_opt_{m_type}(meme_opt_{m_type} opt) {{",
+            f"    if (opt.present && opt.value != NULL) return {inner_fmt_call}(*opt.value);",
+            '    return "None";',
+            "}",
+            f"static inline bool _meme_opt_{m_type}_eq(meme_opt_{m_type} a, meme_opt_{m_type} b) {{",
+            "    if (a.present != b.present) return false;",
+            "    if (!a.present) return true;",
+            "    if (a.value == NULL || b.value == NULL) return a.value == b.value;",
+            f"    return {r_id}_eq(*a.value, *b.value);",
+            "}",
+        ]
     elif inner.startswith("List<") and inner.endswith(">"):
         el_t = inner[5:-1]
         val_eq = f"_meme_list_{_mangle_type(el_t)}_eq(a.value, b.value)"
@@ -2422,7 +2466,236 @@ _C_JSON_PARSER_HELPERS = [
 ]
 
 
-def _emit_c_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> list[str]:
+def _c_json_decode_val(jv_ptr: str, ftype: str, indent: str, records: set[str] | None = None) -> tuple[str, list[str]]:
+    if ftype == "Int":
+        temp_val = f"_v_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        code = [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MEME_J_NUM || !{jv_ptr}->is_int) return false;",
+            f"{indent}int64_t {temp_val} = {jv_ptr}->i_val;",
+        ]
+        return temp_val, code
+    if ftype == "Float":
+        temp_val = f"_v_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        code = [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MEME_J_NUM) return false;",
+            f"{indent}double {temp_val} = {jv_ptr}->num;",
+        ]
+        return temp_val, code
+    if ftype == "String":
+        temp_val = f"_v_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        code = [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MEME_J_STR) return false;",
+            f"{indent}char* {temp_val} = (char*)malloc(strlen({jv_ptr}->str) + 1);",
+            f"{indent}strcpy({temp_val}, {jv_ptr}->str);",
+        ]
+        return temp_val, code
+    if ftype == "Bool":
+        temp_val = f"_v_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        code = [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MEME_J_BOOL) return false;",
+            f"{indent}bool {temp_val} = {jv_ptr}->b;",
+        ]
+        return temp_val, code
+    if ftype.startswith("Optional<") and ftype.endswith(">"):
+        inner = ftype[9:-1]
+        m_inner = _mangle_type(inner)
+        temp_opt = f"_opt_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        inner_val, inner_code = _c_json_decode_val(jv_ptr, inner, indent + "    ", records)
+        code = [
+            f"{indent}meme_opt_{m_inner} {temp_opt} = (meme_opt_{m_inner}){{0}};",
+            f"{indent}if ({jv_ptr} && {jv_ptr}->kind != _MEME_J_NULL) {{",
+            *inner_code,
+            f"{indent}    {temp_opt} = _meme_opt_{m_inner}_some({inner_val});",
+            f"{indent}}}",
+        ]
+        return temp_opt, code
+    if ftype.startswith("List<") and ftype.endswith(">"):
+        el_t = ftype[5:-1]
+        m_el = _mangle_type(el_t)
+        temp_list = f"_l_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        temp_i = f"_i_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        el_val, el_code = _c_json_decode_val(f"{jv_ptr}->arr[{temp_i}]", el_t, indent + "    ", records)
+        code = [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MEME_J_ARR) return false;",
+            f"{indent}meme_list_{m_el} {temp_list} = _meme_list_{m_el}_new();",
+            f"{indent}for (size_t {temp_i} = 0; {temp_i} < {jv_ptr}->arr_len; ++{temp_i}) {{",
+            *el_code,
+            f"{indent}    _meme_list_{m_el}_append(&{temp_list}, {el_val});",
+            f"{indent}}}",
+        ]
+        return temp_list, code
+    if ftype.startswith("Set<") and ftype.endswith(">"):
+        el_t = ftype[4:-1]
+        m_el = _mangle_type(el_t)
+        temp_set = f"_s_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        temp_i = f"_i_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        el_val, el_code = _c_json_decode_val(f"{jv_ptr}->arr[{temp_i}]", el_t, indent + "    ", records)
+        code = [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MEME_J_ARR) return false;",
+            f"{indent}meme_set_{m_el} {temp_set} = _meme_set_{m_el}_new();",
+            f"{indent}for (size_t {temp_i} = 0; {temp_i} < {jv_ptr}->arr_len; ++{temp_i}) {{",
+            *el_code,
+            f"{indent}    _meme_set_{m_el}_add(&{temp_set}, {el_val});",
+            f"{indent}}}",
+        ]
+        return temp_set, code
+    if ftype.startswith("Map<") and ftype.endswith(">"):
+        mt = _map_types_of(ftype)
+        assert mt is not None
+        k_t, v_t = mt
+        m_k = _mangle_type(k_t)
+        m_v = _mangle_type(v_t)
+        temp_map = f"_m_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        temp_i = f"_i_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        v_val, v_code = _c_json_decode_val(f"{jv_ptr}->obj[{temp_i}].val", v_t, indent + "    ", records)
+        code = [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MEME_J_OBJ) return false;",
+            f"{indent}meme_map_{m_k}_{m_v} {temp_map} = _meme_map_{m_k}_{m_v}_new();",
+            f"{indent}for (size_t {temp_i} = 0; {temp_i} < {jv_ptr}->obj_len; ++{temp_i}) {{",
+            f"{indent}    const char* _k_str = {jv_ptr}->obj[{temp_i}].key;",
+        ]
+        if k_t == "Int":
+            code.extend([
+                f"{indent}    char* _endptr = NULL;",
+                f"{indent}    errno = 0;",
+                f"{indent}    int64_t _k_val = strtoll(_k_str, &_endptr, 10);",
+                f"{indent}    if (errno != 0 || _endptr == _k_str || *_endptr != '\\0') return false;",
+            ])
+            key_access = "_k_val"
+        else:
+            code.extend([
+                f"{indent}    char* _k_val = (char*)malloc(strlen(_k_str) + 1);",
+                f"{indent}    strcpy(_k_val, _k_str);",
+            ])
+            key_access = "_k_val"
+        code.extend(v_code)
+        code.append(f"{indent}    _meme_map_{m_k}_{m_v}_set(&{temp_map}, {key_access}, {v_val});")
+        code.append(f"{indent}}}")
+        return temp_map, code
+    if records is not None and ftype in records:
+        r_ident = _c_ident(ftype)
+        temp_val = f"_rec_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        code = [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MEME_J_OBJ) return false;",
+            f"{indent}{r_ident} {temp_val};",
+            f"{indent}if (!_meme_parse_record_{r_ident}({jv_ptr}, &{temp_val})) return false;",
+        ]
+        return temp_val, code
+    return jv_ptr, []
+
+
+def _c_json_serialize_val(val_expr: str, ftype: str, indent: str, records: set[str] | None = None) -> list[str]:
+    if ftype == "Int":
+        return [
+            f"{indent}{{",
+            f"{indent}    char buf[32];",
+            f"{indent}    snprintf(buf, sizeof(buf), \"%lld\", (long long)({val_expr}));",
+            f"{indent}    _meme_sb_append(&sb, buf);",
+            f"{indent}}}",
+        ]
+    if ftype == "Float":
+        return [
+            f"{indent}{{",
+            f"{indent}    char* f_str = _meme_format_json_float({val_expr});",
+            f"{indent}    _meme_sb_append(&sb, f_str);",
+            f"{indent}    free(f_str);",
+            f"{indent}}}",
+        ]
+    if ftype == "String":
+        return [
+            f"{indent}{{",
+            f"{indent}    char* s_str = _meme_escape_json_str({val_expr});",
+            f"{indent}    _meme_sb_append(&sb, s_str);",
+            f"{indent}    free(s_str);",
+            f"{indent}}}",
+        ]
+    if ftype == "Bool":
+        return [
+            f"{indent}_meme_sb_append(&sb, ({val_expr}) ? \"true\" : \"false\");",
+        ]
+    if ftype.startswith("Optional<") and ftype.endswith(">"):
+        inner = ftype[9:-1]
+        inner_val = f"*({val_expr}).value" if (records and inner in records) else f"({val_expr}).value"
+        inner_code = _c_json_serialize_val(inner_val, inner, indent + "    ", records)
+        return [
+            f"{indent}if (!({val_expr}).present) {{",
+            f"{indent}    _meme_sb_append(&sb, \"null\");",
+            f"{indent}}} else {{",
+            *inner_code,
+            f"{indent}}}",
+        ]
+    if ftype.startswith("List<") and ftype.endswith(">"):
+        el_t = ftype[5:-1]
+        temp_i = f"_i_{abs(hash(ftype + val_expr)) % 1000000}"
+        el_code = _c_json_serialize_val(f"({val_expr}).data[{temp_i}]", el_t, indent + "        ", records)
+        return [
+            f"{indent}{{",
+            f"{indent}    _meme_sb_append_char(&sb, '[');",
+            f"{indent}    for (int64_t {temp_i} = 0; {temp_i} < ({val_expr}).len; ++{temp_i}) {{",
+            f"{indent}        if ({temp_i} > 0) _meme_sb_append_char(&sb, ',');",
+            *el_code,
+            f"{indent}    }}",
+            f"{indent}    _meme_sb_append_char(&sb, ']');",
+            f"{indent}}}",
+        ]
+    if ftype.startswith("Set<") and ftype.endswith(">"):
+        el_t = ftype[4:-1]
+        temp_i = f"_i_{abs(hash(ftype + val_expr)) % 1000000}"
+        el_code = _c_json_serialize_val(f"({val_expr}).data[{temp_i}]", el_t, indent + "        ", records)
+        return [
+            f"{indent}{{",
+            f"{indent}    _meme_sb_append_char(&sb, '[');",
+            f"{indent}    for (int64_t {temp_i} = 0; {temp_i} < ({val_expr}).len; ++{temp_i}) {{",
+            f"{indent}        if ({temp_i} > 0) _meme_sb_append_char(&sb, ',');",
+            *el_code,
+            f"{indent}    }}",
+            f"{indent}    _meme_sb_append_char(&sb, ']');",
+            f"{indent}}}",
+        ]
+    if ftype.startswith("Map<") and ftype.endswith(">"):
+        mt = _map_types_of(ftype)
+        assert mt is not None
+        k_t, v_t = mt
+        temp_i = f"_i_{abs(hash(ftype + val_expr)) % 1000000}"
+        v_code = _c_json_serialize_val(f"({val_expr}).data[{temp_i}].value", v_t, indent + "        ", records)
+        lines = [
+            f"{indent}{{",
+            f"{indent}    _meme_sb_append_char(&sb, '{{');",
+            f"{indent}    for (int64_t {temp_i} = 0; {temp_i} < ({val_expr}).len; ++{temp_i}) {{",
+            f"{indent}        if ({temp_i} > 0) _meme_sb_append_char(&sb, ',');",
+        ]
+        if k_t == "Int":
+            lines.extend([
+                f"{indent}        char _kbuf[32];",
+                f"{indent}        snprintf(_kbuf, sizeof(_kbuf), \"\\\"%lld\\\"\", (long long)({val_expr}).data[{temp_i}].key);",
+                f"{indent}        _meme_sb_append(&sb, _kbuf);",
+            ])
+        else:
+            lines.extend([
+                f"{indent}        char* _k_esc = _meme_escape_json_str(({val_expr}).data[{temp_i}].key);",
+                f"{indent}        _meme_sb_append(&sb, _k_esc);",
+                f"{indent}        free(_k_esc);",
+            ])
+        lines.extend([
+            f"{indent}        _meme_sb_append_char(&sb, ':');",
+            *v_code,
+            f"{indent}    }}",
+            f"{indent}    _meme_sb_append_char(&sb, '}}');",
+            f"{indent}}}",
+        ])
+        return lines
+    if records is not None and ftype in records:
+        r_ident = _c_ident(ftype)
+        temp_s = f"_s_{abs(hash(ftype + val_expr)) % 1000000}"
+        return [
+            f"{indent}char* {temp_s} = _meme_serialize_json_record_{r_ident}({val_expr});",
+            f"{indent}_meme_sb_append(&sb, {temp_s});",
+            f"{indent}free({temp_s});",
+        ]
+    return [f"{indent}_meme_sb_append(&sb, \"null\");"]
+
+
+def _emit_c_json_record_reader(r_name: str, fields: dict[str, MemeType], records: set[str] | None = None) -> list[str]:
     ident = _c_ident(r_name)
     lines = [
         f"static inline bool _meme_parse_record_{ident}(const _MemeJV* _jv, {ident}* _out) {{",
@@ -2432,41 +2705,23 @@ def _emit_c_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> list
         fn_str = json.dumps(fname)
         f_ident = _c_ident(fname)
         lines.append(f"    const _MemeJV* _f_{fname} = _meme_jv_find_field(_jv, {fn_str});")
-        if ftype == "Int":
-            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MEME_J_NUM || !_f_{fname}->is_int) return false;")
-            lines.append(f"    _out->{f_ident} = _f_{fname}->i_val;")
-        elif ftype == "Float":
-            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MEME_J_NUM) return false;")
-            lines.append(f"    _out->{f_ident} = _f_{fname}->num;")
-        elif ftype == "String":
-            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MEME_J_STR) return false;")
-            lines.append(f"    char* _s_{fname} = (char*)malloc(strlen(_f_{fname}->str) + 1);")
-            lines.append(f"    strcpy(_s_{fname}, _f_{fname}->str);")
-            lines.append(f"    _out->{f_ident} = _s_{fname};")
-        elif ftype == "Bool":
-            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MEME_J_BOOL) return false;")
-            lines.append(f"    _out->{f_ident} = _f_{fname}->b;")
-        elif ftype.startswith("Optional<"):
+        if ftype.startswith("Optional<"):
             inner = ftype[9:-1]
             m_inner = _mangle_type(inner)
-            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind == _MEME_J_NULL) {{")
-            lines.append(f"        _out->{f_ident} = (meme_opt_{m_inner}){{0}};")
-            lines.append("    } else {")
-            if inner == "Int":
-                lines.append(f"        if (_f_{fname}->kind != _MEME_J_NUM || !_f_{fname}->is_int) return false;")
-                lines.append(f"        _out->{f_ident} = (meme_opt_Int){{ .present = true, .value = _f_{fname}->i_val }};")
-            elif inner == "Float":
-                lines.append(f"        if (_f_{fname}->kind != _MEME_J_NUM) return false;")
-                lines.append(f"        _out->{f_ident} = (meme_opt_Float){{ .present = true, .value = _f_{fname}->num }};")
-            elif inner == "String":
-                lines.append(f"        if (_f_{fname}->kind != _MEME_J_STR) return false;")
-                lines.append(f"        char* _s_{fname} = (char*)malloc(strlen(_f_{fname}->str) + 1);")
-                lines.append(f"        strcpy(_s_{fname}, _f_{fname}->str);")
-                lines.append(f"        _out->{f_ident} = (meme_opt_String){{ .present = true, .value = _s_{fname} }};")
-            elif inner == "Bool":
-                lines.append(f"        if (_f_{fname}->kind != _MEME_J_BOOL) return false;")
-                lines.append(f"        _out->{f_ident} = (meme_opt_Bool){{ .present = true, .value = _f_{fname}->b }};")
-            lines.append("    }")
+            dec_val, dec_code = _c_json_decode_val(f"_f_{fname}", inner, "        ", records)
+            lines.extend([
+                f"    if (!_f_{fname} || _f_{fname}->kind == _MEME_J_NULL) {{",
+                f"        _out->{f_ident} = (meme_opt_{m_inner}){{0}};",
+                "    } else {",
+                *dec_code,
+                f"        _out->{f_ident} = _meme_opt_{m_inner}_some({dec_val});",
+                "    }",
+            ])
+        else:
+            dec_val, dec_code = _c_json_decode_val(f"_f_{fname}", ftype, "    ", records)
+            lines.extend(dec_code)
+            lines.append(f"    _out->{f_ident} = {dec_val};")
+
     lines.append("    return true;")
     lines.append("}")
     lines.append("")
@@ -2478,12 +2733,12 @@ def _emit_c_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> list
         f"    bool ok = _meme_parse_record_{ident}(root, &rec);",
         "    _meme_free_jv(root);",
         f"    if (!ok) return (meme_opt_{ident}){{0}};",
-        f"    return (meme_opt_{ident}){{ .present = true, .value = rec }};",
+        f"    return _meme_opt_{ident}_some(rec);",
         "}",
         "",
         f"static inline {ident} _meme_read_json_record_{ident}_or(const char* path, {ident} dflt) {{",
         f"    meme_opt_{ident} o = _meme_read_json_record_{ident}(path);",
-        "    return o.present ? o.value : dflt;",
+        "    return o.present ? *o.value : dflt;",
         "}",
         "",
         f"static inline meme_opt_List_{ident} _meme_read_json_records_{ident}(const char* path) {{",
@@ -2514,7 +2769,7 @@ def _emit_c_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> list
     return lines
 
 
-def _emit_c_json_record_writer(r_name: str, fields: dict[str, MemeType]) -> list[str]:
+def _emit_c_json_record_writer(r_name: str, fields: dict[str, MemeType], records: set[str] | None = None) -> list[str]:
     ident = _c_ident(r_name)
     lines = [
         f"static inline char* _meme_serialize_json_record_{ident}({ident} rec) {{",
@@ -2527,69 +2782,7 @@ def _emit_c_json_record_writer(r_name: str, fields: dict[str, MemeType]) -> list
         if idx > 0:
             lines.append("    _meme_sb_append_char(&sb, ',');")
         lines.append(f"    _meme_sb_append(&sb, {json.dumps(fn_str)});")
-        if ftype == "Int":
-            lines.extend([
-                "    {",
-                "        char buf[32];",
-                f"        snprintf(buf, sizeof(buf), \"%lld\", (long long)rec.{f_ident});",
-                "        _meme_sb_append(&sb, buf);",
-                "    }",
-            ])
-        elif ftype == "Float":
-            lines.extend([
-                "    {",
-                f"        char* f_str = _meme_format_json_float(rec.{f_ident});",
-                "        _meme_sb_append(&sb, f_str);",
-                "        free(f_str);",
-                "    }",
-            ])
-        elif ftype == "String":
-            lines.extend([
-                "    {",
-                f"        char* s_str = _meme_escape_json_str(rec.{f_ident});",
-                "        _meme_sb_append(&sb, s_str);",
-                "        free(s_str);",
-                "    }",
-            ])
-        elif ftype == "Bool":
-            lines.append(f"    _meme_sb_append(&sb, rec.{f_ident} ? \"true\" : \"false\");")
-        elif ftype.startswith("Optional<"):
-            inner = ftype[9:-1]
-            lines.extend([
-                f"    if (!rec.{f_ident}.present) {{",
-                "        _meme_sb_append(&sb, \"null\");",
-                "    } else {",
-            ])
-            if inner == "Int":
-                lines.extend([
-                    "        char buf[32];",
-                    f"        snprintf(buf, sizeof(buf), \"%lld\", (long long)rec.{f_ident}.value);",
-                    "        _meme_sb_append(&sb, buf);",
-                ])
-            elif inner == "Float":
-                lines.extend([
-                    "        {",
-                    f"            char* f_str = _meme_format_json_float(rec.{f_ident}.value);",
-                    "            _meme_sb_append(&sb, f_str);",
-                    "            free(f_str);",
-                    "        }",
-                ])
-            elif inner == "String":
-                lines.extend([
-                    "        {",
-                    f"            char* s_str = _meme_escape_json_str(rec.{f_ident}.value);",
-                    "            _meme_sb_append(&sb, s_str);",
-                    "            free(s_str);",
-                    "        }",
-                ])
-            elif inner == "Bool":
-                lines.append(f"        _meme_sb_append(&sb, rec.{f_ident}.value ? \"true\" : \"false\");")
-            else:
-                lines.append("        _meme_sb_append(&sb, \"null\");")
-            lines.append("    }")
-        else:
-            lines.append("    _meme_sb_append(&sb, \"null\");")
-
+        lines.extend(_c_json_serialize_val(f"rec.{f_ident}", ftype, "    ", records))
     lines.extend([
         "    _meme_sb_append_char(&sb, '}');",
         "    return sb.data;",
@@ -2598,11 +2791,11 @@ def _emit_c_json_record_writer(r_name: str, fields: dict[str, MemeType]) -> list
         f"static inline char* _meme_serialize_json_records_{ident}(meme_list_{ident} recs) {{",
         "    _MemeSB sb = _meme_sb_new();",
         "    _meme_sb_append_char(&sb, '[');",
-        "    for (int64_t i = 0; i < recs.len; i++) {",
+        "    for (int64_t i = 0; i < recs.len; ++i) {",
         "        if (i > 0) _meme_sb_append_char(&sb, ',');",
-        f"        char* r_str = _meme_serialize_json_record_{ident}(recs.data[i]);",
-        "        _meme_sb_append(&sb, r_str);",
-        "        free(r_str);",
+        f"        char* s = _meme_serialize_json_record_{ident}(recs.data[i]);",
+        "        _meme_sb_append(&sb, s);",
+        "        free(s);",
         "    }",
         "    _meme_sb_append_char(&sb, ']');",
         "    return sb.data;",
@@ -3534,6 +3727,14 @@ def generate_c(ir: ProgramIR) -> str:
 
         # Struct declarations in dependency order
     struct_decls: list[str] = []
+
+    # Forward declarations for all records
+    for r in records:
+        r_ident = _c_ident(r.name)
+        struct_decls.append(f"typedef struct {r_ident} {r_ident};")
+    if records:
+        struct_decls.append("")
+
     for el_t in list_elem_types:
         struct_decls.extend(_emit_list_struct(el_t))
     struct_decls.append("")
@@ -3542,37 +3743,56 @@ def generate_c(ir: ProgramIR) -> str:
         struct_decls.extend(_emit_set_struct(el_t))
     struct_decls.append("")
 
+    emitted_maps: set[tuple[str, str]] = set()
     for k_t, v_t in map_types:
         if k_t not in gen.records and v_t not in gen.records:
             struct_decls.extend(_emit_map_struct(k_t, v_t))
+            emitted_maps.add((k_t, v_t))
     struct_decls.append("")
 
-    # Non-record optionals (primitives, lists, sets, non-record maps)
+    # All optionals (primitives, records, lists, sets, non-record maps)
+    emitted_opts: set[str] = set()
     for inner in opt_types:
-        if inner not in gen.records and not (inner.startswith("Map<") and any(r in inner for r in gen.records)):
-            struct_decls.extend(_emit_opt_struct(inner))
+        if not (inner.startswith("Map<") and any(r in inner for r in gen.records)):
+            struct_decls.extend(_emit_opt_struct(inner, gen))
+            emitted_opts.add(inner)
     struct_decls.append("")
 
-    # Records and record optionals
+    # Records in dependency order, emitting map and opt types as dependencies are satisfied
+    emitted_records: set[str] = set()
     for r in sorted_records:
         struct_decls.extend(_emit_record_decl(r, gen))
-        if r.name in opt_types:
-            struct_decls.extend(_emit_opt_struct(r.name))
         struct_decls.append("")
+        emitted_records.add(r.name)
+        for k_t, v_t in map_types:
+            if (k_t, v_t) not in emitted_maps:
+                k_ok = k_t not in gen.records or k_t in emitted_records
+                v_ok = v_t not in gen.records or v_t in emitted_records
+                if k_ok and v_ok:
+                    struct_decls.extend(_emit_map_struct(k_t, v_t))
+                    struct_decls.append("")
+                    emitted_maps.add((k_t, v_t))
+        for inner in opt_types:
+            if inner not in emitted_opts:
+                mt = _map_types_of(inner)
+                if mt and mt in emitted_maps:
+                    struct_decls.extend(_emit_opt_struct(inner, gen))
+                    struct_decls.append("")
+                    emitted_opts.add(inner)
 
-    # Record maps
+    # Any remaining maps
     for k_t, v_t in map_types:
-        if k_t in gen.records or v_t in gen.records:
+        if (k_t, v_t) not in emitted_maps:
             struct_decls.extend(_emit_map_struct(k_t, v_t))
             struct_decls.append("")
+            emitted_maps.add((k_t, v_t))
 
     # Any remaining optionals
-    emitted_opts = {inner for inner in opt_types if inner not in gen.records and not (inner.startswith("Map<") and any(r in inner for r in gen.records))}
-    emitted_opts.update(r.name for r in sorted_records if r.name in opt_types)
     for inner in opt_types:
         if inner not in emitted_opts:
-            struct_decls.extend(_emit_opt_struct(inner))
+            struct_decls.extend(_emit_opt_struct(inner, gen))
             struct_decls.append("")
+            emitted_opts.add(inner)
 
     # Prototypes for all container & record helpers
     all_protos: list[str] = []
@@ -3756,16 +3976,28 @@ def generate_c(ir: ProgramIR) -> str:
 
     json_record_helpers: list[str] = []
     record_readers: list[str] = []
-    if gen.uses_json_records or gen.uses_json_list_opt:
+    all_read_records = _get_transitive_json_records(
+        gen.json_records_read | gen.json_record_lists_read,
+        gen.records,
+    )
+    if gen.uses_json_records or gen.uses_json_list_opt or all_read_records:
         json_record_helpers.extend(_C_JSON_PARSER_HELPERS)
-    if gen.uses_json_records:
-        for r_name in sorted(gen.json_records_read | gen.json_record_lists_read):
+    if all_read_records:
+        for r_name in sorted(all_read_records):
+            r_ident = _c_ident(r_name)
+            record_readers.append(f"static inline bool _meme_parse_record_{r_ident}(const _MemeJV* _jv, {r_ident}* _out);")
+        record_readers.append("")
+        for r_name in sorted(all_read_records):
             r_fields = gen.records.get(r_name, {})
-            record_readers.extend(_emit_c_json_record_reader(r_name, r_fields))
+            record_readers.extend(_emit_c_json_record_reader(r_name, r_fields, set(gen.records.keys())))
             record_readers.append("")
 
     record_writers: list[str] = []
-    if gen.uses_json_write:
+    all_write_records = _get_transitive_json_records(
+        gen.json_records_write,
+        gen.records,
+    )
+    if gen.uses_json_write or all_write_records:
         record_writers.extend([
             "static inline char* _meme_format_json_float(double v) {",
             "    char* s = _meme_format_float(v, 6);",
@@ -3809,9 +4041,13 @@ def generate_c(ir: ProgramIR) -> str:
             "}",
             "",
         ])
-        for r_name in sorted(gen.json_records_write):
+        for r_name in sorted(all_write_records):
+            r_ident = _c_ident(r_name)
+            record_writers.append(f"static inline char* _meme_serialize_json_record_{r_ident}({r_ident} rec);")
+        record_writers.append("")
+        for r_name in sorted(all_write_records):
             r_fields = gen.records.get(r_name, {})
-            record_writers.extend(_emit_c_json_record_writer(r_name, r_fields))
+            record_writers.extend(_emit_c_json_record_writer(r_name, r_fields, set(gen.records.keys())))
             record_writers.append("")
 
     env_helpers: list[str] = []

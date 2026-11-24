@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from memelang.codegen.base import BaseGen, _map_types_of, _set_type_of, escape_str
+from memelang.codegen.base import BaseGen, _get_transitive_json_records, _map_types_of, _set_type_of, escape_str
 from memelang.ir.canonical import format_expr
 from memelang.ir.schema import (
     AppendFileStmt,
@@ -135,19 +135,27 @@ def _rust_ident(name: str) -> str:
     return f"meme_{name}" if name in _RUST_KEYWORDS or name.startswith("_meme_") else name
 
 
-def _rust_type(meme_type: MemeType | str) -> str:
+def _is_record_name(name: str, records: set[str] | None = None) -> bool:
+    if records is not None:
+        return name in records
+    return name not in ("Int", "Float", "Bool", "String", "Void") and not any(
+        name.startswith(p) for p in ("List<", "Map<", "Set<", "Optional<")
+    )
+
+
+def _rust_type(meme_type: MemeType | str, records: set[str] | None = None) -> str:
     if meme_type.startswith("List<") and meme_type.endswith(">"):
         inner = meme_type[5:-1]
-        return f"Vec<{_rust_type(inner)}>"
+        return f"Vec<{_rust_type(inner, records)}>"
     if meme_type.startswith("Optional<") and meme_type.endswith(">"):
         inner = meme_type[9:-1]
-        return f"Option<{_rust_type(inner)}>"
+        return f"Option<{_rust_type(inner, records)}>"
     map_t = _map_types_of(meme_type)
     if map_t is not None:
-        return f"std::collections::HashMap<{_rust_type(map_t[0])}, {_rust_type(map_t[1])}>"
+        return f"std::collections::HashMap<{_rust_type(map_t[0], records)}, {_rust_type(map_t[1], records)}>"
     set_t = _set_type_of(meme_type)
     if set_t is not None:
-        return f"_MemeSet<{_rust_type(set_t)}>"
+        return f"_MemeSet<{_rust_type(set_t, records)}>"
     mapping = {
         "Int": "i64",
         "Float": "f64",
@@ -462,13 +470,31 @@ class _RustGen(BaseGen):
             return f"_meme_arg_at({self.gen_expr(expr.index, scope)})"
 
         if isinstance(expr, RecordLiteralExpr):
-            fields = ", ".join(
-                f"{_rust_ident(f.name)}: {self.gen_expr(f.value, scope)}" for f in expr.fields
-            )
-            return f"{_rust_ident(expr.record_name)} {{ {fields} }}"
+            rec_def = self.records.get(expr.record_name, {})
+            fields = []
+            for f in expr.fields:
+                f_t = rec_def.get(f.name, "")
+                f_id = _rust_ident(f.name)
+                if f_t.startswith("Optional<") and f_t.endswith(">") and _is_record_name(f_t[9:-1], set(self.records.keys())):
+                    if isinstance(f.value, OptionalNoneExpr):
+                        val_code = "None"
+                    elif isinstance(f.value, OptionalWrapExpr):
+                        val_code = f"Some(Box::new({self.gen_expr(f.value.value, scope)}))"
+                    else:
+                        val_code = f"({self.gen_expr(f.value, scope)}).map(Box::new)"
+                else:
+                    val_code = self.gen_expr(f.value, scope)
+                fields.append(f"{f_id}: {val_code}")
+            return f"{_rust_ident(expr.record_name)} {{ {', '.join(fields)} }}"
 
         if isinstance(expr, RecordFieldExpr):
-            return f"{self.gen_expr(expr.target, scope)}.{_rust_ident(expr.field_name)}.clone()"
+            rec_t = self.infer_type(expr.target, scope)
+            f_t = self.records.get(rec_t, {}).get(expr.field_name, "")
+            tgt_expr = self.gen_expr(expr.target, scope)
+            fld_id = _rust_ident(expr.field_name)
+            if f_t.startswith("Optional<") and f_t.endswith(">") and _is_record_name(f_t[9:-1], set(self.records.keys())):
+                return f"{tgt_expr}.{fld_id}.clone().map(|b| *b)"
+            return f"{tgt_expr}.{fld_id}.clone()"
 
         if isinstance(expr, MapLiteralExpr):
             if not expr.entries:
@@ -796,8 +822,21 @@ class _RustGen(BaseGen):
             return []
 
         if isinstance(stmt, RecordSetFieldStmt):
+            rec_t = scope.get(stmt.target, "")
+            f_t = self.records.get(rec_t, {}).get(stmt.field_name, "")
+            tgt = _rust_ident(stmt.target)
+            fld = _rust_ident(stmt.field_name)
+            if f_t.startswith("Optional<") and f_t.endswith(">") and _is_record_name(f_t[9:-1], set(self.records.keys())):
+                if isinstance(stmt.value, OptionalNoneExpr):
+                    val_code = "None"
+                elif isinstance(stmt.value, OptionalWrapExpr):
+                    val_code = f"Some(Box::new({self.gen_expr(stmt.value.value, scope)}))"
+                else:
+                    val_code = f"({self.gen_expr(stmt.value, scope)}).map(Box::new)"
+            else:
+                val_code = self.gen_expr(stmt.value, scope)
             return [
-                f"{pad}{_rust_ident(stmt.target)}.{_rust_ident(stmt.field_name)} = {self.gen_expr(stmt.value, scope)};"
+                f"{pad}{tgt}.{fld} = {val_code};"
             ]
 
         if isinstance(stmt, MapSetStmt):
@@ -1074,7 +1113,86 @@ _RUST_JSON_PARSER_HELPERS = [
 ]
 
 
-def _emit_rust_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> list[str]:
+def _rust_json_decode_val(jv_expr: str, ftype: str, records: set[str] | None = None) -> str:
+    if ftype == "Int":
+        return f"match {jv_expr} {{ _MemeJV::Num(_, is_int, ival) if *is_int => *ival, _ => return None }}"
+    if ftype == "Float":
+        return f"match {jv_expr} {{ _MemeJV::Num(num, _, _) => *num, _ => return None }}"
+    if ftype == "String":
+        return f"match {jv_expr} {{ _MemeJV::Str(s) => s.clone(), _ => return None }}"
+    if ftype == "Bool":
+        return f"match {jv_expr} {{ _MemeJV::Bool(b) => *b, _ => return None }}"
+    if ftype.startswith("Optional<") and ftype.endswith(">"):
+        inner = ftype[9:-1]
+        inner_dec = _rust_json_decode_val("other", inner, records)
+        if records and inner in records:
+            wrap = f"Some(Box::new({inner_dec}))"
+        else:
+            wrap = f"Some({inner_dec})"
+        return f"match {jv_expr} {{ _MemeJV::Null => None, other => {wrap} }}"
+    if ftype.startswith("List<") and ftype.endswith(">"):
+        el_t = ftype[5:-1]
+        el_dec = _rust_json_decode_val("it", el_t, records)
+        return f"if let _MemeJV::Arr(items) = {jv_expr} {{ let mut out = Vec::new(); for it in items {{ out.push({el_dec}); }} out }} else {{ return None; }}"
+    if ftype.startswith("Set<") and ftype.endswith(">"):
+        el_t = ftype[4:-1]
+        el_dec = _rust_json_decode_val("it", el_t, records)
+        return f"if let _MemeJV::Arr(items) = {jv_expr} {{ let mut out = _MemeSet::new(); for it in items {{ out.insert({el_dec}); }} out }} else {{ return None; }}"
+    if ftype.startswith("Map<") and ftype.endswith(">"):
+        mt = _map_types_of(ftype)
+        assert mt is not None
+        k_t, v_t = mt
+        v_dec = _rust_json_decode_val("v_jv", v_t, records)
+        if k_t == "Int":
+            k_parse = "let k_val: i64 = k_str.parse().ok()?;"
+        else:
+            k_parse = "let k_val = k_str.clone();"
+        return f"if let _MemeJV::Obj(pairs) = {jv_expr} {{ let mut out = std::collections::HashMap::new(); for (k_str, v_jv) in pairs {{ {k_parse} let v_val = {v_dec}; out.insert(k_val, v_val); }} out }} else {{ return None; }}"
+    r_ident = _rust_ident(ftype)
+    return f"_meme_parse_record_{r_ident}(&({jv_expr}))?"
+
+
+def _rust_json_serialize_val(val_expr: str, ftype: str, is_ref: bool = False, records: set[str] | None = None) -> str:
+    if ftype == "Int":
+        return f"{val_expr}.to_string()"
+    if ftype == "Float":
+        deref = f"*{val_expr}" if is_ref else val_expr
+        return f"_meme_format_json_float({deref})"
+    if ftype == "String":
+        ref = val_expr if is_ref else f"&{val_expr}"
+        return f"_meme_escape_json_str({ref})"
+    if ftype == "Bool":
+        deref = f"*{val_expr}" if is_ref else val_expr
+        return f'(if {deref} {{ "true" }} else {{ "false" }}).to_string()'
+    if ftype.startswith("Optional<") and ftype.endswith(">"):
+        inner = ftype[9:-1]
+        inner_code = _rust_json_serialize_val("v", inner, is_ref=True, records=records)
+        return f'(match &{val_expr} {{ None => "null".to_string(), Some(v) => {inner_code} }})'
+    if ftype.startswith("List<") and ftype.endswith(">"):
+        el_t = ftype[5:-1]
+        el_code = _rust_json_serialize_val("_x", el_t, is_ref=True, records=records)
+        return f'format!("[{{}}]", {val_expr}.iter().map(|_x| {el_code}).collect::<Vec<_>>().join(","))'
+    if ftype.startswith("Set<") and ftype.endswith(">"):
+        el_t = ftype[4:-1]
+        el_code = _rust_json_serialize_val("_x", el_t, is_ref=True, records=records)
+        return f'format!("[{{}}]", {val_expr}.data.iter().map(|_x| {el_code}).collect::<Vec<_>>().join(","))'
+    if ftype.startswith("Map<") and ftype.endswith(">"):
+        mt = _map_types_of(ftype)
+        assert mt is not None
+        k_t, v_t = mt
+        v_code = _rust_json_serialize_val(f"{val_expr}.get(k).unwrap()", v_t, is_ref=True, records=records)
+        return (
+            f"{{ let mut keys: Vec<_> = {val_expr}.keys().cloned().collect();"
+            f" keys.sort_by(|a, b| a.meme_cmp(b));"
+            f' let parts: Vec<String> = keys.iter().map(|k| format!("{{}}:{{}}", _meme_escape_json_str(&k.to_string()), {v_code})).collect();'
+            ' format!("{{{}}}", parts.join(",")) }'
+        )
+    r_ident = _rust_ident(ftype)
+    ref = val_expr if is_ref else f"&{val_expr}"
+    return f"_meme_serialize_json_record_{r_ident}({ref})"
+
+
+def _emit_rust_json_record_reader(r_name: str, fields: dict[str, MemeType], records: set[str] | None = None) -> list[str]:
     ident = _rust_ident(r_name)
     lines = [
         f"fn _meme_parse_record_{ident}(jv: &_MemeJV) -> Option<{ident}> {{",
@@ -1084,82 +1202,26 @@ def _emit_rust_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> l
     for fname, ftype in fields.items():
         fn_str = json.dumps(fname)
         f_ident = _rust_ident(fname)
-        if ftype == "Int":
-            lines.extend([
-                f"            {f_ident}: {{",
-                f"                let f_val = _meme_find_field(jv, {fn_str})?;",
-                "                if let _MemeJV::Num(_, is_int, ival) = f_val {",
-                "                    if !*is_int { return None; }",
-                "                    *ival",
-                "                } else {",
-                "                    return None;",
-                "                }",
-                "            },",
-            ])
-        elif ftype == "Float":
-            lines.extend([
-                f"            {f_ident}: {{",
-                f"                let f_val = _meme_find_field(jv, {fn_str})?;",
-                "                if let _MemeJV::Num(num, _, _) = f_val {",
-                "                    *num",
-                "                } else {",
-                "                    return None;",
-                "                }",
-                "            },",
-            ])
-        elif ftype == "String":
-            lines.extend([
-                f"            {f_ident}: {{",
-                f"                let f_val = _meme_find_field(jv, {fn_str})?;",
-                "                if let _MemeJV::Str(s) = f_val {",
-                "                    s.clone()",
-                "                } else {",
-                "                    return None;",
-                "                }",
-                "            },",
-            ])
-        elif ftype == "Bool":
-            lines.extend([
-                f"            {f_ident}: {{",
-                f"                let f_val = _meme_find_field(jv, {fn_str})?;",
-                "                if let _MemeJV::Bool(b) = f_val {",
-                "                    *b",
-                "                } else {",
-                "                    return None;",
-                "                }",
-                "            },",
-            ])
-        elif ftype.startswith("Optional<"):
+        lines.append(f"            {f_ident}: {{")
+        lines.append(f"                let f_val = _meme_find_field(jv, {fn_str});")
+        if ftype.startswith("Optional<"):
             inner = ftype[9:-1]
+            inner_dec = _rust_json_decode_val("val", inner, records)
+            if records and inner in records:
+                wrap = f"Some(Box::new({inner_dec}))"
+            else:
+                wrap = f"Some({inner_dec})"
             lines.extend([
-                f"            {f_ident}: {{",
-                f"                match _meme_find_field(jv, {fn_str}) {{",
+                "                match f_val {",
                 "                    None | Some(_MemeJV::Null) => None,",
-            ])
-            if inner == "Int":
-                lines.extend([
-                    "                    Some(_MemeJV::Num(_, is_int, ival)) if *is_int => Some(*ival),",
-                    "                    _ => return None,",
-                ])
-            elif inner == "Float":
-                lines.extend([
-                    "                    Some(_MemeJV::Num(num, _, _)) => Some(*num),",
-                    "                    _ => return None,",
-                ])
-            elif inner == "String":
-                lines.extend([
-                    "                    Some(_MemeJV::Str(s)) => Some(s.clone()),",
-                    "                    _ => return None,",
-                ])
-            elif inner == "Bool":
-                lines.extend([
-                    "                    Some(_MemeJV::Bool(b)) => Some(*b),",
-                    "                    _ => return None,",
-                ])
-            lines.extend([
+                f"                    Some(val) => {wrap},",
                 "                }",
-                "            },",
             ])
+        else:
+            lines.append("                let f_val = f_val?;")
+            lines.append(f"                {_rust_json_decode_val('f_val', ftype, records)}")
+        lines.append("            },")
+
     lines.extend([
         "        })",
         "    } else {",
@@ -1189,7 +1251,7 @@ def _emit_rust_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> l
     return lines
 
 
-def _emit_rust_json_record_writer(r_name: str, fields: dict[str, MemeType]) -> list[str]:
+def _emit_rust_json_record_writer(r_name: str, fields: dict[str, MemeType], records: set[str] | None = None) -> list[str]:
     ident = _rust_ident(r_name)
     lines = [
         f"fn _meme_serialize_json_record_{ident}(rec: &{ident}) -> String {{",
@@ -1198,29 +1260,7 @@ def _emit_rust_json_record_writer(r_name: str, fields: dict[str, MemeType]) -> l
     for fname, ftype in fields.items():
         k_str = json.dumps(fname) + ":"
         f_ident = _rust_ident(fname)
-        if ftype == "Int":
-            val_code = f"rec.{f_ident}.to_string()"
-        elif ftype == "Float":
-            val_code = f"_meme_format_json_float(rec.{f_ident})"
-        elif ftype == "String":
-            val_code = f"_meme_escape_json_str(&rec.{f_ident})"
-        elif ftype == "Bool":
-            val_code = f"(if rec.{f_ident} {{ \"true\" }} else {{ \"false\" }}).to_string()"
-        elif ftype.startswith("Optional<"):
-            inner = ftype[9:-1]
-            if inner == "Int":
-                inner_code = "v.to_string()"
-            elif inner == "Float":
-                inner_code = "_meme_format_json_float(*v)"
-            elif inner == "String":
-                inner_code = "_meme_escape_json_str(v)"
-            elif inner == "Bool":
-                inner_code = "(if *v { \"true\" } else { \"false\" }).to_string()"
-            else:
-                inner_code = "v.to_string()"
-            val_code = f"(match &rec.{f_ident} {{ None => \"null\".to_string(), Some(v) => {inner_code} }})"
-        else:
-            val_code = f"rec.{f_ident}.to_string()"
+        val_code = _rust_json_serialize_val(f"rec.{f_ident}", ftype, records=records)
         lines.append(f"    parts.push(format!(\"{{}}{{}}\", {json.dumps(k_str)}, {val_code}));")
     lines.extend([
         "    format!(\"{{{}}}\", parts.join(\",\"))",
@@ -1261,7 +1301,14 @@ def generate_rust(ir: ProgramIR) -> str:
         record_blocks.append("#[derive(Clone, Debug, PartialEq)]")
         record_blocks.append(f"struct {r_name} {{")
         for f in r.fields:
-            record_blocks.append(f"    {_rust_ident(f.name)}: {_rust_type(f.field_type)},")
+            if f.field_type.startswith("Optional<") and f.field_type.endswith(">"):
+                inner = f.field_type[9:-1]
+                if _is_record_name(inner, set(gen.records.keys())):
+                    record_blocks.append(f"    {_rust_ident(f.name)}: Option<Box<{_rust_ident(inner)}>>,")
+                else:
+                    record_blocks.append(f"    {_rust_ident(f.name)}: {_rust_type(f.field_type)},")
+            else:
+                record_blocks.append(f"    {_rust_ident(f.name)}: {_rust_type(f.field_type)},")
         record_blocks.append("}")
         record_blocks.append(f"impl _MemeFmt for {r_name} {{")
         record_blocks.append("    fn meme_fmt(&self) -> String {")
@@ -1358,6 +1405,11 @@ def generate_rust(ir: ProgramIR) -> str:
         "        }",
         "    }",
         "}",
+        "impl<T: _MemeFmt> _MemeFmt for Box<T> {",
+        "    fn meme_fmt(&self) -> String {",
+        "        (**self).meme_fmt()",
+        "    }",
+        "}",
         "fn _meme_fmt_slice<T: _MemeFmt>(items: &[T]) -> String {",
         "    let parts: Vec<String> = items.iter().map(|x| x.meme_fmt()).collect();",
         "    format!(\"[{}]\", parts.join(\", \"))",
@@ -1385,6 +1437,11 @@ def generate_rust(ir: ProgramIR) -> str:
         "            (Some(_), None) => std::cmp::Ordering::Greater,",
         "            (Some(a), Some(b)) => a.meme_cmp(b),",
         "        }",
+        "    }",
+        "}",
+        "impl<T: _MemeOrd> _MemeOrd for Box<T> {",
+        "    fn meme_cmp(&self, other: &Self) -> std::cmp::Ordering {",
+        "        (**self).meme_cmp(&**other)",
         "    }",
         "}",
         "impl<T: _MemeOrd> _MemeOrd for Vec<T> {",
@@ -2160,9 +2217,10 @@ def generate_rust(ir: ProgramIR) -> str:
         )
 
     if gen.uses_json_records:
-        for r_name in sorted(gen.json_records_read | gen.json_record_lists_read):
+        all_read = _get_transitive_json_records(gen.json_records_read | gen.json_record_lists_read, gen.records)
+        for r_name in sorted(all_read):
             r_fields = gen.records.get(r_name, {})
-            record_blocks.extend(_emit_rust_json_record_reader(r_name, r_fields))
+            record_blocks.extend(_emit_rust_json_record_reader(r_name, r_fields, set(gen.records.keys())))
 
     if gen.uses_json_write:
         gen.uses_format_float = True
@@ -2200,9 +2258,10 @@ def generate_rust(ir: ProgramIR) -> str:
             "}",
             "",
         ])
-        for r_name in sorted(gen.json_records_write):
+        all_write = _get_transitive_json_records(gen.json_records_write, gen.records)
+        for r_name in sorted(all_write):
             r_fields = gen.records.get(r_name, {})
-            record_blocks.extend(_emit_rust_json_record_writer(r_name, r_fields))
+            record_blocks.extend(_emit_rust_json_record_writer(r_name, r_fields, set(gen.records.keys())))
 
     out = preamble + record_blocks + fn_blocks + ["fn main() {"] + main_lines + ["}", ""]
     return "\n".join(out)

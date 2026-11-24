@@ -1,0 +1,943 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/539_json_record_collections.meme": {
+      "source_sha256": "abb20bed80ad4aca9342c4d54541b44d629c684fb9a31e99354af8ceccdaad8b",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "ConfigProfile",
+          "fields": [
+            {
+              "name": "name",
+              "field_type": "String"
+            },
+            {
+              "name": "ports",
+              "field_type": "List<Int>"
+            },
+            {
+              "name": "tags",
+              "field_type": "Set<String>"
+            },
+            {
+              "name": "settings",
+              "field_type": "Map<String, String>"
+            }
+          ],
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "sample_ports",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "literal",
+                "value": 80,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 443,
+                "data_type": "Int"
+              },
+              {
+                "expr_type": "literal",
+                "value": 8080,
+                "data_type": "Int"
+              }
+            ],
+            "element_type": "Int"
+          },
+          "source_line": 8
+        },
+        {
+          "op": "var_decl",
+          "name": "sample_tags",
+          "var_type": "Set<String>",
+          "value": {
+            "expr_type": "empty_set",
+            "element_type": "String"
+          },
+          "source_line": 9
+        },
+        {
+          "op": "set_add",
+          "target": "sample_tags",
+          "value": {
+            "expr_type": "literal",
+            "value": "web",
+            "data_type": "String"
+          },
+          "source_line": 10
+        },
+        {
+          "op": "set_add",
+          "target": "sample_tags",
+          "value": {
+            "expr_type": "literal",
+            "value": "prod",
+            "data_type": "String"
+          },
+          "source_line": 11
+        },
+        {
+          "op": "var_decl",
+          "name": "sample_settings",
+          "var_type": "Map<String, String>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "String",
+            "entries": []
+          },
+          "source_line": 13
+        },
+        {
+          "op": "map_set",
+          "target": "sample_settings",
+          "key": {
+            "expr_type": "literal",
+            "value": "region",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "literal",
+            "value": "us-west",
+            "data_type": "String"
+          },
+          "source_line": 14
+        },
+        {
+          "op": "map_set",
+          "target": "sample_settings",
+          "key": {
+            "expr_type": "literal",
+            "value": "env",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "literal",
+            "value": "production",
+            "data_type": "String"
+          },
+          "source_line": 15
+        },
+        {
+          "op": "var_decl",
+          "name": "profile",
+          "var_type": "ConfigProfile",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "ConfigProfile",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "gateway",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "ports",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "sample_ports"
+                }
+              },
+              {
+                "name": "tags",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "sample_tags"
+                }
+              },
+              {
+                "name": "settings",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "sample_settings"
+                }
+              }
+            ]
+          },
+          "source_line": 17
+        },
+        {
+          "op": "write_json",
+          "target": {
+            "expr_type": "var_ref",
+            "name": "profile"
+          },
+          "filepath": {
+            "expr_type": "literal",
+            "value": "tmp_profile.json",
+            "data_type": "String"
+          },
+          "source_line": 19
+        },
+        {
+          "op": "var_decl",
+          "name": "fallback_ports",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "Int"
+          },
+          "source_line": 21
+        },
+        {
+          "op": "var_decl",
+          "name": "fallback_tags",
+          "var_type": "Set<String>",
+          "value": {
+            "expr_type": "empty_set",
+            "element_type": "String"
+          },
+          "source_line": 22
+        },
+        {
+          "op": "var_decl",
+          "name": "fallback_settings",
+          "var_type": "Map<String, String>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "String",
+            "entries": []
+          },
+          "source_line": 23
+        },
+        {
+          "op": "var_decl",
+          "name": "fallback_profile",
+          "var_type": "ConfigProfile",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "ConfigProfile",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "default",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "ports",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "fallback_ports"
+                }
+              },
+              {
+                "name": "tags",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "fallback_tags"
+                }
+              },
+              {
+                "name": "settings",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "fallback_settings"
+                }
+              }
+            ]
+          },
+          "source_line": 24
+        },
+        {
+          "op": "var_decl",
+          "name": "loaded_opt",
+          "var_type": "Optional<ConfigProfile>",
+          "value": {
+            "expr_type": "read_json_record",
+            "record_name": "ConfigProfile",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_profile.json",
+              "data_type": "String"
+            },
+            "default_val": {
+              "expr_type": "optional_none"
+            }
+          },
+          "source_line": 26
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "loaded_opt"
+            },
+            "negated": true
+          },
+          "then_body": [
+            {
+              "op": "var_decl",
+              "name": "loaded",
+              "var_type": "ConfigProfile",
+              "value": {
+                "expr_type": "optional_unwrap",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "loaded_opt"
+                }
+              },
+              "source_line": 29
+            },
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "name:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "loaded"
+                  },
+                  "field_name": "name"
+                }
+              ],
+              "source_line": 30
+            },
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "ports count:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "loaded"
+                    },
+                    "field_name": "ports"
+                  }
+                }
+              ],
+              "source_line": 31
+            },
+            {
+              "op": "for_each",
+              "item_var": "p",
+              "index_var": null,
+              "collection": "loaded.ports",
+              "collection_expr": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "loaded"
+                },
+                "field_name": "ports"
+              },
+              "body": [
+                {
+                  "op": "print_stmt",
+                  "expressions": [
+                    {
+                      "expr_type": "literal",
+                      "value": "port:",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "p"
+                    }
+                  ],
+                  "source_line": 33
+                }
+              ],
+              "source_line": 32
+            },
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "has web tag:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "set_contains",
+                  "target": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "loaded"
+                    },
+                    "field_name": "tags"
+                  },
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "web",
+                    "data_type": "String"
+                  }
+                }
+              ],
+              "source_line": 34
+            },
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "region:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "map_get",
+                  "target": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "loaded"
+                    },
+                    "field_name": "settings"
+                  },
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "region",
+                    "data_type": "String"
+                  },
+                  "default_val": null
+                }
+              ],
+              "source_line": 35
+            },
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "env:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "map_get",
+                  "target": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "loaded"
+                    },
+                    "field_name": "settings"
+                  },
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "env",
+                    "data_type": "String"
+                  },
+                  "default_val": null
+                }
+              ],
+              "source_line": 36
+            }
+          ],
+          "else_body": [],
+          "source_line": 28
+        },
+        {
+          "op": "delete_file",
+          "path": {
+            "expr_type": "literal",
+            "value": "tmp_profile.json",
+            "data_type": "String"
+          },
+          "source_line": 38
+        }
+      ],
+      "canonical_meme": "record ConfigProfile:\n    name: String\n    ports: List<Int>\n    tags: Set<String>\n    settings: Map<String, String>\ndefine list sample_ports as [80, 443, 8080]\ndefine sample_tags as empty set of String\nadd \"web\" to set sample_tags\nadd \"prod\" to set sample_tags\ndefine sample_settings: Map<String, String> as empty Map<String, String>\nset sample_settings[\"region\"] to \"us-west\"\nset sample_settings[\"env\"] to \"production\"\ndefine profile: ConfigProfile as ConfigProfile(name=\"gateway\", ports=sample_ports, tags=sample_tags, settings=sample_settings)\nwrite profile as json to file \"tmp_profile.json\"\ndefine list fallback_ports as empty List<Int>\ndefine fallback_tags as empty set of String\ndefine fallback_settings: Map<String, String> as empty Map<String, String>\ndefine fallback_profile: ConfigProfile as ConfigProfile(name=\"default\", ports=fallback_ports, tags=fallback_tags, settings=fallback_settings)\ndefine loaded_opt: Optional<ConfigProfile> as read json record ConfigProfile from file \"tmp_profile.json\" or else nothing\nif loaded_opt is not nothing:\n    define loaded: ConfigProfile as value of loaded_opt\n    print \"name:\", loaded.name\n    print \"ports count:\", length of loaded.ports\n    for each p in loaded.ports:\n        print \"port:\", p\n    print \"has web tag:\", loaded.tags contains \"web\"\n    print \"region:\", loaded.settings[\"region\"]\n    print \"env:\", loaded.settings[\"env\"]\ndelete file \"tmp_profile.json\"",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "ConfigProfile",
+            "fields": [
+              {
+                "name": "name",
+                "field_type": "String"
+              },
+              {
+                "name": "ports",
+                "field_type": "List<Int>"
+              },
+              {
+                "name": "tags",
+                "field_type": "Set<String>"
+              },
+              {
+                "name": "settings",
+                "field_type": "Map<String, String>"
+              }
+            ],
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "sample_ports",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "literal",
+                  "value": 80,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 443,
+                  "data_type": "Int"
+                },
+                {
+                  "expr_type": "literal",
+                  "value": 8080,
+                  "data_type": "Int"
+                }
+              ],
+              "element_type": "Int"
+            },
+            "source_line": 8
+          },
+          {
+            "op": "var_decl",
+            "name": "sample_tags",
+            "var_type": "Set<String>",
+            "value": {
+              "expr_type": "empty_set",
+              "element_type": "String"
+            },
+            "source_line": 9
+          },
+          {
+            "op": "set_add",
+            "target": "sample_tags",
+            "value": {
+              "expr_type": "literal",
+              "value": "web",
+              "data_type": "String"
+            },
+            "source_line": 10
+          },
+          {
+            "op": "set_add",
+            "target": "sample_tags",
+            "value": {
+              "expr_type": "literal",
+              "value": "prod",
+              "data_type": "String"
+            },
+            "source_line": 11
+          },
+          {
+            "op": "var_decl",
+            "name": "sample_settings",
+            "var_type": "Map<String, String>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "String",
+              "entries": []
+            },
+            "source_line": 13
+          },
+          {
+            "op": "map_set",
+            "target": "sample_settings",
+            "key": {
+              "expr_type": "literal",
+              "value": "region",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "literal",
+              "value": "us-west",
+              "data_type": "String"
+            },
+            "source_line": 14
+          },
+          {
+            "op": "map_set",
+            "target": "sample_settings",
+            "key": {
+              "expr_type": "literal",
+              "value": "env",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "literal",
+              "value": "production",
+              "data_type": "String"
+            },
+            "source_line": 15
+          },
+          {
+            "op": "var_decl",
+            "name": "profile",
+            "var_type": "ConfigProfile",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "ConfigProfile",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "gateway",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "ports",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "sample_ports"
+                  }
+                },
+                {
+                  "name": "tags",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "sample_tags"
+                  }
+                },
+                {
+                  "name": "settings",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "sample_settings"
+                  }
+                }
+              ]
+            },
+            "source_line": 17
+          },
+          {
+            "op": "write_json",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "profile"
+            },
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_profile.json",
+              "data_type": "String"
+            },
+            "source_line": 19
+          },
+          {
+            "op": "var_decl",
+            "name": "fallback_ports",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "Int"
+            },
+            "source_line": 21
+          },
+          {
+            "op": "var_decl",
+            "name": "fallback_tags",
+            "var_type": "Set<String>",
+            "value": {
+              "expr_type": "empty_set",
+              "element_type": "String"
+            },
+            "source_line": 22
+          },
+          {
+            "op": "var_decl",
+            "name": "fallback_settings",
+            "var_type": "Map<String, String>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "String",
+              "entries": []
+            },
+            "source_line": 23
+          },
+          {
+            "op": "var_decl",
+            "name": "fallback_profile",
+            "var_type": "ConfigProfile",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "ConfigProfile",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "default",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "ports",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "fallback_ports"
+                  }
+                },
+                {
+                  "name": "tags",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "fallback_tags"
+                  }
+                },
+                {
+                  "name": "settings",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "fallback_settings"
+                  }
+                }
+              ]
+            },
+            "source_line": 24
+          },
+          {
+            "op": "var_decl",
+            "name": "loaded_opt",
+            "var_type": "Optional<ConfigProfile>",
+            "value": {
+              "expr_type": "read_json_record",
+              "record_name": "ConfigProfile",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tmp_profile.json",
+                "data_type": "String"
+              },
+              "default_val": {
+                "expr_type": "optional_none"
+              }
+            },
+            "source_line": 26
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "loaded_opt"
+              },
+              "negated": true
+            },
+            "then_body": [
+              {
+                "op": "var_decl",
+                "name": "loaded",
+                "var_type": "ConfigProfile",
+                "value": {
+                  "expr_type": "optional_unwrap",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "loaded_opt"
+                  }
+                },
+                "source_line": 29
+              },
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "name:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "loaded"
+                    },
+                    "field_name": "name"
+                  }
+                ],
+                "source_line": 30
+              },
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "ports count:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "list_length",
+                    "target": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "loaded"
+                      },
+                      "field_name": "ports"
+                    }
+                  }
+                ],
+                "source_line": 31
+              },
+              {
+                "op": "for_each",
+                "item_var": "p",
+                "index_var": null,
+                "collection": "loaded.ports",
+                "collection_expr": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "loaded"
+                  },
+                  "field_name": "ports"
+                },
+                "body": [
+                  {
+                    "op": "print_stmt",
+                    "expressions": [
+                      {
+                        "expr_type": "literal",
+                        "value": "port:",
+                        "data_type": "String"
+                      },
+                      {
+                        "expr_type": "var_ref",
+                        "name": "p"
+                      }
+                    ],
+                    "source_line": 33
+                  }
+                ],
+                "source_line": 32
+              },
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "has web tag:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "set_contains",
+                    "target": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "loaded"
+                      },
+                      "field_name": "tags"
+                    },
+                    "value": {
+                      "expr_type": "literal",
+                      "value": "web",
+                      "data_type": "String"
+                    }
+                  }
+                ],
+                "source_line": 34
+              },
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "region:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "map_get",
+                    "target": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "loaded"
+                      },
+                      "field_name": "settings"
+                    },
+                    "key": {
+                      "expr_type": "literal",
+                      "value": "region",
+                      "data_type": "String"
+                    },
+                    "default_val": null
+                  }
+                ],
+                "source_line": 35
+              },
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "env:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "map_get",
+                    "target": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "loaded"
+                      },
+                      "field_name": "settings"
+                    },
+                    "key": {
+                      "expr_type": "literal",
+                      "value": "env",
+                      "data_type": "String"
+                    },
+                    "default_val": null
+                  }
+                ],
+                "source_line": 36
+              }
+            ],
+            "else_body": [],
+            "source_line": 28
+          },
+          {
+            "op": "delete_file",
+            "path": {
+              "expr_type": "literal",
+              "value": "tmp_profile.json",
+              "data_type": "String"
+            },
+            "source_line": 38
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

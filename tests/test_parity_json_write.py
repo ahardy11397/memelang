@@ -6,6 +6,7 @@ from memelang.analyzer.verifier import StaticVerificationError, verify_program, 
 from memelang.codegen import TARGET_LANGS, TargetLang
 from memelang.ir.canonical import to_canonical_meme
 from memelang.ir.schema import (
+    ListLiteralExpr,
     LiteralExpr,
     ProgramIR,
     RecordDefStmt,
@@ -180,7 +181,7 @@ def test_json_write_verifier_rejects_nested_record():
         statements=[
             RecordDefStmt(
                 name="Inner",
-                fields=[RecordFieldDef(name="a", field_type="Int")],
+                fields=[RecordFieldDef(name="a", field_type="List<List<Int>>")],
             ),
             RecordDefStmt(
                 name="Outer",
@@ -196,7 +197,7 @@ def test_json_write_verifier_rejects_nested_record():
                             name="inner",
                             value=RecordLiteralExpr(
                                 record_name="Inner",
-                                fields=[RecordFieldInit(name="a", value=LiteralExpr(value=1, data_type="Int"))],
+                                fields=[RecordFieldInit(name="a", value=ListLiteralExpr(elements=[], element_type="List<Int>"))],
                             ),
                         )
                     ],
@@ -208,7 +209,7 @@ def test_json_write_verifier_rejects_nested_record():
             ),
         ]
     )
-    with pytest.raises(StaticVerificationError, match="nested record"):
+    with pytest.raises(StaticVerificationError, match="unsupported List element type"):
         verify_program(prog)
 
 

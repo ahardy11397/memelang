@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from memelang.codegen.base import BaseGen, _map_types_of, _set_type_of, escape_str
+from memelang.codegen.base import BaseGen, _get_transitive_json_records, _map_types_of, _set_type_of, escape_str
 from memelang.ir.canonical import format_expr
 from memelang.ir.schema import (
     AppendFileStmt,
@@ -142,19 +142,27 @@ def _cpp_ident(name: str) -> str:
     return f"meme_{name}" if name in _CPP_KEYWORDS or name.startswith("_meme_") else name
 
 
-def _cpp_type(meme_type: MemeType | str) -> str:
+def _is_record_name(name: str, records: set[str] | None = None) -> bool:
+    if records is not None:
+        return name in records
+    return name not in ("Int", "Float", "Bool", "String", "Void") and not any(
+        name.startswith(p) for p in ("List<", "Map<", "Set<", "Optional<")
+    )
+
+
+def _cpp_type(meme_type: MemeType | str, records: set[str] | None = None) -> str:
     if meme_type.startswith("List<") and meme_type.endswith(">"):
         inner = meme_type[5:-1]
-        return f"std::vector<{_cpp_type(inner)}>"
+        return f"std::vector<{_cpp_type(inner, records)}>"
     if meme_type.startswith("Optional<") and meme_type.endswith(">"):
         inner = meme_type[9:-1]
-        return f"std::optional<{_cpp_type(inner)}>"
+        return f"std::optional<{_cpp_type(inner, records)}>"
     map_t = _map_types_of(meme_type)
     if map_t is not None:
-        return f"std::unordered_map<{_cpp_type(map_t[0])}, {_cpp_type(map_t[1])}>"
+        return f"std::unordered_map<{_cpp_type(map_t[0], records)}, {_cpp_type(map_t[1], records)}>"
     set_t = _set_type_of(meme_type)
     if set_t is not None:
-        return f"std::set<{_cpp_type(set_t)}>"
+        return f"std::set<{_cpp_type(set_t, records)}>"
     mapping = {
         "Int": "long long",
         "Float": "double",
@@ -1115,6 +1123,147 @@ _CPP_JSON_PARSER_HELPERS = [
 ]
 
 
+def _cpp_json_decode_val(jv_ptr: str, ftype: str, indent: str) -> tuple[str, list[str]]:
+    if ftype == "Int":
+        return f"{jv_ptr}->i_val", [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MemeJK::Num || !{jv_ptr}->is_int) return std::nullopt;",
+        ]
+    if ftype == "Float":
+        return f"{jv_ptr}->num", [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MemeJK::Num) return std::nullopt;",
+        ]
+    if ftype == "String":
+        return f"{jv_ptr}->s", [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MemeJK::Str) return std::nullopt;",
+        ]
+    if ftype == "Bool":
+        return f"{jv_ptr}->b", [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MemeJK::Bool) return std::nullopt;",
+        ]
+    if ftype.startswith("Optional<") and ftype.endswith(">"):
+        inner = ftype[9:-1]
+        temp_opt = f"_opt_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        inner_val, inner_code = _cpp_json_decode_val(jv_ptr, inner, indent + "    ")
+        code = [
+            f"{indent}std::optional<{_cpp_type(inner)}> {temp_opt} = std::nullopt;",
+            f"{indent}if ({jv_ptr} && {jv_ptr}->kind != _MemeJK::Null) {{",
+            *inner_code,
+            f"{indent}    {temp_opt} = {inner_val};",
+            f"{indent}}}",
+        ]
+        return temp_opt, code
+    if ftype.startswith("List<") and ftype.endswith(">"):
+        el_t = ftype[5:-1]
+        temp_list = f"_l_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        el_val, el_code = _cpp_json_decode_val("(&_it)", el_t, indent + "    ")
+        code = [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MemeJK::Arr) return std::nullopt;",
+            f"{indent}std::vector<{_cpp_type(el_t)}> {temp_list};",
+            f"{indent}for (const auto& _it : {jv_ptr}->arr) {{",
+            *el_code,
+            f"{indent}    {temp_list}.push_back({el_val});",
+            f"{indent}}}",
+        ]
+        return temp_list, code
+    if ftype.startswith("Set<") and ftype.endswith(">"):
+        el_t = ftype[4:-1]
+        temp_set = f"_s_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        el_val, el_code = _cpp_json_decode_val("(&_it)", el_t, indent + "    ")
+        code = [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MemeJK::Arr) return std::nullopt;",
+            f"{indent}std::set<{_cpp_type(el_t)}> {temp_set};",
+            f"{indent}for (const auto& _it : {jv_ptr}->arr) {{",
+            *el_code,
+            f"{indent}    {temp_set}.insert({el_val});",
+            f"{indent}}}",
+        ]
+        return temp_set, code
+    if ftype.startswith("Map<") and ftype.endswith(">"):
+        mt = _map_types_of(ftype)
+        assert mt is not None
+        k_t, v_t = mt
+        temp_map = f"_m_{abs(hash(ftype + jv_ptr)) % 1000000}"
+        v_val, v_code = _cpp_json_decode_val("(&_pair.second)", v_t, indent + "    ")
+        code = [
+            f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MemeJK::Obj) return std::nullopt;",
+            f"{indent}std::unordered_map<{_cpp_type(k_t)}, {_cpp_type(v_t)}> {temp_map};",
+            f"{indent}for (const auto& _pair : {jv_ptr}->obj) {{",
+        ]
+        if k_t == "Int":
+            temp_pk = f"_pk_{abs(hash(ftype + jv_ptr)) % 1000000}"
+            code.extend([
+                f"{indent}    long long {temp_pk};",
+                f"{indent}    try {{",
+                f"{indent}        size_t _idx = 0;",
+                f"{indent}        {temp_pk} = std::stoll(_pair.first, &_idx);",
+                f"{indent}        if (_idx != _pair.first.size()) return std::nullopt;",
+                f"{indent}    }} catch (...) {{ return std::nullopt; }}",
+            ])
+            key_access = temp_pk
+        else:
+            key_access = "_pair.first"
+        code.extend(v_code)
+        code.append(f"{indent}    {temp_map}[{key_access}] = {v_val};")
+        code.append(f"{indent}}}")
+        return temp_map, code
+    r_ident = _cpp_ident(ftype)
+    temp_val = f"_rec_{abs(hash(ftype + jv_ptr)) % 1000000}"
+    code = [
+        f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MemeJK::Obj) return std::nullopt;",
+        f"{indent}auto _parsed_{temp_val} = _meme_parse_record_{r_ident}(*{jv_ptr});",
+        f"{indent}if (!_parsed_{temp_val}.has_value()) return std::nullopt;",
+        f"{indent}{r_ident} {temp_val} = std::move(*_parsed_{temp_val});",
+    ]
+    return temp_val, code
+
+
+def _cpp_json_serialize_val(val_expr: str, ftype: str) -> str:
+    if ftype == "Int":
+        return f"std::to_string({val_expr})"
+    if ftype == "Float":
+        return f"_meme_format_json_float({val_expr})"
+    if ftype == "String":
+        return f"_meme_escape_json_str({val_expr})"
+    if ftype == "Bool":
+        return f"({val_expr} ? \"true\" : \"false\")"
+    if ftype.startswith("Optional<") and ftype.endswith(">"):
+        inner = ftype[9:-1]
+        inner_code = _cpp_json_serialize_val(f"*{val_expr}", inner)
+        return f"(!{val_expr}.has_value() ? std::string(\"null\") : {inner_code})"
+    if ftype.startswith("List<") and ftype.endswith(">"):
+        el_t = ftype[5:-1]
+        el_code = _cpp_json_serialize_val("_x", el_t)
+        return (
+            f"([&]() {{ std::string s = \"[\"; bool first = true;"
+            f" for (const auto& _x : {val_expr}) {{ if (!first) s += \",\"; first = false; s += {el_code}; }}"
+            f" s += \"]\"; return s; }}())"
+        )
+    if ftype.startswith("Set<") and ftype.endswith(">"):
+        el_t = ftype[4:-1]
+        el_code = _cpp_json_serialize_val("_x", el_t)
+        return (
+            f"([&]() {{ std::string s = \"[\"; bool first = true;"
+            f" for (const auto& _x : {val_expr}) {{ if (!first) s += \",\"; first = false; s += {el_code}; }}"
+            f" s += \"]\"; return s; }}())"
+        )
+    if ftype.startswith("Map<") and ftype.endswith(">"):
+        mt = _map_types_of(ftype)
+        assert mt is not None
+        k_t, v_t = mt
+        k_ser = "std::to_string(_k)" if k_t == "Int" else "_k"
+        v_code = _cpp_json_serialize_val(f"{val_expr}.at(_k)", v_t)
+        return (
+            f"([&]() {{ std::vector<{_cpp_type(k_t)}> _keys;"
+            f" for (const auto& _kv : {val_expr}) _keys.push_back(_kv.first);"
+            f" std::sort(_keys.begin(), _keys.end());"
+            f' std::string s = "{{"; bool first = true;'
+            f" for (const auto& _k : _keys) {{ if (!first) s += \",\"; first = false; s += _meme_escape_json_str({k_ser}) + \":\" + {v_code}; }}"
+            f' s += "}}"; return s; }}())'
+        )
+    r_ident = _cpp_ident(ftype)
+    return f"_meme_serialize_json_record_{r_ident}({val_expr})"
+
+
 def _emit_cpp_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> list[str]:
     ident = _cpp_ident(r_name)
     lines = [
@@ -1126,36 +1275,22 @@ def _emit_cpp_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> li
         fn_str = json.dumps(fname)
         f_ident = _cpp_ident(fname)
         lines.append(f"    const _MemeJV* _f_{fname} = _meme_find_field(_jv, {fn_str});")
-        if ftype == "Int":
-            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MemeJK::Num || !_f_{fname}->is_int) return std::nullopt;")
-            lines.append(f"    _rec.{f_ident} = _f_{fname}->i_val;")
-        elif ftype == "Float":
-            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MemeJK::Num) return std::nullopt;")
-            lines.append(f"    _rec.{f_ident} = _f_{fname}->num;")
-        elif ftype == "String":
-            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MemeJK::Str) return std::nullopt;")
-            lines.append(f"    _rec.{f_ident} = _f_{fname}->s;")
-        elif ftype == "Bool":
-            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind != _MemeJK::Bool) return std::nullopt;")
-            lines.append(f"    _rec.{f_ident} = _f_{fname}->b;")
-        elif ftype.startswith("Optional<"):
+        if ftype.startswith("Optional<"):
             inner = ftype[9:-1]
-            lines.append(f"    if (!_f_{fname} || _f_{fname}->kind == _MemeJK::Null) {{")
-            lines.append(f"        _rec.{f_ident} = std::nullopt;")
-            lines.append("    } else {")
-            if inner == "Int":
-                lines.append(f"        if (_f_{fname}->kind != _MemeJK::Num || !_f_{fname}->is_int) return std::nullopt;")
-                lines.append(f"        _rec.{f_ident} = _f_{fname}->i_val;")
-            elif inner == "Float":
-                lines.append(f"        if (_f_{fname}->kind != _MemeJK::Num) return std::nullopt;")
-                lines.append(f"        _rec.{f_ident} = _f_{fname}->num;")
-            elif inner == "String":
-                lines.append(f"        if (_f_{fname}->kind != _MemeJK::Str) return std::nullopt;")
-                lines.append(f"        _rec.{f_ident} = _f_{fname}->s;")
-            elif inner == "Bool":
-                lines.append(f"        if (_f_{fname}->kind != _MemeJK::Bool) return std::nullopt;")
-                lines.append(f"        _rec.{f_ident} = _f_{fname}->b;")
-            lines.append("    }")
+            dec_val, dec_code = _cpp_json_decode_val(f"_f_{fname}", inner, "    ")
+            lines.extend([
+                f"    if (!_f_{fname} || _f_{fname}->kind == _MemeJK::Null) {{",
+                f"        _rec.{f_ident} = std::nullopt;",
+                "    } else {",
+                *dec_code,
+                f"        _rec.{f_ident} = {dec_val};",
+                "    }",
+            ])
+        else:
+            dec_val, dec_code = _cpp_json_decode_val(f"_f_{fname}", ftype, "    ")
+            lines.extend(dec_code)
+            lines.append(f"    _rec.{f_ident} = {dec_val};")
+
     lines.append("    return _rec;")
     lines.append("}")
     lines.append("")
@@ -1191,29 +1326,7 @@ def _emit_cpp_json_record_writer(r_name: str, fields: dict[str, MemeType]) -> li
     for fname, ftype in fields.items():
         k_str = json.dumps(fname) + ":"
         f_ident = _cpp_ident(fname)
-        if ftype == "Int":
-            val_code = f"std::to_string(rec.{f_ident})"
-        elif ftype == "Float":
-            val_code = f"_meme_format_json_float(rec.{f_ident})"
-        elif ftype == "String":
-            val_code = f"_meme_escape_json_str(rec.{f_ident})"
-        elif ftype == "Bool":
-            val_code = f"(rec.{f_ident} ? \"true\" : \"false\")"
-        elif ftype.startswith("Optional<"):
-            inner = ftype[9:-1]
-            if inner == "Int":
-                inner_code = f"std::to_string(*rec.{f_ident})"
-            elif inner == "Float":
-                inner_code = f"_meme_format_json_float(*rec.{f_ident})"
-            elif inner == "String":
-                inner_code = f"_meme_escape_json_str(*rec.{f_ident})"
-            elif inner == "Bool":
-                inner_code = f"(*rec.{f_ident} ? \"true\" : \"false\")"
-            else:
-                inner_code = f"std::to_string(*rec.{f_ident})"
-            val_code = f"(!rec.{f_ident}.has_value() ? std::string(\"null\") : {inner_code})"
-        else:
-            val_code = f"std::to_string(rec.{f_ident})"
+        val_code = _cpp_json_serialize_val(f"rec.{f_ident}", ftype)
         lines.append(f"    parts.push_back(std::string({json.dumps(k_str)}) + {val_code});")
     lines.extend([
         "    std::string out = \"{\";",
@@ -1262,12 +1375,24 @@ def generate_cpp(ir: ProgramIR) -> str:
     if test_blocks:
         gen.uses_argv = True
 
+    record_fwd_decls: list[str] = [f"struct {_cpp_ident(r.name)};" for r in records]
+    if record_fwd_decls:
+        record_fwd_decls.append("")
+
     record_blocks: list[str] = []
     for r in records:
         r_name = _cpp_ident(r.name)
         record_blocks.append(f"struct {r_name} {{")
         for f in r.fields:
-            record_blocks.append(f"    {_cpp_type(f.field_type)} {_cpp_ident(f.name)}{{}};")
+            if f.field_type.startswith("Optional<") and f.field_type.endswith(">"):
+                inner = f.field_type[9:-1]
+                if _is_record_name(inner, set(gen.records.keys())):
+                    f_type = f"_MemeBoxOpt<{_cpp_ident(inner)}>"
+                else:
+                    f_type = _cpp_type(f.field_type)
+            else:
+                f_type = _cpp_type(f.field_type)
+            record_blocks.append(f"    {f_type} {_cpp_ident(f.name)}{{}};")
         record_blocks.append(f"    bool operator==(const {r_name}&) const = default;")
         record_blocks.append(f"    auto operator<=>(const {r_name}&) const = default;")
         record_blocks.append("};")
@@ -1330,6 +1455,7 @@ def generate_cpp(ir: ProgramIR) -> str:
         "#include <fstream>",
         "#include <iomanip>",
         "#include <iostream>",
+        "#include <memory>",
         "#include <optional>",
         "#include <set>",
         "#include <sstream>",
@@ -1387,6 +1513,78 @@ def generate_cpp(ir: ProgramIR) -> str:
         "}",
         "template <typename T>",
         "std::string _meme_fmt(const std::optional<T>& opt) {",
+        "    if (opt.has_value()) return _meme_fmt(*opt);",
+        "    return \"None\";",
+        "}",
+        "template <typename T>",
+        "class _MemeBoxOpt {",
+        "public:",
+        "    std::unique_ptr<T> ptr;",
+        "    _MemeBoxOpt() noexcept : ptr(nullptr) {}",
+        "    _MemeBoxOpt(std::nullopt_t) noexcept : ptr(nullptr) {}",
+        "    _MemeBoxOpt(const T& val) : ptr(std::make_unique<T>(val)) {}",
+        "    _MemeBoxOpt(T&& val) : ptr(std::make_unique<T>(std::move(val))) {}",
+        "    _MemeBoxOpt(const std::optional<T>& opt) {",
+        "        if (opt.has_value()) { ptr = std::make_unique<T>(*opt); } else { ptr = nullptr; }",
+        "    }",
+        "    _MemeBoxOpt(std::optional<T>&& opt) {",
+        "        if (opt.has_value()) { ptr = std::make_unique<T>(std::move(*opt)); } else { ptr = nullptr; }",
+        "    }",
+        "    _MemeBoxOpt(const _MemeBoxOpt& other) {",
+        "        if (other.ptr) { ptr = std::make_unique<T>(*other.ptr); } else { ptr = nullptr; }",
+        "    }",
+        "    _MemeBoxOpt(_MemeBoxOpt&& other) noexcept = default;",
+        "    _MemeBoxOpt& operator=(const _MemeBoxOpt& other) {",
+        "        if (this != &other) {",
+        "            if (other.ptr) { ptr = std::make_unique<T>(*other.ptr); } else { ptr.reset(); }",
+        "        }",
+        "        return *this;",
+        "    }",
+        "    _MemeBoxOpt& operator=(_MemeBoxOpt&& other) noexcept = default;",
+        "    _MemeBoxOpt& operator=(std::nullopt_t) noexcept {",
+        "        ptr.reset();",
+        "        return *this;",
+        "    }",
+        "    _MemeBoxOpt& operator=(const std::optional<T>& opt) {",
+        "        if (opt.has_value()) { ptr = std::make_unique<T>(*opt); } else { ptr.reset(); }",
+        "        return *this;",
+        "    }",
+        "    _MemeBoxOpt& operator=(const T& val) {",
+        "        ptr = std::make_unique<T>(val);",
+        "        return *this;",
+        "    }",
+        "    _MemeBoxOpt& operator=(T&& val) {",
+        "        ptr = std::make_unique<T>(std::move(val));",
+        "        return *this;",
+        "    }",
+        "    bool has_value() const noexcept { return ptr != nullptr; }",
+        "    explicit operator bool() const noexcept { return ptr != nullptr; }",
+        "    const T& value() const {",
+        "        if (!ptr) throw std::bad_optional_access();",
+        "        return *ptr;",
+        "    }",
+        "    T& value() {",
+        "        if (!ptr) throw std::bad_optional_access();",
+        "        return *ptr;",
+        "    }",
+        "    const T& operator*() const noexcept { return *ptr; }",
+        "    T& operator*() noexcept { return *ptr; }",
+        "    const T* operator->() const noexcept { return ptr.get(); }",
+        "    T* operator->() noexcept { return ptr.get(); }",
+        "    bool operator==(const _MemeBoxOpt& other) const {",
+        "        if (!ptr && !other.ptr) return true;",
+        "        if (!ptr || !other.ptr) return false;",
+        "        return *ptr == *other.ptr;",
+        "    }",
+        "    auto operator<=>(const _MemeBoxOpt& other) const {",
+        "        if (!ptr && !other.ptr) return std::strong_ordering::equal;",
+        "        if (!ptr) return std::strong_ordering::less;",
+        "        if (!other.ptr) return std::strong_ordering::greater;",
+        "        return *ptr <=> *other.ptr;",
+        "    }",
+        "};",
+        "template <typename T>",
+        "std::string _meme_fmt(const _MemeBoxOpt<T>& opt) {",
         "    if (opt.has_value()) return _meme_fmt(*opt);",
         "    return \"None\";",
         "}",
@@ -1557,8 +1755,23 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    return *opt;",
                 "}",
                 "",
+                "template <typename T>",
+                "T _meme_unwrap(const _MemeBoxOpt<T>& opt) {",
+                "    if (!opt.has_value()) {",
+                "        std::cout << \"Unwrap failed: Optional value is nothing\\n\";",
+                "        std::exit(1);",
+                "    }",
+                "    return *opt;",
+                "}",
+                "",
                 "template <typename T, typename F>",
                 "T _meme_unwrap_or_else(const std::optional<T>& opt, F default_fn) {",
+                "    if (opt.has_value()) return *opt;",
+                "    return default_fn();",
+                "}",
+                "",
+                "template <typename T, typename F>",
+                "T _meme_unwrap_or_else(const _MemeBoxOpt<T>& opt, F default_fn) {",
                 "    if (opt.has_value()) return *opt;",
                 "    return default_fn();",
                 "}",
@@ -2273,7 +2486,11 @@ def generate_cpp(ir: ProgramIR) -> str:
 
     reader_record_blocks: list[str] = []
     if gen.uses_json_records:
-        for r_name in sorted(gen.json_records_read | gen.json_record_lists_read):
+        all_read = _get_transitive_json_records(gen.json_records_read | gen.json_record_lists_read, gen.records)
+        for r_name in sorted(all_read):
+            ident = _cpp_ident(r_name)
+            reader_record_blocks.append(f"inline std::optional<{ident}> _meme_parse_record_{ident}(const _MemeJV& _jv);")
+        for r_name in sorted(all_read):
             r_fields = gen.records.get(r_name, {})
             reader_record_blocks.extend(_emit_cpp_json_record_reader(r_name, r_fields))
 
@@ -2315,7 +2532,11 @@ def generate_cpp(ir: ProgramIR) -> str:
             "}",
             "",
         ])
-        for r_name in sorted(gen.json_records_write):
+        all_write = _get_transitive_json_records(gen.json_records_write, gen.records)
+        for r_name in sorted(all_write):
+            ident = _cpp_ident(r_name)
+            writer_record_blocks.append(f"inline std::string _meme_serialize_json_record_{ident}(const {ident}& rec);")
+        for r_name in sorted(all_write):
             r_fields = gen.records.get(r_name, {})
             writer_record_blocks.extend(_emit_cpp_json_record_writer(r_name, r_fields))
 
@@ -2327,6 +2548,7 @@ def generate_cpp(ir: ProgramIR) -> str:
     out = (
         headers
         + helpers
+        + record_fwd_decls
         + record_blocks
         + reader_record_blocks
         + writer_record_blocks

@@ -121,7 +121,7 @@ class LockfileManager:
         seen: set[Path] = set()
         ordered: list[Path] = []
         for cand in candidates:
-            if cand not in seen:
+            if cand is not None and cand not in seen:
                 seen.add(cand)
                 ordered.append(cand)
         return ordered

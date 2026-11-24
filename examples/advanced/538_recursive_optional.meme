@@ -1,0 +1,38 @@
+# Demonstrating recursive records via Optional<Record>
+record Node:
+    name: String
+    parent: Optional<Node>
+    children: List<Node>
+
+function count_nodes(n: Node) -> Int:
+    define count: Int as 1
+    for each child in n.children:
+        set count to count + count_nodes(child)
+    return count
+
+function root_name(n: Node) -> String:
+    if n.parent is nothing:
+        return n.name
+    define p: Node as value of n.parent
+    return root_name(p)
+
+define list empty_children as empty List<Node>
+define root: Node as Node(name="root", parent=nothing, children=empty_children)
+define child_a: Node as Node(name="child_a", parent=optional root, children=empty_children)
+define child_b: Node as Node(name="child_b", parent=optional root, children=empty_children)
+define list root_kids as [child_a, child_b]
+define tree: Node as Node(name="root", parent=nothing, children=root_kids)
+
+print "count:", count_nodes(tree)
+print "child_a parent is not nothing:", child_a.parent is not nothing
+print "root parent is nothing:", tree.parent is nothing
+print "child_a root name:", root_name(child_a)
+print "child_b root name:", root_name(child_b)
+
+define fallback_node: Node as Node(name="fallback", parent=nothing, children=empty_children)
+define p_val: Node as value of tree.parent or else fallback_node
+print "p_val name:", p_val.name
+
+define child_a_dup: Node as Node(name="child_a", parent=optional root, children=empty_children)
+print "child_a == child_b:", child_a == child_b
+print "child_a == child_a_dup:", child_a == child_a_dup

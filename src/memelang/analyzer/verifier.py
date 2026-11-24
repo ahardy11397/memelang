@@ -651,6 +651,121 @@ class _StaticChecker:
             return
         raise StaticVerificationError(f"Unknown type `{meme_type}`", stmt_idx)
 
+    def _validate_json_field_type(
+        self,
+        ftype: str,
+        fname: str,
+        rec_name: str,
+        op_name: str,
+        stmt_idx: int | None,
+        allow_records: bool = True,
+        visited_records: set[str] | None = None,
+    ) -> None:
+        if visited_records is None:
+            visited_records = set()
+
+        base_t = ftype[9:-1] if (ftype.startswith("Optional<") and ftype.endswith(">")) else ftype
+        if base_t in self.records:
+            if not allow_records:
+                raise StaticVerificationError(
+                    f"`{op_name}` record `{rec_name}` field `{fname}` has nested record type `{base_t}`; nested records in JSON are not supported",
+                    stmt_idx,
+                )
+            if base_t not in visited_records:
+                visited_records.add(base_t)
+                for sub_fname, sub_ftype in self.records[base_t].items():
+                    self._validate_json_field_type(
+                        sub_ftype, sub_fname, base_t, op_name, stmt_idx, allow_records=True, visited_records=visited_records
+                    )
+            return
+
+        if base_t in ("Int", "Float", "String", "Bool"):
+            return
+
+        if base_t.startswith("List<") and base_t.endswith(">"):
+            el_t = base_t[5:-1]
+            el_base = el_t[9:-1] if (el_t.startswith("Optional<") and el_t.endswith(">")) else el_t
+            if el_base in self.records:
+                if not allow_records:
+                    raise StaticVerificationError(
+                        f"`{op_name}` record `{rec_name}` field `{fname}` has nested record type `{el_base}`; nested records in JSON are not supported",
+                        stmt_idx,
+                    )
+                if el_base not in visited_records:
+                    visited_records.add(el_base)
+                    for sub_fname, sub_ftype in self.records[el_base].items():
+                        self._validate_json_field_type(
+                            sub_ftype, sub_fname, el_base, op_name, stmt_idx, allow_records=True, visited_records=visited_records
+                        )
+                return
+            if el_base in ("Int", "Float", "String", "Bool"):
+                return
+            raise StaticVerificationError(
+                f"`{op_name}` record `{rec_name}` field `{fname}` has unsupported List element type `{el_t}` in JSON",
+                stmt_idx,
+            )
+
+        if base_t.startswith("Set<") and base_t.endswith(">"):
+            el_t = base_t[4:-1]
+            if el_t in self.records:
+                if not allow_records:
+                    raise StaticVerificationError(
+                        f"`{op_name}` record `{rec_name}` field `{fname}` has nested record type `{el_t}`; nested records in JSON are not supported",
+                        stmt_idx,
+                    )
+                if el_t not in visited_records:
+                    visited_records.add(el_t)
+                    for sub_fname, sub_ftype in self.records[el_t].items():
+                        self._validate_json_field_type(
+                            sub_ftype, sub_fname, el_t, op_name, stmt_idx, allow_records=True, visited_records=visited_records
+                        )
+                return
+            if el_t in ("Int", "Float", "String", "Bool"):
+                return
+            raise StaticVerificationError(
+                f"`{op_name}` record `{rec_name}` field `{fname}` has unsupported Set element type `{el_t}` in JSON",
+                stmt_idx,
+            )
+
+        if base_t.startswith("Map<") and base_t.endswith(">"):
+            mt = _map_types_of(base_t)
+            if not mt:
+                raise StaticVerificationError(
+                    f"`{op_name}` record `{rec_name}` field `{fname}` has invalid Map type `{base_t}`",
+                    stmt_idx,
+                )
+            k_t, v_t = mt
+            if k_t not in ("String", "Int"):
+                raise StaticVerificationError(
+                    f"`{op_name}` record `{rec_name}` field `{fname}` Map key must be String or Int in JSON, got `{k_t}`",
+                    stmt_idx,
+                )
+            v_base = v_t[9:-1] if (v_t.startswith("Optional<") and v_t.endswith(">")) else v_t
+            if v_base in self.records:
+                if not allow_records:
+                    raise StaticVerificationError(
+                        f"`{op_name}` record `{rec_name}` field `{fname}` has nested record type `{v_base}`; nested records in JSON are not supported",
+                        stmt_idx,
+                    )
+                if v_base not in visited_records:
+                    visited_records.add(v_base)
+                    for sub_fname, sub_ftype in self.records[v_base].items():
+                        self._validate_json_field_type(
+                            sub_ftype, sub_fname, v_base, op_name, stmt_idx, allow_records=True, visited_records=visited_records
+                        )
+                return
+            if v_base in ("Int", "Float", "String", "Bool") or v_base.startswith("List<") or v_base.startswith("Set<") or v_base.startswith("Map<"):
+                return
+            raise StaticVerificationError(
+                f"`{op_name}` record `{rec_name}` field `{fname}` has unsupported Map value type `{v_t}` in JSON",
+                stmt_idx,
+            )
+
+        raise StaticVerificationError(
+            f"`{op_name}` record `{rec_name}` field `{fname}` has unsupported type `{ftype}` in JSON",
+            stmt_idx,
+        )
+
     def infer_expr_type(self, expr: IRExpr, scope: _Scope, stmt_idx: int | None) -> MemeType:
         if isinstance(expr, LiteralExpr):
             return expr.data_type
@@ -1206,17 +1321,9 @@ class _StaticChecker:
                 )
             rec_fields = self.records[expr.record_name]
             for fname, ftype in rec_fields.items():
-                base_t = ftype[9:-1] if (ftype.startswith("Optional<") and ftype.endswith(">")) else ftype
-                if base_t in self.records:
-                    raise StaticVerificationError(
-                        f"`{expr.expr_type}` record `{expr.record_name}` field `{fname}` has nested record type `{base_t}`; nested records in JSON are not supported",
-                        stmt_idx,
-                    )
-                if base_t.startswith("List<") or base_t.startswith("Map<"):
-                    raise StaticVerificationError(
-                        f"`{expr.expr_type}` record `{expr.record_name}` field `{fname}` has type `{ftype}`; record field cannot be List or Map in JSON",
-                        stmt_idx,
-                    )
+                self._validate_json_field_type(
+                    ftype, fname, expr.record_name, expr.expr_type, stmt_idx, allow_records=True
+                )
             base_ret = expr.record_name if isinstance(expr, ReadJsonRecordExpr) else f"List<{expr.record_name}>"
             if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
                 d_t = self.infer_expr_type(expr.default_val, scope, stmt_idx)
@@ -2108,17 +2215,9 @@ class _StaticChecker:
                 )
             rec_fields = self.records[rec_name]
             for fname, ftype in rec_fields.items():
-                base_t = ftype[9:-1] if (ftype.startswith("Optional<") and ftype.endswith(">")) else ftype
-                if base_t in self.records:
-                    raise StaticVerificationError(
-                        f"`write_json` record `{rec_name}` field `{fname}` has nested record type `{base_t}`; nested records in JSON are not supported",
-                        stmt_idx,
-                    )
-                if base_t.startswith("List<") or base_t.startswith("Map<"):
-                    raise StaticVerificationError(
-                        f"`write_json` record `{rec_name}` field `{fname}` has type `{ftype}`; record field cannot be List or Map in JSON",
-                        stmt_idx,
-                    )
+                self._validate_json_field_type(
+                    ftype, fname, rec_name, "write_json", stmt_idx, allow_records=True
+                )
             return False
 
         if isinstance(stmt, AppendFileStmt):

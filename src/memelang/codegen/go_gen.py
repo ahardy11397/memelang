@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
-from memelang.codegen.base import BaseGen, _map_types_of, _set_type_of, escape_str
+from memelang.codegen.base import BaseGen, _get_transitive_json_records, _map_types_of, _set_type_of, escape_str
 from memelang.ir.canonical import format_expr
 from memelang.ir.schema import (
     AppendFileStmt,
@@ -1092,6 +1092,175 @@ class _GoGen(BaseGen):
         return lines
 
 
+def _go_json_decode_val(raw_var: str, ftype: str, indent: str) -> tuple[str, list[str]]:
+    if ftype == "Int":
+        temp_val = f"_v_{abs(hash(ftype + raw_var)) % 1000000}"
+        code = [
+            f"{indent}f_val, ok := {raw_var}.(float64)",
+            f"{indent}if !ok || f_val != float64(int64(f_val)) {{ return nil }}",
+            f"{indent}{temp_val} := int64(f_val)",
+        ]
+        return temp_val, code
+    if ftype == "Float":
+        temp_val = f"_v_{abs(hash(ftype + raw_var)) % 1000000}"
+        code = [
+            f"{indent}f_val, ok := {raw_var}.(float64)",
+            f"{indent}if !ok {{ return nil }}",
+            f"{indent}{temp_val} := f_val",
+        ]
+        return temp_val, code
+    if ftype == "String":
+        temp_val = f"_v_{abs(hash(ftype + raw_var)) % 1000000}"
+        code = [
+            f"{indent}s_val, ok := {raw_var}.(string)",
+            f"{indent}if !ok {{ return nil }}",
+            f"{indent}{temp_val} := s_val",
+        ]
+        return temp_val, code
+    if ftype == "Bool":
+        temp_val = f"_v_{abs(hash(ftype + raw_var)) % 1000000}"
+        code = [
+            f"{indent}b_val, ok := {raw_var}.(bool)",
+            f"{indent}if !ok {{ return nil }}",
+            f"{indent}{temp_val} := b_val",
+        ]
+        return temp_val, code
+    if ftype.startswith("Optional<") and ftype.endswith(">"):
+        inner = ftype[9:-1]
+        temp_opt = f"_opt_{abs(hash(ftype + raw_var)) % 1000000}"
+        inner_val, inner_code = _go_json_decode_val(raw_var, inner, indent + "    ")
+        code = [
+            f"{indent}var {temp_opt} *{_go_type(inner)}",
+            f"{indent}if {raw_var} != nil {{",
+            *inner_code,
+            f"{indent}    _tmp := {inner_val}",
+            f"{indent}    {temp_opt} = &_tmp",
+            f"{indent}}}",
+        ]
+        return temp_opt, code
+    if ftype.startswith("List<") and ftype.endswith(">"):
+        el_t = ftype[5:-1]
+        temp_list = f"_l_{abs(hash(ftype + raw_var)) % 1000000}"
+        temp_it = f"_it_{abs(hash(ftype + raw_var)) % 1000000}"
+        el_val, el_code = _go_json_decode_val(temp_it, el_t, indent + "    ")
+        code = [
+            f"{indent}arr, ok := {raw_var}.([]any)",
+            f"{indent}if !ok {{ return nil }}",
+            f"{indent}var {temp_list} []{_go_type(el_t)}",
+            f"{indent}for _, {temp_it} := range arr {{",
+            *el_code,
+            f"{indent}    {temp_list} = append({temp_list}, {el_val})",
+            f"{indent}}}",
+        ]
+        return temp_list, code
+    if ftype.startswith("Set<") and ftype.endswith(">"):
+        el_t = ftype[4:-1]
+        temp_set = f"_s_{abs(hash(ftype + raw_var)) % 1000000}"
+        temp_it = f"_it_{abs(hash(ftype + raw_var)) % 1000000}"
+        el_val, el_code = _go_json_decode_val(temp_it, el_t, indent + "    ")
+        code = [
+            f"{indent}arr, ok := {raw_var}.([]any)",
+            f"{indent}if !ok {{ return nil }}",
+            f"{indent}{temp_set} := make(_MemeSet[{_go_type(el_t)}])",
+            f"{indent}for _, {temp_it} := range arr {{",
+            *el_code,
+            f"{indent}    {temp_set}[{el_val}] = true",
+            f"{indent}}}",
+        ]
+        return temp_set, code
+    if ftype.startswith("Map<") and ftype.endswith(">"):
+        mt = _map_types_of(ftype)
+        assert mt is not None
+        k_t, v_t = mt
+        temp_map = f"_m_{abs(hash(ftype + raw_var)) % 1000000}"
+        temp_k = f"_k_{abs(hash(ftype + raw_var)) % 1000000}"
+        temp_v = f"_v_{abs(hash(ftype + raw_var)) % 1000000}"
+        v_val, v_code = _go_json_decode_val(temp_v, v_t, indent + "    ")
+        code = [
+            f"{indent}obj, ok := {raw_var}.(map[string]any)",
+            f"{indent}if !ok {{ return nil }}",
+            f"{indent}{temp_map} := make(map[{_go_type(k_t)}]{_go_type(v_t)})",
+            f"{indent}for {temp_k}, {temp_v} := range obj {{",
+        ]
+        if k_t == "Int":
+            temp_pk = f"_pk_{abs(hash(ftype + raw_var)) % 1000000}"
+            code.extend([
+                f"{indent}    {temp_pk}, err := strconv.ParseInt({temp_k}, 10, 64)",
+                f"{indent}    if err != nil {{ return nil }}",
+            ])
+            key_access = temp_pk
+        else:
+            key_access = temp_k
+        code.extend(v_code)
+        code.append(f"{indent}    {temp_map}[{key_access}] = {v_val}")
+        code.append(f"{indent}}}")
+        return temp_map, code
+    r_ident = _go_ident(ftype)
+    temp_rec = f"_rec_{abs(hash(ftype + raw_var)) % 1000000}"
+    code = [
+        f"{indent}{temp_rec}_ptr := _meme_parse_record_{r_ident}({raw_var})",
+        f"{indent}if {temp_rec}_ptr == nil {{ return nil }}",
+        f"{indent}{temp_rec} := *{temp_rec}_ptr",
+    ]
+    return temp_rec, code
+
+
+def _go_json_serialize_val(val_expr: str, ftype: str) -> str:
+    if ftype == "Int":
+        return f"strconv.FormatInt({val_expr}, 10)"
+    if ftype == "Float":
+        return f"_meme_format_json_float({val_expr})"
+    if ftype == "String":
+        return f"_meme_escape_json_str({val_expr})"
+    if ftype == "Bool":
+        return f"func() string {{ if {val_expr} {{ return \"true\" }}; return \"false\" }}()"
+    if ftype.startswith("Optional<") and ftype.endswith(">"):
+        inner = ftype[9:-1]
+        inner_code = _go_json_serialize_val(f"*{val_expr}", inner)
+        return f"func() string {{ if {val_expr} == nil {{ return \"null\" }}; return {inner_code} }}()"
+    if ftype.startswith("List<") and ftype.endswith(">"):
+        el_t = ftype[5:-1]
+        el_code = _go_json_serialize_val("it", el_t)
+        return (
+            f"func() string {{ var parts []string;"
+            f" for _, it := range {val_expr} {{ parts = append(parts, {el_code}) }};"
+            f' return "[" + strings.Join(parts, ",") + "]" }}()'
+        )
+    if ftype.startswith("Set<") and ftype.endswith(">"):
+        el_t = ftype[4:-1]
+        el_code = _go_json_serialize_val("it", el_t)
+        if el_t == "Bool":
+            sort_less = "!items[i] && items[j]"
+        elif el_t in ("Int", "Float", "String"):
+            sort_less = "items[i] < items[j]"
+        else:
+            sort_less = f"_meme_less_{_go_ident(el_t)}(items[i], items[j])"
+        return (
+            f"func() string {{ var items []{_go_type(el_t)};"
+            f" for it := range {val_expr} {{ items = append(items, it) }};"
+            f" sort.SliceStable(items, func(i, j int) bool {{ return {sort_less} }});"
+            f" var parts []string;"
+            f" for _, it := range items {{ parts = append(parts, {el_code}) }};"
+            f' return "[" + strings.Join(parts, ",") + "]" }}()'
+        )
+    if ftype.startswith("Map<") and ftype.endswith(">"):
+        mt = _map_types_of(ftype)
+        assert mt is not None
+        k_t, v_t = mt
+        k_fmt = "strconv.FormatInt(k, 10)" if k_t == "Int" else "k"
+        v_code = _go_json_serialize_val(f"{val_expr}[k]", v_t)
+        return (
+            f"func() string {{ var keys []{_go_type(k_t)};"
+            f" for k := range {val_expr} {{ keys = append(keys, k) }};"
+            f" sort.SliceStable(keys, func(i, j int) bool {{ return keys[i] < keys[j] }});"
+            f" var parts []string;"
+            f' for _, k := range keys {{ parts = append(parts, _meme_escape_json_str({k_fmt}) + ":" + {v_code}) }};'
+            f' return "{{" + strings.Join(parts, ",") + "}}" }}()'
+        )
+    r_ident = _go_ident(ftype)
+    return f"_meme_serialize_json_record_{r_ident}({val_expr})"
+
+
 def _emit_go_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> list[str]:
     ident = _go_ident(r_name)
     lines = [
@@ -1105,85 +1274,22 @@ def _emit_go_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> lis
     for fname, ftype in fields.items():
         fn_str = json.dumps(fname)
         f_ident = _go_ident(fname)
-        if ftype == "Int":
-            lines.extend([
-                f"    if v_raw, exists := m[{fn_str}]; !exists || v_raw == nil {{",
-                "        return nil",
-                "    } else if f_val, ok := v_raw.(float64); !ok || f_val != float64(int64(f_val)) {",
-                "        return nil",
-                "    } else {",
-                f"        res.{f_ident} = int64(f_val)",
-                "    }",
-            ])
-        elif ftype == "Float":
-            lines.extend([
-                f"    if v_raw, exists := m[{fn_str}]; !exists || v_raw == nil {{",
-                "        return nil",
-                "    } else if f_val, ok := v_raw.(float64); !ok {",
-                "        return nil",
-                "    } else {",
-                f"        res.{f_ident} = f_val",
-                "    }",
-            ])
-        elif ftype == "String":
-            lines.extend([
-                f"    if v_raw, exists := m[{fn_str}]; !exists || v_raw == nil {{",
-                "        return nil",
-                "    } else if s_val, ok := v_raw.(string); !ok {",
-                "        return nil",
-                "    } else {",
-                f"        res.{f_ident} = s_val",
-                "    }",
-            ])
-        elif ftype == "Bool":
-            lines.extend([
-                f"    if v_raw, exists := m[{fn_str}]; !exists || v_raw == nil {{",
-                "        return nil",
-                "    } else if b_val, ok := v_raw.(bool); !ok {",
-                "        return nil",
-                "    } else {",
-                f"        res.{f_ident} = b_val",
-                "    }",
-            ])
-        elif ftype.startswith("Optional<"):
-            inner = ftype[9:-1]
-            lines.extend([
-                f"    if v_raw, exists := m[{fn_str}]; exists && v_raw != nil {{",
-            ])
-            if inner == "Int":
-                lines.extend([
-                    "        if f_val, ok := v_raw.(float64); !ok || f_val != float64(int64(f_val)) {",
-                    "            return nil",
-                    "        } else {",
-                    "            iv := int64(f_val)",
-                    f"            res.{f_ident} = &iv",
-                    "        }",
-                ])
-            elif inner == "Float":
-                lines.extend([
-                    "        if f_val, ok := v_raw.(float64); !ok {",
-                    "            return nil",
-                    "        } else {",
-                    f"            res.{f_ident} = &f_val",
-                    "        }",
-                ])
-            elif inner == "String":
-                lines.extend([
-                    "        if s_val, ok := v_raw.(string); !ok {",
-                    "            return nil",
-                    "        } else {",
-                    f"            res.{f_ident} = &s_val",
-                    "        }",
-                ])
-            elif inner == "Bool":
-                lines.extend([
-                    "        if b_val, ok := v_raw.(bool); !ok {",
-                    "            return nil",
-                    "        } else {",
-                    f"            res.{f_ident} = &b_val",
-                    "        }",
-                ])
+        if ftype.startswith("Optional<"):
+            lines.append(f"    if v_raw, exists := m[{fn_str}]; exists && v_raw != nil {{")
+            dec_val, dec_code = _go_json_decode_val("v_raw", ftype[9:-1], "        ")
+            lines.extend(dec_code)
+            lines.append(f"        _tmp := {dec_val}")
+            lines.append(f"        res.{f_ident} = &_tmp")
             lines.append("    }")
+        else:
+            lines.append(f"    if v_raw, exists := m[{fn_str}]; !exists || v_raw == nil {{")
+            lines.append("        return nil")
+            lines.append("    } else {")
+            dec_val, dec_code = _go_json_decode_val("v_raw", ftype, "        ")
+            lines.extend(dec_code)
+            lines.append(f"        res.{f_ident} = {dec_val}")
+            lines.append("    }")
+
     lines.append("    return &res")
     lines.append("}")
     lines.append("")
@@ -1237,29 +1343,7 @@ def _emit_go_json_record_writer(r_name: str, fields: dict[str, MemeType]) -> lis
     for fname, ftype in fields.items():
         k_str = json.dumps(fname) + ":"
         f_ident = _go_ident(fname)
-        if ftype == "Int":
-            val_code = f"strconv.FormatInt(rec.{f_ident}, 10)"
-        elif ftype == "Float":
-            val_code = f"_meme_format_json_float(rec.{f_ident})"
-        elif ftype == "String":
-            val_code = f"_meme_escape_json_str(rec.{f_ident})"
-        elif ftype == "Bool":
-            val_code = f"func() string {{ if rec.{f_ident} {{ return \"true\" }}; return \"false\" }}()"
-        elif ftype.startswith("Optional<"):
-            inner = ftype[9:-1]
-            if inner == "Int":
-                inner_code = f"strconv.FormatInt(*rec.{f_ident}, 10)"
-            elif inner == "Float":
-                inner_code = f"_meme_format_json_float(*rec.{f_ident})"
-            elif inner == "String":
-                inner_code = f"_meme_escape_json_str(*rec.{f_ident})"
-            elif inner == "Bool":
-                inner_code = f"func() string {{ if *rec.{f_ident} {{ return \"true\" }}; return \"false\" }}()"
-            else:
-                inner_code = f"fmt.Sprint(*rec.{f_ident})"
-            val_code = f"func() string {{ if rec.{f_ident} == nil {{ return \"null\" }}; return {inner_code} }}()"
-        else:
-            val_code = f"fmt.Sprint(rec.{f_ident})"
+        val_code = _go_json_serialize_val(f"rec.{f_ident}", ftype)
         lines.append(f"    parts = append(parts, {json.dumps(k_str)} + {val_code})")
     lines.extend([
         "    return \"{\" + strings.Join(parts, \",\") + \"}\"",
@@ -2292,8 +2376,14 @@ def generate_go(ir: ProgramIR) -> str:
     if gen.uses_json_records:
         gen.uses_json = True
         gen.uses_os = True
-        for r_name in sorted(gen.json_records_read | gen.json_record_lists_read):
+        all_read = _get_transitive_json_records(gen.json_records_read | gen.json_record_lists_read, gen.records)
+        for r_name in sorted(all_read):
             r_fields = gen.records.get(r_name, {})
+            for ftype in r_fields.values():
+                if "Set<" in ftype:
+                    gen.uses_set = True
+                if "Map<" in ftype:
+                    gen.uses_strconv = True
             helpers.extend(_emit_go_json_record_reader(r_name, r_fields))
 
     if gen.uses_json_write:
@@ -2341,8 +2431,15 @@ def generate_go(ir: ProgramIR) -> str:
             "}",
             "",
         ])
-        for r_name in sorted(gen.json_records_write):
+        all_write = _get_transitive_json_records(gen.json_records_write, gen.records)
+        for r_name in sorted(all_write):
             r_fields = gen.records.get(r_name, {})
+            for ftype in r_fields.values():
+                if "Set<" in ftype:
+                    gen.uses_set = True
+                    gen.uses_sort = True
+                if "Map<" in ftype:
+                    gen.uses_sort = True
             helpers.extend(_emit_go_json_record_writer(r_name, r_fields))
 
     if gen.uses_env:

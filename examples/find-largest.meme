@@ -1,26 +1,20 @@
-this runs in the shell
+# find-largest (demo): reads a filepath from stdin, loads a JSON list of
+# integers from that file, and prints the largest value.
+# Run: printf "examples/numbers.json\n" | uv run meme run examples/find-largest.meme --target rust
 
-class find-largest
-  
-  define function loadFile with filepath
-    if filepath is json
-      define list as fromFile from filepath
-      return fromFile 
-    else return "Wrong File Type"
+function find_largest(nums: List<Int>) -> Int:
+    define largest: Int as nums[0]
+    for each n in nums:
+        if n > largest:
+            set largest to n
+    return largest
 
-  define function findLargest with list
-    define unsorted as list
-    define sorted as empty
+define filepath: String as read String
+define numbers_opt as read json file filepath as List<Int> or else nothing
+define fallback_numbers as empty List<Int>
+define numbers: List<Int> as value of numbers_opt or else fallback_numbers
 
-    sort unsorted into sorted ascending
-
-    return largest from sorted
-
-  define function main  
-    define filepath from user "Filepath?"
-
-    define largest as findLargest from loadFile filepath
-
-    print largest
-
-      
+if length of numbers > 0:
+    print find_largest(numbers)
+else:
+    print "no numbers found"

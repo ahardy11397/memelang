@@ -1,0 +1,1229 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/538_recursive_optional.meme": {
+      "source_sha256": "58dbe32aeb81f55557e15d6f611ca111f0e2d128ac48c27af97b9055ab85e1ed",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "Node",
+          "fields": [
+            {
+              "name": "name",
+              "field_type": "String"
+            },
+            {
+              "name": "parent",
+              "field_type": "Optional<Node>"
+            },
+            {
+              "name": "children",
+              "field_type": "List<Node>"
+            }
+          ],
+          "source_line": 2
+        },
+        {
+          "op": "func_def",
+          "name": "count_nodes",
+          "params": [
+            {
+              "name": "n",
+              "param_type": "Node"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "count",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "source_line": 8
+            },
+            {
+              "op": "for_each",
+              "item_var": "child",
+              "index_var": null,
+              "collection": "n.children",
+              "collection_expr": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "field_name": "children"
+              },
+              "body": [
+                {
+                  "op": "assign",
+                  "name": "count",
+                  "value": {
+                    "expr_type": "binary_op",
+                    "op": "+",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "count"
+                    },
+                    "right": {
+                      "expr_type": "call",
+                      "func_name": "count_nodes",
+                      "args": [
+                        {
+                          "expr_type": "var_ref",
+                          "name": "child"
+                        }
+                      ]
+                    }
+                  },
+                  "source_line": 10
+                }
+              ],
+              "source_line": 9
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "count"
+              },
+              "source_line": 11
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "func_def",
+          "name": "root_name",
+          "params": [
+            {
+              "name": "n",
+              "param_type": "Node"
+            }
+          ],
+          "return_type": "String",
+          "body": [
+            {
+              "op": "if_stmt",
+              "condition": {
+                "expr_type": "optional_is_nothing",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "field_name": "parent"
+                },
+                "negated": false
+              },
+              "then_body": [
+                {
+                  "op": "return_stmt",
+                  "value": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "field_name": "name"
+                  },
+                  "source_line": 15
+                }
+              ],
+              "else_body": [],
+              "source_line": 14
+            },
+            {
+              "op": "var_decl",
+              "name": "p",
+              "var_type": "Node",
+              "value": {
+                "expr_type": "optional_unwrap",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "field_name": "parent"
+                }
+              },
+              "source_line": 16
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "call",
+                "func_name": "root_name",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "p"
+                  }
+                ]
+              },
+              "source_line": 17
+            }
+          ],
+          "source_line": 13
+        },
+        {
+          "op": "var_decl",
+          "name": "empty_children",
+          "var_type": "List<Node>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "Node"
+          },
+          "source_line": 19
+        },
+        {
+          "op": "var_decl",
+          "name": "root",
+          "var_type": "Node",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Node",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "root",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "parent",
+                "value": {
+                  "expr_type": "optional_none"
+                }
+              },
+              {
+                "name": "children",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "empty_children"
+                }
+              }
+            ]
+          },
+          "source_line": 20
+        },
+        {
+          "op": "var_decl",
+          "name": "child_a",
+          "var_type": "Node",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Node",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "child_a",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "parent",
+                "value": {
+                  "expr_type": "optional_wrap",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "root"
+                  }
+                }
+              },
+              {
+                "name": "children",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "empty_children"
+                }
+              }
+            ]
+          },
+          "source_line": 21
+        },
+        {
+          "op": "var_decl",
+          "name": "child_b",
+          "var_type": "Node",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Node",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "child_b",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "parent",
+                "value": {
+                  "expr_type": "optional_wrap",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "root"
+                  }
+                }
+              },
+              {
+                "name": "children",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "empty_children"
+                }
+              }
+            ]
+          },
+          "source_line": 22
+        },
+        {
+          "op": "var_decl",
+          "name": "root_kids",
+          "var_type": "List<Node>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "var_ref",
+                "name": "child_a"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "child_b"
+              }
+            ],
+            "element_type": "Node"
+          },
+          "source_line": 23
+        },
+        {
+          "op": "var_decl",
+          "name": "tree",
+          "var_type": "Node",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Node",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "root",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "parent",
+                "value": {
+                  "expr_type": "optional_none"
+                }
+              },
+              {
+                "name": "children",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "root_kids"
+                }
+              }
+            ]
+          },
+          "source_line": 24
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "count:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "count_nodes",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "tree"
+                }
+              ]
+            }
+          ],
+          "source_line": 26
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "child_a parent is not nothing:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "child_a"
+                },
+                "field_name": "parent"
+              },
+              "negated": true
+            }
+          ],
+          "source_line": 27
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "root parent is nothing:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "tree"
+                },
+                "field_name": "parent"
+              },
+              "negated": false
+            }
+          ],
+          "source_line": 28
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "child_a root name:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "root_name",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "child_a"
+                }
+              ]
+            }
+          ],
+          "source_line": 29
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "child_b root name:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "call",
+              "func_name": "root_name",
+              "args": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "child_b"
+                }
+              ]
+            }
+          ],
+          "source_line": 30
+        },
+        {
+          "op": "var_decl",
+          "name": "fallback_node",
+          "var_type": "Node",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Node",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "fallback",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "parent",
+                "value": {
+                  "expr_type": "optional_none"
+                }
+              },
+              {
+                "name": "children",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "empty_children"
+                }
+              }
+            ]
+          },
+          "source_line": 32
+        },
+        {
+          "op": "var_decl",
+          "name": "p_val",
+          "var_type": "Node",
+          "value": {
+            "expr_type": "optional_unwrap_or_default",
+            "target": {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "tree"
+              },
+              "field_name": "parent"
+            },
+            "default_val": {
+              "expr_type": "var_ref",
+              "name": "fallback_node"
+            }
+          },
+          "source_line": 33
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "p_val name:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "record_field",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "p_val"
+              },
+              "field_name": "name"
+            }
+          ],
+          "source_line": 34
+        },
+        {
+          "op": "var_decl",
+          "name": "child_a_dup",
+          "var_type": "Node",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Node",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "child_a",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "parent",
+                "value": {
+                  "expr_type": "optional_wrap",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "root"
+                  }
+                }
+              },
+              {
+                "name": "children",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "empty_children"
+                }
+              }
+            ]
+          },
+          "source_line": 36
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "child_a == child_b:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "binary_op",
+              "op": "==",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "child_a"
+              },
+              "right": {
+                "expr_type": "var_ref",
+                "name": "child_b"
+              }
+            }
+          ],
+          "source_line": 37
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "child_a == child_a_dup:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "binary_op",
+              "op": "==",
+              "left": {
+                "expr_type": "var_ref",
+                "name": "child_a"
+              },
+              "right": {
+                "expr_type": "var_ref",
+                "name": "child_a_dup"
+              }
+            }
+          ],
+          "source_line": 38
+        }
+      ],
+      "canonical_meme": "record Node:\n    name: String\n    parent: Optional<Node>\n    children: List<Node>\nfunction count_nodes(n: Node) -> Int:\n    define count: Int as 1\n    for each child in n.children:\n        set count to count + count_nodes(child)\n    return count\nfunction root_name(n: Node) -> String:\n    if n.parent is nothing:\n        return n.name\n    define p: Node as value of n.parent\n    return root_name(p)\ndefine list empty_children as empty List<Node>\ndefine root: Node as Node(name=\"root\", parent=nothing, children=empty_children)\ndefine child_a: Node as Node(name=\"child_a\", parent=optional root, children=empty_children)\ndefine child_b: Node as Node(name=\"child_b\", parent=optional root, children=empty_children)\ndefine list root_kids as [child_a, child_b]\ndefine tree: Node as Node(name=\"root\", parent=nothing, children=root_kids)\nprint \"count:\", count_nodes(tree)\nprint \"child_a parent is not nothing:\", child_a.parent is not nothing\nprint \"root parent is nothing:\", tree.parent is nothing\nprint \"child_a root name:\", root_name(child_a)\nprint \"child_b root name:\", root_name(child_b)\ndefine fallback_node: Node as Node(name=\"fallback\", parent=nothing, children=empty_children)\ndefine p_val: Node as value of tree.parent or else fallback_node\nprint \"p_val name:\", p_val.name\ndefine child_a_dup: Node as Node(name=\"child_a\", parent=optional root, children=empty_children)\nprint \"child_a == child_b:\", child_a == child_b\nprint \"child_a == child_a_dup:\", child_a == child_a_dup",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "Node",
+            "fields": [
+              {
+                "name": "name",
+                "field_type": "String"
+              },
+              {
+                "name": "parent",
+                "field_type": "Optional<Node>"
+              },
+              {
+                "name": "children",
+                "field_type": "List<Node>"
+              }
+            ],
+            "source_line": 2
+          },
+          {
+            "op": "func_def",
+            "name": "count_nodes",
+            "params": [
+              {
+                "name": "n",
+                "param_type": "Node"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "count",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 1,
+                  "data_type": "Int"
+                },
+                "source_line": 8
+              },
+              {
+                "op": "for_each",
+                "item_var": "child",
+                "index_var": null,
+                "collection": "n.children",
+                "collection_expr": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "field_name": "children"
+                },
+                "body": [
+                  {
+                    "op": "assign",
+                    "name": "count",
+                    "value": {
+                      "expr_type": "binary_op",
+                      "op": "+",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "count"
+                      },
+                      "right": {
+                        "expr_type": "call",
+                        "func_name": "count_nodes",
+                        "args": [
+                          {
+                            "expr_type": "var_ref",
+                            "name": "child"
+                          }
+                        ]
+                      }
+                    },
+                    "source_line": 10
+                  }
+                ],
+                "source_line": 9
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "count"
+                },
+                "source_line": 11
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "func_def",
+            "name": "root_name",
+            "params": [
+              {
+                "name": "n",
+                "param_type": "Node"
+              }
+            ],
+            "return_type": "String",
+            "body": [
+              {
+                "op": "if_stmt",
+                "condition": {
+                  "expr_type": "optional_is_nothing",
+                  "target": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "field_name": "parent"
+                  },
+                  "negated": false
+                },
+                "then_body": [
+                  {
+                    "op": "return_stmt",
+                    "value": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "field_name": "name"
+                    },
+                    "source_line": 15
+                  }
+                ],
+                "else_body": [],
+                "source_line": 14
+              },
+              {
+                "op": "var_decl",
+                "name": "p",
+                "var_type": "Node",
+                "value": {
+                  "expr_type": "optional_unwrap",
+                  "target": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "field_name": "parent"
+                  }
+                },
+                "source_line": 16
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "call",
+                  "func_name": "root_name",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "p"
+                    }
+                  ]
+                },
+                "source_line": 17
+              }
+            ],
+            "source_line": 13
+          },
+          {
+            "op": "var_decl",
+            "name": "empty_children",
+            "var_type": "List<Node>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "Node"
+            },
+            "source_line": 19
+          },
+          {
+            "op": "var_decl",
+            "name": "root",
+            "var_type": "Node",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Node",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "root",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "parent",
+                  "value": {
+                    "expr_type": "optional_none"
+                  }
+                },
+                {
+                  "name": "children",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "empty_children"
+                  }
+                }
+              ]
+            },
+            "source_line": 20
+          },
+          {
+            "op": "var_decl",
+            "name": "child_a",
+            "var_type": "Node",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Node",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "child_a",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "parent",
+                  "value": {
+                    "expr_type": "optional_wrap",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "root"
+                    }
+                  }
+                },
+                {
+                  "name": "children",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "empty_children"
+                  }
+                }
+              ]
+            },
+            "source_line": 21
+          },
+          {
+            "op": "var_decl",
+            "name": "child_b",
+            "var_type": "Node",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Node",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "child_b",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "parent",
+                  "value": {
+                    "expr_type": "optional_wrap",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "root"
+                    }
+                  }
+                },
+                {
+                  "name": "children",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "empty_children"
+                  }
+                }
+              ]
+            },
+            "source_line": 22
+          },
+          {
+            "op": "var_decl",
+            "name": "root_kids",
+            "var_type": "List<Node>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "child_a"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "child_b"
+                }
+              ],
+              "element_type": "Node"
+            },
+            "source_line": 23
+          },
+          {
+            "op": "var_decl",
+            "name": "tree",
+            "var_type": "Node",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Node",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "root",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "parent",
+                  "value": {
+                    "expr_type": "optional_none"
+                  }
+                },
+                {
+                  "name": "children",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "root_kids"
+                  }
+                }
+              ]
+            },
+            "source_line": 24
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "count:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "count_nodes",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "tree"
+                  }
+                ]
+              }
+            ],
+            "source_line": 26
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "child_a parent is not nothing:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "optional_is_nothing",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "child_a"
+                  },
+                  "field_name": "parent"
+                },
+                "negated": true
+              }
+            ],
+            "source_line": 27
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "root parent is nothing:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "optional_is_nothing",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "tree"
+                  },
+                  "field_name": "parent"
+                },
+                "negated": false
+              }
+            ],
+            "source_line": 28
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "child_a root name:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "root_name",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "child_a"
+                  }
+                ]
+              }
+            ],
+            "source_line": 29
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "child_b root name:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "call",
+                "func_name": "root_name",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "child_b"
+                  }
+                ]
+              }
+            ],
+            "source_line": 30
+          },
+          {
+            "op": "var_decl",
+            "name": "fallback_node",
+            "var_type": "Node",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Node",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "fallback",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "parent",
+                  "value": {
+                    "expr_type": "optional_none"
+                  }
+                },
+                {
+                  "name": "children",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "empty_children"
+                  }
+                }
+              ]
+            },
+            "source_line": 32
+          },
+          {
+            "op": "var_decl",
+            "name": "p_val",
+            "var_type": "Node",
+            "value": {
+              "expr_type": "optional_unwrap_or_default",
+              "target": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "tree"
+                },
+                "field_name": "parent"
+              },
+              "default_val": {
+                "expr_type": "var_ref",
+                "name": "fallback_node"
+              }
+            },
+            "source_line": 33
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "p_val name:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "p_val"
+                },
+                "field_name": "name"
+              }
+            ],
+            "source_line": 34
+          },
+          {
+            "op": "var_decl",
+            "name": "child_a_dup",
+            "var_type": "Node",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Node",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "child_a",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "parent",
+                  "value": {
+                    "expr_type": "optional_wrap",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "root"
+                    }
+                  }
+                },
+                {
+                  "name": "children",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "empty_children"
+                  }
+                }
+              ]
+            },
+            "source_line": 36
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "child_a == child_b:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "child_a"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "child_b"
+                }
+              }
+            ],
+            "source_line": 37
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "child_a == child_a_dup:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "child_a"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "child_a_dup"
+                }
+              }
+            ],
+            "source_line": 38
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

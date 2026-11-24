@@ -199,13 +199,16 @@ def evaluate_script(
     if spec.path.startswith("tests/corpus/"):
         ex_p = repo_root / spec.path.replace("tests/corpus/", "examples/")
         mirror_lock = Path(str(ex_p) + ".lock")
+    extra_candidates: list[Path] = [repo_root / "build.lock", lock_mgr.lockfile_path]
+    if mirror_lock is not None:
+        extra_candidates.append(mirror_lock)
     lock_candidates = LockfileManager.lockfile_candidates(
         script_path,
-        extra_candidates=[repo_root / "build.lock", lock_mgr.lockfile_path, mirror_lock],
+        extra_candidates=extra_candidates,
     )
 
     for lock_cand in lock_candidates:
-        if lock_cand.is_file():
+        if lock_cand and lock_cand.is_file():
             try:
                 cand_mgr = LockfileManager(lock_cand)
                 for skey in source_keys:

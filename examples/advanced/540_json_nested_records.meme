@@ -1,0 +1,38 @@
+# JSON record round-trip with nested records
+record Item:
+    name: String
+    quantity: Int
+
+record Order:
+    id: String
+    items: List<Item>
+    metadata: Map<String, Item>
+
+define i1 as Item(name="Widget", quantity=3)
+define i2 as Item(name="Gadget", quantity=7)
+define items_list as [i1, i2]
+
+define meta_map as empty Map<String, Item>
+set meta_map["primary"] to i1
+set meta_map["secondary"] to i2
+
+define ord as Order(id="ORD-100", items=items_list, metadata=meta_map)
+
+write ord as json to file "tmp_order_540.json"
+
+define fallback_items as empty List<Item>
+define fallback_meta as empty Map<String, Item>
+define fallback_ord as Order(id="FALLBACK", items=fallback_items, metadata=fallback_meta)
+
+define loaded_ord_opt as read json record Order from file "tmp_order_540.json" or else nothing
+
+if loaded_ord_opt is not nothing:
+    define loaded_ord as value of loaded_ord_opt
+    print "order id:", loaded_ord.id
+    print "items count:", length of loaded_ord.items
+    for each itm in loaded_ord.items:
+        print "item:", itm.name, itm.quantity
+    define prim as loaded_ord.metadata["primary"]
+    print "primary item:", prim.name, prim.quantity
+
+delete file "tmp_order_540.json"

@@ -18,7 +18,7 @@ import math
 import re
 from typing import Any
 
-from memelang.codegen.base import BaseGen, _set_types_of
+from memelang.codegen.base import BaseGen, _get_transitive_json_records, _set_types_of
 from memelang.ir.canonical import format_expr
 from memelang.ir.schema import (
     AppendFileStmt,
@@ -939,6 +939,137 @@ class _TSGen(BaseGen):
         return lines
 
 
+def _ts_json_decode_val(val_var: str, ftype: str, indent: str) -> tuple[str, list[str]]:
+    if ftype == "Int":
+        return val_var, [
+            f"{indent}if (typeof {val_var} !== \"number\" || !Number.isInteger({val_var})) return null;",
+        ]
+    if ftype == "Float":
+        return val_var, [
+            f"{indent}if (typeof {val_var} !== \"number\" || Number.isNaN({val_var})) return null;",
+        ]
+    if ftype == "String":
+        return val_var, [
+            f"{indent}if (typeof {val_var} !== \"string\") return null;",
+        ]
+    if ftype == "Bool":
+        return val_var, [
+            f"{indent}if (typeof {val_var} !== \"boolean\") return null;",
+        ]
+    if ftype.startswith("Optional<") and ftype.endswith(">"):
+        inner = ftype[9:-1]
+        temp_opt = f"_opt_{abs(hash(ftype + val_var)) % 1000000}"
+        inner_expr, inner_code = _ts_json_decode_val(val_var, inner, indent + "    ")
+        code = [
+            f"{indent}let {temp_opt}: {_ts_type(inner)} | null = null;",
+            f"{indent}if ({val_var} !== null) {{",
+            *inner_code,
+            f"{indent}    {temp_opt} = {inner_expr};",
+            f"{indent}}}",
+        ]
+        return temp_opt, code
+    if ftype.startswith("List<") and ftype.endswith(">"):
+        el_t = ftype[5:-1]
+        temp_list = f"_l_{abs(hash(ftype + val_var)) % 1000000}"
+        temp_it = f"_it_{abs(hash(ftype + val_var)) % 1000000}"
+        el_expr, el_code = _ts_json_decode_val(temp_it, el_t, indent + "    ")
+        code = [
+            f"{indent}if (!Array.isArray({val_var})) return null;",
+            f"{indent}const {temp_list}: {_ts_type(el_t)}[] = [];",
+            f"{indent}for (const {temp_it} of {val_var}) {{",
+            *el_code,
+            f"{indent}    {temp_list}.push({el_expr});",
+            f"{indent}}}",
+        ]
+        return temp_list, code
+    if ftype.startswith("Set<") and ftype.endswith(">"):
+        el_t = ftype[4:-1]
+        temp_set = f"_s_{abs(hash(ftype + val_var)) % 1000000}"
+        temp_it = f"_it_{abs(hash(ftype + val_var)) % 1000000}"
+        el_expr, el_code = _ts_json_decode_val(temp_it, el_t, indent + "    ")
+        code = [
+            f"{indent}if (!Array.isArray({val_var})) return null;",
+            f"{indent}let {temp_set}: {_ts_type(el_t)}[] = [];",
+            f"{indent}for (const {temp_it} of {val_var}) {{",
+            *el_code,
+            f"{indent}    {temp_set} = _meme_set_add({temp_set}, {el_expr}, {_ts_set_cmp_expr(el_t)});",
+            f"{indent}}}",
+        ]
+        return temp_set, code
+    if ftype.startswith("Map<") and ftype.endswith(">"):
+        mt = _map_types_of(ftype)
+        assert mt is not None
+        k_t, v_t = mt
+        temp_map = f"_m_{abs(hash(ftype + val_var)) % 1000000}"
+        temp_k = f"_k_{abs(hash(ftype + val_var)) % 1000000}"
+        temp_v = f"_v_{abs(hash(ftype + val_var)) % 1000000}"
+        v_expr, v_code = _ts_json_decode_val(temp_v, v_t, indent + "    ")
+        code = [
+            f"{indent}if (typeof {val_var} !== \"object\" || {val_var} === null || Array.isArray({val_var})) return null;",
+            f"{indent}const {temp_map} = new Map<{_ts_type(k_t)}, {_ts_type(v_t)}>();",
+            f"{indent}for (const {temp_k} of Object.keys({val_var})) {{",
+        ]
+        if k_t == "Int":
+            temp_pk = f"_pk_{abs(hash(ftype + val_var)) % 1000000}"
+            code.extend([
+                f"{indent}    const {temp_pk} = parseInt({temp_k}, 10);",
+                f"{indent}    if (isNaN({temp_pk}) || {temp_pk}.toString() !== {temp_k}) return null;",
+            ])
+            key_access = temp_pk
+        else:
+            key_access = temp_k
+        code.extend([
+            f"{indent}    const {temp_v} = ({val_var} as any)[{temp_k}];",
+            *v_code,
+            f"{indent}    {temp_map}.set({key_access}, {v_expr});",
+            f"{indent}}}",
+        ])
+        return temp_map, code
+    r_ident = _ts_ident(ftype)
+    temp_rec = f"_rec_{abs(hash(ftype + val_var)) % 1000000}"
+    code = [
+        f"{indent}const {temp_rec} = _meme_parse_record_{r_ident}({val_var});",
+        f"{indent}if ({temp_rec} === null) return null;",
+    ]
+    return temp_rec, code
+
+
+def _ts_json_serialize_val(val_expr: str, ftype: str) -> str:
+    if ftype == "Int":
+        return f"{val_expr}.toString()"
+    if ftype == "Float":
+        return f"_meme_format_json_float({val_expr})"
+    if ftype == "String":
+        return f"_meme_escape_json_str({val_expr})"
+    if ftype == "Bool":
+        return f"({val_expr} ? 'true' : 'false')"
+    if ftype.startswith("Optional<") and ftype.endswith(">"):
+        inner = ftype[9:-1]
+        inner_code = _ts_json_serialize_val(val_expr, inner)
+        return f"({val_expr} === null ? 'null' : {inner_code})"
+    if ftype.startswith("List<") and ftype.endswith(">"):
+        el_t = ftype[5:-1]
+        el_code = _ts_json_serialize_val("_x", el_t)
+        return f"'[' + {val_expr}.map((_x: any) => {el_code}).join(',') + ']'"
+    if ftype.startswith("Set<") and ftype.endswith(">"):
+        el_t = ftype[4:-1]
+        el_code = _ts_json_serialize_val("_x", el_t)
+        return f"'[' + {val_expr}.map((_x: any) => {el_code}).join(',') + ']'"
+    if ftype.startswith("Map<") and ftype.endswith(">"):
+        mt = _map_types_of(ftype)
+        assert mt is not None
+        k_t, v_t = mt
+        v_code = _ts_json_serialize_val(f"{val_expr}.get(_k)!", v_t)
+        return (
+            f"((() => {{"
+            f" const _keys = Array.from({val_expr}.keys()).sort({_ts_set_cmp_expr(k_t)});"
+            f" return '{{' + _keys.map((_k: any) => _meme_escape_json_str(_k.toString()) + ':' + {v_code}).join(',') + '}}';"
+            f" }})())"
+        )
+    r_ident = _ts_ident(ftype)
+    return f"_meme_serialize_json_record_{r_ident}({val_expr})"
+
+
 def _emit_ts_json_record_reader(r_name: str, fields: dict[str, str]) -> list[str]:
     lines = [
         f"function _meme_parse_record_{r_name}(_d: any): {r_name} | null {{",
@@ -947,63 +1078,18 @@ def _emit_ts_json_record_reader(r_name: str, fields: dict[str, str]) -> list[str
     ]
     for fname, ftype in fields.items():
         fn_json = json.dumps(fname)
-        if ftype == "Int":
-            lines.extend([
-                f"    if (!({fn_json} in _d)) return null;",
-                f"    const _v_{fname} = _d[{fn_json}];",
-                f"    if (typeof _v_{fname} !== \"number\" || !Number.isInteger(_v_{fname})) return null;",
-                f"    _res[{fn_json}] = _v_{fname};",
-            ])
-        elif ftype == "Float":
-            lines.extend([
-                f"    if (!({fn_json} in _d)) return null;",
-                f"    const _v_{fname} = _d[{fn_json}];",
-                f"    if (typeof _v_{fname} !== \"number\" || Number.isNaN(_v_{fname})) return null;",
-                f"    _res[{fn_json}] = _v_{fname};",
-            ])
-        elif ftype == "String":
-            lines.extend([
-                f"    if (!({fn_json} in _d)) return null;",
-                f"    const _v_{fname} = _d[{fn_json}];",
-                f"    if (typeof _v_{fname} !== \"string\") return null;",
-                f"    _res[{fn_json}] = _v_{fname};",
-            ])
-        elif ftype == "Bool":
-            lines.extend([
-                f"    if (!({fn_json} in _d)) return null;",
-                f"    const _v_{fname} = _d[{fn_json}];",
-                f"    if (typeof _v_{fname} !== \"boolean\") return null;",
-                f"    _res[{fn_json}] = _v_{fname};",
-            ])
-        elif ftype.startswith("Optional<"):
-            inner = ftype[9:-1]
-            lines.extend([
-                f"    if (!({fn_json} in _d) || _d[{fn_json}] === null) {{",
-                f"        _res[{fn_json}] = null;",
-                "    } else {",
-                f"        const _v_{fname} = _d[{fn_json}];",
-            ])
-            if inner == "Int":
-                lines.extend([
-                    f"        if (typeof _v_{fname} !== \"number\" || !Number.isInteger(_v_{fname})) return null;",
-                    f"        _res[{fn_json}] = _v_{fname};",
-                ])
-            elif inner == "Float":
-                lines.extend([
-                    f"        if (typeof _v_{fname} !== \"number\" || Number.isNaN(_v_{fname})) return null;",
-                    f"        _res[{fn_json}] = _v_{fname};",
-                ])
-            elif inner == "String":
-                lines.extend([
-                    f"        if (typeof _v_{fname} !== \"string\") return null;",
-                    f"        _res[{fn_json}] = _v_{fname};",
-                ])
-            elif inner == "Bool":
-                lines.extend([
-                    f"        if (typeof _v_{fname} !== \"boolean\") return null;",
-                    f"        _res[{fn_json}] = _v_{fname};",
-                ])
-            lines.append("    }")
+        lines.append(f"    if (!({fn_json} in _d)) {{")
+        if ftype.startswith("Optional<"):
+            lines.append(f"        _res[{fn_json}] = null;")
+        else:
+            lines.append("        return null;")
+        lines.append("    } else {")
+        lines.append(f"        const _v_{fname} = _d[{fn_json}];")
+        dec_expr, dec_code = _ts_json_decode_val(f"_v_{fname}", ftype, "        ")
+        lines.extend(dec_code)
+        lines.append(f"        _res[{fn_json}] = {dec_expr};")
+        lines.append("    }")
+
     lines.append(f"    return _res as {r_name};")
     lines.append("}")
     lines.append("")
@@ -1047,29 +1133,7 @@ def _emit_ts_json_record_writer(r_name: str, fields: dict[str, str]) -> list[str
     for fname, ftype in fields.items():
         k_str = json.dumps(fname) + ":"
         f_ident = _ts_ident(fname)
-        if ftype == "Int":
-            val_code = f"rec.{f_ident}.toString()"
-        elif ftype == "Float":
-            val_code = f"_meme_format_json_float(rec.{f_ident})"
-        elif ftype == "String":
-            val_code = f"_meme_escape_json_str(rec.{f_ident})"
-        elif ftype == "Bool":
-            val_code = f"(rec.{f_ident} ? 'true' : 'false')"
-        elif ftype.startswith("Optional<"):
-            inner = ftype[9:-1]
-            if inner == "Int":
-                inner_code = f"rec.{f_ident}.toString()"
-            elif inner == "Float":
-                inner_code = f"_meme_format_json_float(rec.{f_ident})"
-            elif inner == "String":
-                inner_code = f"_meme_escape_json_str(rec.{f_ident})"
-            elif inner == "Bool":
-                inner_code = f"(rec.{f_ident} ? 'true' : 'false')"
-            else:
-                inner_code = f"String(rec.{f_ident})"
-            val_code = f"(rec.{f_ident} === null ? 'null' : {inner_code})"
-        else:
-            val_code = f"String(rec.{f_ident})"
+        val_code = _ts_json_serialize_val(f"rec.{f_ident}", ftype)
         lines.append(f"    parts.push({json.dumps(k_str)} + {val_code});")
     lines.extend([
         "    return '{' + parts.join(',') + '}';",
@@ -1898,7 +1962,8 @@ def generate_ts(ir: ProgramIR) -> str:
 
     reader_blocks: list[str] = []
     if gen.uses_json_records:
-        for r_name in sorted(gen.json_records_read | gen.json_record_lists_read):
+        all_read = _get_transitive_json_records(gen.json_records_read | gen.json_record_lists_read, gen.records)
+        for r_name in sorted(all_read):
             r_fields = gen.records.get(r_name, {})
             reader_blocks.extend(_emit_ts_json_record_reader(r_name, r_fields))
 
@@ -1939,7 +2004,8 @@ def generate_ts(ir: ProgramIR) -> str:
             "}",
             "",
         ])
-        for r_name in sorted(gen.json_records_write):
+        all_write = _get_transitive_json_records(gen.json_records_write, gen.records)
+        for r_name in sorted(all_write):
             r_fields = gen.records.get(r_name, {})
             writer_blocks.extend(_emit_ts_json_record_writer(r_name, r_fields))
 

@@ -101,7 +101,7 @@ def test_json_records_verifier_rejects_nested_record():
         statements=[
             RecordDefStmt(
                 name="Inner",
-                fields=[RecordFieldDef(name="x", field_type="Int")],
+                fields=[RecordFieldDef(name="x", field_type="List<List<Int>>")],
             ),
             RecordDefStmt(
                 name="Outer",
@@ -117,7 +117,7 @@ def test_json_records_verifier_rejects_nested_record():
             ),
         ]
     )
-    with pytest.raises(StaticVerificationError, match="nested record"):
+    with pytest.raises(StaticVerificationError, match="unsupported List element type"):
         verify_program(prog)
 
 
@@ -126,7 +126,7 @@ def test_json_records_verifier_rejects_list_field():
         statements=[
             RecordDefStmt(
                 name="HasList",
-                fields=[RecordFieldDef(name="items", field_type="List<Int>")],
+                fields=[RecordFieldDef(name="items", field_type="List<List<Int>>")],
             ),
             PrintStmt(
                 expressions=[
@@ -138,7 +138,7 @@ def test_json_records_verifier_rejects_list_field():
             ),
         ]
     )
-    with pytest.raises(StaticVerificationError, match="record field cannot be List or Map"):
+    with pytest.raises(StaticVerificationError, match="unsupported List element type"):
         verify_program(prog)
 
 

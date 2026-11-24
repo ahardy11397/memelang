@@ -1,0 +1,909 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/540_json_nested_records.meme": {
+      "source_sha256": "2224a1e3f27744d2f91b3e7550b496ee4f9cca3a1c2bce398aeb4d363d9ed2de",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "record_def",
+          "name": "Item",
+          "fields": [
+            {
+              "name": "name",
+              "field_type": "String"
+            },
+            {
+              "name": "quantity",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 2
+        },
+        {
+          "op": "record_def",
+          "name": "Order",
+          "fields": [
+            {
+              "name": "id",
+              "field_type": "String"
+            },
+            {
+              "name": "items",
+              "field_type": "List<Item>"
+            },
+            {
+              "name": "metadata",
+              "field_type": "Map<String, Item>"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "var_decl",
+          "name": "i1",
+          "var_type": "Item",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Item",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Widget",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "quantity",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 3,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 11
+        },
+        {
+          "op": "var_decl",
+          "name": "i2",
+          "var_type": "Item",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Item",
+            "fields": [
+              {
+                "name": "name",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "Gadget",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "quantity",
+                "value": {
+                  "expr_type": "literal",
+                  "value": 7,
+                  "data_type": "Int"
+                }
+              }
+            ]
+          },
+          "source_line": 12
+        },
+        {
+          "op": "var_decl",
+          "name": "items_list",
+          "var_type": "List<Item>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [
+              {
+                "expr_type": "var_ref",
+                "name": "i1"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "i2"
+              }
+            ],
+            "element_type": "Item"
+          },
+          "source_line": 13
+        },
+        {
+          "op": "var_decl",
+          "name": "meta_map",
+          "var_type": "Map<String, Item>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "Item",
+            "entries": []
+          },
+          "source_line": 15
+        },
+        {
+          "op": "map_set",
+          "target": "meta_map",
+          "key": {
+            "expr_type": "literal",
+            "value": "primary",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "var_ref",
+            "name": "i1"
+          },
+          "source_line": 16
+        },
+        {
+          "op": "map_set",
+          "target": "meta_map",
+          "key": {
+            "expr_type": "literal",
+            "value": "secondary",
+            "data_type": "String"
+          },
+          "value": {
+            "expr_type": "var_ref",
+            "name": "i2"
+          },
+          "source_line": 17
+        },
+        {
+          "op": "var_decl",
+          "name": "ord",
+          "var_type": "Order",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Order",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "ORD-100",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "items",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "items_list"
+                }
+              },
+              {
+                "name": "metadata",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "meta_map"
+                }
+              }
+            ]
+          },
+          "source_line": 19
+        },
+        {
+          "op": "write_json",
+          "target": {
+            "expr_type": "var_ref",
+            "name": "ord"
+          },
+          "filepath": {
+            "expr_type": "literal",
+            "value": "tmp_order_540.json",
+            "data_type": "String"
+          },
+          "source_line": 21
+        },
+        {
+          "op": "var_decl",
+          "name": "fallback_items",
+          "var_type": "List<Item>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "Item"
+          },
+          "source_line": 23
+        },
+        {
+          "op": "var_decl",
+          "name": "fallback_meta",
+          "var_type": "Map<String, Item>",
+          "value": {
+            "expr_type": "map_literal",
+            "key_type": "String",
+            "value_type": "Item",
+            "entries": []
+          },
+          "source_line": 24
+        },
+        {
+          "op": "var_decl",
+          "name": "fallback_ord",
+          "var_type": "Order",
+          "value": {
+            "expr_type": "record_literal",
+            "record_name": "Order",
+            "fields": [
+              {
+                "name": "id",
+                "value": {
+                  "expr_type": "literal",
+                  "value": "FALLBACK",
+                  "data_type": "String"
+                }
+              },
+              {
+                "name": "items",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "fallback_items"
+                }
+              },
+              {
+                "name": "metadata",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "fallback_meta"
+                }
+              }
+            ]
+          },
+          "source_line": 25
+        },
+        {
+          "op": "var_decl",
+          "name": "loaded_ord_opt",
+          "var_type": "Optional<Order>",
+          "value": {
+            "expr_type": "read_json_record",
+            "record_name": "Order",
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_order_540.json",
+              "data_type": "String"
+            },
+            "default_val": {
+              "expr_type": "optional_none"
+            }
+          },
+          "source_line": 27
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "optional_is_nothing",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "loaded_ord_opt"
+            },
+            "negated": true
+          },
+          "then_body": [
+            {
+              "op": "var_decl",
+              "name": "loaded_ord",
+              "var_type": "Order",
+              "value": {
+                "expr_type": "optional_unwrap",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "loaded_ord_opt"
+                }
+              },
+              "source_line": 30
+            },
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "order id:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "loaded_ord"
+                  },
+                  "field_name": "id"
+                }
+              ],
+              "source_line": 31
+            },
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "items count:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "list_length",
+                  "target": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "loaded_ord"
+                    },
+                    "field_name": "items"
+                  }
+                }
+              ],
+              "source_line": 32
+            },
+            {
+              "op": "for_each",
+              "item_var": "itm",
+              "index_var": null,
+              "collection": "loaded_ord.items",
+              "collection_expr": {
+                "expr_type": "record_field",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "loaded_ord"
+                },
+                "field_name": "items"
+              },
+              "body": [
+                {
+                  "op": "print_stmt",
+                  "expressions": [
+                    {
+                      "expr_type": "literal",
+                      "value": "item:",
+                      "data_type": "String"
+                    },
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "itm"
+                      },
+                      "field_name": "name"
+                    },
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "itm"
+                      },
+                      "field_name": "quantity"
+                    }
+                  ],
+                  "source_line": 34
+                }
+              ],
+              "source_line": 33
+            },
+            {
+              "op": "var_decl",
+              "name": "prim",
+              "var_type": "Item",
+              "value": {
+                "expr_type": "map_get",
+                "target": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "loaded_ord"
+                  },
+                  "field_name": "metadata"
+                },
+                "key": {
+                  "expr_type": "literal",
+                  "value": "primary",
+                  "data_type": "String"
+                },
+                "default_val": null
+              },
+              "source_line": 35
+            },
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "primary item:",
+                  "data_type": "String"
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "prim"
+                  },
+                  "field_name": "name"
+                },
+                {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "prim"
+                  },
+                  "field_name": "quantity"
+                }
+              ],
+              "source_line": 36
+            }
+          ],
+          "else_body": [],
+          "source_line": 29
+        },
+        {
+          "op": "delete_file",
+          "path": {
+            "expr_type": "literal",
+            "value": "tmp_order_540.json",
+            "data_type": "String"
+          },
+          "source_line": 38
+        }
+      ],
+      "canonical_meme": "record Item:\n    name: String\n    quantity: Int\nrecord Order:\n    id: String\n    items: List<Item>\n    metadata: Map<String, Item>\ndefine i1: Item as Item(name=\"Widget\", quantity=3)\ndefine i2: Item as Item(name=\"Gadget\", quantity=7)\ndefine list items_list as [i1, i2]\ndefine meta_map: Map<String, Item> as empty Map<String, Item>\nset meta_map[\"primary\"] to i1\nset meta_map[\"secondary\"] to i2\ndefine ord: Order as Order(id=\"ORD-100\", items=items_list, metadata=meta_map)\nwrite ord as json to file \"tmp_order_540.json\"\ndefine list fallback_items as empty List<Item>\ndefine fallback_meta: Map<String, Item> as empty Map<String, Item>\ndefine fallback_ord: Order as Order(id=\"FALLBACK\", items=fallback_items, metadata=fallback_meta)\ndefine loaded_ord_opt: Optional<Order> as read json record Order from file \"tmp_order_540.json\" or else nothing\nif loaded_ord_opt is not nothing:\n    define loaded_ord: Order as value of loaded_ord_opt\n    print \"order id:\", loaded_ord.id\n    print \"items count:\", length of loaded_ord.items\n    for each itm in loaded_ord.items:\n        print \"item:\", itm.name, itm.quantity\n    define prim: Item as loaded_ord.metadata[\"primary\"]\n    print \"primary item:\", prim.name, prim.quantity\ndelete file \"tmp_order_540.json\"",
+      "ir": {
+        "statements": [
+          {
+            "op": "record_def",
+            "name": "Item",
+            "fields": [
+              {
+                "name": "name",
+                "field_type": "String"
+              },
+              {
+                "name": "quantity",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 2
+          },
+          {
+            "op": "record_def",
+            "name": "Order",
+            "fields": [
+              {
+                "name": "id",
+                "field_type": "String"
+              },
+              {
+                "name": "items",
+                "field_type": "List<Item>"
+              },
+              {
+                "name": "metadata",
+                "field_type": "Map<String, Item>"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "var_decl",
+            "name": "i1",
+            "var_type": "Item",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Item",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Widget",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "quantity",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 3,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 11
+          },
+          {
+            "op": "var_decl",
+            "name": "i2",
+            "var_type": "Item",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Item",
+              "fields": [
+                {
+                  "name": "name",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "Gadget",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "quantity",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": 7,
+                    "data_type": "Int"
+                  }
+                }
+              ]
+            },
+            "source_line": 12
+          },
+          {
+            "op": "var_decl",
+            "name": "items_list",
+            "var_type": "List<Item>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [
+                {
+                  "expr_type": "var_ref",
+                  "name": "i1"
+                },
+                {
+                  "expr_type": "var_ref",
+                  "name": "i2"
+                }
+              ],
+              "element_type": "Item"
+            },
+            "source_line": 13
+          },
+          {
+            "op": "var_decl",
+            "name": "meta_map",
+            "var_type": "Map<String, Item>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "Item",
+              "entries": []
+            },
+            "source_line": 15
+          },
+          {
+            "op": "map_set",
+            "target": "meta_map",
+            "key": {
+              "expr_type": "literal",
+              "value": "primary",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "var_ref",
+              "name": "i1"
+            },
+            "source_line": 16
+          },
+          {
+            "op": "map_set",
+            "target": "meta_map",
+            "key": {
+              "expr_type": "literal",
+              "value": "secondary",
+              "data_type": "String"
+            },
+            "value": {
+              "expr_type": "var_ref",
+              "name": "i2"
+            },
+            "source_line": 17
+          },
+          {
+            "op": "var_decl",
+            "name": "ord",
+            "var_type": "Order",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Order",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "ORD-100",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "items",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "items_list"
+                  }
+                },
+                {
+                  "name": "metadata",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "meta_map"
+                  }
+                }
+              ]
+            },
+            "source_line": 19
+          },
+          {
+            "op": "write_json",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "ord"
+            },
+            "filepath": {
+              "expr_type": "literal",
+              "value": "tmp_order_540.json",
+              "data_type": "String"
+            },
+            "source_line": 21
+          },
+          {
+            "op": "var_decl",
+            "name": "fallback_items",
+            "var_type": "List<Item>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "Item"
+            },
+            "source_line": 23
+          },
+          {
+            "op": "var_decl",
+            "name": "fallback_meta",
+            "var_type": "Map<String, Item>",
+            "value": {
+              "expr_type": "map_literal",
+              "key_type": "String",
+              "value_type": "Item",
+              "entries": []
+            },
+            "source_line": 24
+          },
+          {
+            "op": "var_decl",
+            "name": "fallback_ord",
+            "var_type": "Order",
+            "value": {
+              "expr_type": "record_literal",
+              "record_name": "Order",
+              "fields": [
+                {
+                  "name": "id",
+                  "value": {
+                    "expr_type": "literal",
+                    "value": "FALLBACK",
+                    "data_type": "String"
+                  }
+                },
+                {
+                  "name": "items",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "fallback_items"
+                  }
+                },
+                {
+                  "name": "metadata",
+                  "value": {
+                    "expr_type": "var_ref",
+                    "name": "fallback_meta"
+                  }
+                }
+              ]
+            },
+            "source_line": 25
+          },
+          {
+            "op": "var_decl",
+            "name": "loaded_ord_opt",
+            "var_type": "Optional<Order>",
+            "value": {
+              "expr_type": "read_json_record",
+              "record_name": "Order",
+              "filepath": {
+                "expr_type": "literal",
+                "value": "tmp_order_540.json",
+                "data_type": "String"
+              },
+              "default_val": {
+                "expr_type": "optional_none"
+              }
+            },
+            "source_line": 27
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "optional_is_nothing",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "loaded_ord_opt"
+              },
+              "negated": true
+            },
+            "then_body": [
+              {
+                "op": "var_decl",
+                "name": "loaded_ord",
+                "var_type": "Order",
+                "value": {
+                  "expr_type": "optional_unwrap",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "loaded_ord_opt"
+                  }
+                },
+                "source_line": 30
+              },
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "order id:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "loaded_ord"
+                    },
+                    "field_name": "id"
+                  }
+                ],
+                "source_line": 31
+              },
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "items count:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "list_length",
+                    "target": {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "loaded_ord"
+                      },
+                      "field_name": "items"
+                    }
+                  }
+                ],
+                "source_line": 32
+              },
+              {
+                "op": "for_each",
+                "item_var": "itm",
+                "index_var": null,
+                "collection": "loaded_ord.items",
+                "collection_expr": {
+                  "expr_type": "record_field",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "loaded_ord"
+                  },
+                  "field_name": "items"
+                },
+                "body": [
+                  {
+                    "op": "print_stmt",
+                    "expressions": [
+                      {
+                        "expr_type": "literal",
+                        "value": "item:",
+                        "data_type": "String"
+                      },
+                      {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "itm"
+                        },
+                        "field_name": "name"
+                      },
+                      {
+                        "expr_type": "record_field",
+                        "target": {
+                          "expr_type": "var_ref",
+                          "name": "itm"
+                        },
+                        "field_name": "quantity"
+                      }
+                    ],
+                    "source_line": 34
+                  }
+                ],
+                "source_line": 33
+              },
+              {
+                "op": "var_decl",
+                "name": "prim",
+                "var_type": "Item",
+                "value": {
+                  "expr_type": "map_get",
+                  "target": {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "loaded_ord"
+                    },
+                    "field_name": "metadata"
+                  },
+                  "key": {
+                    "expr_type": "literal",
+                    "value": "primary",
+                    "data_type": "String"
+                  },
+                  "default_val": null
+                },
+                "source_line": 35
+              },
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "primary item:",
+                    "data_type": "String"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "prim"
+                    },
+                    "field_name": "name"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "prim"
+                    },
+                    "field_name": "quantity"
+                  }
+                ],
+                "source_line": 36
+              }
+            ],
+            "else_body": [],
+            "source_line": 29
+          },
+          {
+            "op": "delete_file",
+            "path": {
+              "expr_type": "literal",
+              "value": "tmp_order_540.json",
+              "data_type": "String"
+            },
+            "source_line": 38
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

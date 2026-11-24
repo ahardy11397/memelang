@@ -1,0 +1,38 @@
+# JSON record round-trip with collection fields (List, Set, Map)
+record ConfigProfile:
+    name: String
+    ports: List<Int>
+    tags: Set<String>
+    settings: Map<String, String>
+
+define sample_ports as [80, 443, 8080]
+define sample_tags as empty set of String
+add "web" to set sample_tags
+add "prod" to set sample_tags
+
+define sample_settings as empty Map<String, String>
+set sample_settings["region"] to "us-west"
+set sample_settings["env"] to "production"
+
+define profile as ConfigProfile(name="gateway", ports=sample_ports, tags=sample_tags, settings=sample_settings)
+
+write profile as json to file "tmp_profile.json"
+
+define fallback_ports as empty List<Int>
+define fallback_tags as empty set of String
+define fallback_settings as empty Map<String, String>
+define fallback_profile as ConfigProfile(name="default", ports=fallback_ports, tags=fallback_tags, settings=fallback_settings)
+
+define loaded_opt as read json record ConfigProfile from file "tmp_profile.json" or else nothing
+
+if loaded_opt is not nothing:
+    define loaded as value of loaded_opt
+    print "name:", loaded.name
+    print "ports count:", length of loaded.ports
+    for each p in loaded.ports:
+        print "port:", p
+    print "has web tag:", loaded.tags contains "web"
+    print "region:", loaded.settings["region"]
+    print "env:", loaded.settings["env"]
+
+delete file "tmp_profile.json"
