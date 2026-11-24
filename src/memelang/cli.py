@@ -18,7 +18,7 @@ from memelang.analyzer.verifier import (
     VerificationOutcome,
     verify_synthesis,
 )
-from memelang.codegen import TargetLang, generate_code
+from memelang.codegen import TARGET_LANGS, TargetLang, generate_code
 from memelang.ir.canonical import to_canonical_meme
 from memelang.ir.schema import AmbiguityDiagnostic, ProgramIR, TestBlockStmt
 from memelang.llm import (
@@ -30,8 +30,16 @@ from memelang.llm import (
     get_provider,
     pull_gguf_model,
 )
+from memelang.llm.base import synthesize_compat
 from memelang.lockfile.manager import LockfileManager, LockfileResolutionError
 from memelang.runner.executor import execute_ir, execute_test_blocks, program_uses_input
+
+ALL_TARGETS = list(TARGET_LANGS)
+
+
+def _env_quiet_prompts() -> bool:
+    """Whether `MEME_QUIET_PROMPTS` opts out of progress chatter."""
+    return os.environ.get("MEME_QUIET_PROMPTS", "").strip().lower() in ("1", "true", "yes")
 
 
 def _compute_source_key(source_path: Path) -> str:
@@ -147,10 +155,7 @@ def _load_or_synthesize_program(
         retriever = ExampleRetriever()
         retriever.index_corpus()
         provider = get_provider(provider_spec, retriever=retriever)
-        try:
-            synthesis = provider.synthesize(source_text, source_path=source_path)  # type: ignore[call-arg]
-        except TypeError:
-            synthesis = provider.synthesize(source_text)
+        synthesis = synthesize_compat(provider, source_text, source_path)
         initial_outcome = verify_synthesis(synthesis, source_path=source_path)
         outcome = lock_mgr.record_outcome(
             source_key=source_key,
@@ -182,6 +187,20 @@ def _add_shared_args(sub: argparse.ArgumentParser, default_provider: str = "auto
     )
 
 
+def _add_resolve_args(sub: argparse.ArgumentParser) -> None:
+    sub.add_argument(
+        "--resolve",
+        action="append",
+        metavar="ID=OPT",
+        help="Resolve ambiguity statement ID to option (e.g. --resolve 2=1)",
+    )
+    sub.add_argument(
+        "--interactive",
+        action="store_true",
+        help="Prompt interactively when semantic ambiguities are detected",
+    )
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="meme",
@@ -194,43 +213,23 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_shared_args(p_compile)
     p_compile.add_argument(
         "--target",
-        choices=["python", "rust", "cpp", "go", "c", "ts"],
+        choices=ALL_TARGETS,
         required=True,
         help="Target programming language",
     )
     p_compile.add_argument("-o", "--output", type=Path, help="Output file path (default: stdout)")
-    p_compile.add_argument(
-        "--resolve",
-        action="append",
-        metavar="ID=OPT",
-        help="Resolve ambiguity statement ID to option (e.g. --resolve 2=1)",
-    )
-    p_compile.add_argument(
-        "--interactive",
-        action="store_true",
-        help="Prompt interactively when semantic ambiguities are detected",
-    )
+    _add_resolve_args(p_compile)
 
     # run
     p_run = subparsers.add_parser("run", help="Compile and immediately execute a .meme file")
     _add_shared_args(p_run)
     p_run.add_argument(
         "--target",
-        choices=["python", "rust", "cpp", "go", "c", "ts"],
+        choices=ALL_TARGETS,
         default="python",
         help="Target runtime backend (default: python)",
     )
-    p_run.add_argument(
-        "--resolve",
-        action="append",
-        metavar="ID=OPT",
-        help="Resolve ambiguity statement ID to option (e.g. --resolve 2=1)",
-    )
-    p_run.add_argument(
-        "--interactive",
-        action="store_true",
-        help="Prompt interactively when semantic ambiguities are detected",
-    )
+    _add_resolve_args(p_run)
 
     # check
     p_check = subparsers.add_parser(
@@ -250,17 +249,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     _add_shared_args(p_build, default_provider="heuristic")
     p_build.add_argument("-o", "--output", type=Path, required=True, help="Output binary path")
-    p_build.add_argument(
-        "--resolve",
-        action="append",
-        metavar="ID=OPT",
-        help="Resolve ambiguity statement ID to option (e.g. --resolve 2=1)",
-    )
-    p_build.add_argument(
-        "--interactive",
-        action="store_true",
-        help="Prompt interactively when semantic ambiguities are detected",
-    )
+    _add_resolve_args(p_build)
     p_build.add_argument(
         "--cc",
         type=str,
@@ -305,7 +294,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     p_test.add_argument(
         "--target",
-        choices=["python", "rust", "cpp", "go", "c", "ts"],
+        choices=ALL_TARGETS,
         default="python",
         help="Target runtime backend (default: python)",
     )
@@ -368,44 +357,24 @@ def main(argv: list[str] | None = None) -> int:
             failed_cases = 0
 
             for meme_file in meme_files:
-                if args.lockfile is not None:
-                    lockfile_path = args.lockfile
-                elif Path(str(meme_file) + ".lock").is_file():
-                    lockfile_path = Path(str(meme_file) + ".lock")
-                elif (meme_file.parent / "build.lock").is_file():
-                    lockfile_path = meme_file.parent / "build.lock"
-                elif Path("build.lock").is_file():
-                    lockfile_path = Path("build.lock")
-                else:
-                    lockfile_path = Path(str(meme_file) + ".lock")
+                lockfile_path = args.lockfile or (
+                    LockfileManager.find_lock(meme_file) or Path(str(meme_file) + ".lock")
+                )
 
                 source_text = meme_file.read_text(encoding="utf-8")
-                is_stale = False
                 cached_program = None
+                is_stale = False
 
                 if lockfile_path.is_file():
                     try:
                         lock_mgr = LockfileManager(lockfile_path)
                         source_key = _compute_source_key(meme_file)
-                        current_hash = lock_mgr.compute_source_hash(source_text)
-                        entry = lock_mgr.get_entry(source_key)
-                        if entry is not None:
-                            if entry.source_sha256 != current_hash or not lock_mgr._check_module_files(entry, source_key):
-                                is_stale = True
-                            else:
-                                cached_program = lock_mgr.get_cached_program(source_key, source_text)
-                                if cached_program is None:
-                                    is_stale = True
-                        else:
-                            doc = lock_mgr._load_doc()
-                            for k, v in doc.entries.items():
-                                if Path(k).name == meme_file.name and v.source_sha256 != current_hash:
-                                    is_stale = True
-                                    break
+                        cached_program = lock_mgr.get_cached_program(source_key, source_text)
+                        is_stale = lock_mgr.is_stale(source_key, source_text)
                     except Exception:
                         is_stale = True
 
-                quiet = os.environ.get("MEME_QUIET_PROMPTS", "").strip().lower() in ("1", "true", "yes")
+                quiet = _env_quiet_prompts()
 
                 if is_stale:
                     if not quiet:
@@ -413,10 +382,7 @@ def main(argv: list[str] | None = None) -> int:
                     retriever = ExampleRetriever()
                     retriever.index_corpus()
                     provider = get_provider(getattr(args, "provider", "heuristic"), retriever=retriever)
-                    try:
-                        synthesis = provider.synthesize(source_text, source_path=meme_file)
-                    except TypeError:
-                        synthesis = provider.synthesize(source_text)
+                    synthesis = synthesize_compat(provider, source_text, meme_file)
                     outcome = verify_synthesis(synthesis, source_path=meme_file)
                     program, ambiguities = outcome.program, outcome.ambiguities
                 elif cached_program is not None:
@@ -535,7 +501,7 @@ def main(argv: list[str] | None = None) -> int:
                         sys.stderr.write(proc.stdout)
                     return proc.returncode if proc.returncode != 0 else 1
 
-            quiet = os.environ.get("MEME_QUIET_PROMPTS", "").strip().lower() in ("1", "true", "yes")
+            quiet = _env_quiet_prompts()
             if not quiet:
                 print(str(args.output), file=sys.stderr)
             return 0

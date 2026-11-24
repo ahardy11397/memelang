@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from memelang.analyzer.verifier import StaticVerificationError, verify_program, verify_synthesis
-from memelang.codegen import TargetLang
+from memelang.analyzer.verifier import StaticVerificationError, verify_program
+from memelang.codegen import TARGET_LANGS, TargetLang
 from memelang.ir.canonical import to_canonical_meme
 from memelang.ir.schema import (
     LiteralExpr,
@@ -14,13 +14,10 @@ from memelang.ir.schema import (
     RecordDefStmt,
     RecordFieldDef,
 )
-from memelang.llm.heuristic import HeuristicProvider
-from memelang.runner.executor import execute_ir
-
-TARGETS: list[TargetLang] = ["python", "rust", "cpp", "go", "c", "ts"]
+from conftest import run_parity
 
 
-@pytest.mark.parametrize("target", TARGETS)
+@pytest.mark.parametrize("target", list(TARGET_LANGS))
 def test_json_records_cross_target_parity(target: TargetLang, tmp_path):
     (tmp_path / "single.json").write_text(
         '{"id": 1, "name": "Alice", "score": 95.5, "active": true, "extra": "ignored"}',
@@ -84,9 +81,7 @@ define bad5 as read json records User from file "array_of_scalars.json" or else 
 if bad5 is nothing:
     print "bad5: is nothing"
 """
-    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
-    assert outcome.program is not None
-    res = execute_ir(outcome.program, target, source_dir=tmp_path)
+    res = run_parity(src, target, source_dir=tmp_path)
     assert res.returncode == 0, res.stderr
     expected = (
         "single user: 1 Alice 95.5 true\n"

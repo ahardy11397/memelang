@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, get_args
 
 from memelang.codegen.c_gen import generate_c
 from memelang.codegen.cpp_gen import generate_cpp
@@ -13,6 +13,10 @@ from memelang.codegen.ts_gen import generate_ts
 from memelang.ir.schema import ProgramIR
 
 TargetLang = Literal["python", "rust", "cpp", "go", "c", "ts"]
+
+# Single source for the target list (derive from the Literal so CLI and
+# corpus tooling never re-hardcode it).
+TARGET_LANGS: tuple[TargetLang, ...] = get_args(TargetLang)
 
 
 def generate_code(ir: ProgramIR, target: TargetLang) -> str:
@@ -32,6 +36,7 @@ def generate_code(ir: ProgramIR, target: TargetLang) -> str:
 
 
 __all__ = [
+    "TARGET_LANGS",
     "TargetLang",
     "generate_c",
     "generate_code",

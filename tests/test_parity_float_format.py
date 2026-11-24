@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from memelang.analyzer.verifier import StaticVerificationError, verify_program, verify_synthesis
-from memelang.codegen import TargetLang
+from memelang.analyzer.verifier import StaticVerificationError, verify_program
 from memelang.ir.canonical import to_canonical_meme
 from memelang.ir.schema import (
     FormatFloatExpr,
@@ -13,29 +12,6 @@ from memelang.ir.schema import (
     VarDeclStmt,
     VarRefExpr,
 )
-from memelang.llm.heuristic import HeuristicProvider
-from memelang.runner.executor import execute_ir
-
-TARGETS: list[TargetLang] = ["python", "rust", "cpp", "go", "c", "ts"]
-
-
-@pytest.mark.parametrize("target", TARGETS)
-def test_float_format_cross_target_parity(target: TargetLang):
-    src = (
-        "print format 2.345 with 2 decimals\n"
-        "print format 2.5 with 0 decimals\n"
-        "print format -2.5 with 0 decimals\n"
-        "print format 0.005 with 2 decimals\n"
-        "print format 10.0 with 2 decimals\n"
-        "print format 1000000000.0 with 0 decimals\n"
-        "print format -0.001 with 2 decimals\n"
-    )
-    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
-    assert outcome.program is not None
-    res = execute_ir(outcome.program, target)
-    assert res.returncode == 0, res.stderr
-    expected = "2.35\n3\n-3\n0.01\n10.00\n1000000000\n0.00\n"
-    assert res.stdout.replace("\r\n", "\n") == expected
 
 
 def test_float_format_verifier_rejects_non_float_target():

@@ -34,6 +34,19 @@ def has_executable_content(source_text: str) -> bool:
     return False
 
 
+def synthesize_compat(
+    provider: LLMProvider,
+    source_text: str,
+    source_path: Path | None = None,
+) -> SynthesisResult:
+    """Call `provider.synthesize`, tolerating providers whose signature
+    lacks a `source_path` keyword argument (single shared fallback)."""
+    try:
+        return provider.synthesize(source_text, source_path=source_path)  # type: ignore[call-arg]
+    except TypeError:
+        return provider.synthesize(source_text)
+
+
 BASE_PROMPT_PREFIX = """You are the frontend semantic synthesizer for the `meme` (Memelang) natural-language compiler.
 Translate the user's English `.meme` source file into a strict JSON object matching `SynthesisResult`: `{"items": [...]}`.
 

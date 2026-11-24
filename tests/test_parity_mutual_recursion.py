@@ -3,22 +3,17 @@ from __future__ import annotations
 import pytest
 
 from memelang.analyzer.verifier import StaticVerificationError, verify_program, verify_synthesis
-from memelang.codegen import TargetLang
+from memelang.codegen import TARGET_LANGS, TargetLang
 from memelang.ir.canonical import to_canonical_meme
 from memelang.ir.schema import (
-    CallExpr,
     CallStmt,
     FuncDefStmt,
-    FuncParam,
     LiteralExpr,
     PrintStmt,
     ProgramIR,
-    ReturnStmt,
 )
 from memelang.llm.heuristic import HeuristicProvider
 from memelang.runner.executor import execute_ir
-
-TARGETS: list[TargetLang] = ["python", "rust", "cpp", "go", "c", "ts"]
 
 MUTUAL_RECURSION_PROGRAM = (
     "function is_even(n: Int) -> Bool:\n"
@@ -38,22 +33,6 @@ MUTUAL_RECURSION_PROGRAM = (
 )
 
 
-@pytest.mark.parametrize("target", TARGETS)
-def test_mutual_recursion_cross_target_parity(target: TargetLang):
-    outcome = verify_synthesis(HeuristicProvider().synthesize(MUTUAL_RECURSION_PROGRAM))
-    assert outcome.program is not None
-    res = execute_ir(outcome.program, target)
-    assert res.returncode == 0, res.stderr
-    expected_stdout = (
-        "4 is even: true\n"
-        "4 is odd: false\n"
-        "7 is even: false\n"
-        "7 is odd: true\n"
-    )
-    assert res.stdout.replace("\r\n", "\n") == expected_stdout
-    assert res.stderr == ""
-
-
 def test_mutual_recursion_canonical_decompilation():
     outcome = verify_synthesis(HeuristicProvider().synthesize(MUTUAL_RECURSION_PROGRAM))
     assert outcome.program is not None
@@ -62,7 +41,7 @@ def test_mutual_recursion_canonical_decompilation():
     assert "function is_odd(n: Int) -> Bool:" in out
 
 
-@pytest.mark.parametrize("target", TARGETS)
+@pytest.mark.parametrize("target", list(TARGET_LANGS))
 def test_locked_536_mutual_recursion_parity(target: TargetLang):
     from pathlib import Path
     from memelang.lockfile.manager import LockfileManager

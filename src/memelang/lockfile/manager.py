@@ -99,6 +99,74 @@ class LockfileManager:
                 f"Corrupt or incompatible lockfile `{self.lockfile_path}`: {exc}"
             ) from exc
 
+    @staticmethod
+    def lockfile_candidates(
+        source_path: Path | str,
+        extra_candidates: list[Path] | None = None,
+    ) -> list[Path]:
+        """Canonical lockfile candidate order for a `.meme` source file.
+
+        Order (strictest first): the sibling `<source>.lock`, the
+        `<source dir>/build.lock`, the cwd `build.lock`, then any extra
+        candidates in the given order. Duplicates are removed, keeping
+        the first occurrence.
+        """
+        source_path = Path(source_path)
+        candidates = [
+            Path(str(source_path) + ".lock"),
+            source_path.parent / "build.lock",
+            Path.cwd() / "build.lock",
+            *(extra_candidates or []),
+        ]
+        seen: set[Path] = set()
+        ordered: list[Path] = []
+        for cand in candidates:
+            if cand not in seen:
+                seen.add(cand)
+                ordered.append(cand)
+        return ordered
+
+    @classmethod
+    def find_lock(
+        cls,
+        source_path: Path | str,
+        extra_candidates: list[Path] | None = None,
+    ) -> Path | None:
+        """First existing lockfile for a `.meme` source, per the canonical
+        candidate order (see :meth:`lockfile_candidates`)."""
+        for cand in cls.lockfile_candidates(source_path, extra_candidates):
+            if cand.is_file():
+                return cand
+        return None
+
+    def is_stale(self, source_key: str, source_text: str) -> bool:
+        """Whether the cached lock entry for `source_key` is missing, stale,
+        or no longer verifiable.
+
+        Mirrors the `meme test` staleness contract: an entry whose source
+        hash or module files changed is stale, as is an entry that fails
+        `get_cached_program`; when no entry exists for the key, a
+        same-named entry with a different hash counts as stale. Any error
+        reading the lockfile counts as stale.
+        """
+        try:
+            current_hash = self.compute_source_hash(source_text)
+            entry = self.get_entry(source_key)
+            if entry is not None:
+                if entry.source_sha256 != current_hash or not self._check_module_files(
+                    entry, source_key
+                ):
+                    return True
+                return self.get_cached_program(source_key, source_text) is None
+            doc = self._load_doc()
+            source_name = Path(source_key).name
+            for k, v in doc.entries.items():
+                if Path(k).name == source_name and v.source_sha256 != current_hash:
+                    return True
+            return False
+        except Exception:
+            return True
+
     def _save_doc(self, doc: LockFileDocument) -> None:
         self.lockfile_path.parent.mkdir(parents=True, exist_ok=True)
         self.lockfile_path.write_text(

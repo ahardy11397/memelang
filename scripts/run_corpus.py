@@ -2,6 +2,7 @@
 """CS 101-103 stress corpus batch runner & 2-axis gap attribution reporter for Memelang."""
 
 import argparse
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -14,18 +15,15 @@ from memelang.analyzer.verifier import (
     VerificationOutcome,
     verify_synthesis,
 )
-from memelang.codegen import TargetLang
+from memelang.codegen import TARGET_LANGS, TargetLang
 from memelang.ir.schema import (
     FailStmt,
-    ForEachStmt,
-    ForRangeStmt,
-    FuncDefStmt,
     IRStatement,
-    IfStmt,
     ProgramIR,
-    WhileStmt,
 )
+from memelang.ir.walk import iter_stmt_bodies
 from memelang.llm import LLMProvider, LLMProviderError, get_provider
+from memelang.llm.base import synthesize_compat
 from memelang.llm.retriever import ExampleRetriever
 from memelang.lockfile.manager import LockfileManager
 from memelang.runner.executor import execute_ir
@@ -134,9 +132,7 @@ def _stmts_have_fail(stmts: list[IRStatement]) -> bool:
     for s in stmts:
         if isinstance(s, FailStmt):
             return True
-        if isinstance(s, IfStmt) and (_stmts_have_fail(s.then_body) or _stmts_have_fail(s.else_body)):
-            return True
-        if isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt, FuncDefStmt)) and _stmts_have_fail(s.body):
+        if any(_stmts_have_fail(body) for body in iter_stmt_bodies(s)):
             return True
     return False
 
@@ -146,454 +142,15 @@ def _program_has_fail(program: ProgramIR) -> bool:
 
 
 def get_advanced_and_root_specs() -> list[CorpusScriptSpec]:
-    """Returns specs for advanced 501-532, 524_build, and root examples."""
-    return [
-        CorpusScriptSpec(
-            id=501,
-            slug="501_service_contract_auth",
-            path="examples/advanced/501_service_contract_auth.meme",
-            course="advanced",
-            topic="contracts",
-            title="Service Contract Auth",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="200 OK admin true",
-        ),
-        CorpusScriptSpec(
-            id=502,
-            slug="502_payment_gateway_contract",
-            path="examples/advanced/502_payment_gateway_contract.meme",
-            course="advanced",
-            topic="contracts",
-            title="Payment Gateway Contract",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="INSUFFICIENT_FUNDS",
-        ),
-        CorpusScriptSpec(
-            id=503,
-            slug="503_inventory_reservation_contract",
-            path="examples/advanced/503_inventory_reservation_contract.meme",
-            course="advanced",
-            topic="contracts",
-            title="Inventory Reservation Contract",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="SKU-A",
-        ),
-        CorpusScriptSpec(
-            id=504,
-            slug="504_relational_entity_join",
-            path="examples/advanced/504_relational_entity_join.meme",
-            course="advanced",
-            topic="entities",
-            title="Relational Entity Join",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="Alice",
-        ),
-        CorpusScriptSpec(
-            id=505,
-            slug="505_rbac_policy_lookup",
-            path="examples/advanced/505_rbac_policy_lookup.meme",
-            course="advanced",
-            topic="entities",
-            title="RBAC Policy Lookup",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="DENIED",
-        ),
-        CorpusScriptSpec(
-            id=506,
-            slug="506_package_dependency_graph",
-            path="examples/advanced/506_package_dependency_graph.meme",
-            course="advanced",
-            topic="entities",
-            title="Package Dependency Graph",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="web-service true",
-        ),
-        CorpusScriptSpec(
-            id=507,
-            slug="507_api_request_pipeline",
-            path="examples/advanced/507_api_request_pipeline.meme",
-            course="advanced",
-            topic="api",
-            title="API Request Pipeline",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="201 true",
-        ),
-        CorpusScriptSpec(
-            id=508,
-            slug="508_telemetry_health_aggregator",
-            path="examples/advanced/508_telemetry_health_aggregator.meme",
-            course="advanced",
-            topic="api",
-            title="Telemetry Health Aggregator",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="HEALTHY",
-        ),
-        CorpusScriptSpec(
-            id=509,
-            slug="509_webhook_dispatch_pipeline",
-            path="examples/advanced/509_webhook_dispatch_pipeline.meme",
-            course="advanced",
-            topic="api",
-            title="Webhook Dispatch Pipeline",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="200 0",
-        ),
-        CorpusScriptSpec(
-            id=510,
-            slug="510_file_io_persistence",
-            path="examples/advanced/510_file_io_persistence.meme",
-            course="advanced",
-            topic="file_io",
-            title="File IO Persistence",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="log_length",
-        ),
-        CorpusScriptSpec(
-            id=511,
-            slug="511_exit_code_gate",
-            path="examples/advanced/511_exit_code_gate.meme",
-            course="advanced",
-            topic="control",
-            title="Exit Code Gate",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="auth-gateway PASS",
-        ),
-        CorpusScriptSpec(
-            id=512,
-            slug="512_cli_argument_router",
-            path="examples/advanced/512_cli_argument_router.meme",
-            course="advanced",
-            topic="cli",
-            title="CLI Argument Router",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="argc 1 has_prog true",
-        ),
-        CorpusScriptSpec(
-            id=513,
-            slug="513_typed_json_ingestion",
-            path="examples/advanced/513_typed_json_ingestion.meme",
-            course="advanced",
-            topic="json",
-            title="Typed JSON Ingestion",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="DatasetSummary",
-        ),
-        CorpusScriptSpec(
-            id=514,
-            slug="514_loop_control_break_continue",
-            path="examples/advanced/514_loop_control_break_continue.meme",
-            course="advanced",
-            topic="control",
-            title="Loop Control Break Continue",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="first_match 12",
-        ),
-        CorpusScriptSpec(
-            id=515,
-            slug="515_string_toolbox_pipeline",
-            path="examples/advanced/515_string_toolbox_pipeline.meme",
-            course="advanced",
-            topic="strings",
-            title="String Toolbox Pipeline",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="ALPHA,BETA,GAMMA",
-        ),
-        CorpusScriptSpec(
-            id=516,
-            slug="516_map_iteration_and_indexed_loops",
-            path="examples/advanced/516_map_iteration_and_indexed_loops.meme",
-            course="advanced",
-            topic="maps",
-            title="Map Iteration And Indexed Loops",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="alice 95",
-        ),
-        CorpusScriptSpec(
-            id=517,
-            slug="517_compound_assignment",
-            path="examples/advanced/517_compound_assignment.meme",
-            course="advanced",
-            topic="operators",
-            title="Compound Assignment",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="Adjusted score: 18",
-        ),
-        CorpusScriptSpec(
-            id=518,
-            slug="518_switch_match",
-            path="examples/advanced/518_switch_match.meme",
-            course="advanced",
-            topic="control",
-            title="Switch Match",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="Status 200: OK",
-        ),
-        CorpusScriptSpec(
-            id=519,
-            slug="519_optional",
-            path="examples/advanced/519_optional.meme",
-            course="advanced",
-            topic="types",
-            title="Optional",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="missing is nothing: true",
-        ),
-        CorpusScriptSpec(
-            id=520,
-            slug="520_argv_file_optional_pipeline",
-            path="examples/advanced/520_argv_file_optional_pipeline.meme",
-            course="advanced",
-            topic="pipeline",
-            title="Argv File Optional Pipeline",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="final_status: success",
-        ),
-        CorpusScriptSpec(
-            id=521,
-            slug="521_modules",
-            path="examples/advanced/521_modules/main.meme",
-            course="advanced",
-            topic="modules",
-            title="Modules Main",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="25",
-        ),
-        CorpusScriptSpec(
-            id=522,
-            slug="522_record_optional_pipeline",
-            path="examples/advanced/522_record_optional_pipeline.meme",
-            course="advanced",
-            topic="records",
-            title="Record Optional Pipeline",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="Priority map entries:",
-        ),
-        CorpusScriptSpec(
-            id=523,
-            slug="523_csv_inventory_conversion_pipeline",
-            path="examples/advanced/523_csv_inventory_conversion_pipeline.meme",
-            course="advanced",
-            topic="pipeline",
-            title="CSV Inventory Conversion Pipeline",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="Reordered items: 2",
-        ),
-        CorpusScriptSpec(
-            id=524,
-            slug="524_build_demo",
-            path="examples/524_build/build_demo.meme",
-            course="advanced",
-            topic="build",
-            title="Build Demo",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="cleaned_up true",
-        ),
-        CorpusScriptSpec(
-            id=525,
-            slug="525_assert_statement",
-            path="examples/advanced/525_assert_statement.meme",
-            course="advanced",
-            topic="assert",
-            title="Assert Statement",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="all assertions passed: 25",
-        ),
-        CorpusScriptSpec(
-            id=526,
-            slug="526_float_formatting",
-            path="examples/advanced/526_float_formatting.meme",
-            course="advanced",
-            topic="formatting",
-            title="Float Formatting",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="pi 2 decimals: 3.14",
-        ),
-        CorpusScriptSpec(
-            id=527,
-            slug="527_json_records",
-            path="examples/advanced/527_json_records.meme",
-            course="advanced",
-            topic="json",
-            title="JSON Records",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="single item: 101 WIDGET-A",
-        ),
-        CorpusScriptSpec(
-            id=528,
-            slug="528_json_roundtrip",
-            path="examples/advanced/528_json_roundtrip.meme",
-            course="advanced",
-            topic="json",
-            title="JSON Roundtrip",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="single raw json:",
-        ),
-        CorpusScriptSpec(
-            id=529,
-            slug="529_clock_and_env",
-            path="examples/advanced/529_clock_and_env.meme",
-            course="advanced",
-            topic="clock_env",
-            title="Clock and Env",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            # Exclusion: verified via internal relational assertions
-            expected_stdout_contains="clock valid: true",
-        ),
-        CorpusScriptSpec(
-            id=530,
-            slug="530_optional_file_io",
-            path="examples/advanced/530_optional_file_io.meme",
-            course="advanced",
-            topic="optional_io",
-            title="Optional File IO",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="missing json is nothing: true",
-        ),
-        CorpusScriptSpec(
-            id=531,
-            slug="531_sets",
-            path="examples/advanced/531_sets.meme",
-            course="advanced",
-            topic="sets",
-            title="Sets",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="count 3",
-        ),
-        CorpusScriptSpec(
-            id=532,
-            slug="532_2d_lists",
-            path="examples/advanced/532_2d_lists.meme",
-            course="advanced",
-            topic="2d_lists",
-            title="2D Lists",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="rows 2",
-        ),
-        CorpusScriptSpec(
-            id=533,
-            slug="hello",
-            path="examples/hello.meme",
-            course="demos",
-            topic="basics",
-            title="Hello World",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="Hello, World!",
-        ),
-        CorpusScriptSpec(
-            id=534,
-            slug="fizzbuzz",
-            path="examples/fizzbuzz.meme",
-            course="demos",
-            topic="basics",
-            title="FizzBuzz",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="FizzBuzz",
-        ),
-        CorpusScriptSpec(
-            id=535,
-            slug="find_largest",
-            path="examples/find-largest.meme",
-            course="demos",
-            topic="basics",
-            title="Find Largest",
-            style="clean",
-            stdin="examples/numbers.json\n",
-            expected_status="ok",
-            expected_stdout_contains="99",
-        ),
-        CorpusScriptSpec(
-            id=536,
-            slug="random_sort_structured",
-            path="examples/random_sort_structured.meme",
-            course="demos",
-            topic="basics",
-            title="Random Sort Structured",
-            style="clean",
-            stdin="",
-            expected_status="ok",
-            expected_stdout_contains="",
-        ),
-        CorpusScriptSpec(
-            id=537,
-            slug="random_sort_ambiguous",
-            path="examples/random_sort_ambiguous.meme",
-            course="demos",
-            topic="ambiguous",
-            title="Random Sort Ambiguous",
-            style="ambiguous",
-            stdin="",
-            expected_status="ambiguous",
-            expected_stdout_contains="",
-        ),
-    ]
+    """Loads the advanced 501-537 specs (advanced examples, 524_build, root demos).
+
+    The corpus data lives in ``tests/corpus/advanced_manifest.json`` with the
+    same entry shape as ``tests/corpus/manifest.json``.
+    """
+    manifest_path = REPO_ROOT / "tests" / "corpus" / "advanced_manifest.json"
+    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    return [CorpusScriptSpec.model_validate(item) for item in data["scripts"]]
+
 
 
 def evaluate_script(
@@ -638,15 +195,14 @@ def evaluate_script(
     elif spec.path.startswith("examples/"):
         source_keys.append(spec.path.replace("examples/", "tests/corpus/"))
 
-    lock_candidates = [
-        Path(str(script_path) + ".lock"),
-        script_path.parent / "build.lock",
-        repo_root / "build.lock",
-        lock_mgr.lockfile_path,
-    ]
+    mirror_lock: Path | None = None
     if spec.path.startswith("tests/corpus/"):
         ex_p = repo_root / spec.path.replace("tests/corpus/", "examples/")
-        lock_candidates.append(Path(str(ex_p) + ".lock"))
+        mirror_lock = Path(str(ex_p) + ".lock")
+    lock_candidates = LockfileManager.lockfile_candidates(
+        script_path,
+        extra_candidates=[repo_root / "build.lock", lock_mgr.lockfile_path, mirror_lock],
+    )
 
     for lock_cand in lock_candidates:
         if lock_cand.is_file():
@@ -665,10 +221,7 @@ def evaluate_script(
 
     if outcome is None:
         try:
-            try:
-                synthesis = provider.synthesize(source_text, source_path=script_path)  # type: ignore[call-arg]
-            except TypeError:
-                synthesis = provider.synthesize(source_text)
+            synthesis = synthesize_compat(provider, source_text, script_path)
         except LLMProviderError as exc:
             return ScriptEvalResult(
                 id=spec.id,

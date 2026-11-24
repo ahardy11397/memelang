@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from memelang.codegen.base import BaseGen, _map_types_of, _set_type_of, escape_str
 from memelang.ir.canonical import format_expr
 from memelang.ir.schema import (
     AppendFileStmt,
@@ -129,56 +130,15 @@ _GO_KEYWORDS = {
 }
 
 
+def _escape_go_str(val: str) -> str:
+    return escape_str(val, "go")
+
+
 def _go_ident(name: str) -> str:
     cleaned = name.replace("-", "_")
     if cleaned in _GO_KEYWORDS or cleaned.startswith("_meme_"):
         return f"m_{cleaned}"
     return cleaned
-
-
-def _escape_go_str(val: str) -> str:
-    out: list[str] = ['"']
-    for ch in val:
-        if ch == "\\":
-            out.append("\\\\")
-        elif ch == '"':
-            out.append('\\"')
-        elif ch == "\n":
-            out.append("\\n")
-        elif ch == "\r":
-            out.append("\\r")
-        elif ch == "\t":
-            out.append("\\t")
-        elif ord(ch) < 32:
-            out.append(f"\\x{ord(ch):02x}")
-        else:
-            out.append(ch)
-    out.append('"')
-    return "".join(out)
-
-
-def _map_types_of(map_type: str) -> tuple[str, str] | None:
-    if map_type.startswith("Map<") and map_type.endswith(">"):
-        inner = map_type[4:-1]
-        depth = 0
-        comma = -1
-        for i, ch in enumerate(inner):
-            if ch == "<":
-                depth += 1
-            elif ch == ">":
-                depth -= 1
-            elif ch == "," and depth == 0:
-                comma = i
-                break
-        if comma != -1:
-            return inner[:comma].strip(), inner[comma + 1 :].strip()
-    return None
-
-
-def _set_type_of(set_type: str) -> str | None:
-    if set_type.startswith("Set<") and set_type.endswith(">"):
-        return set_type[4:-1].strip()
-    return None
 
 
 def _go_type(meme_type: str) -> str:
@@ -207,7 +167,7 @@ def _go_type(meme_type: str) -> str:
     return _go_ident(meme_type)
 
 
-class _GoGen:
+class _GoGen(BaseGen):
     def __init__(self) -> None:
         self.uses_fmt = False
         self.uses_math = False
@@ -262,132 +222,6 @@ class _GoGen:
 
         self.func_returns: dict[str, MemeType] = {}
         self.records: dict[str, dict[str, MemeType]] = {}
-
-    def infer_type(self, expr: IRExpr, scope: dict[str, MemeType]) -> MemeType:
-        if isinstance(expr, FloatOfExpr):
-            return "Float"
-        if isinstance(expr, NumberOfExpr):
-            return "Int"
-        if isinstance(expr, CharacterOfExpr):
-            return "String"
-        if isinstance(expr, LiteralExpr):
-            return expr.data_type
-        if isinstance(expr, ListLiteralExpr):
-            return f"List<{expr.element_type}>"  # type: ignore[return-value]
-        if isinstance(expr, VarRefExpr):
-            return scope.get(expr.name, "Int")
-        if isinstance(expr, RandomListExpr):
-            return "List<Int>"
-        if isinstance(expr, ReadJsonListExpr):
-            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
-                return f"List<{expr.element_type}>"  # type: ignore[return-value]
-            if expr.default_val is not None:
-                return f"Optional<List<{expr.element_type}>>"  # type: ignore[return-value]
-            return f"List<{expr.element_type}>"  # type: ignore[return-value]
-        if isinstance(expr, ReadFileStringExpr):
-            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
-                return "String"
-            if expr.default_val is not None:
-                return "Optional<String>"
-            return "String"
-        if isinstance(expr, ReadFileLinesExpr):
-            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
-                return "List<String>"
-            if expr.default_val is not None:
-                return "Optional<List<String>>"
-            return "List<String>"
-        if isinstance(expr, ReadJsonRecordExpr):
-            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
-                return expr.record_name  # type: ignore[return-value]
-            return f"Optional<{expr.record_name}>"  # type: ignore[return-value]
-        if isinstance(expr, ReadJsonRecordsExpr):
-            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
-                return f"List<{expr.record_name}>"  # type: ignore[return-value]
-            return f"Optional<List<{expr.record_name}>>"  # type: ignore[return-value]
-        if isinstance(expr, CurrentEpochExpr):
-            return "Int"
-        if isinstance(expr, EnvVarExpr):
-            if expr.default_val is not None and not isinstance(expr.default_val, OptionalNoneExpr):
-                return "String"
-            return "Optional<String>"
-        if isinstance(expr, StringSplitExpr):
-            return "List<String>"
-        if isinstance(expr, ListFilesExpr):
-            return "List<String>"
-        if isinstance(expr, (StrEndsWithExpr, StrStartsWithExpr, StrContainsExpr, FileExistsExpr, IsDigitExpr, IsLetterExpr, IsUpperExpr, IsLowerExpr)):
-            return "Bool"
-        if isinstance(
-            expr,
-            (RandomIntExpr, ListLengthExpr, StringLengthExpr, StringIndexOfExpr, ArgCountExpr, ParseIntExpr, ParseIntOrDefaultExpr),
-        ):
-            return "Int"
-        if isinstance(
-            expr,
-            (
-                StringSliceExpr,
-                StringReplaceExpr,
-                StringUpperExpr,
-                StringLowerExpr,
-                StringTrimExpr,
-                StringJoinExpr,
-                StringCharAtExpr,
-                ArgAtExpr,
-                FormatIntExpr,
-                FormatFloatExpr,
-            ),
-        ):
-            return "String"
-        if isinstance(expr, ListIndexExpr):
-            col_t = self.infer_type(expr.target, scope)
-            if col_t.startswith("List<"):
-                return col_t[5:-1]  # type: ignore[return-value]
-            map_t = _map_types_of(col_t)
-            if map_t is not None:
-                return map_t[1]  # type: ignore[return-value]
-            return "Int"
-        if isinstance(expr, CallExpr):
-            return self.func_returns.get(expr.func_name, "Int")
-        if isinstance(expr, ReadInputExpr):
-            return expr.target_type
-        if isinstance(expr, RecordLiteralExpr):
-            return expr.record_name
-        if isinstance(expr, RecordFieldExpr):
-            target_t = self.infer_type(expr.target, scope)
-            return self.records.get(target_t, {}).get(expr.field_name, "String")
-        if isinstance(expr, MapLiteralExpr):
-            return f"Map<{expr.key_type}, {expr.value_type}>"
-        if isinstance(expr, MapGetExpr):
-            target_t = self.infer_type(expr.target, scope)
-            mt = _map_types_of(target_t)
-            return mt[1] if mt else "String"
-        if isinstance(expr, MapHasKeyExpr):
-            return "Bool"
-        if isinstance(expr, OptionalNoneExpr):
-            return "Optional<Void>"
-        if isinstance(expr, OptionalWrapExpr):
-            return f"Optional<{self.infer_type(expr.value, scope)}>"
-        if isinstance(expr, OptionalIsNothingExpr):
-            return "Bool"
-        if isinstance(expr, (OptionalUnwrapExpr, OptionalUnwrapOrDefaultExpr)):
-            tgt_t = self.infer_type(expr.target, scope)
-            if tgt_t.startswith("Optional<") and tgt_t.endswith(">"):
-                return tgt_t[9:-1]
-            if isinstance(expr, OptionalUnwrapOrDefaultExpr):
-                return self.infer_type(expr.default_val, scope)
-            return "Int"
-        if isinstance(expr, EmptySetExpr):
-            return f"Set<{expr.element_type}>"
-        if isinstance(expr, SetContainsExpr):
-            return "Bool"
-        if isinstance(expr, SetLengthExpr):
-            return "Int"
-        if isinstance(expr, UnaryOpExpr):
-            return "Bool" if expr.op == "not" else self.infer_type(expr.operand, scope)
-        if isinstance(expr, BinaryOpExpr):
-            if expr.op in ("==", "!=", "<", "<=", ">", ">=", "and", "or"):
-                return "Bool"
-            return self.infer_type(expr.left, scope)
-        return "Int"
 
     def gen_expr(self, expr: IRExpr, scope: dict[str, MemeType]) -> str:
         if isinstance(expr, LiteralExpr):

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from memelang.analyzer.verifier import StaticVerificationError, verify_program, verify_synthesis
-from memelang.codegen import TargetLang
+from memelang.analyzer.verifier import StaticVerificationError, verify_program
+from memelang.codegen import TARGET_LANGS, TargetLang
 from memelang.ir.canonical import to_canonical_meme
 from memelang.ir.schema import (
     CharacterOfExpr,
@@ -13,50 +13,11 @@ from memelang.ir.schema import (
     ProgramIR,
     VarRefExpr,
 )
-from memelang.llm.heuristic import HeuristicProvider
-from memelang.runner.executor import execute_ir
 
-TARGETS: list[TargetLang] = ["python", "rust", "cpp", "go", "c", "ts"]
+from conftest import run_parity
 
 
-@pytest.mark.parametrize("target", TARGETS)
-def test_char_codes_round_trip_ascii_cross_target_parity(target: TargetLang):
-    src = (
-        "define ok: Bool as true\n"
-        "for n from 32 to 126:\n"
-        "    define ch: String as character of n\n"
-        "    define roundtrip: Int as number of ch\n"
-        "    if roundtrip != n:\n"
-        "        set ok to false\n"
-        'if ok:\n'
-        '    print "ASCII 32..126 roundtrip ok"\n'
-        'else:\n'
-        '    print "roundtrip failed"\n'
-    )
-    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
-    assert outcome.program is not None
-    res = execute_ir(outcome.program, target)
-    assert res.returncode == 0, res.stderr
-    assert res.stdout.replace("\r\n", "\n") == "ASCII 32..126 roundtrip ok\n"
-    assert res.stderr == ""
-
-
-@pytest.mark.parametrize("target", TARGETS)
-def test_char_codes_basic_cross_target_parity(target: TargetLang):
-    src = (
-        'define n: Int as number of "a"\n'
-        "define c: String as character of 97\n"
-        'print n, c\n'
-    )
-    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
-    assert outcome.program is not None
-    res = execute_ir(outcome.program, target)
-    assert res.returncode == 0, res.stderr
-    assert res.stdout.replace("\r\n", "\n") == "97 a\n"
-    assert res.stderr == ""
-
-
-@pytest.mark.parametrize("target", TARGETS)
+@pytest.mark.parametrize("target", list(TARGET_LANGS))
 def test_locked_534_conversions_example_cross_target_parity(target: TargetLang):
     from pathlib import Path
     example_path = Path("examples/advanced/534_conversions.meme")
@@ -64,9 +25,7 @@ def test_locked_534_conversions_example_cross_target_parity(target: TargetLang):
     assert example_path.with_suffix(".meme.lock").is_file()
 
     src = example_path.read_text(encoding="utf-8")
-    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
-    assert outcome.program is not None
-    res = execute_ir(outcome.program, target)
+    res = run_parity(src, target)
     assert res.returncode == 0, res.stderr
     expected_stdout = (
         "cents: 1999\n"

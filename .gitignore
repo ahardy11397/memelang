@@ -9,3 +9,10 @@ build/
 .superpowers/
 build.lock
 graphify-out/
+
+# Local audit/runtime artifacts
+audit_state.log
+flags.json
+floats.json
+ints.json
+tags.json

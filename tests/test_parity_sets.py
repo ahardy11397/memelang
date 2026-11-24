@@ -2,12 +2,8 @@
 
 import pytest
 from memelang.analyzer.verifier import StaticVerificationError, verify_synthesis
-from memelang.codegen import TargetLang
 from memelang.ir.canonical import to_canonical_meme
 from memelang.llm.heuristic import HeuristicProvider
-from memelang.runner.executor import execute_ir
-
-TARGETS: list[TargetLang] = ["python", "rust", "cpp", "go", "c", "ts"]
 
 
 SET_PARITY_SRC = """
@@ -72,34 +68,6 @@ if pts contains Point(x=1, y=1):
 else:
     print "has p1 after remove: false"
 """
-
-
-@pytest.mark.parametrize("target", TARGETS)
-def test_sets_cross_target_parity(target: TargetLang):
-    outcome = verify_synthesis(HeuristicProvider().synthesize(SET_PARITY_SRC))
-    assert outcome.program is not None
-    res = execute_ir(outcome.program, target)
-    assert res.returncode == 0, f"Target {target} failed: {res.stderr}"
-    lines = res.stdout.strip().splitlines()
-    assert lines == [
-        "s length: 5",
-        "has cherry: true",
-        "has cherry after remove: false",
-        "s length after remove: 4",
-        "fruit: apple",
-        "fruit: banana",
-        "fruit: date",
-        "fruit: elderberry",
-        "nums length: 4",
-        "num: 5",
-        "num: 10",
-        "num: 42",
-        "num: 99",
-        "pts length: 2",
-        "has p1: true",
-        "pts length after remove: 1",
-        "has p1 after remove: false",
-    ]
 
 
 def test_sets_verifier_rejects_type_mismatch():

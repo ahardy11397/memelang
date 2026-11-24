@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Callable, cast
 
 from memelang.ir.canonical import format_expr, to_canonical_meme
+from memelang.ir.walk import iter_child_exprs, iter_stmt_bodies
 from memelang.ir.schema import (
     AmbiguityCandidate,
     AmbiguityDiagnostic,
@@ -57,7 +58,6 @@ from memelang.ir.schema import (
     ListRemoveStmt,
     ListSetIndexStmt,
     LiteralExpr,
-    MapEntry,
     MapGetExpr,
     MapHasKeyExpr,
     MapLiteralExpr,
@@ -84,9 +84,7 @@ from memelang.ir.schema import (
     ReadJsonRecordExpr,
     ReadJsonRecordsExpr,
     RecordDefStmt,
-    RecordFieldDef,
     RecordFieldExpr,
-    RecordFieldInit,
     RecordLiteralExpr,
     RecordSetFieldStmt,
     RenameFileStmt,
@@ -109,7 +107,6 @@ from memelang.ir.schema import (
     StringSplitExpr,
     StringTrimExpr,
     StringUpperExpr,
-    SwitchCase,
     SwitchStmt,
     SynthesisItem,
     SynthesisResult,
@@ -217,33 +214,26 @@ def _set_type_of(set_type: MemeType) -> MemeType | None:
     return None
 
 
+_COLLECTION_MUTATION_STMTS = (
+    SortCollectionStmt,
+    ClampCollectionStmt,
+    FilterCollectionStmt,
+    ListAppendStmt,
+    ListInsertStmt,
+    ListSetIndexStmt,
+    ListRemoveStmt,
+    SetAddStmt,
+    SetRemoveStmt,
+)
+
+
 def _find_collection_mutations(stmts: list[IRStatement], collection: str) -> list[IRStatement]:
     hits: list[IRStatement] = []
     for s in stmts:
-        if isinstance(
-            s,
-            (
-                SortCollectionStmt,
-                ClampCollectionStmt,
-                FilterCollectionStmt,
-                ListAppendStmt,
-                ListInsertStmt,
-                ListSetIndexStmt,
-                ListRemoveStmt,
-                SetAddStmt,
-                SetRemoveStmt,
-            ),
-        ) and s.target == collection:
+        if isinstance(s, _COLLECTION_MUTATION_STMTS) and s.target == collection:
             hits.append(s)
-        elif isinstance(s, IfStmt):
-            hits.extend(_find_collection_mutations(s.then_body, collection))
-            hits.extend(_find_collection_mutations(s.else_body, collection))
-        elif isinstance(s, SwitchStmt):
-            for c in s.cases:
-                hits.extend(_find_collection_mutations(c.body, collection))
-            hits.extend(_find_collection_mutations(s.default_body, collection))
-        elif isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)):
-            hits.extend(_find_collection_mutations(s.body, collection))
+        for body in iter_stmt_bodies(s):
+            hits.extend(_find_collection_mutations(body, collection))
     return hits
 
 
@@ -580,18 +570,8 @@ def _has_exit_stmt(stmts: list[IRStatement]) -> bool:
     for s in stmts:
         if isinstance(s, ExitStmt):
             return True
-        if isinstance(s, IfStmt):
-            if _has_exit_stmt(s.then_body) or _has_exit_stmt(s.else_body):
-                return True
-        if isinstance(s, SwitchStmt):
-            if any(_has_exit_stmt(c.body) for c in s.cases) or _has_exit_stmt(s.default_body):
-                return True
-        if isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)):
-            if _has_exit_stmt(s.body):
-                return True
-        if isinstance(s, TestBlockStmt):
-            if _has_exit_stmt(s.body):
-                return True
+        if any(_has_exit_stmt(body) for body in iter_stmt_bodies(s)):
+            return True
     return False
 
 
@@ -2224,295 +2204,63 @@ class _StaticChecker:
 def _expr_references_var(expr: IRExpr, name: str) -> bool:
     if isinstance(expr, VarRefExpr):
         return expr.name == name
-    if isinstance(expr, ListLiteralExpr):
-        return any(_expr_references_var(e, name) for e in expr.elements)
-    if isinstance(expr, RandomIntExpr):
-        return _expr_references_var(expr.min_val, name) or _expr_references_var(expr.max_val, name)
-    if isinstance(expr, RandomListExpr):
-        return (
-            _expr_references_var(expr.count, name)
-            or _expr_references_var(expr.min_val, name)
-            or _expr_references_var(expr.max_val, name)
-        )
-    if isinstance(expr, BinaryOpExpr):
-        return _expr_references_var(expr.left, name) or _expr_references_var(expr.right, name)
-    if isinstance(expr, UnaryOpExpr):
-        return _expr_references_var(expr.operand, name)
-    if isinstance(expr, ListLengthExpr):
-        return _expr_references_var(expr.target, name)
-    if isinstance(expr, ListIndexExpr):
-        return _expr_references_var(expr.target, name) or _expr_references_var(expr.index, name)
-    if isinstance(expr, CallExpr):
-        return any(_expr_references_var(a, name) for a in expr.args)
-    if isinstance(expr, StrEndsWithExpr):
-        return _expr_references_var(expr.target, name) or _expr_references_var(expr.suffix, name)
-    if isinstance(expr, StrStartsWithExpr):
-        return _expr_references_var(expr.target, name) or _expr_references_var(expr.prefix, name)
-    if isinstance(expr, (StrContainsExpr, StringIndexOfExpr)):
-        return _expr_references_var(expr.target, name) or _expr_references_var(expr.substring, name)
-    if isinstance(expr, StringReplaceExpr):
-        return (
-            _expr_references_var(expr.target, name)
-            or _expr_references_var(expr.old, name)
-            or _expr_references_var(expr.new, name)
-        )
-    if isinstance(
-        expr,
-        (
-            StringUpperExpr,
-            StringLowerExpr,
-            StringTrimExpr,
-            ParseIntExpr,
-            FormatIntExpr,
-            IsDigitExpr,
-            IsLetterExpr,
-            IsUpperExpr,
-            IsLowerExpr,
-            FloatOfExpr,
-            NumberOfExpr,
-            CharacterOfExpr,
-        ),
-    ):
-        return _expr_references_var(expr.target, name)
-    if isinstance(expr, FormatFloatExpr):
-        return _expr_references_var(expr.target, name) or _expr_references_var(expr.decimals, name)
-    if isinstance(expr, CurrentEpochExpr):
-        return False
-    if isinstance(expr, EnvVarExpr):
-        ref = _expr_references_var(expr.var_name, name)
-        if expr.default_val is not None:
-            ref = ref or _expr_references_var(expr.default_val, name)
-        return ref
-    if isinstance(expr, (ReadJsonRecordExpr, ReadJsonRecordsExpr)):
-        ref = _expr_references_var(expr.filepath, name)
-        if expr.default_val is not None:
-            ref = ref or _expr_references_var(expr.default_val, name)
-        return ref
-    if isinstance(expr, ParseIntOrDefaultExpr):
-        return _expr_references_var(expr.target, name) or _expr_references_var(expr.default_val, name)
-    if isinstance(expr, StringSplitExpr):
-        return _expr_references_var(expr.target, name) or _expr_references_var(expr.separator, name)
-    if isinstance(expr, StringJoinExpr):
-        return _expr_references_var(expr.items, name) or _expr_references_var(expr.separator, name)
-    if isinstance(expr, StringCharAtExpr):
-        return _expr_references_var(expr.target, name) or _expr_references_var(expr.index, name)
-    if isinstance(expr, (FileExistsExpr, ReadFileStringExpr, ReadFileLinesExpr)):
-        ref = _expr_references_var(expr.filepath, name)
-        if getattr(expr, "default_val", None) is not None:
-            ref = ref or _expr_references_var(expr.default_val, name)
-        return ref
-    if isinstance(expr, ListFilesExpr):
-        return _expr_references_var(expr.path, name)
-    if isinstance(expr, ArgAtExpr):
-        return _expr_references_var(expr.index, name)
-    if isinstance(expr, ReadJsonListExpr):
-        ref = _expr_references_var(expr.filepath, name)
-        if expr.default_val is not None:
-            ref = ref or _expr_references_var(expr.default_val, name)
-        return ref
-    if isinstance(expr, StringLengthExpr):
-        return _expr_references_var(expr.target, name)
-    if isinstance(expr, StringSliceExpr):
-        return (
-            _expr_references_var(expr.target, name)
-            or _expr_references_var(expr.start, name)
-            or _expr_references_var(expr.end, name)
-        )
-    if isinstance(expr, RecordLiteralExpr):
-        return any(_expr_references_var(f.value, name) for f in expr.fields)
-    if isinstance(expr, RecordFieldExpr):
-        return _expr_references_var(expr.target, name)
-    if isinstance(expr, MapLiteralExpr):
-        return any(
-            _expr_references_var(e.key, name) or _expr_references_var(e.value, name)
-            for e in expr.entries
-        )
-    if isinstance(expr, MapGetExpr):
-        return (
-            _expr_references_var(expr.target, name)
-            or _expr_references_var(expr.key, name)
-            or (
-                _expr_references_var(expr.default_val, name)
-                if expr.default_val is not None
-                else False
-            )
-        )
-    if isinstance(expr, MapHasKeyExpr):
-        return _expr_references_var(expr.target, name) or _expr_references_var(expr.key, name)
-    if isinstance(expr, OptionalWrapExpr):
-        return _expr_references_var(expr.value, name)
-    if isinstance(expr, (OptionalIsNothingExpr, OptionalUnwrapExpr)):
-        return _expr_references_var(expr.target, name)
-    if isinstance(expr, OptionalUnwrapOrDefaultExpr):
-        return _expr_references_var(expr.target, name) or _expr_references_var(expr.default_val, name)
-    if isinstance(expr, SetContainsExpr):
-        return _expr_references_var(expr.target, name) or _expr_references_var(expr.value, name)
-    if isinstance(expr, SetLengthExpr):
-        return _expr_references_var(expr.target, name)
-    return False
+    return any(_expr_references_var(child, name) for child in iter_child_exprs(expr))
+
+
+_REFERENCE_DEST_STMTS = (
+    CompoundAssignStmt,
+    ListAppendStmt,
+    ListInsertStmt,
+    ListSetIndexStmt,
+    ListRemoveStmt,
+    RecordSetFieldStmt,
+    MapSetStmt,
+    SetAddStmt,
+    SetRemoveStmt,
+    SortCollectionStmt,
+    ClampCollectionStmt,
+    FilterCollectionStmt,
+)
 
 
 def _stmts_reference_var(stmts: list[IRStatement], name: str) -> bool:
     for s in stmts:
-        if isinstance(s, VarDeclStmt) and _expr_references_var(s.value, name):
+        if isinstance(s, AssignStmt) and s.name == name:
             return True
-        if isinstance(s, AssignStmt) and (
-            s.name == name or _expr_references_var(s.value, name)
-        ):
+        if isinstance(s, _REFERENCE_DEST_STMTS) and s.target == name:
             return True
-        if isinstance(s, CompoundAssignStmt) and (
-            s.target == name or _expr_references_var(s.value, name)
-        ):
+        if isinstance(s, ForEachStmt) and s.collection_expr is None and s.collection == name:
             return True
-        if isinstance(s, ListAppendStmt) and (
-            s.target == name or _expr_references_var(s.value, name)
-        ):
+        if any(_expr_references_var(child, name) for child in iter_child_exprs(s)):
             return True
-        if isinstance(s, (ListInsertStmt, ListSetIndexStmt)) and (
-            s.target == name
-            or _expr_references_var(s.index, name)
-            or _expr_references_var(s.value, name)
-        ):
-            return True
-        if isinstance(s, ListRemoveStmt) and (
-            s.target == name
-            or (s.index is not None and _expr_references_var(s.index, name))
-        ):
-            return True
-        if isinstance(s, RecordSetFieldStmt) and (
-            s.target == name or _expr_references_var(s.value, name)
-        ):
-            return True
-        if isinstance(s, MapSetStmt) and (
-            s.target == name
-            or _expr_references_var(s.key, name)
-            or _expr_references_var(s.value, name)
-        ):
-            return True
-        if isinstance(s, (SetAddStmt, SetRemoveStmt)) and (
-            s.target == name or _expr_references_var(s.value, name)
-        ):
-            return True
-        if isinstance(s, (WriteFileStmt, AppendFileStmt)) and (
-            _expr_references_var(s.filepath, name) or _expr_references_var(s.content, name)
-        ):
-            return True
-        if isinstance(s, WriteJsonStmt) and (
-            _expr_references_var(s.target, name) or _expr_references_var(s.filepath, name)
-        ):
-            return True
-        if isinstance(s, (CopyFileStmt, MoveFileStmt)) and (
-            _expr_references_var(s.src, name) or _expr_references_var(s.dst, name)
-        ):
-            return True
-        if isinstance(s, RenameFileStmt) and (
-            _expr_references_var(s.path, name) or _expr_references_var(s.new_name, name)
-        ):
-            return True
-        if isinstance(s, (DeleteFileStmt, CreateDirectoryStmt)) and (
-            _expr_references_var(s.path, name)
-        ):
-            return True
-        if isinstance(s, (SortCollectionStmt, ClampCollectionStmt, FilterCollectionStmt)) and (
-            s.target == name
-        ):
-            return True
-        if isinstance(s, ClampCollectionStmt) and (
-            _expr_references_var(s.min_val, name) or _expr_references_var(s.max_val, name)
-        ):
-            return True
-        if isinstance(s, FilterCollectionStmt) and _expr_references_var(s.predicate, name):
-            return True
-        if isinstance(s, FailStmt) and _expr_references_var(s.message, name):
-            return True
-        if isinstance(s, ExitStmt) and _expr_references_var(s.code, name):
-            return True
-        if isinstance(s, AssertStmt) and _expr_references_var(s.condition, name):
-            return True
-        if isinstance(s, TestBlockStmt) and _stmts_reference_var(s.body, name):
-            return True
-        if isinstance(s, (PrintStmt, PrintErrorStmt)) and any(
-            _expr_references_var(e, name) for e in s.expressions
-        ):
-            return True
-        if isinstance(s, CallStmt) and any(
-            _expr_references_var(a, name) for a in s.args
-        ):
-            return True
-        if isinstance(s, ReturnStmt) and s.value is not None and _expr_references_var(
-            s.value, name
-        ):
-            return True
-        if isinstance(s, IfStmt) and (
-            _expr_references_var(s.condition, name)
-            or _stmts_reference_var(s.then_body, name)
-            or _stmts_reference_var(s.else_body, name)
-        ):
-            return True
-        if isinstance(s, SwitchStmt) and (
-            _expr_references_var(s.target, name)
-            or any(
-                _expr_references_var(c.value, name) or _stmts_reference_var(c.body, name)
-                for c in s.cases
-            )
-            or _stmts_reference_var(s.default_body, name)
-        ):
-            return True
-        if isinstance(s, ForEachStmt):
-            col_e = (
-                s.collection_expr
-                if s.collection_expr is not None
-                else VarRefExpr(name=s.collection)
-            )
-            if _expr_references_var(col_e, name) or _stmts_reference_var(s.body, name):
-                return True
-        if isinstance(s, ForRangeStmt) and (
-            _expr_references_var(s.start, name)
-            or _expr_references_var(s.end, name)
-            or _stmts_reference_var(s.body, name)
-        ):
-            return True
-        if isinstance(s, WhileStmt) and (
-            _expr_references_var(s.condition, name) or _stmts_reference_var(s.body, name)
-        ):
+        if any(_stmts_reference_var(body, name) for body in iter_stmt_bodies(s)):
             return True
     return False
+
+
+_MUTATE_DEST_STMTS = (
+    CompoundAssignStmt,
+    ListAppendStmt,
+    ListInsertStmt,
+    ListSetIndexStmt,
+    ListRemoveStmt,
+    SortCollectionStmt,
+    ClampCollectionStmt,
+    FilterCollectionStmt,
+    RecordSetFieldStmt,
+    MapSetStmt,
+    SetAddStmt,
+    SetRemoveStmt,
+)
 
 
 def _stmts_mutate_var(stmts: list[IRStatement], name: str) -> bool:
     for s in stmts:
         if isinstance(s, AssignStmt) and s.name == name:
             return True
-        if isinstance(
-            s,
-            (
-                CompoundAssignStmt,
-                ListAppendStmt,
-                ListInsertStmt,
-                ListSetIndexStmt,
-                ListRemoveStmt,
-                SortCollectionStmt,
-                ClampCollectionStmt,
-                FilterCollectionStmt,
-                RecordSetFieldStmt,
-                MapSetStmt,
-                SetAddStmt,
-                SetRemoveStmt,
-            ),
-        ) and s.target == name:
+        if isinstance(s, _MUTATE_DEST_STMTS) and s.target == name:
             return True
-        if isinstance(s, IfStmt) and (
-            _stmts_mutate_var(s.then_body, name) or _stmts_mutate_var(s.else_body, name)
-        ):
-            return True
-        if isinstance(s, SwitchStmt) and (
-            any(_stmts_mutate_var(c.body, name) for c in s.cases)
-            or _stmts_mutate_var(s.default_body, name)
-        ):
-            return True
-        if isinstance(s, (ForEachStmt, ForRangeStmt, WhileStmt)) and _stmts_mutate_var(
-            s.body, name
-        ):
+        if any(_stmts_mutate_var(body, name) for body in iter_stmt_bodies(s)):
             return True
     return False
 

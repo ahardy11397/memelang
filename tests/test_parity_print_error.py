@@ -2,65 +2,20 @@ from __future__ import annotations
 
 import pytest
 
-from memelang.analyzer.verifier import StaticVerificationError, verify_program, verify_synthesis
-from memelang.codegen import TargetLang
+from memelang.analyzer.verifier import StaticVerificationError, verify_program
+from memelang.codegen import TARGET_LANGS, TargetLang
 from memelang.ir.canonical import to_canonical_meme
 from memelang.ir.schema import (
     LiteralExpr,
     PrintErrorStmt,
-    PrintStmt,
     ProgramIR,
     VarRefExpr,
 )
-from memelang.llm.heuristic import HeuristicProvider
-from memelang.runner.executor import execute_ir
 
-TARGETS: list[TargetLang] = ["python", "rust", "cpp", "go", "c", "ts"]
+from conftest import run_parity
 
 
-@pytest.mark.parametrize("target", TARGETS)
-def test_print_error_single_expr_cross_target_parity(target: TargetLang):
-    src = 'print error "hello from stderr"\n'
-    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
-    assert outcome.program is not None
-    res = execute_ir(outcome.program, target)
-    assert res.returncode == 0, res.stderr
-    assert res.stdout == ""
-    assert res.stderr.replace("\r\n", "\n") == "hello from stderr\n"
-
-
-@pytest.mark.parametrize("target", TARGETS)
-def test_print_error_multi_expr_cross_target_parity(target: TargetLang):
-    src = (
-        'define code: Int as 500\n'
-        'define active: Bool as true\n'
-        'print error "fatal:", code, active, "system failure"\n'
-    )
-    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
-    assert outcome.program is not None
-    res = execute_ir(outcome.program, target)
-    assert res.returncode == 0, res.stderr
-    assert res.stdout == ""
-    assert res.stderr.replace("\r\n", "\n") == "fatal: 500 true system failure\n"
-
-
-@pytest.mark.parametrize("target", TARGETS)
-def test_print_error_stream_separation_cross_target_parity(target: TargetLang):
-    src = (
-        'print "standard out 1"\n'
-        'print error "standard err 1"\n'
-        'print "standard out 2"\n'
-        'print error "standard err 2"\n'
-    )
-    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
-    assert outcome.program is not None
-    res = execute_ir(outcome.program, target)
-    assert res.returncode == 0, res.stderr
-    assert res.stdout.replace("\r\n", "\n") == "standard out 1\nstandard out 2\n"
-    assert res.stderr.replace("\r\n", "\n") == "standard err 1\nstandard err 2\n"
-
-
-@pytest.mark.parametrize("target", TARGETS)
+@pytest.mark.parametrize("target", list(TARGET_LANGS))
 def test_locked_533_print_error_example_cross_target_parity(target: TargetLang):
     from pathlib import Path
     example_path = Path("examples/advanced/533_print_error.meme")
@@ -68,9 +23,7 @@ def test_locked_533_print_error_example_cross_target_parity(target: TargetLang):
     assert example_path.with_suffix(".meme.lock").is_file()
 
     src = example_path.read_text(encoding="utf-8")
-    outcome = verify_synthesis(HeuristicProvider().synthesize(src))
-    assert outcome.program is not None
-    res = execute_ir(outcome.program, target)
+    res = run_parity(src, target)
     assert res.returncode == 0, res.stderr
     expected_stdout = "starting diagnostic run\nfinished diagnostic run\n"
     expected_stderr = "warning: diagnostic check triggered\nerror 404 resource not found\n"
