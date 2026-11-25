@@ -34,3 +34,6 @@
 [submodule "projects/csv-analytics"]
 	path = projects/csv-analytics
 	url = https://github.com/ahardy11397/csv-analytics.git
+[submodule "projects/meme-tokenizer"]
+	path = projects/meme-tokenizer
+	url = https://github.com/ahardy11397/meme-tokenizer.git
