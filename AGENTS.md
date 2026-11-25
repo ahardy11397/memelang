@@ -1,10 +1,8 @@
 # AGENTS.md — Memelang compiler (umbrella repo)
 
 Rules for coding agents (agy, opencode, Hermes subagents) working in this
-repo. These rules are distilled from how this project is actually developed:
-delegated feature phases, coordinator verification, six-target parity gates.
-If a delegated brief (PHASEx_TASK.md / PLAN.md) exists, it wins on scope —
-but never on the non-negotiables below.
+repo. If a delegated brief (PHASEx_TASK.md / PLAN.md) exists, it wins on
+scope — but never on the non-negotiables below.
 
 ## What this repo is
 
@@ -18,10 +16,11 @@ An UMBRELLA. Three layers, each with its own rules:
 - `examples/` — the locked example corpus. Every language feature ships a
   canonical example with a `.meme.lock`. Existing examples must never
   change their output.
-- `projects/` — 12 real Memelang apps, each its OWN GitHub repo linked as a
-  git submodule. Never edit their contents from the umbrella: work happens
-  inside the submodule repo (see its AGENTS.md), then the umbrella bumps
-  the pointer.
+- `projects/` — 14 real Memelang apps (incl. self-hosting components
+  meme-tokenizer and meme-canonical-checker), each its OWN GitHub repo
+  linked as a git submodule. Never edit their contents from the umbrella:
+  work happens inside the submodule repo (see its AGENTS.md), then the
+  umbrella bumps the pointer.
 
 Key docs: `docs/WRITING_GUIDE.md` (the language surface — read before
 writing any `.meme` code or agent brief), `docs/roadmap.md`,
@@ -31,7 +30,7 @@ hardening catalog).
 ## Verify — run these before claiming anything works
 
 ```bash
-uv run pytest -q                                  # full suite, must be green
+uv run pytest -q                                  # full suite (~920 tests), must be green
 uv run python scripts/run_corpus.py --all-targets # release gate: all programs x 6 targets
 ```
 
@@ -128,7 +127,6 @@ heuristic provider (zero-LLM); `meme compile` / `meme run` default to auto
   bumps: `chore: bump <name> submodule pointer`).
 - Commit message says WHAT closed or changed and why, not just "updates".
 - Push: commit first, then `git pull --rebase` (refuses on a dirty tree;
-  the remote can carry direct user edits), then
-  `git push origin master:main`.
+  the remote can carry direct user edits), then `git push origin main`.
 - `gh` on PATH hangs — use
   `~/.local/share/mise/installs/gh/2.102.0/gh_2.102.0_linux_amd64/bin/gh`.
