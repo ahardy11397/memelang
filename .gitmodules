@@ -37,3 +37,6 @@
 [submodule "projects/meme-tokenizer"]
 	path = projects/meme-tokenizer
 	url = https://github.com/ahardy11397/meme-tokenizer.git
+[submodule "projects/meme-canonical-checker"]
+	path = projects/meme-canonical-checker
+	url = https://github.com/ahardy11397/meme-canonical-checker.git
