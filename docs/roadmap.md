@@ -37,7 +37,7 @@ at a time. Each rung is a working, shipped thing:
 - [x] Ambiguity-halt + zero-LLM lockfile rebuilds (beta)
 - [x] Native binaries via `meme build` (beta)
 - [x] Known language limits closed (2026-11-24)
-- [ ] Memelang tokenizer (self-hosting step 1)
+- [x] Memelang tokenizer (self-hosting step 1) — projects/meme-tokenizer, 23×6 green, self-tokenizes
 - [ ] Further self-hosting components (canonical checker, ...)
 - [ ] Single-binary compiler distribution
 - [ ] HTTP / networking chapter (runtime surface)
