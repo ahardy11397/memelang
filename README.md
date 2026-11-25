@@ -190,8 +190,9 @@ Real programs built with Memelang, each its own repo linked as a submodule, each
 | [projects/meme-tokenizer](projects/meme-tokenizer) | .meme source tokenizer — self-hosting step 1, tokenizes its own source | 23 × 6 targets |
 | [projects/meme-canonical-checker](projects/meme-canonical-checker) | Lockfile freshness checker (FRESH / CANONICAL TOKENS / STALE) — self-hosting step 2 | 22 × 6 targets |
 | [projects/meme-canonical-fixer](projects/meme-canonical-fixer) | Lexical layout canonicalizer (`fix` / `preview`) — self-hosting step 3 | 20 × 6 targets |
+| [projects/meme-lock-check](projects/meme-lock-check) | Exact lockfile freshness (LOCKED-FRESH / DRIFTED) via sha256 — self-hosting step 4 | 20 × 6 targets |
 
-**358 test cases across 12 programs + 3 self-hosting components, 0 failures, every one green on all six targets.**
+**358 test cases across 12 programs + 4 self-hosting components, 0 failures, every one green on all six targets.**
 
 ### Release Gate
 
