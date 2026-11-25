@@ -39,7 +39,9 @@ at a time. Each rung is a working, shipped thing:
 - [x] Known language limits closed (2026-11-24)
 - [x] Memelang tokenizer (self-hosting step 1) — projects/meme-tokenizer, 23×6 green, self-tokenizes
 - [x] Canonical checker (self-hosting step 2) — projects/meme-canonical-checker, 22×6 green, reads real lockfiles
-- [ ] Further self-hosting components (canonical re-emitter, parser subset, ...)
+- [x] Canonical fixer (self-hosting step 3) — projects/meme-canonical-fixer, 20×6 green, fix/preview with round-trip invariant
+- [ ] sha256 builtin (`sha256 of <text>`) — found by step 3: exact lock freshness needs hashing inside Memelang; no bitwise ops exist to implement it (language-gap candidate)
+- [ ] Further self-hosting components (exact-freshness checker via sha256 builtin, parser subset, ...)
 - [ ] Single-binary compiler distribution
 - [ ] HTTP / networking chapter (runtime surface)
 - [ ] Syntax highlighting (editor surface)

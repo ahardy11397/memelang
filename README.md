@@ -189,8 +189,9 @@ Real programs built with Memelang, each its own repo linked as a submodule, each
 | [projects/csv-analytics](projects/csv-analytics) | RFC-4180 CSV engine: joins, group-by, aggregations | 41 × 6 targets |
 | [projects/meme-tokenizer](projects/meme-tokenizer) | .meme source tokenizer — self-hosting step 1, tokenizes its own source | 23 × 6 targets |
 | [projects/meme-canonical-checker](projects/meme-canonical-checker) | Lockfile freshness checker (FRESH / CANONICAL TOKENS / STALE) — self-hosting step 2 | 22 × 6 targets |
+| [projects/meme-canonical-fixer](projects/meme-canonical-fixer) | Lexical layout canonicalizer (`fix` / `preview`) — self-hosting step 3 | 20 × 6 targets |
 
-**358 test cases across 12 programs + 2 self-hosting components, 0 failures, every one green on all six targets.**
+**358 test cases across 12 programs + 3 self-hosting components, 0 failures, every one green on all six targets.**
 
 ### Release Gate
 
