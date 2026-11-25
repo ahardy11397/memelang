@@ -187,8 +187,9 @@ Real programs built with Memelang, each its own repo linked as a submodule, each
 | [projects/expense-splitter](projects/expense-splitter) | Shared expenses: equal/exact/shares splits, min-cash-flow settle | 28 × 6 targets |
 | [projects/project-tracker](projects/project-tracker) | DAG tasks: topo order, critical path, cycle rejection | 29 × 6 targets |
 | [projects/csv-analytics](projects/csv-analytics) | RFC-4180 CSV engine: joins, group-by, aggregations | 41 × 6 targets |
+| [projects/meme-tokenizer](projects/meme-tokenizer) | .meme source tokenizer — self-hosting step 1, tokenizes its own source | 23 × 6 targets |
 
-**335 test cases across 12 programs, 0 failures, every one green on all six targets.**
+**358 test cases across 13 programs, 0 failures, every one green on all six targets.**
 
 ### Release Gate
 
