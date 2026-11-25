@@ -334,6 +334,11 @@ class CharacterOfExpr(IRNode):
     target: IRExpr
 
 
+class Sha256Expr(IRNode):
+    expr_type: Literal["sha256"] = "sha256"
+    target: IRExpr
+
+
 class RecordFieldInit(IRNode):
     name: str
     value: IRExpr
@@ -469,6 +474,7 @@ IRExpr = Annotated[
     | FloatOfExpr
     | NumberOfExpr
     | CharacterOfExpr
+    | Sha256Expr
     | IsDigitExpr
     | IsLetterExpr
     | IsUpperExpr

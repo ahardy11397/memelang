@@ -92,6 +92,7 @@ from memelang.ir.schema import (
     SetContainsExpr,
     SetLengthExpr,
     SetRemoveStmt,
+    Sha256Expr,
     SortCollectionStmt,
     StrContainsExpr,
     StrEndsWithExpr,
@@ -137,6 +138,7 @@ class _PyGen(BaseGen):
         self.uses_format_float = False
         self.uses_number_of = False
         self.uses_character_of = False
+        self.uses_sha256 = False
         self.uses_time = False
         self.uses_env = False
         self.uses_argv = False
@@ -254,6 +256,10 @@ class _PyGen(BaseGen):
 
         if isinstance(expr, StringTrimExpr):
             return f"{self.gen_expr(expr.target, scope)}.strip()"
+
+        if isinstance(expr, Sha256Expr):
+            self.uses_sha256 = True
+            return f"_hashlib.sha256(({self.gen_expr(expr.target, scope)}).encode('utf-8')).hexdigest()"
 
         if isinstance(expr, StringSplitExpr):
             self.uses_str_split = True
@@ -1103,6 +1109,8 @@ def generate_python(ir: ProgramIR) -> str:
         header.append("import random as _meme_random")
     if gen.uses_time:
         header.append("import time as _meme_time")
+    if gen.uses_sha256:
+        header.append("import hashlib as _hashlib")
     header.append("")
 
     if gen.uses_argv:

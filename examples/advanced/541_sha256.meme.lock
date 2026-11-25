@@ -1,0 +1,215 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/541_sha256.meme": {
+      "source_sha256": "932035723226291de5499e724fd735f7e021de6daffe27d6030d21775bd18edf",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "empty_hash",
+          "var_type": "String",
+          "value": {
+            "expr_type": "sha256",
+            "target": {
+              "expr_type": "literal",
+              "value": "",
+              "data_type": "String"
+            }
+          },
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "empty:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "empty_hash"
+            }
+          ],
+          "source_line": 2
+        },
+        {
+          "op": "var_decl",
+          "name": "abc_hash",
+          "var_type": "String",
+          "value": {
+            "expr_type": "sha256",
+            "target": {
+              "expr_type": "literal",
+              "value": "abc",
+              "data_type": "String"
+            }
+          },
+          "source_line": 4
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "abc:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "abc_hash"
+            }
+          ],
+          "source_line": 5
+        },
+        {
+          "op": "var_decl",
+          "name": "msg",
+          "var_type": "String",
+          "value": {
+            "expr_type": "literal",
+            "value": "hello memelang",
+            "data_type": "String"
+          },
+          "source_line": 7
+        },
+        {
+          "op": "var_decl",
+          "name": "msg_hash",
+          "var_type": "String",
+          "value": {
+            "expr_type": "sha256",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "msg"
+            }
+          },
+          "source_line": 8
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "msg:",
+              "data_type": "String"
+            },
+            {
+              "expr_type": "var_ref",
+              "name": "msg_hash"
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "define empty_hash: String as sha256 of \"\"\nprint \"empty:\", empty_hash\ndefine abc_hash: String as sha256 of \"abc\"\nprint \"abc:\", abc_hash\ndefine msg: String as \"hello memelang\"\ndefine msg_hash: String as sha256 of msg\nprint \"msg:\", msg_hash",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "empty_hash",
+            "var_type": "String",
+            "value": {
+              "expr_type": "sha256",
+              "target": {
+                "expr_type": "literal",
+                "value": "",
+                "data_type": "String"
+              }
+            },
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "empty:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "empty_hash"
+              }
+            ],
+            "source_line": 2
+          },
+          {
+            "op": "var_decl",
+            "name": "abc_hash",
+            "var_type": "String",
+            "value": {
+              "expr_type": "sha256",
+              "target": {
+                "expr_type": "literal",
+                "value": "abc",
+                "data_type": "String"
+              }
+            },
+            "source_line": 4
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "abc:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "abc_hash"
+              }
+            ],
+            "source_line": 5
+          },
+          {
+            "op": "var_decl",
+            "name": "msg",
+            "var_type": "String",
+            "value": {
+              "expr_type": "literal",
+              "value": "hello memelang",
+              "data_type": "String"
+            },
+            "source_line": 7
+          },
+          {
+            "op": "var_decl",
+            "name": "msg_hash",
+            "var_type": "String",
+            "value": {
+              "expr_type": "sha256",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "msg"
+              }
+            },
+            "source_line": 8
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "msg:",
+                "data_type": "String"
+              },
+              {
+                "expr_type": "var_ref",
+                "name": "msg_hash"
+              }
+            ],
+            "source_line": 9
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

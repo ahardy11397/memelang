@@ -87,6 +87,7 @@ from memelang.ir.schema import (
     SetContainsExpr,
     SetLengthExpr,
     SetRemoveStmt,
+    Sha256Expr,
     SortCollectionStmt,
     StrContainsExpr,
     StrEndsWithExpr,
@@ -331,6 +332,10 @@ def format_expr(expr: IRExpr, parent_prec: int = 0) -> str:
 
     if isinstance(expr, CharacterOfExpr):
         res = f"character of {format_expr(expr.target, 6)}"
+        return f"({res})" if parent_prec > 5 else res
+
+    if isinstance(expr, Sha256Expr):
+        res = f"sha256 of {format_expr(expr.target, 6)}"
         return f"({res})" if parent_prec > 5 else res
 
     if isinstance(expr, CurrentEpochExpr):

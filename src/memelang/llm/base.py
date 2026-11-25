@@ -85,6 +85,7 @@ Translate the user's English `.meme` source file into a strict JSON object match
 - `{"expr_type": "float_of", "target": <Int expr>}` (`float of <int-expr>`, converts Int to Float, exact for |x| < 2^53)
 - `{"expr_type": "number_of", "target": <String expr>}` (`number of <string-expr>`, returns `"Int"` codepoint of first char; empty or multi-character literal is static error)
 - `{"expr_type": "character_of", "target": <Int expr>}` (`character of <int-expr>`, returns single-character `"String"` for codepoint 0..0x10FFFF)
+- `{"expr_type": "sha256", "target": <String expr>}` (`sha256 of <string-expr>`, returns 64-character lowercase hex digest `"String"`)
 - `{"expr_type": "is_digit", "target": <String expr>}` (`is digit <target>`, returns `"Bool"`, true if single ASCII digit '0'..'9', false for empty or non-digit)
 - `{"expr_type": "is_letter", "target": <String expr>}` (`is letter <target>`, returns `"Bool"`, true if single ASCII letter 'A'..'Z' or 'a'..'z', false for empty or non-letter)
 - `{"expr_type": "is_upper", "target": <String expr>}` (`is upper <target>`, returns `"Bool"`, true if single ASCII uppercase letter 'A'..'Z', false otherwise)

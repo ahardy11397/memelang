@@ -92,6 +92,7 @@ from memelang.ir.schema import (
     SetContainsExpr,
     SetLengthExpr,
     SetRemoveStmt,
+    Sha256Expr,
     SortCollectionStmt,
     StrContainsExpr,
     StrEndsWithExpr,
@@ -191,6 +192,7 @@ class _GoGen(BaseGen):
         self.uses_format_float = False
         self.uses_number_of = False
         self.uses_character_of = False
+        self.uses_sha256 = False
         self.uses_time = False
         self.uses_env = False
         self.uses_env_or = False
@@ -438,6 +440,11 @@ class _GoGen(BaseGen):
             self.uses_character_of = True
             tgt = self.gen_expr(expr.target, scope)
             return f"_meme_character_of({tgt})"
+
+        if isinstance(expr, Sha256Expr):
+            self.uses_sha256 = True
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_sha256({tgt})"
 
         if isinstance(expr, CurrentEpochExpr):
             self.uses_time = True
@@ -2470,6 +2477,16 @@ def generate_go(ir: ProgramIR) -> str:
                 "",
             ]
         )
+    if gen.uses_sha256:
+        helpers.extend(
+            [
+                "func _meme_sha256(s string) string {",
+                "    h := sha256.Sum256([]byte(s))",
+                "    return fmt.Sprintf(\"%x\", h)",
+                "}",
+                "",
+            ]
+        )
 
     # Collect required imports in sorted order
     imports: list[str] = []
@@ -2477,6 +2494,9 @@ def generate_go(ir: ProgramIR) -> str:
         imports.append('"bufio"')
     if gen.uses_bytes:
         imports.append('"bytes"')
+    if gen.uses_sha256:
+        imports.append('"crypto/sha256"')
+        gen.uses_fmt = True
     if gen.uses_json:
         imports.append('"encoding/json"')
     if gen.uses_fmt:

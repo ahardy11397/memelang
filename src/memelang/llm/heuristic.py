@@ -99,6 +99,7 @@ from memelang.ir.schema import (
     SetContainsExpr,
     SetLengthExpr,
     SetRemoveStmt,
+    Sha256Expr,
     SortCollectionStmt,
     SortDirection,
     StrContainsExpr,
@@ -859,6 +860,18 @@ class _ExprParser:
                 self.consume("IDENT")
                 tgt_e = self.parse_unary()
                 return CharacterOfExpr(target=tgt_e)
+
+            if (
+                t.val.lower() == "sha256"
+                and t.val not in self.symbols
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].kind == "IDENT"
+                and self.tokens[self.pos + 1].val.lower() in ("of", "from")
+            ):
+                self.consume("IDENT")
+                self.consume("IDENT")
+                tgt_e = self.parse_unary()
+                return Sha256Expr(target=tgt_e)
 
             if (
                 t.val.lower() in ("text", "string")
@@ -1690,6 +1703,7 @@ def _guess_expr_type(
             FormatIntExpr,
             FormatFloatExpr,
             CharacterOfExpr,
+            Sha256Expr,
         ),
     ):
         return "String"
@@ -2842,6 +2856,7 @@ class HeuristicProvider:
                 FloatOfExpr,
                 NumberOfExpr,
                 CharacterOfExpr,
+                Sha256Expr,
             ),
         ):
             return HeuristicProvider._find_free_var(expr.target, symbols)

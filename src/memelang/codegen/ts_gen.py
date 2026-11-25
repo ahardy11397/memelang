@@ -106,6 +106,7 @@ from memelang.ir.schema import (
     RecordLiteralExpr,
     RecordSetFieldStmt,
     ReturnStmt,
+    Sha256Expr,
     SortCollectionStmt,
     StrContainsExpr,
     StrEndsWithExpr,
@@ -455,6 +456,9 @@ class _TSGen(BaseGen):
 
         if isinstance(expr, CharacterOfExpr):
             return f"_meme_character_of({self.gen_expr(expr.target, scope)})"
+
+        if isinstance(expr, Sha256Expr):
+            return f"_meme_sha256({self.gen_expr(expr.target, scope)})"
 
         if isinstance(expr, CurrentEpochExpr):
             return "Math.floor(Date.now() / 1000)"
@@ -1184,6 +1188,11 @@ def generate_ts(ir: ProgramIR) -> str:
         "declare function require(name: string): any;",
         "const _fs = require(\"node:fs\");",
         "const _path = require(\"node:path\");",
+        "const _crypto = require(\"node:crypto\");",
+        "",
+        "function _meme_sha256(s: string): string {",
+        "    return _crypto.createHash(\"sha256\").update(Buffer.from(s, \"utf-8\")).digest(\"hex\");",
+        "}",
         "",
         "const _meme_argv: string[] = process.argv.slice(1);",
         "function _meme_arg_at(idx: number): string {",

@@ -56,6 +56,7 @@ from memelang.ir.schema import (
     RecordLiteralExpr,
     SetContainsExpr,
     SetLengthExpr,
+    Sha256Expr,
     StrContainsExpr,
     StrEndsWithExpr,
     StrStartsWithExpr,
@@ -260,6 +261,7 @@ class BaseGen:
                 ArgAtExpr,
                 FormatIntExpr,
                 FormatFloatExpr,
+                Sha256Expr,
             ),
         ):
             return "String"

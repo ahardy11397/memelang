@@ -93,6 +93,7 @@ from memelang.ir.schema import (
     SetContainsExpr,
     SetLengthExpr,
     SetRemoveStmt,
+    Sha256Expr,
     SortCollectionStmt,
     StrContainsExpr,
     StrEndsWithExpr,
@@ -1010,6 +1011,14 @@ class _StaticChecker:
             if target_t != "String":
                 raise StaticVerificationError(
                     f"`string_trim` requires a String target, got {target_t}", stmt_idx
+                )
+            return "String"
+
+        if isinstance(expr, Sha256Expr):
+            target_t = self.infer_expr_type(expr.target, scope, stmt_idx)
+            if target_t != "String":
+                raise StaticVerificationError(
+                    f"`sha256` requires a String target, got {target_t}", stmt_idx
                 )
             return "String"
 
@@ -2316,6 +2325,7 @@ _REFERENCE_DEST_STMTS = (
     MapSetStmt,
     SetAddStmt,
     SetRemoveStmt,
+    Sha256Expr,
     SortCollectionStmt,
     ClampCollectionStmt,
     FilterCollectionStmt,

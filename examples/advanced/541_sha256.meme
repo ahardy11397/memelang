@@ -1,0 +1,9 @@
+define empty_hash: String as sha256 of ""
+print "empty:", empty_hash
+
+define abc_hash: String as sha256 of "abc"
+print "abc:", abc_hash
+
+define msg: String as "hello memelang"
+define msg_hash: String as sha256 of msg
+print "msg:", msg_hash

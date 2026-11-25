@@ -292,7 +292,25 @@ def test_split_compilation_units_and_per_function_llama_cpp_synthesis(tmp_path):
     from memelang.llm.base import split_compilation_units
     from memelang.llm.llama_cpp import LlamaCppProvider
 
-    fl_text = Path("examples/find-largest.meme").read_text(encoding="utf-8")
+    fl_text = (
+        "class find-largest\n"
+        "  define function loadFile with filepath\n"
+        "    if filepath is json\n"
+        "      define list as fromFile from filepath\n"
+        "      return fromFile\n"
+        "    else return \"Wrong File Type\"\n"
+        "\n"
+        "  define function findLargest with list\n"
+        "    define unsorted as list\n"
+        "    define sorted as empty\n"
+        "    sort unsorted into sorted ascending\n"
+        "    return largest from sorted\n"
+        "\n"
+        "  define function main\n"
+        "    define filepath from user \"Filepath?\"\n"
+        "    define largest as findLargest from loadFile filepath\n"
+        "    print largest\n"
+    )
     units = split_compilation_units(fl_text)
     assert len(units) == 3
     assert units[0].is_func is True and "loadFile" in units[0].text

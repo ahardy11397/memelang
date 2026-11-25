@@ -417,6 +417,7 @@ define label: String as text of qty                # format Int -> String (plain
 - **`text of <int-expr>` (`format_int`)**: formats an `Int` expression into its plain decimal string representation (`String`), matching `_meme_fmt` integral rendering exactly across all six targets. Offline heuristic synonyms: `string of <expr>`, `text from <expr>`, `string from <expr>`.
 - **`number of <string-expr>` (`number_of`)**: returns the `Int` Unicode codepoint of the first character of `<string-expr>`. Empty or multi-character literal strings are rejected statically by the verifier (`StaticVerificationError`). At runtime, an empty string prints `Error: empty string in number of` to stdout and terminates execution with status code `1` across all six targets.
 - **`character of <int-expr>` (`character_of`)**: returns a single-character `String` containing the character for the given Unicode codepoint in `0..0x10FFFF`. Invalid codepoints (negative numbers or values exceeding `0x10FFFF` or surrogate range `0xD800..0xDFFF`) terminate execution with status code `1` and output `Error: invalid codepoint <cp>` across all six targets. ASCII 32..126 round-trip parity is exhaustively tested and guaranteed across all backends (Unicode parity is best-effort across backends). Synonyms: `char of <expr>`.
+- **`sha256 of <string-expr>` (`sha256`)**: computes the SHA-256 digest of `<string-expr>` over its UTF-8 encoded bytes and returns a 64-character lowercase hexadecimal `String`. The operand must be of type `String` (non-`String` operands are rejected statically by the verifier with `StaticVerificationError`). Supported across all six compiler targets with byte-identical digests. Synonyms: `sha256 from <expr>`.
 
 ---
 
@@ -1218,6 +1219,7 @@ Each construct is labeled **offline** (supported by the zero-dependency `heurist
 | Int to Float | `float of <int-expr>` | **offline** |
 | String to codepoint | `number of <string-expr>` | **offline** |
 | Codepoint to String | `character of <int-expr>` | **offline** |
+| SHA-256 digest | `sha256 of <string-expr>` | **offline** |
 | Format float | `format <expr> with <N> decimals` | **offline** |
 | Check file exists | `file exists path` | **offline** |
 | Read text file | `read string from file path` | **offline** |

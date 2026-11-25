@@ -91,6 +91,7 @@ from memelang.ir.schema import (
     SetContainsExpr,
     SetLengthExpr,
     SetRemoveStmt,
+    Sha256Expr,
     SortCollectionStmt,
     StrContainsExpr,
     StrEndsWithExpr,
@@ -189,6 +190,7 @@ class _CppGen(BaseGen):
         self.uses_is_upper = False
         self.uses_is_lower = False
         self.uses_format_float = False
+        self.uses_sha256 = False
         self.uses_argv = False
         self.uses_file_io_opt = False
         self.uses_json_list_opt = False
@@ -378,6 +380,11 @@ class _CppGen(BaseGen):
             self.uses_str_helpers = True
             tgt = self.gen_expr(expr.target, scope)
             return f"_meme_character_of({tgt})"
+
+        if isinstance(expr, Sha256Expr):
+            self.uses_sha256 = True
+            tgt = self.gen_expr(expr.target, scope)
+            return f"_meme_sha256({tgt})"
 
         if isinstance(expr, CurrentEpochExpr):
             return "static_cast<long long>(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count())"
@@ -1463,6 +1470,7 @@ def generate_cpp(ir: ProgramIR) -> str:
         "#include <unordered_map>",
         "#include <utility>",
         "#include <vector>",
+        "#include <cstdint>",
     ]
     if gen.uses_random:
         headers.append("#include <random>")
@@ -1738,6 +1746,82 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    ss << std::fixed << std::setprecision(0) << int_part << \".\";",
                 "    ss << std::setw(n) << std::setfill('0') << frac_part;",
                 "    return ss.str();",
+                "}",
+                "",
+            ]
+        )
+
+    if gen.uses_sha256:
+        helpers.extend(
+            [
+                "static inline uint32_t _meme_ror32(uint32_t x, uint32_t n) {",
+                "    return (x >> n) | (x << (32 - n));",
+                "}",
+                "inline std::string _meme_sha256(const std::string& s) {",
+                "    uint64_t bit_len = static_cast<uint64_t>(s.size()) * 8;",
+                "    std::vector<uint8_t> data(s.begin(), s.end());",
+                "    data.push_back(0x80);",
+                "    while ((data.size() % 64) != 56) {",
+                "        data.push_back(0);",
+                "    }",
+                "    for (int i = 7; i >= 0; --i) {",
+                "        data.push_back(static_cast<uint8_t>((bit_len >> (i * 8)) & 0xff));",
+                "    }",
+                "    std::vector<uint64_t> primes;",
+                "    uint64_t cand = 2;",
+                "    while (primes.size() < 64) {",
+                "        bool is_p = true;",
+                "        for (uint64_t p : primes) {",
+                "            if (cand % p == 0) { is_p = false; break; }",
+                "            if (p * p > cand) break;",
+                "        }",
+                "        if (is_p) primes.push_back(cand);",
+                "        cand++;",
+                "    }",
+                "    uint32_t h[8];",
+                "    for (int i = 0; i < 8; ++i) {",
+                "        double f = std::sqrt(static_cast<double>(primes[i]));",
+                "        h[i] = static_cast<uint32_t>((f - std::floor(f)) * 4294967296.0);",
+                "    }",
+                "    uint32_t k[64];",
+                "    for (int i = 0; i < 64; ++i) {",
+                "        double f = std::cbrt(static_cast<double>(primes[i]));",
+                "        k[i] = static_cast<uint32_t>((f - std::floor(f)) * 4294967296.0);",
+                "    }",
+                "    uint32_t w[64];",
+                "    for (std::size_t offset = 0; offset < data.size(); offset += 64) {",
+                "        const uint8_t* chunk = &data[offset];",
+                "        for (int i = 0; i < 16; ++i) {",
+                "            w[i] = (static_cast<uint32_t>(chunk[4*i]) << 24) |",
+                "                   (static_cast<uint32_t>(chunk[4*i+1]) << 16) |",
+                "                   (static_cast<uint32_t>(chunk[4*i+2]) << 8) |",
+                "                    static_cast<uint32_t>(chunk[4*i+3]);",
+                "        }",
+                "        for (int i = 16; i < 64; ++i) {",
+                "            uint32_t s0 = _meme_ror32(w[i - 15], 7) ^ _meme_ror32(w[i - 15], 18) ^ (w[i - 15] >> 3);",
+                "            uint32_t s1 = _meme_ror32(w[i - 2], 17) ^ _meme_ror32(w[i - 2], 19) ^ (w[i - 2] >> 10);",
+                "            w[i] = w[i - 16] + s0 + w[i - 7] + s1;",
+                "        }",
+                "        uint32_t a = h[0], b = h[1], c = h[2], d = h[3];",
+                "        uint32_t e = h[4], f = h[5], g = h[6], hh = h[7];",
+                "        for (int i = 0; i < 64; ++i) {",
+                "            uint32_t s1 = _meme_ror32(e, 6) ^ _meme_ror32(e, 11) ^ _meme_ror32(e, 25);",
+                "            uint32_t ch = (e & f) ^ ((~e) & g);",
+                "            uint32_t t1 = hh + s1 + ch + k[i] + w[i];",
+                "            uint32_t s0 = _meme_ror32(a, 2) ^ _meme_ror32(a, 13) ^ _meme_ror32(a, 22);",
+                "            uint32_t maj = (a & b) ^ (a & c) ^ (b & c);",
+                "            uint32_t t2 = s0 + maj;",
+                "            hh = g; g = f; f = e; e = d + t1;",
+                "            d = c; c = b; b = a; a = t1 + t2;",
+                "        }",
+                "        h[0] += a; h[1] += b; h[2] += c; h[3] += d;",
+                "        h[4] += e; h[5] += f; h[6] += g; h[7] += hh;",
+                "    }",
+                "    std::ostringstream oss;",
+                "    for (int i = 0; i < 8; ++i) {",
+                "        oss << std::hex << std::setw(8) << std::setfill('0') << h[i];",
+                "    }",
+                "    return oss.str();",
                 "}",
                 "",
             ]
