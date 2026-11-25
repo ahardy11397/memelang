@@ -40,3 +40,6 @@
 [submodule "projects/meme-canonical-checker"]
 	path = projects/meme-canonical-checker
 	url = https://github.com/ahardy11397/meme-canonical-checker.git
+[submodule "projects/meme-canonical-fixer"]
+	path = projects/meme-canonical-fixer
+	url = https://github.com/ahardy11397/meme-canonical-fixer.git
