@@ -1,0 +1,134 @@
+# AGENTS.md — Memelang compiler (umbrella repo)
+
+Rules for coding agents (agy, opencode, Hermes subagents) working in this
+repo. These rules are distilled from how this project is actually developed:
+delegated feature phases, coordinator verification, six-target parity gates.
+If a delegated brief (PHASEx_TASK.md / PLAN.md) exists, it wins on scope —
+but never on the non-negotiables below.
+
+## What this repo is
+
+An UMBRELLA. Three layers, each with its own rules:
+
+- `src/memelang/` — the compiler: English -> JSON-schema-constrained
+  synthesis (the deterministic heuristic parser is the REAL language; LLM
+  providers are an optional dictation frontend) -> Pydantic-strict IR ->
+  static verifier with first-class ambiguity-halt -> SHA-256 lockfile
+  (`build.lock`, zero-LLM rebuilds) -> codegen.
+- `examples/` — the locked example corpus. Every language feature ships a
+  canonical example with a `.meme.lock`. Existing examples must never
+  change their output.
+- `projects/` — 12 real Memelang apps, each its OWN GitHub repo linked as a
+  git submodule. Never edit their contents from the umbrella: work happens
+  inside the submodule repo (see its AGENTS.md), then the umbrella bumps
+  the pointer.
+
+Key docs: `docs/WRITING_GUIDE.md` (the language surface — read before
+writing any `.meme` code or agent brief), `docs/roadmap.md`,
+`docs/superpowers/specs/` + `docs/superpowers/plans/` (approved designs,
+hardening catalog).
+
+## Verify — run these before claiming anything works
+
+```bash
+uv run pytest -q                                  # full suite, must be green
+uv run python scripts/run_corpus.py --all-targets # release gate: all programs x 6 targets
+```
+
+Cross-target byte-parity spot-check (one example, all six targets, diff
+stdout byte-for-byte). Compile to per-target scratch dirs, run each binary
+in its OWN subdirectory (programs write cwd-relative files — shared dirs
+cross-contaminate), then compare checksums:
+
+```bash
+uv run meme compile EX.meme --provider heuristic --target python -o /tmp/x.py --lockfile /tmp/x.lock && python3 /tmp/x.py
+uv run meme compile EX.meme --provider heuristic --target rust   -o /tmp/x.rs  && rustc -O /tmp/x.rs -o /tmp/x_rs && /tmp/x_rs
+uv run meme compile EX.meme --provider heuristic --target cpp    -o /tmp/x.cpp && g++ -std=c++20 -O2 /tmp/x.cpp -o /tmp/x_cpp && /tmp/x_cpp
+# go / c / ts analogues
+```
+
+Note the subcommand defaults: `meme build` / `meme test` DEFAULT to the
+heuristic provider (zero-LLM); `meme compile` / `meme run` default to auto
+(LLM-first). Use `--provider heuristic` explicitly when testing the parser.
+
+## Non-negotiables
+
+1. **The deterministic heuristic parser is the single source of truth.**
+   Every language construct must parse offline with `--provider heuristic`.
+   No LLM-only features, ever.
+2. **USER-LOCKED decisions — never relitigate, never "improve" them:**
+   - error channel is `Optional<T>`, NOT `Result<T, E>`
+   - the C++ contract is `g++ -std=c++20` (NOT c++17) when hand-compiling
+     output
+3. **The 7-artifact rule.** Every language feature ships ALL of: schema,
+   verifier, canonical decompiler, all six codegens (python, rust, cpp, go,
+   c, ts), parity tests, parser/prompt rules, and docs + a locked example.
+   A feature missing any artifact is not done.
+4. **Agents never commit.** Leave the working tree uncommitted for
+   coordinator review. The coordinator verifies (git log unchanged, full
+   pytest, live repro of each claimed fix, cross-target parity) and only
+   then commits. Never trust an agent self-report — a suite an agent never
+   ran green is not green, and agent-written tests can pass while the real
+   repro still fails (verify with a live repro, not just the suite).
+5. **Existing examples must not change output.** Fixing the corpus means
+   rewriting the example in canonical offline voice (keep filename/stdin/
+   output contracts for README demos), never deleting corpus entries.
+   Corpus manifests run everything under the heuristic provider, so
+   LLM-voice prose in an example can never pass.
+
+## Known pitfalls (each one has cost us a debug cycle)
+
+- Lock source keys are CWD-RELATIVE — regenerate locks from the repo root,
+  never inside an example dir.
+- `meme run` executes in a TEMP cwd — cwd-relative file paths only work via
+  `meme compile` + manual run, a built binary, or corpus scripts (which
+  execute from repo root).
+- Echo `$?` immediately after the command under test, never after a `&&`
+  chain: `build ... && run; echo $?` reports the BUILD's failure code as
+  the run's. One command per line when diagnosing exit codes.
+- When hand-testing exit codes, trace which branch actually executes — an
+  example can hit a `return` path (exit stays 0) when you meant to exercise
+  `exit with code N`.
+- Never name scratch-compiled output after a stdlib module (a stray
+  `json.py` in /tmp shadows stdlib json for scripts run from that dir).
+- Never clean probe edits with `grep -vn ... > file` — it bakes line
+  numbers into the file.
+- `git status --short` before EVERY commit: build/test/gate runs leave
+  stray outputs in the repo root and `git add -A` sweeps them in.
+- Keep one agy run to ~3 features; split bigger phases into batches and
+  verify + commit between runs. If an agy run dies on print-timeout, do NOT
+  relaunch — the work is uncommitted in the tree; map it (`git status
+  --short`), run the full pytest yourself, and verify.
+- Argon 429 quota exhaustion is ACCOUNT-LEVEL: no agy model will run. Map
+  WIP state and finish by hand or switch to opencode.
+- Long test suites are the COORDINATOR's job, not the agent's — agents
+  background them despite briefs, idle-wait, and burn their timeout budget.
+
+## Delegation workflow (how phases actually run)
+
+1. Brief at repo root: `PHASEx_TASK.md` — scope, ground rules (`uv run
+   pytest -q` green after EVERY task; NO commits; existing examples must
+   not change output), the 7-artifact rule per feature, explicit decisions
+   to make. Put USER-LOCKED decisions verbatim at the TOP — agents
+   relitigate mid-run otherwise.
+2. One engine per repo, never two agents in one repo. Verify yourself
+   (rule 4), then commit and delete the brief.
+3. Submodule (demo-program) work: see `projects/<name>/AGENTS.md` and the
+   template in `templates/submodule-AGENTS.md`. Retrofit waves: name the
+   exact workaround each repo used, require byte-identical before/after
+   demo diffs (errors may move streams), delete test symlinks, re-verify
+   all six targets.
+4. Pointer bumps: `cd projects/<name> && git fetch && git checkout -q
+   origin/master`, then `git add projects/` + commit in the umbrella.
+
+## Commit + push conventions
+
+- Conventional prefixes, matching history: `feat(language):`,
+  `fix(verifier):`, `refactor:`, `docs:`, `chore:` (submodule pointer
+  bumps: `chore: bump <name> submodule pointer`).
+- Commit message says WHAT closed or changed and why, not just "updates".
+- Push: commit first, then `git pull --rebase` (refuses on a dirty tree;
+  the remote can carry direct user edits), then
+  `git push origin master:main`.
+- `gh` on PATH hangs — use
+  `~/.local/share/mise/installs/gh/2.102.0/gh_2.102.0_linux_amd64/bin/gh`.
