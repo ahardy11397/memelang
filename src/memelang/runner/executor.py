@@ -111,14 +111,14 @@ _TARGET_RECIPES: dict[str, _TargetRecipe] = {
         bin_name="app",
         run_name="app",
         run_cmd=("{bin}",),
-        compile_cmd=("rustc", "--edition=2021", "{src}", "-o", "{bin}"),
+        compile_cmd=("rustc", "--edition=2021", "-O", "{src}", "-o", "{bin}"),
     ),
     "cpp": _TargetRecipe(
         source_name="main.cpp",
         bin_name="app",
         run_name="app",
         run_cmd=("{bin}",),
-        compile_cmd=("g++", "-std=c++20", "{src}", "-o", "{bin}"),
+        compile_cmd=("g++", "-std=c++20", "-O2", "{src}", "-o", "{bin}"),
     ),
     "go": _TargetRecipe(
         source_name="main.go",

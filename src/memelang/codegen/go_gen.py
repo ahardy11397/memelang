@@ -1420,7 +1420,10 @@ def generate_go(ir: ProgramIR) -> str:
             elif f.field_type in ("Int", "Float", "String"):
                 record_blocks.append(f"    if a.{f_id} != b.{f_id} {{ return a.{f_id} < b.{f_id} }}")
             elif f.field_type in gen.records:
-                record_blocks.append(f"    if a.{f_id} != b.{f_id} {{ return _meme_less_{_go_ident(f.field_type)}(a.{f_id}, b.{f_id}) }}")
+                gen.uses_reflect = True
+                record_blocks.append(
+                    f"    if !reflect.DeepEqual(a.{f_id}, b.{f_id}) {{ return _meme_less_{_go_ident(f.field_type)}(a.{f_id}, b.{f_id}) }}"
+                )
         record_blocks.append("    return false")
         record_blocks.append("}")
         record_blocks.append("")
