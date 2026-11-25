@@ -42,7 +42,8 @@ at a time. Each rung is a working, shipped thing:
 - [x] Canonical fixer (self-hosting step 3) — projects/meme-canonical-fixer, 20×6 green, fix/preview with round-trip invariant
 - [x] sha256 builtin (`sha256 of <text>`) — a7f862a, byte-identical hex digests on all six targets
 - [x] Exact-freshness checker (self-hosting step 4) — projects/meme-lock-check, 20×6 green, all 39 real locks LOCKED-FRESH
-- [ ] Further self-hosting components (parser subset, canonical re-emitter from IR, ...)
+- [x] Parser subset (self-hosting step 5) — projects/meme-parser, 28×6 green, parses its own source; expression grammar via precedence climbing
+- [ ] Further self-hosting components (canonical re-emitter from IR, checker/fixer integration, ...)
 - [ ] Single-binary compiler distribution
 - [ ] HTTP / networking chapter (runtime surface)
 - [ ] Syntax highlighting (editor surface)
