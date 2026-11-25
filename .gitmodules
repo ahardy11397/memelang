@@ -46,3 +46,6 @@
 [submodule "projects/meme-lock-check"]
 	path = projects/meme-lock-check
 	url = https://github.com/ahardy11397/meme-lock-check.git
+[submodule "projects/meme-parser"]
+	path = projects/meme-parser
+	url = https://github.com/ahardy11397/meme-parser.git
