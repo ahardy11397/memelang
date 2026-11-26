@@ -1,12 +1,19 @@
 # Memelang (`meme`)
 
-**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline. You write programs in structured or casual plain English (`.meme`), and the compiler uses a small local LLM (or optional cloud API / zero-dependency heuristic parser) to synthesize a **strictly-typed Intermediate Representation (IR)**, verify types & semantic unambiguity, lock the AST into **`build.lock`** for 100% deterministic rebuilds, and emit **Python 3**, **Rust**, **C++20**, **Go**, **C (C11)**, or **TypeScript (Node.js)**.
+**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline, currently at **v0.2.0-beta**. You write programs in plain English (`.meme`), and the compiler parses that English into a **strictly-typed Intermediate Representation (IR)**, statically verifies types & semantic unambiguity, locks the result into **`build.lock`** for 100% deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, **Go**, **C (C11)**, or **TypeScript (Node.js)**.
 
 ---
 
 ## Why Memelang
 
-Memelang is the first "meme language": **modern English as a modular expressive language**. Designing software still takes someone who knows how to design software — that never changes. What changes is the ceremony: the job of a programming language has always been to make writing complex software as easy as possible, and Memelang takes that further than any mainstream language by letting you write the program in plain English. The compiler's LLM turns that non-deterministic input into determinism: a strictly-typed IR, a static verifier that halts on ambiguity instead of guessing, and a lockfile that makes every rebuild byte-identical.
+Memelang is the first "meme language": **modern English as a modular expressive language**. Designing software still takes someone who knows how to design software — that never changes. What changes is the ceremony: the job of a programming language has always been to make writing complex software as easy as possible, and Memelang takes that further than any mainstream language by letting you write the program in plain English. The compiler's job is to turn that non-deterministic input into determinism: a strictly-typed IR, a static verifier that halts on ambiguity instead of guessing, and a lockfile that makes every rebuild byte-identical.
+
+### What makes it different
+
+1. **The deterministic heuristic parser is the single source of truth.** Every language construct parses offline with the zero-dependency `heuristic` provider — no model download, no API key, no network. LLM frontends (local GGUF, Ollama, OpenAI-compatible servers, Gemini) are an optional *dictation layer* on top for looser conversational source, never a requirement. Every feature must parse offline or it doesn't ship.
+2. **The verifier halts on ambiguity instead of guessing.** If an English sentence has two readings, the compiler exits with code `2`, prints numbered candidate interpretations, and locks nothing. You resolve once with `--resolve ID=OPT`; the choice is then locked forever.
+3. **SHA-256 lockfiles make rebuilds zero-LLM and byte-identical.** `build.lock` records the source hash plus the fully-resolved IR plus the **Canonical Structured English** decompilation of your program. Rebuilds read the lockfile — 0ms inference latency, fully offline — so the same source always produces the same output, even if it was originally dictated to an LLM.
+4. **Six targets, one behavior.** The same program emits to Python 3, Rust, C++20, Go, C11, and TypeScript with **byte-identical stdout across all six targets** — sorted map iteration, deterministic float formatting, identical exit-code semantics, identical error text.
 
 ---
 
@@ -15,8 +22,9 @@ Memelang is the first "meme language": **modern English as a modular expressive 
 ```text
 [English Source (.meme)]
         │
-        ▼  (Cache miss only)
-[Pluggable LLM Frontend] ──(JSON Schema Constrained, T=0.0)
+        ▼
+[Deterministic Heuristic Parser]  ←── optional: LLM dictation frontend
+   (zero-LLM, offline)                 (JSON-schema constrained, T=0.0)
         │
         ▼
 [Deterministic Static Verifier & Ambiguity Detector]
@@ -33,52 +41,41 @@ Memelang is the first "meme language": **modern English as a modular expressive 
 
 ## Quick Start
 
-New to the language? Start with **[docs/WRITING_GUIDE.md](docs/WRITING_GUIDE.md)** — a practical guide to writing Memelang programs in both voices.
+New to the language? Start with **[docs/WRITING_GUIDE.md](docs/WRITING_GUIDE.md)** — a practical guide to writing Memelang programs in both voices. There is also a **[Tutorial](docs/TUTORIAL.md)** (build your first real app with modules and file I/O) and a **[Cookbook](docs/COOKBOOK.md)** (copy-paste recipes).
 
-Requires Python 3.13+ and [`uv`](https://docs.astral.sh/uv/) (plus `rustc`, `g++`, `go`, `gcc`, or `tsc`/`node` if running native targets).
+Requires Python 3.13+ and [`uv`](https://docs.astral.sh/uv/) (plus `rustc`, `g++`, `go`, `gcc`, or `tsc`/`node` if running native targets). Core dependencies are just `pydantic` and `httpx` — nothing else to download for offline use.
 
 ```bash
-# Install with built-in local GGUF inference (`llama-cpp-python` + `huggingface-hub`):
-uv sync --dev --extra local-gguf
+uv sync  # core install — zero-LLM, zero-model
 
-# Download the default ~2 GB local 3B compiler model (`Qwen2.5-Coder-3B-Instruct` Q4_K_M):
-uv run meme pull
+# Compile & run fully offline with the heuristic parser:
+uv run meme run examples/fizzbuzz.meme --provider heuristic --target python
+uv run meme compile examples/hello.meme --provider heuristic --target rust -o hello.rs
+rustc -O hello.rs -o hello && ./hello
 
-# Run plain-English programs across Python 3, Rust, C++20, Go, C, and TypeScript:
-uv run meme run examples/hello.meme --target rust
-uv run meme run examples/calc.meme --target cpp
-uv run meme run examples/random_sort_structured.meme --target python
-uv run meme run examples/hello.meme --target go
-uv run meme run examples/hello.meme --target c
-uv run meme run examples/hello.meme --target ts
-uv run meme run examples/hello.meme --target python -- arg1 arg2  # forwards argv after -- to program
+# Native binary via the C11 backend (`meme build` defaults to the heuristic provider):
+uv run meme build examples/fizzbuzz.meme -o fizzbuzz
+./fizzbuzz
 
-# Compile standalone Go source (package main, func main):
-uv run meme compile examples/hello.meme --target go -o hello.go
-go build -o hello hello.go && ./hello
+# Cross-target parity, by hand — same program, same stdout on every backend:
+uv run meme compile examples/fizzbuzz.meme --provider heuristic --target cpp -o fizzbuzz.cpp
+g++ -std=c++20 -O2 fizzbuzz.cpp -o fizzbuzz_cpp && ./fizzbuzz_cpp
 
-# Compile standalone C11 source and run:
-uv run meme compile examples/hello.meme --target c -o hello.c
-gcc -std=c11 -O2 hello.c -o hello -lm && ./hello
+# Run .meme test suites across targets:
+uv run meme test tests/meme --target go
 
-# Build standalone native binary via C11 backend:
-uv run meme build examples/hello.meme -o hello
-./hello
-
-# Compile standalone TypeScript source and run:
-uv run meme compile examples/hello.meme --target ts -o hello.ts
-tsc hello.ts --outDir dist --target es2022 --module node16 && node dist/hello.js
-
-# Compile & run multi-function JSON file processing:
-uv run meme compile examples/find-largest.meme --target rust
-printf "examples/numbers.json\n" | uv run meme run examples/find-largest.meme --target rust
-
-# Run FizzBuzz compiled to native C++20:
-uv run meme run examples/fizzbuzz.meme --target cpp
-
-# Run multi-file module example with transitive lockfile verification:
-uv run meme run examples/advanced/521_modules/main.meme --target go
+# Forward program arguments after --:
+uv run meme run examples/hello.meme --target python -- arg1 arg2
 ```
+
+### Two Voices
+
+Memelang accepts two dialects, both compiling to the same IR:
+
+- **Canonical Structured English** — typed, colon-terminated blocks (`function name(param: Type) -> RetType:`). Works fully offline with the `heuristic` parser.
+- **Conversational Memelang** — looser English with `this runs in the shell` / `define function ... with ...` layout. Requires an LLM provider (local GGUF, Ollama, or Gemini — see [Providers](#local--cloud-llm-providers---provider)).
+
+You can mix them in one file. See the writing guide for the full surface.
 
 ### Handling Ambiguous English
 
@@ -149,33 +146,57 @@ uv run meme test [PATH] [--target python|rust|cpp|go|c|ts]
 
 ---
 
-## Beta Features (v0.2.0-beta)
+## Six Targets, One Program
 
-- **Assertions (`assert`):** First-class runtime invariant assertions with status-1 termination and deterministic diagnostics.
-- **Test Blocks (`test`) & Test Runner (`meme test`):** Isolated test blocks and a built-in cross-target test runner.
-- **Native Binaries (`meme build`):** Direct-to-native binary compilation via the C11 backend with zero runtime dependencies.
-- **Float Formatting & Conversions:** Deterministic float formatting with specified decimal precision (`format x with N decimals`), plus `float of <int>` for Int→Float conversion — money-in-cents programs can render dollars directly.
-- **Character Code Conversions:** `number of <char>` (codepoint) and `character of <int>` round-trip single characters.
-- **JSON Record Read/Write:** Strongly-typed record serialization and deserialization (`write r as json to file path`, `read json record R from file path or else nothing`).
-- **System Clock & Environment Variables:** Built-in POSIX epoch seconds (`current epoch seconds`) and environment variable lookup (`environment variable name`).
-- **Optional File Readers:** Null-safe file readers returning `Optional<T>` without panicking on missing files.
-- **Error Output (`print error`):** First-class stderr printing with `print`-identical formatting — error diagnostics land on the right stream on all six targets.
-- **Sets (`Set<T>`):** First-class generic sets with O(1) membership, idempotent addition, and deterministic sorted iteration.
-- **Two-Dimensional Lists (`List<List<T>>`):** Generic nested lists supporting literals `[[1, 2], [3, 4]]`, indexing `g[i][j]`, and mutation `set g[i][j] to v`.
-- **Uniform Iteration:** `for each` accepts any expression evaluating to a collection — record fields, call results, nested index expressions — with sorted deterministic order for maps and sets.
-- **Mutual Recursion:** Functions can forward-reference functions defined later in the same module.
-- **Parent-Relative Modules:** `use ../<module>` resolves modules in parent directories — test files import repo-root modules without symlinks.
-- **Records Hold Collections:** Record fields of type `List<T>`, `Map<K, V>`, and `Set<T>` (including self-referential records through `List`) work across all six targets.
-- **Recursive Records (`Optional<T>` self-reference):** Records can reference themselves through `Optional<T>` fields (`record Node: parent: Optional<Node>`) — indirection is handled per-target (`Option<Box<T>>` on rust, pointers on cpp/c), user code stays identical across all six targets.
-- **JSON Records with Collections & Nested Records:** `write ... as json` / `read json record ...` serialize record fields of type `List<T>`, `Set<T>`, `Map<K, V>` (including record-valued maps), nested record fields, and `Optional` of either — all-or-nothing reads, deterministic sorted ordering, byte-identical output on all six targets.
+Every program compiles to all six backends, and the guarantee is behavioral, not aspirational: **byte-identical stdout across all six targets**, enforced by the release gate on every run. That includes sorted deterministic map/set iteration, half-away-from-zero float rounding (`format x with N decimals`), identical exit-code truncation semantics, and identical error text for runtime failures.
 
-### Project Ecosystem (`projects/`)
+| Flag | Target | Notes |
+|---|---|---|
+| `--target python` | Python 3 | reference backend |
+| `--target rust` | Rust | standalone `rustc`-compilable source |
+| `--target cpp` | C++20 | `g++ -std=c++20` |
+| `--target go` | Go | `package main` / `func main` |
+| `--target c` | C11 | `gcc -std=c11 -O2`, optional `-lm` |
+| `--target ts` | TypeScript (Node.js) | `tsc --target es2022 --module node16` |
 
-Real programs built with Memelang, each its own repo linked as a submodule, each with a `meme test` suite green on all six targets:
+---
+
+## The Examples Corpus
+
+The `examples/` tree is the language's living idiom bank: **544 `.meme` programs, 237 of them with committed `.meme.lock` build artifacts** (zero-LLM rebuilds, verifiable freshness via `meme explain`).
+
+Behind it sits a **491-script six-course stress corpus** (`tests/corpus/`, mirrored into `examples/cs101..cs106`), each script in three styles — clean, typo-injected, and deliberately ambiguous:
+
+| Course | Scripts | Coverage |
+|---|---|---|
+| CS 101 | 100 | conditionals, I/O & math, lists, loops |
+| CS 102 | 100 | classes & state, files & JSON, recursion & strings, search & sort |
+| CS 103 | 100 | stacks & queues, maps & sets, trees, graphs & DP |
+| CS 104 | 70 | text & log parsing |
+| CS 105 | 60 | validation & checksums (Luhn, card prefixes) |
+| CS 106 | 61 | small reusable libraries (statistics) |
+
+Plus **32 advanced module examples** (`examples/advanced/`, ids 501–537) exercising `use` modules, records, and JSON persistence across components, and root demos including `examples/524_build/` for `meme build`.
+
+Verified `.meme.lock` files double as live few-shot demonstrations for the LLM retriever, and the corpus runner attributes non-passing scripts into ranked **Axis 1 (`examples/`)** vs **Axis 2 (`src/`)** gaps — identifying exactly which new reference examples or IR operations unlock the most student programs:
+
+```bash
+# Smoke test a slice of CS 101 using the fast built-in heuristic provider:
+uv run python scripts/run_corpus.py --course cs101 --limit 10
+
+# Filter by course, style, or specific script IDs:
+uv run python scripts/run_corpus.py --course cs102 --style clean --ids 101-125
+```
+
+---
+
+## Project Ecosystem (`projects/`)
+
+Real programs built with Memelang, each its own repo linked as a git submodule, each with a `meme test` suite green on all six targets:
 
 | Project | What it is | Test cases |
 |---|---|---|
-| [projects/card-inventory](projects/card-inventory) | Trading-card inventory CLI (photo organizing, CSV) | 6-target parity |
+| [projects/card-inventory](projects/card-inventory) | Trading-card inventory CLI (photo organizing, CSV) | shell parity harness |
 | [projects/ledger](projects/ledger) | Banking ledger: accounts, transfers, JSON persistence, monthly statements | 36 × 6 targets |
 | [projects/library-system](projects/library-system) | Library management: loans, holds queues, overdue fines | 27 × 6 targets |
 | [projects/payroll](projects/payroll) | Payroll: marginal tax brackets, overtime, payslips | 58 × 6 targets |
@@ -191,16 +212,40 @@ Real programs built with Memelang, each its own repo linked as a submodule, each
 | [projects/meme-canonical-checker](projects/meme-canonical-checker) | Lockfile freshness checker (FRESH / CANONICAL TOKENS / STALE) — self-hosting step 2 | 22 × 6 targets |
 | [projects/meme-canonical-fixer](projects/meme-canonical-fixer) | Lexical layout canonicalizer (`fix` / `preview`) — self-hosting step 3 | 20 × 6 targets |
 | [projects/meme-lock-check](projects/meme-lock-check) | Exact lockfile freshness (LOCKED-FRESH / DRIFTED) via sha256 — self-hosting step 4 | 20 × 6 targets |
-| [projects/meme-parser](projects/meme-parser) | Recursive-descent parser subset — self-hosting step 5, parses its own source | 28 × 6 targets |
+| [projects/meme-parser](projects/meme-parser) | Recursive-descent parser + canonical emitter — self-hosting steps 5 & 6, parses and re-emits its own source | 47 × 6 targets |
 
-**385 test cases across 12 programs + 5 self-hosting components, 0 failures, every one green on all six targets.**
+**487 `meme test` cases across the 16 test-suite projects — plus card-inventory's shell-based parity/acceptance harnesses — all green on all six targets.**
 
-### Release Gate
+---
+
+## The Self-Hosting Ladder
+
+Instead of a big-bang rewrite, the compiler grows out of Python one component at a time — each rung a working, shipped Memelang program (see [docs/roadmap.md](docs/roadmap.md)). The language itself closed its known limits on 2026-11-24 (recursive `Optional` records, JSON record I/O with collections & nested records): nothing in the language needs a workaround.
+
+| Rung | Component | Proof |
+|---|---|---|
+| 1 | **Tokenizer** — [projects/meme-tokenizer](projects/meme-tokenizer) | 23 × 6 green; tokenizes its own source |
+| 2 | **Canonical-form checker** — [projects/meme-canonical-checker](projects/meme-canonical-checker) | 22 × 6 green; reads real lockfiles |
+| 3 | **Canonical fixer** — [projects/meme-canonical-fixer](projects/meme-canonical-fixer) | 20 × 6 green; `fix`/`preview` with a round-trip invariant |
+| 4 | **Lockfile freshness checker** — [projects/meme-lock-check](projects/meme-lock-check) | 20 × 6 green; all 39 real locks report `LOCKED-FRESH` |
+| 5 | **Parser** — [projects/meme-parser](projects/meme-parser) | precedence-climbing expression grammar; parses its own source |
+| 6 | **Canonical emitter** — meme-parser `emit` | 47 × 6 green; `parse(emit(parse(x))) == parse(x)` + idempotence, byte-identical output on all six targets |
+
+The **lexer → parser → emitter chain is now fully Memelang**. Next rungs: checker/fixer integration, a canonical re-emitter from IR, then single-binary compiler distribution — the end state is a compiler shippable as a single native file, with the Python core reduced to the optional (swappable) LLM-dictation frontend.
+
+---
+
+## Release Gate
 
 ```bash
+# Full test suite (~940 tests):
+uv run pytest -q
+
 # Full corpus + meme test across all six targets, one verdict line each:
 uv run python scripts/run_corpus.py --all-targets
 ```
+
+The all-targets gate evaluates **230 locked programs across 6 targets plus `meme test`** — every six-target program in the corpus manifests.
 
 ### CLI Commands
 
@@ -213,7 +258,6 @@ uv run python scripts/run_corpus.py --all-targets
 | `meme check` | Static type checking and verification | `uv run meme check app.meme` |
 | `meme explain` | Inspect canonical form and lock status | `uv run meme explain app.meme` |
 | `meme pull` | Download recommended local compiler model | `uv run meme pull` |
-
 
 ---
 
@@ -253,26 +297,42 @@ For `meme build` and `meme test`, the default is `heuristic` (zero-LLM by defaul
 Memelang is designed to evolve along **three distinct axes**:
 
 1. **`examples/` Axis (Syntax & Idiom Extensibility):**
-   `.meme` files in `examples/` (including shipped foundational examples and the pre-installed CS 101–103 standard library under `examples/cs101/`, `examples/cs102/`, `examples/cs103/`) act as the language's living syntax and idiom bank ("Memelang is as smart as you make it"). Adding new idiomatic patterns or reference programs here teaches the language new phrasing conventions and capabilities so real programs can be written and learned from.
+   `.meme` files in `examples/` (the six-course corpus under `examples/cs101..cs106/`, the advanced module examples under `examples/advanced/`, and the shipped foundational demos) act as the language's living syntax and idiom bank ("Memelang is as smart as you make it"). Adding new idiomatic patterns or reference programs here teaches the language new phrasing conventions and capabilities so real programs can be written and learned from.
 2. **`src/` Language Axis (IR & Output Target Extensibility):**
    The typed Intermediate Representation (`src/memelang/ir/`), static verifier (`src/memelang/analyzer/`), and codegen backends (`src/memelang/codegen/`) define core computational primitives and target languages (`python`, `rust`, `cpp`, `go`, `c`, `ts`). Ships with six runtime targets.
 3. **Compiler LLM Axis (Frontend Extensibility):**
    The compiler's own intelligence is an extension point. Every frontend implements the same `LLMProvider` protocol (`auto`, `ollama`, `openai-local`, `llama-cpp`, `gemini`, `heuristic`), and because synthesis output is JSON-schema-constrained to `SynthesisResult`, a stronger or smarter model can be dropped in without touching the verifier, lockfile, or any codegen backend. Long-term (the golang model of a self-extending toolchain), the goal is a compiler that is extendable **at runtime** — the language growing its own capabilities through its LLM frontend.
 
-The `.meme` files under `tests/corpus/` are the benchmark harness's test suite (containing clean, typo-injected, and deliberately ambiguous stress scripts) and are mirrored into `examples/cs101..103/`, where verified `.meme.lock` files turn curated scripts into live few-shot demonstrations for the retriever.
+The `.meme` files under `tests/corpus/` are the benchmark harness's test suite (containing clean, typo-injected, and deliberately ambiguous stress scripts) and are mirrored into `examples/cs101..cs106/`.
 
-To benchmark compiler robustness across university Computer Science curricula, Memelang includes an unfiltered **300-script stress corpus** mirroring the curriculum (`tests/corpus/` and `examples/` covering CS 101, CS 102, and CS 103):
+To benchmark compiler robustness across the six-course curriculum, run the corpus through the 2-axis gap-attribution reporter:
 
 ```bash
-# Smoke test a slice of CS 101 programs using the fast built-in heuristic provider:
-uv run python scripts/run_corpus.py --course cs101 --limit 10
-
 # Run evaluation with the local compiler model and generate a 2-axis gap attribution report:
 uv run python scripts/run_corpus.py --report gap_report.json
-
-# Filter by course, style, or specific script IDs:
-uv run python scripts/run_corpus.py --course cs102 --style clean --ids 101-125
 ```
 
 The runner attributes non-passing scripts into ranked **Axis 1 (`examples/`)** vs **Axis 2 (`src/`)** gaps, identifying exactly which new reference examples or IR operations will unlock the most student programs.
 
+---
+
+## Language Surface (v0.2.0-beta)
+
+- **Assertions (`assert`):** First-class runtime invariant assertions with status-1 termination and deterministic diagnostics.
+- **Test Blocks (`test`) & Test Runner (`meme test`):** Isolated test blocks and a built-in cross-target test runner.
+- **Native Binaries (`meme build`):** Direct-to-native binary compilation via the C11 backend with zero runtime dependencies.
+- **Float Formatting & Conversions:** Deterministic float formatting with specified decimal precision (`format x with N decimals`), plus `float of <int>` for Int→Float conversion — money-in-cents programs can render dollars directly.
+- **Character Code Conversions:** `number of <char>` (codepoint) and `character of <int>` round-trip single characters.
+- **SHA-256:** `sha256 of <text>` — byte-identical lowercase hex digests on all six targets.
+- **JSON Record Read/Write:** Strongly-typed record serialization and deserialization (`write r as json to file path`, `read json record R from file path or else nothing`).
+- **System Clock & Environment Variables:** Built-in POSIX epoch seconds (`current epoch seconds`) and environment variable lookup (`environment variable name`).
+- **Optional File Readers:** Null-safe file readers returning `Optional<T>` without panicking on missing files.
+- **Error Output (`print error`):** First-class stderr printing with `print`-identical formatting — error diagnostics land on the right stream on all six targets.
+- **Sets (`Set<T>`):** First-class generic sets with O(1) membership, idempotent addition, and deterministic sorted iteration.
+- **Two-Dimensional Lists (`List<List<T>>`):** Generic nested lists supporting literals `[[1, 2], [3, 4]]`, indexing `g[i][j]`, and mutation `set g[i][j] to v`.
+- **Uniform Iteration:** `for each` accepts any expression evaluating to a collection — record fields, call results, nested index expressions — with sorted deterministic order for maps and sets.
+- **Mutual Recursion:** Functions can forward-reference functions defined later in the same module.
+- **Parent-Relative Modules:** `use ../<module>` resolves modules in parent directories — test files import repo-root modules without symlinks.
+- **Records Hold Collections:** Record fields of type `List<T>`, `Map<K, V>`, and `Set<T>` (including self-referential records through `List`) work across all six targets.
+- **Recursive Records (`Optional<T>` self-reference):** Records can reference themselves through `Optional<T>` fields (`record Node: parent: Optional<Node>`) — indirection is handled per-target (`Option<Box<T>>` on rust, pointers on cpp/c), user code stays identical across all six targets.
+- **JSON Records with Collections & Nested Records:** `write ... as json` / `read json record ...` serialize record fields of type `List<T>`, `Set<T>`, `Map<K, V>` (including record-valued maps), nested record fields, and `Optional` of either — all-or-nothing reads, deterministic sorted ordering, byte-identical output on all six targets.
