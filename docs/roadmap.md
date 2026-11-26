@@ -44,7 +44,9 @@ at a time. Each rung is a working, shipped thing:
 - [x] Exact-freshness checker (self-hosting step 4) — projects/meme-lock-check, 20×6 green, all 39 real locks LOCKED-FRESH
 - [x] Parser subset (self-hosting step 5) — projects/meme-parser, 28×6 green, parses its own source; expression grammar via precedence climbing
 - [x] Canonical emitter (self-hosting step 6) — meme-parser `emit`, 47×6 green; parse(emit(parse(x)))==parse(x) invariant + idempotence, byte-identical output on all six
-- [ ] Further self-hosting components (checker/fixer integration, canonical re-emitter from IR, ...)
-- [ ] Single-binary compiler distribution
-- [ ] HTTP / networking chapter (runtime surface)
-- [ ] Syntax highlighting (editor surface)
+- [x] Unified pipeline CLI (self-hosting step 7) — projects/meme-tools, 24×6 green
+- [x] Lock backfill — all offline-parseable examples locked (78dce29); remainder are LLM-voice by design, documented
+- [x] Static type-checker, batch A (self-hosting step 8) — projects/meme-verify, 14×6 green, oracle-agrees with the real verifier
+- [ ] Verifier batch B (cross-module analysis, return paths, flow refinements)
+- [ ] Copy-on-write list codegen (the deep-clone perf debt — matters when rust/cpp become primary)
+- [ ] Further self-hosting components (codegen subset from IR, ...)

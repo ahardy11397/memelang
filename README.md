@@ -231,6 +231,7 @@ Instead of a big-bang rewrite, the compiler grows out of Python one component at
 | 5 | **Parser** — [projects/meme-parser](projects/meme-parser) | precedence-climbing expression grammar; parses its own source |
 | 6 | **Canonical emitter** — meme-parser `emit` | 47 × 6 green; `parse(emit(parse(x))) == parse(x)` + idempotence, byte-identical output on all six targets |
 | 7 | **Unified pipeline CLI** — [projects/meme-tools](projects/meme-tools) | 24 × 6 green; `parse` / `emit` / `check` / `hash` in one zero-dependency binary; `LOCKED-FRESH` / `LEXICAL-FRESH` / `DRIFTED` verdicts, hash verified against an independent oracle |
+| 8 | **Static type-checker (batch A)** — [projects/meme-verify](projects/meme-verify) | 14 × 6 green; oracle-agrees with the real verifier (accepts what it accepts, rejects what it rejects, byte-agreement confirmed) |
 
 The **lexer → parser → emitter chain is now fully Memelang**, and v0.3.0-beta.2 ships it as a tool. Next rungs: copy-on-write list codegen (clearing the deep-clone perf debt), a canonical re-emitter from IR, then single-binary compiler distribution — the end state is a compiler shippable as a single native file, with the Python core reduced to the optional (swappable) LLM-dictation frontend.
 
