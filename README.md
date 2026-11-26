@@ -193,7 +193,7 @@ Real programs built with Memelang, each its own repo linked as a submodule, each
 | [projects/meme-lock-check](projects/meme-lock-check) | Exact lockfile freshness (LOCKED-FRESH / DRIFTED) via sha256 — self-hosting step 4 | 20 × 6 targets |
 | [projects/meme-parser](projects/meme-parser) | Recursive-descent parser subset — self-hosting step 5, parses its own source | 28 × 6 targets |
 
-**358 test cases across 12 programs + 5 self-hosting components, 0 failures, every one green on all six targets.**
+**385 test cases across 12 programs + 5 self-hosting components, 0 failures, every one green on all six targets.**
 
 ### Release Gate
 
