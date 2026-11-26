@@ -1,6 +1,6 @@
 # Memelang (`meme`)
 
-**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline, currently at **v0.2.0-beta**. You write programs in plain English (`.meme`), and the compiler parses that English into a **strictly-typed Intermediate Representation (IR)**, statically verifies types & semantic unambiguity, locks the result into **`build.lock`** for 100% deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, **Go**, **C (C11)**, or **TypeScript (Node.js)**.
+**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline, currently at **v0.3.0-beta.2**. You write programs in plain English (`.meme`), and the compiler parses that English into a **strictly-typed Intermediate Representation (IR)**, statically verifies types & semantic unambiguity, locks the result into **`build.lock`** for 100% deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, **Go**, **C (C11)**, or **TypeScript (Node.js)**.
 
 ---
 
@@ -230,8 +230,21 @@ Instead of a big-bang rewrite, the compiler grows out of Python one component at
 | 4 | **Lockfile freshness checker** — [projects/meme-lock-check](projects/meme-lock-check) | 20 × 6 green; all 39 real locks report `LOCKED-FRESH` |
 | 5 | **Parser** — [projects/meme-parser](projects/meme-parser) | precedence-climbing expression grammar; parses its own source |
 | 6 | **Canonical emitter** — meme-parser `emit` | 47 × 6 green; `parse(emit(parse(x))) == parse(x)` + idempotence, byte-identical output on all six targets |
+| 7 | **Unified pipeline CLI** — [projects/meme-tools](projects/meme-tools) | 24 × 6 green; `parse` / `emit` / `check` / `hash` in one zero-dependency binary; `LOCKED-FRESH` / `LEXICAL-FRESH` / `DRIFTED` verdicts, hash verified against an independent oracle |
 
-The **lexer → parser → emitter chain is now fully Memelang**. Next rungs: checker/fixer integration, a canonical re-emitter from IR, then single-binary compiler distribution — the end state is a compiler shippable as a single native file, with the Python core reduced to the optional (swappable) LLM-dictation frontend.
+The **lexer → parser → emitter chain is now fully Memelang**, and v0.3.0-beta.2 ships it as a tool. Next rungs: copy-on-write list codegen (clearing the deep-clone perf debt), a canonical re-emitter from IR, then single-binary compiler distribution — the end state is a compiler shippable as a single native file, with the Python core reduced to the optional (swappable) LLM-dictation frontend.
+
+---
+
+## Releases
+
+### v0.3.0-beta.2 (2026-11-25)
+
+- **Language: known limits closed.** Recursive records via `Optional<Record>` (heap indirection per target: `Option<Box<T>>` on rust, pointers on cpp/c — surface syntax identical everywhere) and JSON record I/O with collection fields (`List<T>`, `Set<T>`, `Map<K,V>`, including record-valued maps), nested record fields, and `Optional` of either. All-or-nothing reads, deterministic sorted ordering, byte-identical across targets.
+- **New builtin: `sha256 of <text>`** — lowercase hex digest, UTF-8 bytes hashed uniformly, byte-identical on all six targets (stdlib on python/go/ts, self-contained on rust/cpp/c).
+- **Self-hosting ladder, 7 rungs shipped** (see the table above) — 113 new test cases, every component byte-parity across six targets, composed into the `meme-tools` pipeline binary that ships with this release.
+- **Compiler fixes surfaced by the ladder**: Go record `_meme_less` used `!=` on slice-containing structs (compile error for recursive records) — now `reflect.DeepEqual`; test harness compiled rust/cpp without optimization — now rust `-O` / cpp `-O2`, matching the documented hand-compile contract.
+- **Toolchain health**: 940 tests green, release gate 230 programs × 6 targets, 0 failures. 18 projects in the ecosystem.
 
 ---
 
@@ -316,7 +329,7 @@ The runner attributes non-passing scripts into ranked **Axis 1 (`examples/`)** v
 
 ---
 
-## Language Surface (v0.2.0-beta)
+## Language Surface (v0.3.0-beta.2)
 
 - **Assertions (`assert`):** First-class runtime invariant assertions with status-1 termination and deterministic diagnostics.
 - **Test Blocks (`test`) & Test Runner (`meme test`):** Isolated test blocks and a built-in cross-target test runner.
