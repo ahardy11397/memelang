@@ -49,3 +49,6 @@
 [submodule "projects/meme-parser"]
 	path = projects/meme-parser
 	url = https://github.com/ahardy11397/meme-parser.git
+[submodule "projects/meme-tools"]
+	path = projects/meme-tools
+	url = https://github.com/ahardy11397/meme-tools.git
