@@ -52,3 +52,6 @@
 [submodule "projects/meme-tools"]
 	path = projects/meme-tools
 	url = https://github.com/ahardy11397/meme-tools.git
+[submodule "projects/meme-verify"]
+	path = projects/meme-verify
+	url = https://github.com/ahardy11397/meme-verify.git
