@@ -1,0 +1,399 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/find-largest.meme": {
+      "source_sha256": "33e2bb6e2e9a4dfd93a0c7d395c59791415b95aa4f8eace0d754844fdf850b14",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "find_largest",
+          "params": [
+            {
+              "name": "nums",
+              "param_type": "List<Int>"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "largest",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "list_index",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "nums"
+                },
+                "index": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 6
+            },
+            {
+              "op": "for_each",
+              "item_var": "n",
+              "index_var": null,
+              "collection": "nums",
+              "collection_expr": {
+                "expr_type": "var_ref",
+                "name": "nums"
+              },
+              "body": [
+                {
+                  "op": "if_stmt",
+                  "condition": {
+                    "expr_type": "binary_op",
+                    "op": ">",
+                    "left": {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    },
+                    "right": {
+                      "expr_type": "var_ref",
+                      "name": "largest"
+                    }
+                  },
+                  "then_body": [
+                    {
+                      "op": "assign",
+                      "name": "largest",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "source_line": 9
+                    }
+                  ],
+                  "else_body": [],
+                  "source_line": 8
+                }
+              ],
+              "source_line": 7
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "var_ref",
+                "name": "largest"
+              },
+              "source_line": 10
+            }
+          ],
+          "source_line": 5
+        },
+        {
+          "op": "var_decl",
+          "name": "filepath",
+          "var_type": "String",
+          "value": {
+            "expr_type": "read_input",
+            "prompt": "",
+            "target_type": "String"
+          },
+          "source_line": 12
+        },
+        {
+          "op": "var_decl",
+          "name": "numbers_opt",
+          "var_type": "Optional<List<Int>>",
+          "value": {
+            "expr_type": "read_json_list",
+            "filepath": {
+              "expr_type": "var_ref",
+              "name": "filepath"
+            },
+            "element_type": "Int",
+            "explicit_type": true,
+            "default_val": {
+              "expr_type": "optional_none"
+            }
+          },
+          "source_line": 13
+        },
+        {
+          "op": "var_decl",
+          "name": "fallback_numbers",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "list_literal",
+            "elements": [],
+            "element_type": "Int"
+          },
+          "source_line": 14
+        },
+        {
+          "op": "var_decl",
+          "name": "numbers",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "optional_unwrap_or_default",
+            "target": {
+              "expr_type": "var_ref",
+              "name": "numbers_opt"
+            },
+            "default_val": {
+              "expr_type": "var_ref",
+              "name": "fallback_numbers"
+            }
+          },
+          "source_line": 15
+        },
+        {
+          "op": "if_stmt",
+          "condition": {
+            "expr_type": "binary_op",
+            "op": ">",
+            "left": {
+              "expr_type": "list_length",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "numbers"
+              }
+            },
+            "right": {
+              "expr_type": "literal",
+              "value": 0,
+              "data_type": "Int"
+            }
+          },
+          "then_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "call",
+                  "func_name": "find_largest",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "numbers"
+                    }
+                  ]
+                }
+              ],
+              "source_line": 18
+            }
+          ],
+          "else_body": [
+            {
+              "op": "print_stmt",
+              "expressions": [
+                {
+                  "expr_type": "literal",
+                  "value": "no numbers found",
+                  "data_type": "String"
+                }
+              ],
+              "source_line": 20
+            }
+          ],
+          "source_line": 17
+        }
+      ],
+      "canonical_meme": "function find_largest(nums: List<Int>) -> Int:\n    define largest: Int as nums[0]\n    for each n in nums:\n        if n > largest:\n            set largest to n\n    return largest\ndefine filepath: String as read String with prompt \"\"\ndefine numbers_opt: Optional<List<Int>> as read json file filepath as List<Int> or else nothing\ndefine list fallback_numbers as empty List<Int>\ndefine list numbers as value of numbers_opt or else fallback_numbers\nif length of numbers > 0:\n    print find_largest(numbers)\nelse:\n    print \"no numbers found\"",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "find_largest",
+            "params": [
+              {
+                "name": "nums",
+                "param_type": "List<Int>"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "largest",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "list_index",
+                  "target": {
+                    "expr_type": "var_ref",
+                    "name": "nums"
+                  },
+                  "index": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 6
+              },
+              {
+                "op": "for_each",
+                "item_var": "n",
+                "index_var": null,
+                "collection": "nums",
+                "collection_expr": {
+                  "expr_type": "var_ref",
+                  "name": "nums"
+                },
+                "body": [
+                  {
+                    "op": "if_stmt",
+                    "condition": {
+                      "expr_type": "binary_op",
+                      "op": ">",
+                      "left": {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      },
+                      "right": {
+                        "expr_type": "var_ref",
+                        "name": "largest"
+                      }
+                    },
+                    "then_body": [
+                      {
+                        "op": "assign",
+                        "name": "largest",
+                        "value": {
+                          "expr_type": "var_ref",
+                          "name": "n"
+                        },
+                        "source_line": 9
+                      }
+                    ],
+                    "else_body": [],
+                    "source_line": 8
+                  }
+                ],
+                "source_line": 7
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "var_ref",
+                  "name": "largest"
+                },
+                "source_line": 10
+              }
+            ],
+            "source_line": 5
+          },
+          {
+            "op": "var_decl",
+            "name": "filepath",
+            "var_type": "String",
+            "value": {
+              "expr_type": "read_input",
+              "prompt": "",
+              "target_type": "String"
+            },
+            "source_line": 12
+          },
+          {
+            "op": "var_decl",
+            "name": "numbers_opt",
+            "var_type": "Optional<List<Int>>",
+            "value": {
+              "expr_type": "read_json_list",
+              "filepath": {
+                "expr_type": "var_ref",
+                "name": "filepath"
+              },
+              "element_type": "Int",
+              "explicit_type": true,
+              "default_val": {
+                "expr_type": "optional_none"
+              }
+            },
+            "source_line": 13
+          },
+          {
+            "op": "var_decl",
+            "name": "fallback_numbers",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "list_literal",
+              "elements": [],
+              "element_type": "Int"
+            },
+            "source_line": 14
+          },
+          {
+            "op": "var_decl",
+            "name": "numbers",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "optional_unwrap_or_default",
+              "target": {
+                "expr_type": "var_ref",
+                "name": "numbers_opt"
+              },
+              "default_val": {
+                "expr_type": "var_ref",
+                "name": "fallback_numbers"
+              }
+            },
+            "source_line": 15
+          },
+          {
+            "op": "if_stmt",
+            "condition": {
+              "expr_type": "binary_op",
+              "op": ">",
+              "left": {
+                "expr_type": "list_length",
+                "target": {
+                  "expr_type": "var_ref",
+                  "name": "numbers"
+                }
+              },
+              "right": {
+                "expr_type": "literal",
+                "value": 0,
+                "data_type": "Int"
+              }
+            },
+            "then_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "call",
+                    "func_name": "find_largest",
+                    "args": [
+                      {
+                        "expr_type": "var_ref",
+                        "name": "numbers"
+                      }
+                    ]
+                  }
+                ],
+                "source_line": 18
+              }
+            ],
+            "else_body": [
+              {
+                "op": "print_stmt",
+                "expressions": [
+                  {
+                    "expr_type": "literal",
+                    "value": "no numbers found",
+                    "data_type": "String"
+                  }
+                ],
+                "source_line": 20
+              }
+            ],
+            "source_line": 17
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

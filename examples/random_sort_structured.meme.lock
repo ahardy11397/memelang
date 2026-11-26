@@ -1,0 +1,103 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/random_sort_structured.meme": {
+      "source_sha256": "1fa0d62e159d62bf9b9d618ea5f16554c5d3629dd60bd72a47ff90938cab8eac",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "var_decl",
+          "name": "numbers",
+          "var_type": "List<Int>",
+          "value": {
+            "expr_type": "random_list",
+            "count": {
+              "expr_type": "literal",
+              "value": 10,
+              "data_type": "Int"
+            },
+            "min_val": {
+              "expr_type": "literal",
+              "value": 1,
+              "data_type": "Int"
+            },
+            "max_val": {
+              "expr_type": "literal",
+              "value": 100,
+              "data_type": "Int"
+            },
+            "implicit_bounds": false
+          },
+          "source_line": 2
+        },
+        {
+          "op": "sort_collection",
+          "target": "numbers",
+          "direction": "ascending",
+          "source_line": 3
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "var_ref",
+              "name": "numbers"
+            }
+          ],
+          "source_line": 4
+        }
+      ],
+      "canonical_meme": "define list numbers as 10 random integers between 1 and 100\nsort numbers ascending\nprint numbers",
+      "ir": {
+        "statements": [
+          {
+            "op": "var_decl",
+            "name": "numbers",
+            "var_type": "List<Int>",
+            "value": {
+              "expr_type": "random_list",
+              "count": {
+                "expr_type": "literal",
+                "value": 10,
+                "data_type": "Int"
+              },
+              "min_val": {
+                "expr_type": "literal",
+                "value": 1,
+                "data_type": "Int"
+              },
+              "max_val": {
+                "expr_type": "literal",
+                "value": 100,
+                "data_type": "Int"
+              },
+              "implicit_bounds": false
+            },
+            "source_line": 2
+          },
+          {
+            "op": "sort_collection",
+            "target": "numbers",
+            "direction": "ascending",
+            "source_line": 3
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "var_ref",
+                "name": "numbers"
+              }
+            ],
+            "source_line": 4
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

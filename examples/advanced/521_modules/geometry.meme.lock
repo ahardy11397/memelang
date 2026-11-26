@@ -1,0 +1,474 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/521_modules/geometry.meme": {
+      "source_sha256": "732a43aeb40c5abef70b72eaa50e3e8a673f60f772ddef13e1bc38b7b4aceebc",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "import_stmt",
+          "module": "math_ops",
+          "source_line": 1
+        },
+        {
+          "op": "record_def",
+          "name": "Point",
+          "fields": [
+            {
+              "name": "x",
+              "field_type": "Int"
+            },
+            {
+              "name": "y",
+              "field_type": "Int"
+            }
+          ],
+          "source_line": 3
+        },
+        {
+          "op": "func_def",
+          "name": "make_point",
+          "params": [
+            {
+              "name": "x",
+              "param_type": "Int"
+            },
+            {
+              "name": "y",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Point",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "record_literal",
+                "record_name": "Point",
+                "fields": [
+                  {
+                    "name": "x",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "x"
+                    }
+                  },
+                  {
+                    "name": "y",
+                    "value": {
+                      "expr_type": "var_ref",
+                      "name": "y"
+                    }
+                  }
+                ]
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 7
+        },
+        {
+          "op": "func_def",
+          "name": "distance_squared",
+          "params": [
+            {
+              "name": "p",
+              "param_type": "Point"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "var_decl",
+              "name": "sx",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "call",
+                "func_name": "square",
+                "args": [
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "p"
+                    },
+                    "field_name": "x"
+                  }
+                ]
+              },
+              "source_line": 11
+            },
+            {
+              "op": "var_decl",
+              "name": "sy",
+              "var_type": "Int",
+              "value": {
+                "expr_type": "call",
+                "func_name": "square",
+                "args": [
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "p"
+                    },
+                    "field_name": "y"
+                  }
+                ]
+              },
+              "source_line": 12
+            },
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "call",
+                "func_name": "add",
+                "args": [
+                  {
+                    "expr_type": "var_ref",
+                    "name": "sx"
+                  },
+                  {
+                    "expr_type": "var_ref",
+                    "name": "sy"
+                  }
+                ]
+              },
+              "source_line": 13
+            }
+          ],
+          "source_line": 10
+        },
+        {
+          "op": "func_def",
+          "name": "manhattan_distance",
+          "params": [
+            {
+              "name": "p",
+              "param_type": "Point"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "call",
+                "func_name": "add",
+                "args": [
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "p"
+                    },
+                    "field_name": "x"
+                  },
+                  {
+                    "expr_type": "record_field",
+                    "target": {
+                      "expr_type": "var_ref",
+                      "name": "p"
+                    },
+                    "field_name": "y"
+                  }
+                ]
+              },
+              "source_line": 16
+            }
+          ],
+          "source_line": 15
+        }
+      ],
+      "canonical_meme": "use math_ops\nrecord Point:\n    x: Int\n    y: Int\nfunction make_point(x: Int, y: Int) -> Point:\n    return Point(x=x, y=y)\nfunction distance_squared(p: Point) -> Int:\n    define sx: Int as square(p.x)\n    define sy: Int as square(p.y)\n    return add(sx, sy)\nfunction manhattan_distance(p: Point) -> Int:\n    return add(p.x, p.y)",
+      "ir": {
+        "statements": [
+          {
+            "op": "import_stmt",
+            "module": "math_ops",
+            "source_line": 1
+          },
+          {
+            "op": "record_def",
+            "name": "Point",
+            "fields": [
+              {
+                "name": "x",
+                "field_type": "Int"
+              },
+              {
+                "name": "y",
+                "field_type": "Int"
+              }
+            ],
+            "source_line": 3
+          },
+          {
+            "op": "func_def",
+            "name": "make_point",
+            "params": [
+              {
+                "name": "x",
+                "param_type": "Int"
+              },
+              {
+                "name": "y",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Point",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "record_literal",
+                  "record_name": "Point",
+                  "fields": [
+                    {
+                      "name": "x",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "x"
+                      }
+                    },
+                    {
+                      "name": "y",
+                      "value": {
+                        "expr_type": "var_ref",
+                        "name": "y"
+                      }
+                    }
+                  ]
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 7
+          },
+          {
+            "op": "func_def",
+            "name": "distance_squared",
+            "params": [
+              {
+                "name": "p",
+                "param_type": "Point"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "var_decl",
+                "name": "sx",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "call",
+                  "func_name": "square",
+                  "args": [
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "p"
+                      },
+                      "field_name": "x"
+                    }
+                  ]
+                },
+                "source_line": 11
+              },
+              {
+                "op": "var_decl",
+                "name": "sy",
+                "var_type": "Int",
+                "value": {
+                  "expr_type": "call",
+                  "func_name": "square",
+                  "args": [
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "p"
+                      },
+                      "field_name": "y"
+                    }
+                  ]
+                },
+                "source_line": 12
+              },
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "call",
+                  "func_name": "add",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "sx"
+                    },
+                    {
+                      "expr_type": "var_ref",
+                      "name": "sy"
+                    }
+                  ]
+                },
+                "source_line": 13
+              }
+            ],
+            "source_line": 10
+          },
+          {
+            "op": "func_def",
+            "name": "manhattan_distance",
+            "params": [
+              {
+                "name": "p",
+                "param_type": "Point"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "call",
+                  "func_name": "add",
+                  "args": [
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "p"
+                      },
+                      "field_name": "x"
+                    },
+                    {
+                      "expr_type": "record_field",
+                      "target": {
+                        "expr_type": "var_ref",
+                        "name": "p"
+                      },
+                      "field_name": "y"
+                    }
+                  ]
+                },
+                "source_line": 16
+              }
+            ],
+            "source_line": 15
+          }
+        ],
+        "imported_definitions": [
+          {
+            "op": "func_def",
+            "name": "square",
+            "params": [
+              {
+                "name": "n",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "add",
+            "params": [
+              {
+                "name": "a",
+                "param_type": "Int"
+              },
+              {
+                "name": "b",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "a"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "b"
+                  }
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "func_def",
+            "name": "cube",
+            "params": [
+              {
+                "name": "n",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "call",
+                    "func_name": "square",
+                    "args": [
+                      {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      }
+                    ]
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  }
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 7
+          }
+        ],
+        "module_files": {
+          "math_ops.meme": "bff5c32c69a0291777b14594caf5d5cd2e8686301e15500a4a22bb8dfd3883ef"
+        }
+      },
+      "module_files": {
+        "math_ops.meme": "bff5c32c69a0291777b14594caf5d5cd2e8686301e15500a4a22bb8dfd3883ef"
+      }
+    }
+  }
+}

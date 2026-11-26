@@ -1,0 +1,221 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/advanced/521_modules/math_ops.meme": {
+      "source_sha256": "bff5c32c69a0291777b14594caf5d5cd2e8686301e15500a4a22bb8dfd3883ef",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "square",
+          "params": [
+            {
+              "name": "n",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "func_def",
+          "name": "add",
+          "params": [
+            {
+              "name": "a",
+              "param_type": "Int"
+            },
+            {
+              "name": "b",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "+",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "a"
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "b"
+                }
+              },
+              "source_line": 5
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "func_def",
+          "name": "cube",
+          "params": [
+            {
+              "name": "n",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "call",
+                  "func_name": "square",
+                  "args": [
+                    {
+                      "expr_type": "var_ref",
+                      "name": "n"
+                    }
+                  ]
+                },
+                "right": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                }
+              },
+              "source_line": 8
+            }
+          ],
+          "source_line": 7
+        }
+      ],
+      "canonical_meme": "function square(n: Int) -> Int:\n    return n * n\nfunction add(a: Int, b: Int) -> Int:\n    return a + b\nfunction cube(n: Int) -> Int:\n    return square(n) * n",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "square",
+            "params": [
+              {
+                "name": "n",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "func_def",
+            "name": "add",
+            "params": [
+              {
+                "name": "a",
+                "param_type": "Int"
+              },
+              {
+                "name": "b",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "+",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "a"
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "b"
+                  }
+                },
+                "source_line": 5
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "func_def",
+            "name": "cube",
+            "params": [
+              {
+                "name": "n",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "call",
+                    "func_name": "square",
+                    "args": [
+                      {
+                        "expr_type": "var_ref",
+                        "name": "n"
+                      }
+                    ]
+                  },
+                  "right": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  }
+                },
+                "source_line": 8
+              }
+            ],
+            "source_line": 7
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

@@ -1,0 +1,233 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/fixtures/test_block_demo.meme": {
+      "source_sha256": "cd6158928c75cfd5258897cb98ecdc8b99d48e915309e4ab1e054d2fa180e03d",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "func_def",
+          "name": "double",
+          "params": [
+            {
+              "name": "n",
+              "param_type": "Int"
+            }
+          ],
+          "return_type": "Int",
+          "body": [
+            {
+              "op": "return_stmt",
+              "value": {
+                "expr_type": "binary_op",
+                "op": "*",
+                "left": {
+                  "expr_type": "var_ref",
+                  "name": "n"
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 2,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 2
+            }
+          ],
+          "source_line": 1
+        },
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "running demo",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 4
+        },
+        {
+          "op": "test_block_stmt",
+          "name": "double_positive",
+          "body": [
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "call",
+                  "func_name": "double",
+                  "args": [
+                    {
+                      "expr_type": "literal",
+                      "value": 3,
+                      "data_type": "Int"
+                    }
+                  ]
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 6,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 7,
+              "source_text": "double(3) == 6"
+            }
+          ],
+          "source_line": 6
+        },
+        {
+          "op": "test_block_stmt",
+          "name": "double_zero",
+          "body": [
+            {
+              "op": "assert_stmt",
+              "condition": {
+                "expr_type": "binary_op",
+                "op": "==",
+                "left": {
+                  "expr_type": "call",
+                  "func_name": "double",
+                  "args": [
+                    {
+                      "expr_type": "literal",
+                      "value": 0,
+                      "data_type": "Int"
+                    }
+                  ]
+                },
+                "right": {
+                  "expr_type": "literal",
+                  "value": 0,
+                  "data_type": "Int"
+                }
+              },
+              "source_line": 10,
+              "source_text": "double(0) == 0"
+            }
+          ],
+          "source_line": 9
+        }
+      ],
+      "canonical_meme": "function double(n: Int) -> Int:\n    return n * 2\nprint \"running demo\"\ntest double_positive:\n    assert double(3) == 6\ntest double_zero:\n    assert double(0) == 0",
+      "ir": {
+        "statements": [
+          {
+            "op": "func_def",
+            "name": "double",
+            "params": [
+              {
+                "name": "n",
+                "param_type": "Int"
+              }
+            ],
+            "return_type": "Int",
+            "body": [
+              {
+                "op": "return_stmt",
+                "value": {
+                  "expr_type": "binary_op",
+                  "op": "*",
+                  "left": {
+                    "expr_type": "var_ref",
+                    "name": "n"
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 2,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 2
+              }
+            ],
+            "source_line": 1
+          },
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "running demo",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 4
+          },
+          {
+            "op": "test_block_stmt",
+            "name": "double_positive",
+            "body": [
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "call",
+                    "func_name": "double",
+                    "args": [
+                      {
+                        "expr_type": "literal",
+                        "value": 3,
+                        "data_type": "Int"
+                      }
+                    ]
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 6,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 7,
+                "source_text": "double(3) == 6"
+              }
+            ],
+            "source_line": 6
+          },
+          {
+            "op": "test_block_stmt",
+            "name": "double_zero",
+            "body": [
+              {
+                "op": "assert_stmt",
+                "condition": {
+                  "expr_type": "binary_op",
+                  "op": "==",
+                  "left": {
+                    "expr_type": "call",
+                    "func_name": "double",
+                    "args": [
+                      {
+                        "expr_type": "literal",
+                        "value": 0,
+                        "data_type": "Int"
+                      }
+                    ]
+                  },
+                  "right": {
+                    "expr_type": "literal",
+                    "value": 0,
+                    "data_type": "Int"
+                  }
+                },
+                "source_line": 10,
+                "source_text": "double(0) == 0"
+              }
+            ],
+            "source_line": 9
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}

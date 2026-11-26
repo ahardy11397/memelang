@@ -1,0 +1,43 @@
+{
+  "lockfile_version": 1,
+  "entries": {
+    "examples/hello.meme": {
+      "source_sha256": "5f6cfd7cbe43fcd3aa84bf8cbe17ea95fda02d47755c541da68ff528eb54d039",
+      "provider": "heuristic",
+      "resolutions": {},
+      "pending_ambiguities": [],
+      "draft_items": [
+        {
+          "op": "print_stmt",
+          "expressions": [
+            {
+              "expr_type": "literal",
+              "value": "Hello, World!",
+              "data_type": "String"
+            }
+          ],
+          "source_line": 1
+        }
+      ],
+      "canonical_meme": "print \"Hello, World!\"",
+      "ir": {
+        "statements": [
+          {
+            "op": "print_stmt",
+            "expressions": [
+              {
+                "expr_type": "literal",
+                "value": "Hello, World!",
+                "data_type": "String"
+              }
+            ],
+            "source_line": 1
+          }
+        ],
+        "imported_definitions": [],
+        "module_files": {}
+      },
+      "module_files": {}
+    }
+  }
+}
