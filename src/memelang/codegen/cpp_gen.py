@@ -154,16 +154,16 @@ def _is_record_name(name: str, records: set[str] | None = None) -> bool:
 def _cpp_type(meme_type: MemeType | str, records: set[str] | None = None) -> str:
     if meme_type.startswith("List<") and meme_type.endswith(">"):
         inner = meme_type[5:-1]
-        return f"std::vector<{_cpp_type(inner, records)}>"
+        return f"_MemeCow<std::vector<{_cpp_type(inner, records)}>>"
     if meme_type.startswith("Optional<") and meme_type.endswith(">"):
         inner = meme_type[9:-1]
         return f"std::optional<{_cpp_type(inner, records)}>"
     map_t = _map_types_of(meme_type)
     if map_t is not None:
-        return f"std::unordered_map<{_cpp_type(map_t[0], records)}, {_cpp_type(map_t[1], records)}>"
+        return f"_MemeCow<std::unordered_map<{_cpp_type(map_t[0], records)}, {_cpp_type(map_t[1], records)}>>"
     set_t = _set_type_of(meme_type)
     if set_t is not None:
-        return f"std::set<{_cpp_type(set_t, records)}>"
+        return f"_MemeCow<std::set<{_cpp_type(set_t, records)}>>"
     mapping = {
         "Int": "long long",
         "Float": "double",
@@ -220,8 +220,10 @@ class _CppGen(BaseGen):
 
         if isinstance(expr, ListLiteralExpr):
             el_cpp = _cpp_type(expr.element_type)
+            if not expr.elements:
+                return f"_MemeCow<std::vector<{el_cpp}>>{{}}"
             inner = ", ".join(self.gen_expr(e, scope) for e in expr.elements)
-            return f"std::vector<{el_cpp}>{{{inner}}}"
+            return f"_MemeCow<std::vector<{el_cpp}>>(std::vector<{el_cpp}>{{{inner}}})"
 
         if isinstance(expr, VarRefExpr):
             return _cpp_ident(expr.name)
@@ -252,13 +254,13 @@ class _CppGen(BaseGen):
             return f"({left} {cpp_op} {right})"
 
         if isinstance(expr, ListLengthExpr):
-            return f"static_cast<long long>({self.gen_expr(expr.target, scope)}.size())"
+            return f"static_cast<long long>(({self.gen_expr(expr.target, scope)}).read().size())"
 
         if isinstance(expr, ListIndexExpr):
             tgt_t = self.infer_type(expr.target, scope)
             if tgt_t.startswith("Map<"):
-                return f"{self.gen_expr(expr.target, scope)}.at({self.gen_expr(expr.index, scope)})"
-            indexed = f"{self.gen_expr(expr.target, scope)}.at(static_cast<std::size_t>({self.gen_expr(expr.index, scope)}))"
+                return f"({self.gen_expr(expr.target, scope)}).read().at({self.gen_expr(expr.index, scope)})"
+            indexed = f"({self.gen_expr(expr.target, scope)}).read().at(static_cast<std::size_t>({self.gen_expr(expr.index, scope)}))"
             if self.infer_type(expr, scope) == "Bool":
                 return f"static_cast<bool>({indexed})"
             return indexed
@@ -494,24 +496,26 @@ class _CppGen(BaseGen):
             map_t = _cpp_type(f"Map<{expr.key_type}, {expr.value_type}>")
             if not expr.entries:
                 return f"{map_t}{{}}"
+            k_cpp = _cpp_type(expr.key_type)
+            v_cpp = _cpp_type(expr.value_type)
             entries_str = ", ".join(
                 f"{{{self.gen_expr(e.key, scope)}, {self.gen_expr(e.value, scope)}}}"
                 for e in expr.entries
             )
-            return f"{map_t}{{{entries_str}}}"
+            return f"{map_t}(std::unordered_map<{k_cpp}, {v_cpp}>{{{entries_str}}})"
 
         if isinstance(expr, MapGetExpr):
             tgt = self.gen_expr(expr.target, scope)
             k = self.gen_expr(expr.key, scope)
             if expr.default_val is not None:
                 def_val = self.gen_expr(expr.default_val, scope)
-                return f"({tgt}.count({k}) ? {tgt}.at({k}) : {def_val})"
-            return f"{tgt}.at({k})"
+                return f"([&]() {{ const auto& _m = ({tgt}).read(); auto _k = {k}; auto _it = _m.find(_k); return _it != _m.end() ? _it->second : ({def_val}); }}())"
+            return f"({tgt}).read().at({k})"
 
         if isinstance(expr, MapHasKeyExpr):
             tgt = self.gen_expr(expr.target, scope)
             k = self.gen_expr(expr.key, scope)
-            return f"({tgt}.count({k}) > 0)"
+            return f"(({tgt}).read().count({k}) > 0)"
 
         if isinstance(expr, OptionalNoneExpr):
             return "std::nullopt"
@@ -536,13 +540,13 @@ class _CppGen(BaseGen):
             return f"_meme_unwrap_or_else({tgt}, [&]() {{ return {dflt}; }})"
 
         if isinstance(expr, EmptySetExpr):
-            return f"std::set<{_cpp_type(expr.element_type)}>{{}}"
+            return f"{_cpp_type(f'Set<{expr.element_type}>')}{{}}"
 
         if isinstance(expr, SetContainsExpr):
-            return f"({self.gen_expr(expr.target, scope)}.contains({self.gen_expr(expr.value, scope)}))"
+            return f"(({self.gen_expr(expr.target, scope)}).read().contains({self.gen_expr(expr.value, scope)}))"
 
         if isinstance(expr, SetLengthExpr):
-            return f"(static_cast<long long>({self.gen_expr(expr.target, scope)}.size()))"
+            return f"(static_cast<long long>(({self.gen_expr(expr.target, scope)}).read().size()))"
 
         raise TypeError(f"Unsupported IRExpr: {type(expr)!r}")
 
@@ -567,9 +571,9 @@ class _CppGen(BaseGen):
         if isinstance(stmt, SortCollectionStmt):
             tgt = _cpp_ident(stmt.target)
             if stmt.direction == "ascending":
-                return [f"{pad}std::sort({tgt}.begin(), {tgt}.end());"]
+                return [f"{pad}{{ auto& _w = {tgt}.write(); std::sort(_w.begin(), _w.end()); }}"]
             return [
-                f"{pad}std::sort({tgt}.begin(), {tgt}.end(), std::greater<>{{}});"
+                f"{pad}{{ auto& _w = {tgt}.write(); std::sort(_w.begin(), _w.end(), std::greater<>{{}}); }}"
             ]
 
         if isinstance(stmt, ClampCollectionStmt):
@@ -581,7 +585,7 @@ class _CppGen(BaseGen):
                 f"{pad}    auto _lo = {lo};",
                 f"{pad}    auto _hi = {hi};",
                 f"{pad}    if (_lo <= _hi) {{",
-                f"{pad}        for (auto& _x : {tgt}) {{ _x = std::clamp(_x, _lo, _hi); }}",
+                f"{pad}        for (auto& _x : {tgt}.write()) {{ _x = std::clamp(_x, _lo, _hi); }}",
                 f"{pad}    }}",
                 f"{pad}}}",
             ]
@@ -595,19 +599,26 @@ class _CppGen(BaseGen):
             sub[stmt.item_var] = el_mtype  # type: ignore[assignment]
             pred = self.gen_expr(stmt.predicate, sub)
             return [
-                f"{pad}std::erase_if({tgt}, [&](const {_cpp_type(el_mtype)}& {iv}) {{",  # type: ignore[arg-type]
+                f"{pad}std::erase_if({tgt}.write(), [&](const {_cpp_type(el_mtype)}& {iv}) {{",  # type: ignore[arg-type]
                 f"{pad}    return !({pred});",
                 f"{pad}}});",
             ]
 
         if isinstance(stmt, ListAppendStmt):
-            return [f"{pad}{_cpp_ident(stmt.target)}.push_back({self.gen_expr(stmt.value, scope)});"]
+            return [f"{pad}{_cpp_ident(stmt.target)}.write().push_back({self.gen_expr(stmt.value, scope)});"]
 
         if isinstance(stmt, ListInsertStmt):
             tgt = _cpp_ident(stmt.target)
             idx = self.gen_expr(stmt.index, scope)
             val = self.gen_expr(stmt.value, scope)
-            return [f"{pad}{tgt}.insert({tgt}.begin() + static_cast<std::ptrdiff_t>({idx}), {val});"]
+            return [
+                f"{pad}{{",
+                f"{pad}    auto _idx = static_cast<std::ptrdiff_t>({idx});",
+                f"{pad}    auto _val = {val};",
+                f"{pad}    auto& _w = {tgt}.write();",
+                f"{pad}    _w.insert(_w.begin() + _idx, std::move(_val));",
+                f"{pad}}}",
+            ]
 
         if isinstance(stmt, ListSetIndexStmt):
             tgt = _cpp_ident(stmt.target)
@@ -615,16 +626,29 @@ class _CppGen(BaseGen):
             val = self.gen_expr(stmt.value, scope)
             if stmt.nested_index is not None:
                 nidx = self.gen_expr(stmt.nested_index, scope)
-                return [f"{pad}{tgt}.at(static_cast<std::size_t>({idx})).at(static_cast<std::size_t>({nidx})) = {val};"]
-            return [f"{pad}{tgt}.at(static_cast<std::size_t>({idx})) = {val};"]
+                return [
+                    f"{pad}{{",
+                    f"{pad}    auto _idx = static_cast<std::size_t>({idx});",
+                    f"{pad}    auto _nidx = static_cast<std::size_t>({nidx});",
+                    f"{pad}    auto _val = {val};",
+                    f"{pad}    {tgt}.write().at(_idx).write().at(_nidx) = std::move(_val);",
+                    f"{pad}}}",
+                ]
+            return [
+                f"{pad}{{",
+                f"{pad}    auto _idx = static_cast<std::size_t>({idx});",
+                f"{pad}    auto _val = {val};",
+                f"{pad}    {tgt}.write().at(_idx) = std::move(_val);",
+                f"{pad}}}",
+            ]
 
         if isinstance(stmt, ListRemoveStmt):
             self.uses_list_remove = True
             tgt = _cpp_ident(stmt.target)
             if stmt.index is not None:
                 idx = self.gen_expr(stmt.index, scope)
-                return [f"{pad}_meme_list_remove({tgt}, {idx});"]
-            return [f"{pad}_meme_list_remove_last({tgt});"]
+                return [f"{pad}_meme_list_remove({tgt}.write(), {idx});"]
+            return [f"{pad}_meme_list_remove_last({tgt}.write());"]
 
         if isinstance(stmt, FailStmt):
             return [
@@ -730,10 +754,10 @@ class _CppGen(BaseGen):
                 el_cpp = _cpp_type(el_mtype)  # type: ignore[arg-type]
                 lines = [
                     f"{pad}{{",
-                    f"{pad}    const auto& _meme_col = {col_ident};",
+                    f"{pad}    auto _meme_col = {col_ident};",
                     f"{pad}    std::vector<{el_cpp}> _meme_keys;",
-                    f"{pad}    _meme_keys.reserve(_meme_col.size());",
-                    f"{pad}    for (const auto& _meme_kv : _meme_col) {{ _meme_keys.push_back(_meme_kv.first); }}",
+                    f"{pad}    _meme_keys.reserve(_meme_col.read().size());",
+                    f"{pad}    for (const auto& _meme_kv : _meme_col.read()) {{ _meme_keys.push_back(_meme_kv.first); }}",
                     f"{pad}    std::sort(_meme_keys.begin(), _meme_keys.end());",
                 ]
                 if stmt.index_var is not None:
@@ -762,8 +786,9 @@ class _CppGen(BaseGen):
                     idx_ident = _cpp_ident(stmt.index_var)
                     lines = [
                         f"{pad}{{",
+                        f"{pad}    auto _meme_col = {col_ident};",
                         f"{pad}    long long {idx_ident} = 0;",
-                        f"{pad}    for (const auto& {item_ident} : {col_ident}) {{",
+                        f"{pad}    for (const auto& {item_ident} : _meme_col.read()) {{",
                     ]
                     for ch in stmt.body:
                         lines.extend(self.gen_stmt(ch, sub, indent + 2))
@@ -771,9 +796,14 @@ class _CppGen(BaseGen):
                     lines.append(f"{pad}    }}")
                     lines.append(f"{pad}}}")
                 else:
-                    lines = [f"{pad}for (const auto& {item_ident} : {col_ident}) {{"]
+                    lines = [
+                        f"{pad}{{",
+                        f"{pad}    auto _meme_col = {col_ident};",
+                        f"{pad}    for (const auto& {item_ident} : _meme_col.read()) {{",
+                    ]
                     for ch in stmt.body:
-                        lines.extend(self.gen_stmt(ch, sub, indent + 1))
+                        lines.extend(self.gen_stmt(ch, sub, indent + 2))
+                    lines.append(f"{pad}    }}")
                     lines.append(f"{pad}}}")
                 return lines
             else:
@@ -786,9 +816,9 @@ class _CppGen(BaseGen):
                     lines = [
                         f"{pad}{{",
                         f"{pad}    auto _meme_col = {col_ident};",
-                        f"{pad}    for (std::size_t _meme_idx = 0; _meme_idx < _meme_col.size(); ++_meme_idx) {{",
+                        f"{pad}    for (std::size_t _meme_idx = 0; _meme_idx < _meme_col.read().size(); ++_meme_idx) {{",
                         f"{pad}        long long {idx_ident} = static_cast<long long>(_meme_idx);",
-                        f"{pad}        {el_cpp} {item_ident} = _meme_col[_meme_idx];",
+                        f"{pad}        {el_cpp} {item_ident} = _meme_col.read()[_meme_idx];",
                     ]
                     for ch in stmt.body:
                         lines.extend(self.gen_stmt(ch, sub, indent + 2))
@@ -797,10 +827,13 @@ class _CppGen(BaseGen):
                     return lines
                 else:
                     lines = [
-                        f"{pad}for ({el_cpp} {item_ident} : {col_ident}) {{"
+                        f"{pad}{{",
+                        f"{pad}    auto _meme_col = {col_ident};",
+                        f"{pad}    for ({el_cpp} {item_ident} : _meme_col.read()) {{",
                     ]
                     for ch in stmt.body:
-                        lines.extend(self.gen_stmt(ch, sub, indent + 1))
+                        lines.extend(self.gen_stmt(ch, sub, indent + 2))
+                    lines.append(f"{pad}    }}")
                     lines.append(f"{pad}}}")
                     return lines
 
@@ -846,19 +879,36 @@ class _CppGen(BaseGen):
             ]
 
         if isinstance(stmt, MapSetStmt):
+            tgt = _cpp_ident(stmt.target)
+            k = self.gen_expr(stmt.key, scope)
+            v = self.gen_expr(stmt.value, scope)
             return [
-                f"{pad}{_cpp_ident(stmt.target)}[{self.gen_expr(stmt.key, scope)}] = {self.gen_expr(stmt.value, scope)};"
+                f"{pad}{{",
+                f"{pad}    auto _k = {k};",
+                f"{pad}    auto _v = {v};",
+                f"{pad}    {tgt}.write()[std::move(_k)] = std::move(_v);",
+                f"{pad}}}",
             ]
 
         if isinstance(stmt, SetAddStmt):
             tgt = _cpp_ident(stmt.target)
             val = self.gen_expr(stmt.value, scope)
-            return [f"{pad}{tgt}.insert({val});"]
+            return [
+                f"{pad}{{",
+                f"{pad}    auto _val = {val};",
+                f"{pad}    {tgt}.write().insert(std::move(_val));",
+                f"{pad}}}",
+            ]
 
         if isinstance(stmt, SetRemoveStmt):
             tgt = _cpp_ident(stmt.target)
             val = self.gen_expr(stmt.value, scope)
-            return [f"{pad}{tgt}.erase({val});"]
+            return [
+                f"{pad}{{",
+                f"{pad}    auto _val = {val};",
+                f"{pad}    {tgt}.write().erase(_val);",
+                f"{pad}}}",
+            ]
 
         if isinstance(stmt, WriteFileStmt):
             self.uses_str_helpers = True
@@ -1165,11 +1215,12 @@ def _cpp_json_decode_val(jv_ptr: str, ftype: str, indent: str) -> tuple[str, lis
         el_val, el_code = _cpp_json_decode_val("(&_it)", el_t, indent + "    ")
         code = [
             f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MemeJK::Arr) return std::nullopt;",
-            f"{indent}std::vector<{_cpp_type(el_t)}> {temp_list};",
+            f"{indent}std::vector<{_cpp_type(el_t)}> {temp_list}_raw;",
             f"{indent}for (const auto& _it : {jv_ptr}->arr) {{",
             *el_code,
-            f"{indent}    {temp_list}.push_back({el_val});",
+            f"{indent}    {temp_list}_raw.push_back({el_val});",
             f"{indent}}}",
+            f"{indent}{_cpp_type(ftype)} {temp_list}(std::move({temp_list}_raw));",
         ]
         return temp_list, code
     if ftype.startswith("Set<") and ftype.endswith(">"):
@@ -1178,11 +1229,12 @@ def _cpp_json_decode_val(jv_ptr: str, ftype: str, indent: str) -> tuple[str, lis
         el_val, el_code = _cpp_json_decode_val("(&_it)", el_t, indent + "    ")
         code = [
             f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MemeJK::Arr) return std::nullopt;",
-            f"{indent}std::set<{_cpp_type(el_t)}> {temp_set};",
+            f"{indent}std::set<{_cpp_type(el_t)}> {temp_set}_raw;",
             f"{indent}for (const auto& _it : {jv_ptr}->arr) {{",
             *el_code,
-            f"{indent}    {temp_set}.insert({el_val});",
+            f"{indent}    {temp_set}_raw.insert({el_val});",
             f"{indent}}}",
+            f"{indent}{_cpp_type(ftype)} {temp_set}(std::move({temp_set}_raw));",
         ]
         return temp_set, code
     if ftype.startswith("Map<") and ftype.endswith(">"):
@@ -1193,7 +1245,7 @@ def _cpp_json_decode_val(jv_ptr: str, ftype: str, indent: str) -> tuple[str, lis
         v_val, v_code = _cpp_json_decode_val("(&_pair.second)", v_t, indent + "    ")
         code = [
             f"{indent}if (!{jv_ptr} || {jv_ptr}->kind != _MemeJK::Obj) return std::nullopt;",
-            f"{indent}std::unordered_map<{_cpp_type(k_t)}, {_cpp_type(v_t)}> {temp_map};",
+            f"{indent}std::unordered_map<{_cpp_type(k_t)}, {_cpp_type(v_t)}> {temp_map}_raw;",
             f"{indent}for (const auto& _pair : {jv_ptr}->obj) {{",
         ]
         if k_t == "Int":
@@ -1210,8 +1262,9 @@ def _cpp_json_decode_val(jv_ptr: str, ftype: str, indent: str) -> tuple[str, lis
         else:
             key_access = "_pair.first"
         code.extend(v_code)
-        code.append(f"{indent}    {temp_map}[{key_access}] = {v_val};")
+        code.append(f"{indent}    {temp_map}_raw[{key_access}] = {v_val};")
         code.append(f"{indent}}}")
+        code.append(f"{indent}{_cpp_type(ftype)} {temp_map}(std::move({temp_map}_raw));")
         return temp_map, code
     r_ident = _cpp_ident(ftype)
     temp_val = f"_rec_{abs(hash(ftype + jv_ptr)) % 1000000}"
@@ -1242,7 +1295,7 @@ def _cpp_json_serialize_val(val_expr: str, ftype: str) -> str:
         el_code = _cpp_json_serialize_val("_x", el_t)
         return (
             f"([&]() {{ std::string s = \"[\"; bool first = true;"
-            f" for (const auto& _x : {val_expr}) {{ if (!first) s += \",\"; first = false; s += {el_code}; }}"
+            f" for (const auto& _x : ({val_expr}).read()) {{ if (!first) s += \",\"; first = false; s += {el_code}; }}"
             f" s += \"]\"; return s; }}())"
         )
     if ftype.startswith("Set<") and ftype.endswith(">"):
@@ -1250,7 +1303,7 @@ def _cpp_json_serialize_val(val_expr: str, ftype: str) -> str:
         el_code = _cpp_json_serialize_val("_x", el_t)
         return (
             f"([&]() {{ std::string s = \"[\"; bool first = true;"
-            f" for (const auto& _x : {val_expr}) {{ if (!first) s += \",\"; first = false; s += {el_code}; }}"
+            f" for (const auto& _x : ({val_expr}).read()) {{ if (!first) s += \",\"; first = false; s += {el_code}; }}"
             f" s += \"]\"; return s; }}())"
         )
     if ftype.startswith("Map<") and ftype.endswith(">"):
@@ -1258,10 +1311,11 @@ def _cpp_json_serialize_val(val_expr: str, ftype: str) -> str:
         assert mt is not None
         k_t, v_t = mt
         k_ser = "std::to_string(_k)" if k_t == "Int" else "_k"
-        v_code = _cpp_json_serialize_val(f"{val_expr}.at(_k)", v_t)
+        v_code = _cpp_json_serialize_val("_m.at(_k)", v_t)
         return (
-            f"([&]() {{ std::vector<{_cpp_type(k_t)}> _keys;"
-            f" for (const auto& _kv : {val_expr}) _keys.push_back(_kv.first);"
+            f"([&]() {{ const auto& _m = ({val_expr}).read();"
+            f" std::vector<{_cpp_type(k_t)}> _keys;"
+            f" for (const auto& _kv : _m) _keys.push_back(_kv.first);"
             f" std::sort(_keys.begin(), _keys.end());"
             f' std::string s = "{{"; bool first = true;'
             f" for (const auto& _k : _keys) {{ if (!first) s += \",\"; first = false; s += _meme_escape_json_str({k_ser}) + \":\" + {v_code}; }}"
@@ -1308,7 +1362,7 @@ def _emit_cpp_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> li
         f"    return _meme_parse_record_{ident}(*jv);",
         "}",
         "",
-        f"inline std::optional<std::vector<{ident}>> _meme_read_json_records_{ident}(const std::string& path) {{",
+        f"inline std::optional<_MemeCow<std::vector<{ident}>>> _meme_read_json_records_{ident}(const std::string& path) {{",
         "    auto jv = _meme_read_json_file(path);",
         "    if (!jv || jv->kind != _MemeJK::Arr) return std::nullopt;",
         f"    std::vector<{ident}> out;",
@@ -1317,7 +1371,7 @@ def _emit_cpp_json_record_reader(r_name: str, fields: dict[str, MemeType]) -> li
         "        if (!rec) return std::nullopt;",
         "        out.push_back(*rec);",
         "    }",
-        "    return out;",
+        f"    return std::make_optional(_MemeCow<std::vector<{ident}>>(std::move(out)));",
         "}",
         "",
     ])
@@ -1353,6 +1407,10 @@ def _emit_cpp_json_record_writer(r_name: str, fields: dict[str, MemeType]) -> li
         "    }",
         "    out += \"]\";",
         "    return out;",
+        "}",
+        "",
+        f"inline std::string _meme_serialize_json_records_{ident}(const _MemeCow<std::vector<{ident}>>& recs) {{",
+        f"    return _meme_serialize_json_records_{ident}(recs.read());",
         "}",
         "",
     ])
@@ -1477,6 +1535,8 @@ def generate_cpp(ir: ProgramIR) -> str:
     headers.append("")
 
     helpers: list[str] = [
+        "template <typename T> class _MemeCow;",
+        "template <typename T> std::string _meme_fmt(const _MemeCow<T>& cow);",
         "inline std::string _meme_fmt(bool v) { return v ? \"true\" : \"false\"; }",
         "inline std::string _meme_fmt(double v) {",
         "    if (std::isfinite(v) && std::trunc(v) == v && v >= -9007199254740992.0 && v <= 9007199254740992.0) {",
@@ -1608,6 +1668,53 @@ def generate_cpp(ir: ProgramIR) -> str:
         "    }",
         "    oss << '}';",
         "    return oss.str();",
+        "}",
+        "template <typename T>",
+        "class _MemeCow {",
+        "public:",
+        "    std::shared_ptr<T> ptr;",
+        "    _MemeCow() : ptr(std::make_shared<T>()) {}",
+        "    explicit _MemeCow(const T& val) : ptr(std::make_shared<T>(val)) {}",
+        "    explicit _MemeCow(T&& val) : ptr(std::make_shared<T>(std::move(val))) {}",
+        "    explicit _MemeCow(std::shared_ptr<T> p) : ptr(std::move(p)) {",
+        "        if (!ptr) ptr = std::make_shared<T>();",
+        "    }",
+        "    _MemeCow(const _MemeCow&) noexcept = default;",
+        "    _MemeCow(_MemeCow&&) noexcept = default;",
+        "    _MemeCow& operator=(const _MemeCow&) noexcept = default;",
+        "    _MemeCow& operator=(_MemeCow&&) noexcept = default;",
+        "    _MemeCow& operator=(const T& val) {",
+        "        ptr = std::make_shared<T>(val);",
+        "        return *this;",
+        "    }",
+        "    _MemeCow& operator=(T&& val) {",
+        "        ptr = std::make_shared<T>(std::move(val));",
+        "        return *this;",
+        "    }",
+        "    const T& read() const noexcept { return *ptr; }",
+        "    T& write() {",
+        "        if (!ptr) {",
+        "            ptr = std::make_shared<T>();",
+        "        } else if (ptr.use_count() > 1) {",
+        "            ptr = std::make_shared<T>(*ptr);",
+        "        }",
+        "        return *ptr;",
+        "    }",
+        "    std::size_t size() const noexcept { return read().size(); }",
+        "    bool empty() const noexcept { return read().empty(); }",
+        "    bool operator==(const _MemeCow& other) const {",
+        "        if (ptr == other.ptr) return true;",
+        "        if (!ptr || !other.ptr) return false;",
+        "        return *ptr == *other.ptr;",
+        "    }",
+        "    auto operator<=>(const _MemeCow& other) const requires requires(const T& a, const T& b) { a <=> b; } {",
+        "        if (ptr == other.ptr) return std::strong_ordering::equal;",
+        "        return *ptr <=> *other.ptr;",
+        "    }",
+        "};",
+        "template <typename T>",
+        "std::string _meme_fmt(const _MemeCow<T>& cow) {",
+        "    return _meme_fmt(cow.read());",
         "}",
         "",
     ]
@@ -1875,13 +1982,13 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    std::uniform_int_distribution<long long> dist(lo, hi);",
                 "    return dist(_meme_rng());",
                 "}",
-                "inline std::vector<long long> _meme_rand_list(long long count, long long lo, long long hi) {",
+                "inline _MemeCow<std::vector<long long>> _meme_rand_list(long long count, long long lo, long long hi) {",
                 "    std::vector<long long> out;",
                 "    if (count > 0) {",
                 "        out.reserve(static_cast<std::size_t>(count));",
                 "        for (long long i = 0; i < count; ++i) out.push_back(_meme_rand_int(lo, hi));",
                 "    }",
-                "    return out;",
+                "    return _MemeCow<std::vector<long long>>(std::move(out));",
                 "}",
                 "",
             ]
@@ -2032,7 +2139,7 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    }",
                 "    return out;",
                 "}",
-                "inline std::vector<std::string> _meme_str_split(const std::string& s, const std::string& sep) {",
+                "inline _MemeCow<std::vector<std::string>> _meme_str_split(const std::string& s, const std::string& sep) {",
                 "    if (sep.empty()) {",
                 "        std::cout << \"Error: empty separator in split\\n\";",
                 "        std::exit(1);",
@@ -2048,7 +2155,7 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        out.push_back(s.substr(pos, found - pos));",
                 "        pos = found + sep.size();",
                 "    }",
-                "    return out;",
+                "    return _MemeCow<std::vector<std::string>>(std::move(out));",
                 "}",
                 "inline std::string _meme_str_join(const std::vector<std::string>& items, const std::string& sep) {",
                 "    std::string out;",
@@ -2057,6 +2164,9 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        out += items[i];",
                 "    }",
                 "    return out;",
+                "}",
+                "inline std::string _meme_str_join(const _MemeCow<std::vector<std::string>>& items, const std::string& sep) {",
+                "    return _meme_str_join(items.read(), sep);",
                 "}",
                 "inline long long _meme_str_index_of(const std::string& s, const std::string& sub) {",
                 "    std::size_t pos = s.find(sub);",
@@ -2159,10 +2269,10 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    ss << ifs.rdbuf();",
                 "    return ss.str();",
                 "}",
-                "inline std::vector<std::string> _meme_read_file_lines(const std::string& path) {",
+                "inline _MemeCow<std::vector<std::string>> _meme_read_file_lines(const std::string& path) {",
                 "    std::string raw = _meme_read_file_string(path);",
                 "    if (raw.empty()) {",
-                "        return {};",
+                "        return _MemeCow<std::vector<std::string>>{};",
                 "    }",
                 "    if (raw.back() == '\\n') {",
                 "        raw.pop_back();",
@@ -2178,7 +2288,7 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        res.push_back(raw.substr(start, pos - start));",
                 "        start = pos + 1;",
                 "    }",
-                "    return res;",
+                "    return _MemeCow<std::vector<std::string>>(std::move(res));",
                 "}",
                 "inline std::optional<std::string> _meme_read_file_string_opt(const std::string& path) {",
                 "    std::error_code ec;",
@@ -2194,14 +2304,14 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    ss << ifs.rdbuf();",
                 "    return ss.str();",
                 "}",
-                "inline std::optional<std::vector<std::string>> _meme_read_file_lines_opt(const std::string& path) {",
+                "inline std::optional<_MemeCow<std::vector<std::string>>> _meme_read_file_lines_opt(const std::string& path) {",
                 "    auto raw_opt = _meme_read_file_string_opt(path);",
                 "    if (!raw_opt.has_value()) {",
                 "        return std::nullopt;",
                 "    }",
                 "    std::string raw = *raw_opt;",
                 "    if (raw.empty()) {",
-                "        return std::vector<std::string>{};",
+                "        return std::make_optional(_MemeCow<std::vector<std::string>>{});",
                 "    }",
                 "    if (raw.back() == '\\n') {",
                 "        raw.pop_back();",
@@ -2217,7 +2327,7 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        res.push_back(raw.substr(start, pos - start));",
                 "        start = pos + 1;",
                 "    }",
-                "    return res;",
+                "    return std::make_optional(_MemeCow<std::vector<std::string>>(std::move(res)));",
                 "}",
                 "inline void _meme_write_file(const std::string& path, const std::string& content) {",
                 "    std::ofstream ofs(_meme_trim(path), std::ios::out | std::ios::trunc | std::ios::binary);",
@@ -2321,7 +2431,7 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        std::exit(1);",
                 "    }",
                 "}",
-                "inline std::vector<std::string> _meme_list_files(const std::string& path) {",
+                "inline _MemeCow<std::vector<std::string>> _meme_list_files(const std::string& path) {",
                 "    std::string rpath = _meme_resolve_path(path).string();",
                 "    std::error_code ec;",
                 "    if (!std::filesystem::is_directory(rpath, ec)) {",
@@ -2338,7 +2448,7 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        std::exit(1);",
                 "    }",
                 "    std::sort(res.begin(), res.end());",
-                "    return res;",
+                "    return _MemeCow<std::vector<std::string>>(std::move(res));",
                 "}",
                 "",
             ]
@@ -2471,7 +2581,7 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "    if (i != n) _meme_json_fail(\"trailing data after JSON array\");",
                 "    return out;",
                 "}",
-                "inline std::vector<long long> _meme_read_json_list_int(const std::string& path) {",
+                "inline _MemeCow<std::vector<long long>> _meme_read_json_list_int(const std::string& path) {",
                 "    std::vector<long long> out;",
                 "    for (const auto& t : _meme_parse_json_tokens(path)) {",
                 "        if (t.kind != _MemeJsonTok::Num) _meme_json_fail(\"expected Int element\");",
@@ -2484,9 +2594,9 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "            _meme_json_fail(\"expected Int, got `\" + t.s + \"`\");",
                 "        }",
                 "    }",
-                "    return out;",
+                "    return _MemeCow<std::vector<long long>>(std::move(out));",
                 "}",
-                "inline std::vector<double> _meme_read_json_list_float(const std::string& path) {",
+                "inline _MemeCow<std::vector<double>> _meme_read_json_list_float(const std::string& path) {",
                 "    std::vector<double> out;",
                 "    for (const auto& t : _meme_parse_json_tokens(path)) {",
                 "        if (t.kind != _MemeJsonTok::Num) _meme_json_fail(\"expected Float element\");",
@@ -2499,23 +2609,23 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "            _meme_json_fail(\"expected Float, got `\" + t.s + \"`\");",
                 "        }",
                 "    }",
-                "    return out;",
+                "    return _MemeCow<std::vector<double>>(std::move(out));",
                 "}",
-                "inline std::vector<std::string> _meme_read_json_list_string(const std::string& path) {",
+                "inline _MemeCow<std::vector<std::string>> _meme_read_json_list_string(const std::string& path) {",
                 "    std::vector<std::string> out;",
                 "    for (const auto& t : _meme_parse_json_tokens(path)) {",
                 "        if (t.kind != _MemeJsonTok::Str) _meme_json_fail(\"expected String element\");",
                 "        out.push_back(t.s);",
                 "    }",
-                "    return out;",
+                "    return _MemeCow<std::vector<std::string>>(std::move(out));",
                 "}",
-                "inline std::vector<bool> _meme_read_json_list_bool(const std::string& path) {",
+                "inline _MemeCow<std::vector<bool>> _meme_read_json_list_bool(const std::string& path) {",
                 "    std::vector<bool> out;",
                 "    for (const auto& t : _meme_parse_json_tokens(path)) {",
                 "        if (t.kind != _MemeJsonTok::Bool) _meme_json_fail(\"expected Bool element\");",
                 "        out.push_back(t.b);",
                 "    }",
-                "    return out;",
+                "    return _MemeCow<std::vector<bool>>(std::move(out));",
                 "}",
                 "",
             ]
@@ -2524,7 +2634,7 @@ def generate_cpp(ir: ProgramIR) -> str:
     if gen.uses_json_list_opt:
         helpers.extend(
             [
-                "inline std::optional<std::vector<long long>> _meme_read_json_list_int_opt(const std::string& path) {",
+                "inline std::optional<_MemeCow<std::vector<long long>>> _meme_read_json_list_int_opt(const std::string& path) {",
                 "    auto jv = _meme_read_json_file(path);",
                 "    if (!jv || jv->kind != _MemeJK::Arr) return std::nullopt;",
                 "    std::vector<long long> out;",
@@ -2532,9 +2642,9 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        if (item.kind != _MemeJK::Num || !item.is_int) return std::nullopt;",
                 "        out.push_back(item.i_val);",
                 "    }",
-                "    return out;",
+                "    return std::make_optional(_MemeCow<std::vector<long long>>(std::move(out)));",
                 "}",
-                "inline std::optional<std::vector<double>> _meme_read_json_list_float_opt(const std::string& path) {",
+                "inline std::optional<_MemeCow<std::vector<double>>> _meme_read_json_list_float_opt(const std::string& path) {",
                 "    auto jv = _meme_read_json_file(path);",
                 "    if (!jv || jv->kind != _MemeJK::Arr) return std::nullopt;",
                 "    std::vector<double> out;",
@@ -2542,9 +2652,9 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        if (item.kind != _MemeJK::Num) return std::nullopt;",
                 "        out.push_back(item.num);",
                 "    }",
-                "    return out;",
+                "    return std::make_optional(_MemeCow<std::vector<double>>(std::move(out)));",
                 "}",
-                "inline std::optional<std::vector<std::string>> _meme_read_json_list_string_opt(const std::string& path) {",
+                "inline std::optional<_MemeCow<std::vector<std::string>>> _meme_read_json_list_string_opt(const std::string& path) {",
                 "    auto jv = _meme_read_json_file(path);",
                 "    if (!jv || jv->kind != _MemeJK::Arr) return std::nullopt;",
                 "    std::vector<std::string> out;",
@@ -2552,9 +2662,9 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        if (item.kind != _MemeJK::Str) return std::nullopt;",
                 "        out.push_back(item.s);",
                 "    }",
-                "    return out;",
+                "    return std::make_optional(_MemeCow<std::vector<std::string>>(std::move(out)));",
                 "}",
-                "inline std::optional<std::vector<bool>> _meme_read_json_list_bool_opt(const std::string& path) {",
+                "inline std::optional<_MemeCow<std::vector<bool>>> _meme_read_json_list_bool_opt(const std::string& path) {",
                 "    auto jv = _meme_read_json_file(path);",
                 "    if (!jv || jv->kind != _MemeJK::Arr) return std::nullopt;",
                 "    std::vector<bool> out;",
@@ -2562,7 +2672,7 @@ def generate_cpp(ir: ProgramIR) -> str:
                 "        if (item.kind != _MemeJK::Bool) return std::nullopt;",
                 "        out.push_back(item.b);",
                 "    }",
-                "    return out;",
+                "    return std::make_optional(_MemeCow<std::vector<bool>>(std::move(out)));",
                 "}",
                 "",
             ]

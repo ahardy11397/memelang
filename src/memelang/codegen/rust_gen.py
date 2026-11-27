@@ -147,16 +147,16 @@ def _is_record_name(name: str, records: set[str] | None = None) -> bool:
 def _rust_type(meme_type: MemeType | str, records: set[str] | None = None) -> str:
     if meme_type.startswith("List<") and meme_type.endswith(">"):
         inner = meme_type[5:-1]
-        return f"Vec<{_rust_type(inner, records)}>"
+        return f"std::rc::Rc<Vec<{_rust_type(inner, records)}>>"
     if meme_type.startswith("Optional<") and meme_type.endswith(">"):
         inner = meme_type[9:-1]
         return f"Option<{_rust_type(inner, records)}>"
     map_t = _map_types_of(meme_type)
     if map_t is not None:
-        return f"std::collections::HashMap<{_rust_type(map_t[0], records)}, {_rust_type(map_t[1], records)}>"
+        return f"std::rc::Rc<_MemeMap<{_rust_type(map_t[0], records)}, {_rust_type(map_t[1], records)}>>"
     set_t = _set_type_of(meme_type)
     if set_t is not None:
-        return f"_MemeSet<{_rust_type(set_t, records)}>"
+        return f"std::rc::Rc<_MemeSet<{_rust_type(set_t, records)}>>"
     mapping = {
         "Int": "i64",
         "Float": "f64",
@@ -218,9 +218,9 @@ class _RustGen(BaseGen):
         if isinstance(expr, ListLiteralExpr):
             el_rust = _rust_type(expr.element_type)
             if not expr.elements:
-                return f"Vec::<{el_rust}>::new()"
+                return f"std::rc::Rc::new(Vec::<{el_rust}>::new())"
             inner = ", ".join(self.gen_expr(e, scope) for e in expr.elements)
-            return f"vec![{inner}]"
+            return f"std::rc::Rc::new(vec![{inner}])"
 
         if isinstance(expr, VarRefExpr):
             ident = _rust_ident(expr.name)
@@ -264,8 +264,8 @@ class _RustGen(BaseGen):
                 k = self.gen_expr(expr.index, scope)
                 return f"{tgt}.get(&({k})).unwrap().clone()"
             t = self.infer_type(expr, scope)
-            base = f"{self.gen_expr(expr.target, scope)}[({self.gen_expr(expr.index, scope)}) as usize]"
-            if t == "String" or t.startswith("List<") or t in self.records or t.startswith("Map<"):
+            base = f"({self.gen_expr(expr.target, scope)})[({self.gen_expr(expr.index, scope)}) as usize]"
+            if t == "String" or t.startswith("List<") or t in self.records or t.startswith("Map<") or t.startswith("Set<") or t.startswith("Optional<"):
                 return f"{base}.clone()"
             return base
 
@@ -505,12 +505,12 @@ class _RustGen(BaseGen):
 
         if isinstance(expr, MapLiteralExpr):
             if not expr.entries:
-                return f"std::collections::HashMap::<{_rust_type(expr.key_type)}, {_rust_type(expr.value_type)}>::new()"
+                return f"std::rc::Rc::new(std::collections::HashMap::<{_rust_type(expr.key_type)}, {_rust_type(expr.value_type)}>::new())"
             inits = "; ".join(
                 f"_m.insert({self.gen_expr(e.key, scope)}, {self.gen_expr(e.value, scope)})"
                 for e in expr.entries
             )
-            return f"{{ let mut _m = std::collections::HashMap::new(); {inits}; _m }}"
+            return f"std::rc::Rc::new({{ let mut _m = std::collections::HashMap::new(); {inits}; _m }})"
 
         if isinstance(expr, MapGetExpr):
             tgt = self.gen_expr(expr.target, scope)
@@ -547,7 +547,7 @@ class _RustGen(BaseGen):
             return f"{tgt}.unwrap_or_else(|| {dflt})"
 
         if isinstance(expr, EmptySetExpr):
-            return f"_MemeSet::<{_rust_type(expr.element_type)}>::new()"
+            return f"std::rc::Rc::new(_MemeSet::<{_rust_type(expr.element_type)}>::new())"
 
         if isinstance(expr, SetContainsExpr):
             return f"{self.gen_expr(expr.target, scope)}.contains(&({self.gen_expr(expr.value, scope)}))"
@@ -586,10 +586,10 @@ class _RustGen(BaseGen):
             tgt = _rust_ident(stmt.target)
             if stmt.direction == "ascending":
                 return [
-                    f"{pad}{tgt}.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));"
+                    f"{pad}std::rc::Rc::make_mut(&mut {tgt}).sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));"
                 ]
             return [
-                f"{pad}{tgt}.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));"
+                f"{pad}std::rc::Rc::make_mut(&mut {tgt}).sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));"
             ]
 
         if isinstance(stmt, ClampCollectionStmt):
@@ -598,7 +598,7 @@ class _RustGen(BaseGen):
             hi = self.gen_expr(stmt.max_val, scope)
             return [
                 f"{pad}let (_lo, _hi) = ({lo}, {hi});",
-                f"{pad}for _x in {tgt}.iter_mut() {{",
+                f"{pad}for _x in std::rc::Rc::make_mut(&mut {tgt}).iter_mut() {{",
                 f"{pad}    if *_x < _lo {{ *_x = _lo; }} else if *_x > _hi {{ *_x = _hi; }}",
                 f"{pad}}}",
             ]
@@ -611,18 +611,18 @@ class _RustGen(BaseGen):
             sub[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[assignment]
             pred = self.gen_expr(stmt.predicate, sub)
             return [
-                f"{pad}{tgt} = {tgt}.into_iter().filter(|_item_ref| {{",
-                f"{pad}    let {iv} = _item_ref.clone();",
+                f"{pad}{tgt} = std::rc::Rc::new({tgt}.iter().filter(|_item_ref| {{",
+                f"{pad}    let {iv} = (*_item_ref).clone();",
                 f"{pad}    {pred}",
-                f"{pad}}}).collect();",
+                f"{pad}}}).cloned().collect());",
             ]
 
         if isinstance(stmt, ListAppendStmt):
-            return [f"{pad}{_rust_ident(stmt.target)}.push({self.gen_expr(stmt.value, scope)});"]
+            return [f"{pad}std::rc::Rc::make_mut(&mut {_rust_ident(stmt.target)}).push({self.gen_expr(stmt.value, scope)});"]
 
         if isinstance(stmt, ListInsertStmt):
             return [
-                f"{pad}{_rust_ident(stmt.target)}.insert(({self.gen_expr(stmt.index, scope)}) as usize, {self.gen_expr(stmt.value, scope)});"
+                f"{pad}std::rc::Rc::make_mut(&mut {_rust_ident(stmt.target)}).insert(({self.gen_expr(stmt.index, scope)}) as usize, {self.gen_expr(stmt.value, scope)});"
             ]
 
         if isinstance(stmt, ListSetIndexStmt):
@@ -631,16 +631,16 @@ class _RustGen(BaseGen):
             val = self.gen_expr(stmt.value, scope)
             if stmt.nested_index is not None:
                 nidx = self.gen_expr(stmt.nested_index, scope)
-                return [f"{pad}{tgt}[({idx}) as usize][({nidx}) as usize] = {val};"]
-            return [f"{pad}{tgt}[({idx}) as usize] = {val};"]
+                return [f"{pad}std::rc::Rc::make_mut(&mut std::rc::Rc::make_mut(&mut {tgt})[({idx}) as usize])[({nidx}) as usize] = {val};"]
+            return [f"{pad}std::rc::Rc::make_mut(&mut {tgt})[({idx}) as usize] = {val};"]
 
         if isinstance(stmt, ListRemoveStmt):
             self.uses_list_remove = True
             tgt = _rust_ident(stmt.target)
             if stmt.index is not None:
                 idx = self.gen_expr(stmt.index, scope)
-                return [f"{pad}_meme_list_remove(&mut {tgt}, {idx});"]
-            return [f"{pad}_meme_list_remove_last(&mut {tgt});"]
+                return [f"{pad}_meme_list_remove(std::rc::Rc::make_mut(&mut {tgt}), {idx});"]
+            return [f"{pad}_meme_list_remove_last(std::rc::Rc::make_mut(&mut {tgt}));"]
 
         if isinstance(stmt, FailStmt):
             return [
@@ -740,7 +740,8 @@ class _RustGen(BaseGen):
                 sub[stmt.item_var] = map_t[0]  # type: ignore[assignment]
                 lines = [
                     f"{pad}{{",
-                    f"{pad}    let mut _meme_keys: Vec<_> = {col_ident}.keys().cloned().collect();",
+                    f"{pad}    let _meme_col = {col_ident}.clone();",
+                    f"{pad}    let mut _meme_keys: Vec<_> = _meme_col.keys().cloned().collect();",
                     f"{pad}    _meme_keys.sort();",
                 ]
                 if stmt.index_var is not None:
@@ -761,17 +762,17 @@ class _RustGen(BaseGen):
                 sub[stmt.item_var] = set_t  # type: ignore[assignment]
                 lines = [
                     f"{pad}{{",
-                    f"{pad}    let mut _meme_items: Vec<_> = {col_ident}.data.clone();",
+                    f"{pad}    let _meme_col = {col_ident}.clone();",
                 ]
                 if stmt.index_var is not None:
                     sub[stmt.index_var] = "Int"
                     idx_ident = _rust_ident(stmt.index_var)
                     lines.append(
-                        f"{pad}    for (_meme_idx, mut {item_ident}) in _meme_items.into_iter().enumerate() {{"
+                        f"{pad}    for (_meme_idx, mut {item_ident}) in _meme_col.data.iter().cloned().enumerate() {{"
                     )
                     lines.append(f"{pad}        let mut {idx_ident}: i64 = _meme_idx as i64;")
                 else:
-                    lines.append(f"{pad}    for mut {item_ident} in _meme_items.into_iter() {{")
+                    lines.append(f"{pad}    for mut {item_ident} in _meme_col.data.iter().cloned() {{")
                 for ch in stmt.body:
                     lines.extend(self.gen_stmt(ch, sub, indent + 2))
                 lines.append(f"{pad}    }}")
@@ -779,19 +780,22 @@ class _RustGen(BaseGen):
                 return lines
             else:
                 sub[stmt.item_var] = col_t[5:-1] if col_t.startswith("List<") else "Int"  # type: ignore[assignment]
+                lines = [
+                    f"{pad}{{",
+                    f"{pad}    let _meme_col = {col_ident}.clone();",
+                ]
                 if stmt.index_var is not None:
                     sub[stmt.index_var] = "Int"
                     idx_ident = _rust_ident(stmt.index_var)
-                    lines = [
-                        f"{pad}for (_meme_idx, mut {item_ident}) in {col_ident}.clone().into_iter().enumerate() {{",
-                        f"{pad}    let mut {idx_ident}: i64 = _meme_idx as i64;",
-                    ]
+                    lines.append(
+                        f"{pad}    for (_meme_idx, mut {item_ident}) in _meme_col.iter().cloned().enumerate() {{"
+                    )
+                    lines.append(f"{pad}        let mut {idx_ident}: i64 = _meme_idx as i64;")
                 else:
-                    lines = [
-                        f"{pad}for mut {item_ident} in {col_ident}.clone().into_iter() {{"
-                    ]
+                    lines.append(f"{pad}    for mut {item_ident} in _meme_col.iter().cloned() {{")
                 for ch in stmt.body:
-                    lines.extend(self.gen_stmt(ch, sub, indent + 1))
+                    lines.extend(self.gen_stmt(ch, sub, indent + 2))
+                lines.append(f"{pad}    }}")
                 lines.append(f"{pad}}}")
                 return lines
 
@@ -848,18 +852,18 @@ class _RustGen(BaseGen):
 
         if isinstance(stmt, MapSetStmt):
             return [
-                f"{pad}{_rust_ident(stmt.target)}.insert({self.gen_expr(stmt.key, scope)}, {self.gen_expr(stmt.value, scope)});"
+                f"{pad}std::rc::Rc::make_mut(&mut {_rust_ident(stmt.target)}).insert({self.gen_expr(stmt.key, scope)}, {self.gen_expr(stmt.value, scope)});"
             ]
 
         if isinstance(stmt, SetAddStmt):
             tgt = _rust_ident(stmt.target)
             val = self.gen_expr(stmt.value, scope)
-            return [f"{pad}{tgt}.insert({val});"]
+            return [f"{pad}std::rc::Rc::make_mut(&mut {tgt}).insert({val});"]
 
         if isinstance(stmt, SetRemoveStmt):
             tgt = _rust_ident(stmt.target)
             val = self.gen_expr(stmt.value, scope)
-            return [f"{pad}{tgt}.remove(&({val}));"]
+            return [f"{pad}std::rc::Rc::make_mut(&mut {tgt}).remove(&({val}));"]
 
         if isinstance(stmt, WriteFileStmt):
             self.uses_file_io = True
@@ -1140,11 +1144,11 @@ def _rust_json_decode_val(jv_expr: str, ftype: str, records: set[str] | None = N
     if ftype.startswith("List<") and ftype.endswith(">"):
         el_t = ftype[5:-1]
         el_dec = _rust_json_decode_val("it", el_t, records)
-        return f"if let _MemeJV::Arr(items) = {jv_expr} {{ let mut out = Vec::new(); for it in items {{ out.push({el_dec}); }} out }} else {{ return None; }}"
+        return f"if let _MemeJV::Arr(items) = {jv_expr} {{ let mut out = Vec::new(); for it in items {{ out.push({el_dec}); }} std::rc::Rc::new(out) }} else {{ return None; }}"
     if ftype.startswith("Set<") and ftype.endswith(">"):
         el_t = ftype[4:-1]
         el_dec = _rust_json_decode_val("it", el_t, records)
-        return f"if let _MemeJV::Arr(items) = {jv_expr} {{ let mut out = _MemeSet::new(); for it in items {{ out.insert({el_dec}); }} out }} else {{ return None; }}"
+        return f"if let _MemeJV::Arr(items) = {jv_expr} {{ let mut out = _MemeSet::new(); for it in items {{ out.insert({el_dec}); }} std::rc::Rc::new(out) }} else {{ return None; }}"
     if ftype.startswith("Map<") and ftype.endswith(">"):
         mt = _map_types_of(ftype)
         assert mt is not None
@@ -1154,7 +1158,7 @@ def _rust_json_decode_val(jv_expr: str, ftype: str, records: set[str] | None = N
             k_parse = "let k_val: i64 = k_str.parse().ok()?;"
         else:
             k_parse = "let k_val = k_str.clone();"
-        return f"if let _MemeJV::Obj(pairs) = {jv_expr} {{ let mut out = std::collections::HashMap::new(); for (k_str, v_jv) in pairs {{ {k_parse} let v_val = {v_dec}; out.insert(k_val, v_val); }} out }} else {{ return None; }}"
+        return f"if let _MemeJV::Obj(pairs) = {jv_expr} {{ let mut out = std::collections::HashMap::new(); for (k_str, v_jv) in pairs {{ {k_parse} let v_val = {v_dec}; out.insert(k_val, v_val); }} std::rc::Rc::new(out) }} else {{ return None; }}"
     r_ident = _rust_ident(ftype)
     return f"_meme_parse_record_{r_ident}(&({jv_expr}))?"
 
@@ -1241,14 +1245,14 @@ def _emit_rust_json_record_reader(r_name: str, fields: dict[str, MemeType], reco
         f"    _meme_parse_record_{ident}(&jv)",
         "}",
         "",
-        f"fn _meme_read_json_records_{ident}(path: &str) -> Option<Vec<{ident}>> {{",
+        f"fn _meme_read_json_records_{ident}(path: &str) -> Option<std::rc::Rc<Vec<{ident}>>> {{",
         "    let jv = _meme_read_json_file(path)?;",
         "    if let _MemeJV::Arr(items) = jv {",
         "        let mut out = Vec::new();",
         "        for item in items {",
         f"            out.push(_meme_parse_record_{ident}(&item)?);",
         "        }",
-        "        Some(out)",
+        "        Some(std::rc::Rc::new(out))",
         "    } else {",
         "        None",
         "    }",
@@ -1375,6 +1379,8 @@ def generate_rust(ir: ProgramIR) -> str:
     preamble: list[str] = [
         "#![allow(dead_code, unused_mut, unused_parens, unused_variables)]",
         "",
+        "type _MemeMap<K, V> = std::collections::HashMap<K, V>;",
+        "",
         "trait _MemeFmt {",
         "    fn meme_fmt(&self) -> String;",
         "}",
@@ -1417,6 +1423,11 @@ def generate_rust(ir: ProgramIR) -> str:
         "        (**self).meme_fmt()",
         "    }",
         "}",
+        "impl<T: _MemeFmt> _MemeFmt for std::rc::Rc<T> {",
+        "    fn meme_fmt(&self) -> String {",
+        "        (**self).meme_fmt()",
+        "    }",
+        "}",
         "fn _meme_fmt_slice<T: _MemeFmt>(items: &[T]) -> String {",
         "    let parts: Vec<String> = items.iter().map(|x| x.meme_fmt()).collect();",
         "    format!(\"[{}]\", parts.join(\", \"))",
@@ -1447,6 +1458,11 @@ def generate_rust(ir: ProgramIR) -> str:
         "    }",
         "}",
         "impl<T: _MemeOrd> _MemeOrd for Box<T> {",
+        "    fn meme_cmp(&self, other: &Self) -> std::cmp::Ordering {",
+        "        (**self).meme_cmp(&**other)",
+        "    }",
+        "}",
+        "impl<T: _MemeOrd> _MemeOrd for std::rc::Rc<T> {",
         "    fn meme_cmp(&self, other: &Self) -> std::cmp::Ordering {",
         "        (**self).meme_cmp(&**other)",
         "    }",
@@ -1545,9 +1561,9 @@ def generate_rust(ir: ProgramIR) -> str:
                 "    lo + (_meme_next_u64() % span) as i64",
                 "}",
                 "",
-                "fn _meme_rand_list(count: i64, lo: i64, hi: i64) -> Vec<i64> {",
+                "fn _meme_rand_list(count: i64, lo: i64, hi: i64) -> std::rc::Rc<Vec<i64>> {",
                 "    let n = if count < 0 { 0 } else { count as usize };",
-                "    (0..n).map(|_| _meme_rand_int(lo, hi)).collect()",
+                "    std::rc::Rc::new((0..n).map(|_| _meme_rand_int(lo, hi)).collect())",
                 "}",
                 "",
             ]
@@ -1597,12 +1613,12 @@ def generate_rust(ir: ProgramIR) -> str:
     if gen.uses_str_split:
         preamble.extend(
             [
-                "fn _meme_str_split(s: &str, sep: &str) -> Vec<String> {",
+                "fn _meme_str_split(s: &str, sep: &str) -> std::rc::Rc<Vec<String>> {",
                 "    if sep.is_empty() {",
                 "        println!(\"Error: empty separator in split\");",
                 "        std::process::exit(1);",
                 "    }",
-                "    s.split(sep).map(|p| p.to_string()).collect()",
+                "    std::rc::Rc::new(s.split(sep).map(|p| p.to_string()).collect())",
                 "}",
                 "",
             ]
@@ -1891,17 +1907,17 @@ def generate_rust(ir: ProgramIR) -> str:
                 "    }",
                 "}",
                 "",
-                "fn _meme_read_file_lines(path: &str) -> Vec<String> {",
+                "fn _meme_read_file_lines(path: &str) -> std::rc::Rc<Vec<String>> {",
                 "    let raw = _meme_read_file_string(path);",
                 "    if raw.is_empty() {",
-                "        return Vec::new();",
+                "        return std::rc::Rc::new(Vec::new());",
                 "    }",
                 "    let s = if raw.ends_with('\\n') {",
                 "        &raw[..raw.len() - 1]",
                 "    } else {",
                 "        &raw[..]",
                 "    };",
-                "    s.split('\\n').map(|line| line.to_string()).collect()",
+                "    std::rc::Rc::new(s.split('\\n').map(|line| line.to_string()).collect())",
                 "}",
                 "",
                 "fn _meme_read_file_string_opt(path: &str) -> Option<String> {",
@@ -1912,17 +1928,17 @@ def generate_rust(ir: ProgramIR) -> str:
                 "    std::fs::read_to_string(&resolved).ok()",
                 "}",
                 "",
-                "fn _meme_read_file_lines_opt(path: &str) -> Option<Vec<String>> {",
+                "fn _meme_read_file_lines_opt(path: &str) -> Option<std::rc::Rc<Vec<String>>> {",
                 "    let raw = _meme_read_file_string_opt(path)?;",
                 "    if raw.is_empty() {",
-                "        return Some(Vec::new());",
+                "        return Some(std::rc::Rc::new(Vec::new()));",
                 "    }",
                 "    let s = if raw.ends_with('\\n') {",
                 "        &raw[..raw.len() - 1]",
                 "    } else {",
                 "        &raw[..]",
                 "    };",
-                "    Some(s.split('\\n').map(|line| line.to_string()).collect())",
+                "    Some(std::rc::Rc::new(s.split('\\n').map(|line| line.to_string()).collect()))",
                 "}",
                 "",
                 "fn _meme_write_file(path: &str, content: &str) {",
@@ -2016,7 +2032,7 @@ def generate_rust(ir: ProgramIR) -> str:
                 "    }",
                 "}",
                 "",
-                "fn _meme_list_files(path: &str) -> Vec<String> {",
+                "fn _meme_list_files(path: &str) -> std::rc::Rc<Vec<String>> {",
                 "    let rpath = _meme_resolve_path(path);",
                 "    if !rpath.is_dir() {",
                 "        println!(\"Error listing directory: {}\", path);",
@@ -2029,7 +2045,7 @@ def generate_rust(ir: ProgramIR) -> str:
                 "                .map(|e| e.file_name().to_string_lossy().into_owned())",
                 "                .collect();",
                 "            res.sort();",
-                "            res",
+                "            std::rc::Rc::new(res)",
                 "        }",
                 "        Err(_) => {",
                 "            println!(\"Error listing directory: {}\", path);",
@@ -2152,7 +2168,7 @@ def generate_rust(ir: ProgramIR) -> str:
                 "    out",
                 "}",
                 "",
-                "fn _meme_read_json_list_int(path: &str) -> Vec<i64> {",
+                "fn _meme_read_json_list_int(path: &str) -> std::rc::Rc<Vec<i64>> {",
                 "    let mut out = Vec::new();",
                 "    for tok in _meme_parse_json_tokens(path) {",
                 "        match tok {",
@@ -2163,10 +2179,10 @@ def generate_rust(ir: ProgramIR) -> str:
                 "            _ => _meme_json_fail(\"expected Int element\"),",
                 "        }",
                 "    }",
-                "    out",
+                "    std::rc::Rc::new(out)",
                 "}",
                 "",
-                "fn _meme_read_json_list_float(path: &str) -> Vec<f64> {",
+                "fn _meme_read_json_list_float(path: &str) -> std::rc::Rc<Vec<f64>> {",
                 "    let mut out = Vec::new();",
                 "    for tok in _meme_parse_json_tokens(path) {",
                 "        match tok {",
@@ -2177,10 +2193,10 @@ def generate_rust(ir: ProgramIR) -> str:
                 "            _ => _meme_json_fail(\"expected Float element\"),",
                 "        }",
                 "    }",
-                "    out",
+                "    std::rc::Rc::new(out)",
                 "}",
                 "",
-                "fn _meme_read_json_list_string(path: &str) -> Vec<String> {",
+                "fn _meme_read_json_list_string(path: &str) -> std::rc::Rc<Vec<String>> {",
                 "    let mut out = Vec::new();",
                 "    for tok in _meme_parse_json_tokens(path) {",
                 "        match tok {",
@@ -2188,10 +2204,10 @@ def generate_rust(ir: ProgramIR) -> str:
                 "            _ => _meme_json_fail(\"expected String element\"),",
                 "        }",
                 "    }",
-                "    out",
+                "    std::rc::Rc::new(out)",
                 "}",
                 "",
-                "fn _meme_read_json_list_bool(path: &str) -> Vec<bool> {",
+                "fn _meme_read_json_list_bool(path: &str) -> std::rc::Rc<Vec<bool>> {",
                 "    let mut out = Vec::new();",
                 "    for tok in _meme_parse_json_tokens(path) {",
                 "        match tok {",
@@ -2199,7 +2215,7 @@ def generate_rust(ir: ProgramIR) -> str:
                 "            _ => _meme_json_fail(\"expected Bool element\"),",
                 "        }",
                 "    }",
-                "    out",
+                "    std::rc::Rc::new(out)",
                 "}",
                 "",
             ]
@@ -2224,7 +2240,7 @@ def generate_rust(ir: ProgramIR) -> str:
     if gen.uses_json_list_opt:
         preamble.extend(
             [
-                "fn _meme_read_json_list_int_opt(path: &str) -> Option<Vec<i64>> {",
+                "fn _meme_read_json_list_int_opt(path: &str) -> Option<std::rc::Rc<Vec<i64>>> {",
                 "    let jv = _meme_read_json_file(path)?;",
                 "    if let _MemeJV::Arr(items) = jv {",
                 "        let mut out = Vec::new();",
@@ -2235,13 +2251,13 @@ def generate_rust(ir: ProgramIR) -> str:
                 "                return None;",
                 "            }",
                 "        }",
-                "        Some(out)",
+                "        Some(std::rc::Rc::new(out))",
                 "    } else {",
                 "        None",
                 "    }",
                 "}",
                 "",
-                "fn _meme_read_json_list_float_opt(path: &str) -> Option<Vec<f64>> {",
+                "fn _meme_read_json_list_float_opt(path: &str) -> Option<std::rc::Rc<Vec<f64>>> {",
                 "    let jv = _meme_read_json_file(path)?;",
                 "    if let _MemeJV::Arr(items) = jv {",
                 "        let mut out = Vec::new();",
@@ -2252,13 +2268,13 @@ def generate_rust(ir: ProgramIR) -> str:
                 "                return None;",
                 "            }",
                 "        }",
-                "        Some(out)",
+                "        Some(std::rc::Rc::new(out))",
                 "    } else {",
                 "        None",
                 "    }",
                 "}",
                 "",
-                "fn _meme_read_json_list_string_opt(path: &str) -> Option<Vec<String>> {",
+                "fn _meme_read_json_list_string_opt(path: &str) -> Option<std::rc::Rc<Vec<String>>> {",
                 "    let jv = _meme_read_json_file(path)?;",
                 "    if let _MemeJV::Arr(items) = jv {",
                 "        let mut out = Vec::new();",
@@ -2269,13 +2285,13 @@ def generate_rust(ir: ProgramIR) -> str:
                 "                return None;",
                 "            }",
                 "        }",
-                "        Some(out)",
+                "        Some(std::rc::Rc::new(out))",
                 "    } else {",
                 "        None",
                 "    }",
                 "}",
                 "",
-                "fn _meme_read_json_list_bool_opt(path: &str) -> Option<Vec<bool>> {",
+                "fn _meme_read_json_list_bool_opt(path: &str) -> Option<std::rc::Rc<Vec<bool>>> {",
                 "    let jv = _meme_read_json_file(path)?;",
                 "    if let _MemeJV::Arr(items) = jv {",
                 "        let mut out = Vec::new();",
@@ -2286,7 +2302,7 @@ def generate_rust(ir: ProgramIR) -> str:
                 "                return None;",
                 "            }",
                 "        }",
-                "        Some(out)",
+                "        Some(std::rc::Rc::new(out))",
                 "    } else {",
                 "        None",
                 "    }",
