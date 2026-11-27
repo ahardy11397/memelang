@@ -163,7 +163,7 @@ def _format_cmd(cmd: tuple[str, ...], subs: dict[str, Path | str]) -> list[str]:
 def execute_ir(
     ir: ProgramIR,
     target: TargetLang,
-    timeout_sec: float = 15.0,
+    timeout_sec: float = 60.0,
     stdin_text: str | None = None,
     interactive_io: bool = False,
     source_dir: Path | None = None,
@@ -240,7 +240,7 @@ def execute_test_blocks(
     ir: ProgramIR,
     target: TargetLang,
     test_names: list[str] | None = None,
-    timeout_sec: float = 15.0,
+    timeout_sec: float = 60.0,
     source_dir: Path | None = None,
     cwd: Path | None = None,
 ) -> list[tuple[str, ExecutionResult]]:
