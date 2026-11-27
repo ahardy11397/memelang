@@ -47,6 +47,7 @@ at a time. Each rung is a working, shipped thing:
 - [x] Unified pipeline CLI (self-hosting step 7) — projects/meme-tools, 24×6 green
 - [x] Lock backfill — all offline-parseable examples locked (78dce29); remainder are LLM-voice by design, documented
 - [x] Static type-checker, batch A (self-hosting step 8) — projects/meme-verify, 14×6 green, oracle-agrees with the real verifier
-- [ ] Verifier batch B (cross-module analysis, return paths, flow refinements)
-- [ ] Copy-on-write list codegen (the deep-clone perf debt — matters when rust/cpp become primary)
+- [x] Verifier batch B (cross-module analysis, return paths, flow refinements) — 5bad059 + bump 25defaa, 34×6 green, 18-rule empirical evidence table
+- [x] Harness subprocess timeout 15s → 60s — d16886d (big generated components need real -O2 compile time)
+- [x] Copy-on-write list codegen for rust/cpp — 604d66f; value semantics kept (make_mut/clone-on-write), self-hosting benchmark 17.5s -> 0.134s (130x)
 - [ ] Further self-hosting components (codegen subset from IR, ...)
