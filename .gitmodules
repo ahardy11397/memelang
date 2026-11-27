@@ -55,3 +55,6 @@
 [submodule "projects/meme-verify"]
 	path = projects/meme-verify
 	url = https://github.com/ahardy11397/meme-verify.git
+[submodule "projects/meme-transpiler"]
+	path = projects/meme-transpiler
+	url = https://github.com/ahardy11397/meme-transpiler.git
