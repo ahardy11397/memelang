@@ -1,6 +1,6 @@
 # Memelang (`meme`)
 
-**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline, currently at **v0.3.0-beta.2**. You write programs in plain English (`.meme`), and the compiler parses that English into a **strictly-typed Intermediate Representation (IR)**, statically verifies types & semantic unambiguity, locks the result into **`build.lock`** for 100% deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, **Go**, **C (C11)**, or **TypeScript (Node.js)**.
+**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline, currently at **v0.3.2-beta**. You write programs in plain English (`.meme`), and the compiler parses that English into a **strictly-typed Intermediate Representation (IR)**, statically verifies types & semantic unambiguity, locks the result into **`build.lock`** for 100% deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, **Go**, **C (C11)**, or **TypeScript (Node.js)**.
 
 ---
 
@@ -239,7 +239,16 @@ The **lexer → parser → emitter chain is now fully Memelang**, and v0.3.0-bet
 
 ## Releases
 
-### v0.3.0-beta.2 (2026-11-25)
+### v0.3.2-beta (2026-11-26)
+
+- **Self-hosting rungs 8-9:**
+  - **Static type-checker** ([projects/meme-verify](projects/meme-verify)) — the compiler's verification phase in Memelang: expression type inference, scoped symbol tables, cross-module checking, and flow rules pinned by an 18-rule empirical evidence table (probes against the real compiler). Oracle-agrees with the real verifier.
+  - **Copy-on-write list codegen** for rust/cpp — value semantics kept via shared handles with clone-on-write at every mutation; zero observable change (byte parity held), and the self-hosting benchmark dropped **17.5s → 0.134s (130x)**.
+- **Harness**: subprocess timeout 15s → 60s (large generated components need real `-O2` compile time).
+- **Lock backfill closed**: every offline-parseable example now has a verified lock; the remainder are LLM-voice by design (dictation demos) — documented, not a gap.
+- **Health**: 940 tests green; release gate 230 × 6, 0 failures; 19 ecosystem projects.
+
+### v0.3.1-beta (2026-11-25) — self-hosting rungs 1-7, language limits closed
 
 - **Language: known limits closed.** Recursive records via `Optional<Record>` (heap indirection per target: `Option<Box<T>>` on rust, pointers on cpp/c — surface syntax identical everywhere) and JSON record I/O with collection fields (`List<T>`, `Set<T>`, `Map<K,V>`, including record-valued maps), nested record fields, and `Optional` of either. All-or-nothing reads, deterministic sorted ordering, byte-identical across targets.
 - **New builtin: `sha256 of <text>`** — lowercase hex digest, UTF-8 bytes hashed uniformly, byte-identical on all six targets (stdlib on python/go/ts, self-contained on rust/cpp/c).
@@ -330,7 +339,7 @@ The runner attributes non-passing scripts into ranked **Axis 1 (`examples/`)** v
 
 ---
 
-## Language Surface (v0.3.0-beta.2)
+## Language Surface (v0.3.2-beta)
 
 - **Assertions (`assert`):** First-class runtime invariant assertions with status-1 termination and deterministic diagnostics.
 - **Test Blocks (`test`) & Test Runner (`meme test`):** Isolated test blocks and a built-in cross-target test runner.

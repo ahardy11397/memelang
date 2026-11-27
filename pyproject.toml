@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "memelang"
-version = "0.3.0b2"
+version = "0.3.2b0"
 description = "Natural language programming compiler with deterministic IR, lockfile, and multi-target backends"
 readme = "README.md"
 requires-python = ">=3.13"
