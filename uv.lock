@@ -642,7 +642,7 @@ wheels = [
 
 [[package]]
 name = "memelang"
-version = "0.3.2b0"
+version = "0.3.3b0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },

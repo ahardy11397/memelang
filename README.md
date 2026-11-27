@@ -1,6 +1,6 @@
 # Memelang (`meme`)
 
-**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline, currently at **v0.3.2-beta**. You write programs in plain English (`.meme`), and the compiler parses that English into a **strictly-typed Intermediate Representation (IR)**, statically verifies types & semantic unambiguity, locks the result into **`build.lock`** for 100% deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, **Go**, **C (C11)**, or **TypeScript (Node.js)**.
+**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline, currently at **v0.3.3-beta**. You write programs in plain English (`.meme`), and the compiler parses that English into a **strictly-typed Intermediate Representation (IR)**, statically verifies types & semantic unambiguity, locks the result into **`build.lock`** for 100% deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, **Go**, **C (C11)**, or **TypeScript (Node.js)**.
 
 ---
 
@@ -339,7 +339,7 @@ The runner attributes non-passing scripts into ranked **Axis 1 (`examples/`)** v
 
 ---
 
-## Language Surface (v0.3.2-beta)
+## Language Surface (v0.3.3-beta)
 
 - **Assertions (`assert`):** First-class runtime invariant assertions with status-1 termination and deterministic diagnostics.
 - **Test Blocks (`test`) & Test Runner (`meme test`):** Isolated test blocks and a built-in cross-target test runner.
@@ -359,3 +359,9 @@ The runner attributes non-passing scripts into ranked **Axis 1 (`examples/`)** v
 - **Records Hold Collections:** Record fields of type `List<T>`, `Map<K, V>`, and `Set<T>` (including self-referential records through `List`) work across all six targets.
 - **Recursive Records (`Optional<T>` self-reference):** Records can reference themselves through `Optional<T>` fields (`record Node: parent: Optional<Node>`) — indirection is handled per-target (`Option<Box<T>>` on rust, pointers on cpp/c), user code stays identical across all six targets.
 - **JSON Records with Collections & Nested Records:** `write ... as json` / `read json record ...` serialize record fields of type `List<T>`, `Set<T>`, `Map<K, V>` (including record-valued maps), nested record fields, and `Optional` of either — all-or-nothing reads, deterministic sorted ordering, byte-identical output on all six targets.
+
+### v0.3.3-beta (2026-11-26)
+
+- **Self-hosting rung 10: the compiler's back half, in Memelang.** [projects/meme-transpiler](projects/meme-transpiler) — a Python-3 transpiler over the parse tree (vendored parser + checker), with the oracle as its acceptance: for every accepted program, its output is byte-identical to the real compiler's python backend (verified on hello, fizzbuzz, 538, 539, 540, 541, 512 — including recursive records + JSON I/O and argv routing). Out-of-subset constructs are refused cleanly, never silently miscompiled.
+- The Memelang-authored chain is now complete: **lex → parse → verify → transpile**, all of it Memelang, all of it zero-dependency native binaries. The remaining distance to single-binary distribution is retargeting the transpiler at C.
+- Health: 940 tests green; release gate 230 × 6, 0 failures; 20 ecosystem projects.
