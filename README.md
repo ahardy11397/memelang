@@ -1,6 +1,6 @@
 # Memelang (`meme`)
 
-**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline, currently at **v0.3.3-beta**. You write programs in plain English (`.meme`), and the compiler parses that English into a **strictly-typed Intermediate Representation (IR)**, statically verifies types & semantic unambiguity, locks the result into **`build.lock`** for 100% deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, **Go**, **C (C11)**, or **TypeScript (Node.js)**.
+**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline, currently at **v0.3.4-beta**. You write programs in plain English (`.meme`), and the compiler parses that English into a **strictly-typed Intermediate Representation (IR)**, statically verifies types & semantic unambiguity, locks the result into **`build.lock`** for 100% deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, **Go**, **C (C11)**, or **TypeScript (Node.js)**.
 
 ---
 
@@ -213,8 +213,12 @@ Real programs built with Memelang, each its own repo linked as a git submodule, 
 | [projects/meme-canonical-fixer](projects/meme-canonical-fixer) | Lexical layout canonicalizer (`fix` / `preview`) — self-hosting step 3 | 20 × 6 targets |
 | [projects/meme-lock-check](projects/meme-lock-check) | Exact lockfile freshness (LOCKED-FRESH / DRIFTED) via sha256 — self-hosting step 4 | 20 × 6 targets |
 | [projects/meme-parser](projects/meme-parser) | Recursive-descent parser + canonical emitter — self-hosting steps 5 & 6, parses and re-emits its own source | 47 × 6 targets |
+| [projects/meme-tools](projects/meme-tools) | Unified pipeline CLI (parse/emit/check/hash, combined verdicts) — self-hosting step 7 | 24 × 6 targets |
+| [projects/meme-verify](projects/meme-verify) | Static type-checker — self-hosting steps 8 & 9, oracle-agrees with the real verifier | 34 × 6 targets |
+| [projects/meme-transpiler](projects/meme-transpiler) | Python-target transpiler — self-hosting step 10, stdout byte-identical to the real backend | 2 × 6 targets |
+| [projects/meme-transpiler-c](projects/meme-transpiler-c) | C-target transpiler — self-hosting step 11, stdout byte-identical to the real backend | 2 × 6 targets |
 
-**487 `meme test` cases across the 16 test-suite projects — plus card-inventory's shell-based parity/acceptance harnesses — all green on all six targets.**
+**549 `meme test` cases across the 20 test-suite projects — plus card-inventory's shell-based parity/acceptance harnesses — all green on all six targets.**
 
 ---
 
@@ -238,6 +242,18 @@ The **lexer → parser → emitter chain is now fully Memelang**, and v0.3.0-bet
 ---
 
 ## Releases
+
+### v0.3.4-beta (2026-11-27)
+
+- **Self-hosting rung 11: the C target — the single-binary end state.** [projects/meme-transpiler-c](projects/meme-transpiler-c) — the Memelang-authored transpiler now emits C11, same oracle, same discipline: byte-identical stdout vs the real compiler's C backend on all 7 canonical programs (hello, fizzbuzz, 538, 539, 540, 541, 512; both sides link `-lm` for the sha256's `trunc`/`cbrt` — faithfully mirrored). Zero parser gaps (GAPS.md).
+- **What this means**: Memelang programs now compile to native executables through a toolchain that is itself Memelang — lex, parse, verify, transpile — with no runtime beyond libc. The remaining bootstrap-ladder step is reflexive: compile the transpiler itself to C with its own C target, closing the loop.
+- Health: 940 tests green; release gate 230 × 6, 0 failures; 21 ecosystem projects.
+
+### v0.3.3-beta (2026-11-26)
+
+- **Self-hosting rung 10: the compiler's back half, in Memelang.** [projects/meme-transpiler](projects/meme-transpiler) — a Python-3 transpiler over the parse tree (vendored parser + checker), with the oracle as its acceptance: for every accepted program, its output is byte-identical to the real compiler's python backend (verified on hello, fizzbuzz, 538, 539, 540, 541, 512 — including recursive records + JSON I/O and argv routing). Out-of-subset constructs are refused cleanly, never silently miscompiled.
+- The Memelang-authored chain is now complete: **lex → parse → verify → transpile**, all of it Memelang, all of it zero-dependency native binaries.
+- Health: 940 tests green; release gate 230 × 6, 0 failures; 20 ecosystem projects.
 
 ### v0.3.2-beta (2026-11-26)
 
@@ -339,7 +355,7 @@ The runner attributes non-passing scripts into ranked **Axis 1 (`examples/`)** v
 
 ---
 
-## Language Surface (v0.3.3-beta)
+## Language Surface (v0.3.4-beta)
 
 - **Assertions (`assert`):** First-class runtime invariant assertions with status-1 termination and deterministic diagnostics.
 - **Test Blocks (`test`) & Test Runner (`meme test`):** Isolated test blocks and a built-in cross-target test runner.
@@ -359,9 +375,3 @@ The runner attributes non-passing scripts into ranked **Axis 1 (`examples/`)** v
 - **Records Hold Collections:** Record fields of type `List<T>`, `Map<K, V>`, and `Set<T>` (including self-referential records through `List`) work across all six targets.
 - **Recursive Records (`Optional<T>` self-reference):** Records can reference themselves through `Optional<T>` fields (`record Node: parent: Optional<Node>`) — indirection is handled per-target (`Option<Box<T>>` on rust, pointers on cpp/c), user code stays identical across all six targets.
 - **JSON Records with Collections & Nested Records:** `write ... as json` / `read json record ...` serialize record fields of type `List<T>`, `Set<T>`, `Map<K, V>` (including record-valued maps), nested record fields, and `Optional` of either — all-or-nothing reads, deterministic sorted ordering, byte-identical output on all six targets.
-
-### v0.3.3-beta (2026-11-26)
-
-- **Self-hosting rung 10: the compiler's back half, in Memelang.** [projects/meme-transpiler](projects/meme-transpiler) — a Python-3 transpiler over the parse tree (vendored parser + checker), with the oracle as its acceptance: for every accepted program, its output is byte-identical to the real compiler's python backend (verified on hello, fizzbuzz, 538, 539, 540, 541, 512 — including recursive records + JSON I/O and argv routing). Out-of-subset constructs are refused cleanly, never silently miscompiled.
-- The Memelang-authored chain is now complete: **lex → parse → verify → transpile**, all of it Memelang, all of it zero-dependency native binaries. The remaining distance to single-binary distribution is retargeting the transpiler at C.
-- Health: 940 tests green; release gate 230 × 6, 0 failures; 20 ecosystem projects.

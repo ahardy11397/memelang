@@ -51,5 +51,5 @@ at a time. Each rung is a working, shipped thing:
 - [x] Harness subprocess timeout 15s → 60s — d16886d (big generated components need real -O2 compile time)
 - [x] Copy-on-write list codegen for rust/cpp — 604d66f; value semantics kept (make_mut/clone-on-write), self-hosting benchmark 17.5s -> 0.134s (130x)
 - [x] Codegen subset from IR (self-hosting step 10) — projects/meme-transpiler; python-target transpiler, oracle byte-identical vs the real backend on 7 programs
-- [ ] Next: C-target transpiler (the single-binary distribution end state)
+- [x] C-target transpiler (self-hosting step 11) — projects/meme-transpiler-c; oracle byte-identical vs the real C backend on all 7 canonical programs; zero parser gaps. Memelang now compiles to native executables through a Memelang-authored toolchain. Remaining reflexive step: compile the transpiler itself with its own C target.
 - [ ] Transpiler batch B: format-with-decimals, parent-relative use, remaining builtins
