@@ -58,3 +58,6 @@
 [submodule "projects/meme-transpiler"]
 	path = projects/meme-transpiler
 	url = https://github.com/ahardy11397/meme-transpiler.git
+[submodule "projects/meme-transpiler-c"]
+	path = projects/meme-transpiler-c
+	url = https://github.com/ahardy11397/meme-transpiler-c.git
