@@ -1,6 +1,6 @@
 # Memelang (`meme`)
 
-**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline, currently at **v0.3.4-beta**. You write programs in plain English (`.meme`), and the compiler parses that English into a **strictly-typed Intermediate Representation (IR)**, statically verifies types & semantic unambiguity, locks the result into **`build.lock`** for 100% deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, **Go**, **C (C11)**, or **TypeScript (Node.js)**.
+**Memelang** (`meme`) is an experimental natural-language programming language and compiler pipeline, currently at **v0.4.0-beta**. You write programs in plain English (`.meme`), and the compiler parses that English into a **strictly-typed Intermediate Representation (IR)**, statically verifies types & semantic unambiguity, locks the result into **`build.lock`** for 100% deterministic rebuilds, and emits **Python 3**, **Rust**, **C++20**, **Go**, **C (C11)**, or **TypeScript (Node.js)**.
 
 ---
 
@@ -243,6 +243,13 @@ The **lexer → parser → emitter chain is now fully Memelang**, and v0.3.0-bet
 
 ## Releases
 
+### v0.4.0-beta (2026-11-28) — the bootstrap ladder is finished
+
+- **The reflexive proof: Memelang compiles Memelang to native code, end to end, with nothing else in the loop.** [projects/meme-transpiler-c](projects/meme-transpiler-c) transpiled its own 9 modules to C, `gcc -O2` built a 428 KB standalone binary from them, and that self-hosted binary emits **byte-identical C** to the python-built transpiler (`sha256` match, coordinator-independently reproduced from a clean rebuild) — and passes the same oracle: real C backend == python-built transpiler == self-hosted C transpiler, byte-identical stdout on **8/8 canonical programs**.
+- **Batch B in both transpilers** ([projects/meme-transpiler](projects/meme-transpiler) + C): `format <x> with N decimals` (half-away-from-zero), parent-relative `use ../module`, and the checker truth-up — every rule mirrored from the real compiler via probes and recorded in the [evidence table](https://github.com/ahardy11397/meme-transpiler-c/blob/master/EVIDENCE.md): remove-last, starts/ends with, trim, split, join, or-else-nothing Optional, additive slice bounds, real line attribution, transitive `use` inlining.
+- **Zero-dependency distribution achieved**: a Memelang program now compiles to a native executable through a toolchain that is itself compiled Memelang — no runtime beyond libc, no Python anywhere in the shipped path.
+- Health: 940 tests green; release gate 230 × 6, 0 failures; 21 ecosystem projects.
+
 ### v0.3.4-beta (2026-11-27)
 
 - **Self-hosting rung 11: the C target — the single-binary end state.** [projects/meme-transpiler-c](projects/meme-transpiler-c) — the Memelang-authored transpiler now emits C11, same oracle, same discipline: byte-identical stdout vs the real compiler's C backend on all 7 canonical programs (hello, fizzbuzz, 538, 539, 540, 541, 512; both sides link `-lm` for the sha256's `trunc`/`cbrt` — faithfully mirrored). Zero parser gaps (GAPS.md).
@@ -355,7 +362,7 @@ The runner attributes non-passing scripts into ranked **Axis 1 (`examples/`)** v
 
 ---
 
-## Language Surface (v0.3.4-beta)
+## Language Surface (v0.4.0-beta)
 
 - **Assertions (`assert`):** First-class runtime invariant assertions with status-1 termination and deterministic diagnostics.
 - **Test Blocks (`test`) & Test Runner (`meme test`):** Isolated test blocks and a built-in cross-target test runner.
